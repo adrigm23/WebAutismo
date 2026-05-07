@@ -30,6 +30,47 @@ async function requireAdminUser() {
   return user;
 }
 
+async function ensureNotLastAdmin(input: {
+  targetUserId: string;
+  nextRole?: "STUDENT" | "TEACHER" | "ADMIN";
+  nextActive?: boolean;
+}) {
+  const db = getDb();
+  const targetUser = await db.user.findUnique({
+    where: {
+      id: input.targetUserId
+    },
+    select: {
+      id: true,
+      globalRole: true,
+      isActive: true
+    }
+  });
+
+  if (!targetUser || targetUser.globalRole !== "ADMIN") {
+    return;
+  }
+
+  const keepsAdminRole = input.nextRole ? input.nextRole === "ADMIN" : true;
+  const keepsActiveState =
+    typeof input.nextActive === "boolean" ? input.nextActive : targetUser.isActive;
+
+  if (keepsAdminRole && keepsActiveState) {
+    return;
+  }
+
+  const activeAdmins = await db.user.count({
+    where: {
+      globalRole: "ADMIN",
+      isActive: true
+    }
+  });
+
+  if (activeAdmins <= 1) {
+    redirect("/admin/users?error=last-admin");
+  }
+}
+
 function revalidateAdminViews() {
   revalidatePath("/admin");
   revalidatePath("/cursos");
@@ -103,6 +144,11 @@ export async function updateUserRoleAction(formData: FormData) {
     redirect("/admin?error=user-role");
   }
 
+  await ensureNotLastAdmin({
+    targetUserId: userId,
+    nextRole: nextRole as "STUDENT" | "TEACHER" | "ADMIN"
+  });
+
   const updatedUser = await getDb().user.update({
     where: {
       id: userId
@@ -140,6 +186,11 @@ export async function toggleUserActiveAction(formData: FormData) {
   if (!userId) {
     redirect("/admin?error=user-active");
   }
+
+  await ensureNotLastAdmin({
+    targetUserId: userId,
+    nextActive: active
+  });
 
   const updatedUser = await getDb().user.update({
     where: {
@@ -416,6 +467,96 @@ export async function unassignTeacherFromCourseAction(formData: FormData) {
   redirect("/admin");
 }
 
+export async function syncTeacherCourseAssignmentsAction(formData: FormData) {
+  const admin = await requireAdminUser();
+  const teacherUserId = String(formData.get("teacherUserId") ?? "");
+  const selectedCourseIds = formData
+    .getAll("courseIds")
+    .map((value) => String(value))
+    .filter(Boolean);
+
+  if (!teacherUserId) {
+    redirect("/admin/teachers?error=teacher-sync");
+  }
+
+  const db = getDb();
+  const teacher = await db.user.findUnique({
+    where: {
+      id: teacherUserId
+    },
+    select: {
+      id: true,
+      email: true,
+      globalRole: true
+    }
+  });
+
+  if (!teacher) {
+    redirect("/admin/teachers?error=teacher-sync-missing");
+  }
+
+  const currentAssignments = await db.courseTeacherAssignment.findMany({
+    where: {
+      userId: teacherUserId
+    },
+    select: {
+      courseId: true
+    }
+  });
+
+  const currentCourseIds = new Set(currentAssignments.map((assignment) => assignment.courseId));
+  const nextCourseIds = new Set(selectedCourseIds);
+  const courseIdsToRemove = Array.from(currentCourseIds).filter((courseId) => !nextCourseIds.has(courseId));
+  const courseIdsToAdd = Array.from(nextCourseIds).filter((courseId) => !currentCourseIds.has(courseId));
+
+  if (courseIdsToRemove.length > 0) {
+    await db.courseTeacherAssignment.deleteMany({
+      where: {
+        userId: teacherUserId,
+        courseId: {
+          in: courseIdsToRemove
+        }
+      }
+    });
+  }
+
+  if (courseIdsToAdd.length > 0) {
+    await db.courseTeacherAssignment.createMany({
+      data: courseIdsToAdd.map((courseId) => ({
+        courseId,
+        userId: teacherUserId
+      })),
+      skipDuplicates: true
+    });
+  }
+
+  if (teacher.globalRole === "STUDENT" && nextCourseIds.size > 0) {
+    await db.user.update({
+      where: {
+        id: teacher.id
+      },
+      data: {
+        globalRole: "TEACHER"
+      }
+    });
+  }
+
+  await writeAuditLog({
+    actorId: admin.id,
+    action: "COURSE_TEACHER_ASSIGNED",
+    entityType: "USER",
+    entityId: teacher.id,
+    entityLabel: teacher.email,
+    metadata: {
+      selectedCourseIds,
+      removedCourseIds: courseIdsToRemove
+    }
+  });
+
+  revalidateAdminViews();
+  redirect(`/admin/teachers?teacherId=${teacherUserId}`);
+}
+
 export async function createCourseEditionAction(formData: FormData) {
   const admin = await requireAdminUser();
   const courseId = String(formData.get("courseId") ?? "");
@@ -583,4 +724,93 @@ export async function togglePromotionAction(formData: FormData) {
 
   revalidateAdminViews();
   redirect("/admin");
+}
+
+export async function updatePromotionAction(formData: FormData) {
+  const admin = await requireAdminUser();
+  const promotionId = String(formData.get("promotionId") ?? "");
+  const code = String(formData.get("code") ?? "").trim().toUpperCase();
+  const description = String(formData.get("description") ?? "").trim();
+  const amountInCents = Number(formData.get("amountInCents") ?? 0);
+  const usageLimitRaw = String(formData.get("usageLimit") ?? "").trim();
+  const scope = String(formData.get("scope") ?? "GLOBAL");
+  const courseId = String(formData.get("courseId") ?? "").trim();
+
+  if (!promotionId || !code || Number.isNaN(amountInCents) || amountInCents < 0) {
+    redirect("/admin/promotions?error=promotion-update");
+  }
+
+  const promotion = await getDb().promotion.update({
+    where: {
+      id: promotionId
+    },
+    data: {
+      code,
+      description: description || null,
+      discountType:
+        String(formData.get("discountType") ?? "") === "FIXED_AMOUNT"
+          ? "FIXED_AMOUNT"
+          : "PERCENTAGE",
+      amountInCents,
+      validFrom: parseOptionalDate(formData.get("validFrom")),
+      validUntil: parseOptionalDate(formData.get("validUntil")),
+      usageLimit: usageLimitRaw ? Number(usageLimitRaw) : null,
+      scope: scope === "COURSE" ? "COURSE" : "GLOBAL",
+      courseId: scope === "COURSE" && courseId ? courseId : null,
+      updatedById: admin.id
+    }
+  });
+
+  await writeAuditLog({
+    actorId: admin.id,
+    action: "PROMOTION_UPDATED",
+    entityType: "PROMOTION",
+    entityId: promotion.id,
+    entityLabel: promotion.code
+  });
+
+  revalidateAdminViews();
+  redirect(`/admin/promotions?promotionId=${promotion.id}`);
+}
+
+export async function updateEnrollmentAccessAction(formData: FormData) {
+  const admin = await requireAdminUser();
+  const enrollmentId = String(formData.get("enrollmentId") ?? "");
+  const status = String(formData.get("status") ?? "ACTIVE");
+  const notes = String(formData.get("notes") ?? "").trim();
+
+  if (
+    !enrollmentId ||
+    !["ACTIVE", "CANCELLED", "REVOKED", "EXPIRED"].includes(status)
+  ) {
+    redirect("/admin/supervision?error=enrollment-update");
+  }
+
+  const nextStatus = status as "ACTIVE" | "CANCELLED" | "REVOKED" | "EXPIRED";
+  const enrollment = await getDb().courseEnrollment.update({
+    where: {
+      id: enrollmentId
+    },
+    data: {
+      status: nextStatus,
+      accessUntil: parseOptionalDate(formData.get("accessUntil")),
+      notes: notes || null,
+      deactivatedAt: nextStatus === "ACTIVE" ? null : new Date(),
+      deactivatedById: nextStatus === "ACTIVE" ? null : admin.id
+    }
+  });
+
+  await writeAuditLog({
+    actorId: admin.id,
+    action: nextStatus === "ACTIVE" ? "ENROLLMENT_REACTIVATED" : "ENROLLMENT_DEACTIVATED",
+    entityType: "COURSE_ENROLLMENT",
+    entityId: enrollment.id,
+    metadata: {
+      nextStatus,
+      accessUntil: enrollment.accessUntil?.toISOString() ?? null
+    }
+  });
+
+  revalidateAdminViews();
+  redirect(`/admin/supervision?enrollmentId=${enrollment.id}`);
 }

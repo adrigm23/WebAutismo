@@ -1,0 +1,239 @@
+import type {
+  AuditAction,
+  CourseEditionStatus,
+  CourseEnrollmentStatus,
+  CourseStatus,
+  PromotionDiscountType,
+  UserGlobalRole
+} from "@prisma/client";
+import { getGlobalRoleLabel } from "@/lib/course-permissions";
+import { firstValue, formatPrice } from "@/lib/utils";
+
+export type AdminNavigationItem = {
+  href: string;
+  label: string;
+  shortLabel: string;
+  icon: string;
+};
+
+export const adminNavigation: AdminNavigationItem[] = [
+  { href: "/admin", label: "Dashboard", shortLabel: "Dashboard", icon: "layout-dashboard" },
+  { href: "/admin/users", label: "Usuarios", shortLabel: "Usuarios", icon: "users-round" },
+  { href: "/admin/teachers", label: "Portal docente", shortLabel: "Docentes", icon: "graduation-cap" },
+  { href: "/admin/courses", label: "Catalogo", shortLabel: "Cursos", icon: "book-copy" },
+  { href: "/admin/editions", label: "Ediciones", shortLabel: "Ediciones", icon: "layers-3" },
+  { href: "/admin/promotions", label: "Promociones", shortLabel: "Promociones", icon: "tickets" },
+  { href: "/admin/audit", label: "Auditoria", shortLabel: "Auditoria", icon: "scroll-text" },
+  { href: "/admin/supervision", label: "Supervision", shortLabel: "Supervision", icon: "chart-column-big" }
+];
+
+export function isAdminRoute(pathname: string) {
+  return pathname === "/admin" || pathname.startsWith("/admin/");
+}
+
+export function getAdminSearchPlaceholder(pathname: string) {
+  if (pathname.startsWith("/admin/users")) {
+    return "Buscar usuarios, emails...";
+  }
+
+  if (pathname.startsWith("/admin/teachers")) {
+    return "Buscar docentes o cursos...";
+  }
+
+  if (pathname.startsWith("/admin/courses")) {
+    return "Buscar cursos, slugs, docentes...";
+  }
+
+  if (pathname.startsWith("/admin/editions")) {
+    return "Buscar ediciones...";
+  }
+
+  if (pathname.startsWith("/admin/promotions")) {
+    return "Buscar codigos promocionales...";
+  }
+
+  if (pathname.startsWith("/admin/audit")) {
+    return "Buscar logs, actores, entidades...";
+  }
+
+  if (pathname.startsWith("/admin/supervision")) {
+    return "Buscar alumnos, cursos, accesos...";
+  }
+
+  return "Buscar...";
+}
+
+export function getUserInitials(name: string) {
+  return (
+    name
+      .split(" ")
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((chunk) => chunk[0]?.toUpperCase())
+      .join("") || "AD"
+  );
+}
+
+export function getCourseStatusLabel(status: CourseStatus) {
+  return status === "ACTIVE" ? "Activo" : "Inactivo";
+}
+
+export function getCourseStatusTone(status: CourseStatus) {
+  return status === "ACTIVE" ? "primary" : "neutral";
+}
+
+export function getEditionStatusLabel(status: CourseEditionStatus) {
+  switch (status) {
+    case "ACTIVE":
+      return "Abierta";
+    case "SCHEDULED":
+      return "Programada";
+    case "CLOSED":
+      return "Cerrada";
+    case "CANCELLED":
+      return "Cancelada";
+    default:
+      return status;
+  }
+}
+
+export function getEditionStatusTone(status: CourseEditionStatus) {
+  switch (status) {
+    case "ACTIVE":
+      return "primary";
+    case "SCHEDULED":
+      return "warning";
+    case "CLOSED":
+      return "neutral";
+    case "CANCELLED":
+      return "danger";
+    default:
+      return "neutral";
+  }
+}
+
+export function getEnrollmentStatusLabel(status: CourseEnrollmentStatus) {
+  switch (status) {
+    case "ACTIVE":
+      return "Activa";
+    case "CANCELLED":
+      return "Baja";
+    case "REVOKED":
+      return "Revocada";
+    case "EXPIRED":
+      return "Expirada";
+    default:
+      return status;
+  }
+}
+
+export function getRoleTone(role: UserGlobalRole) {
+  switch (role) {
+    case "ADMIN":
+      return "primary";
+    case "TEACHER":
+      return "warning";
+    default:
+      return "neutral";
+  }
+}
+
+export function getAccessStateLabel(state: "active" | "scheduled" | "expired" | "inactive") {
+  switch (state) {
+    case "active":
+      return "Vigente";
+    case "scheduled":
+      return "Programado";
+    case "expired":
+      return "Caducado";
+    case "inactive":
+      return "Inactivo";
+    default:
+      return state;
+  }
+}
+
+export function getAccessStateTone(state: "active" | "scheduled" | "expired" | "inactive") {
+  switch (state) {
+    case "active":
+      return "primary";
+    case "scheduled":
+      return "warning";
+    case "expired":
+      return "danger";
+    case "inactive":
+      return "neutral";
+    default:
+      return "neutral";
+  }
+}
+
+export function getPromotionDiscountSummary(input: {
+  discountType: PromotionDiscountType;
+  amountInCents: number;
+}) {
+  return input.discountType === "PERCENTAGE"
+    ? `${input.amountInCents}%`
+    : formatPrice(input.amountInCents);
+}
+
+export function getPromotionScopeLabel(scope: "GLOBAL" | "COURSE") {
+  return scope === "GLOBAL" ? "Global" : "Por curso";
+}
+
+export function getAuditActionLabel(action: AuditAction) {
+  const labels: Partial<Record<AuditAction, string>> = {
+    COURSE_CREATED: "Curso creado",
+    COURSE_UPDATED: "Curso actualizado",
+    COURSE_CLONED: "Curso clonado",
+    COURSE_TEACHER_ASSIGNED: "Docente asignado",
+    COURSE_TEACHER_UNASSIGNED: "Docente desasignado",
+    EDITION_CREATED: "Edicion creada",
+    EDITION_UPDATED: "Edicion actualizada",
+    EDITION_CLOSED: "Edicion cerrada",
+    USER_CREATED: "Usuario creado",
+    USER_DEACTIVATED: "Usuario desactivado",
+    USER_REACTIVATED: "Usuario reactivado",
+    USER_ADMIN_GRANTED: "Permiso admin concedido",
+    USER_ADMIN_REVOKED: "Permiso admin revocado",
+    USER_TEACHER_GRANTED: "Permiso docente concedido",
+    USER_TEACHER_REVOKED: "Permiso docente revocado",
+    ENROLLMENT_CREATED: "Matricula creada",
+    ENROLLMENT_DEACTIVATED: "Matricula desactivada",
+    ENROLLMENT_REACTIVATED: "Matricula reactivada",
+    PROMOTION_CREATED: "Promocion creada",
+    PROMOTION_UPDATED: "Promocion actualizada",
+    PROMOTION_ACTIVATED: "Promocion activada",
+    PROMOTION_DEACTIVATED: "Promocion desactivada",
+    PURCHASE_CREATED: "Compra creada",
+    PURCHASE_PAID: "Compra pagada",
+    PURCHASE_FAILED: "Compra fallida",
+    PROMOTION_APPLIED: "Promocion aplicada",
+    NOTIFICATION_PREFERENCES_UPDATED: "Preferencias actualizadas"
+  };
+
+  return labels[action] ?? action;
+}
+
+export function getAuditActionTone(action: AuditAction) {
+  if (action.includes("DEACTIVATED") || action.includes("REVOKED") || action === "PURCHASE_FAILED") {
+    return "danger";
+  }
+
+  if (action.includes("UPDATED") || action.includes("CLOSED") || action.includes("APPLIED")) {
+    return "warning";
+  }
+
+  return "primary";
+}
+
+export function getSearchParamValue(
+  value: string | string[] | undefined,
+  fallback = ""
+) {
+  return firstValue(value)?.trim() || fallback;
+}
+
+export function getRoleFilterLabel(role: UserGlobalRole) {
+  return getGlobalRoleLabel(role);
+}

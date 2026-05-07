@@ -23,6 +23,8 @@ export function SiteHeader({ user }: SiteHeaderProps) {
   if (
     pathname === "/acceder" ||
     pathname === "/registro" ||
+    pathname === "/admin" ||
+    pathname.startsWith("/admin/") ||
     pathname.startsWith("/checkout/") ||
     pathname.startsWith("/mis-cursos/")
   ) {
