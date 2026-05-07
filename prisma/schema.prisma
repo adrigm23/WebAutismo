@@ -1,0 +1,619 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                    String                       @id @default(cuid())
+  name                  String
+  email                 String                       @unique
+  passwordHash          String
+  globalRole            UserGlobalRole               @default(STUDENT)
+  isActive              Boolean                      @default(true)
+  deactivatedAt         DateTime?
+  deactivatedById       String?
+  createdAt             DateTime                     @default(now())
+  updatedAt             DateTime                     @updatedAt
+  purchases             Purchase[]
+  memberships           CourseMembership[]
+  moduleProgress        CourseModuleProgress[]
+  forumThreads          ForumThread[]
+  forumPosts            ForumPost[]
+  forumNotifications    ForumNotification[]
+  notifications         UserNotification[]
+  notificationPreference NotificationPreference?
+  courseAssignments     CourseTeacherAssignment[]
+  editionAssignments    CourseEditionTeacherAssignment[]
+  enrollments           CourseEnrollment[]
+  createdPromotions     Promotion[]                  @relation("PromotionCreatedBy")
+  updatedPromotions     Promotion[]                  @relation("PromotionUpdatedBy")
+  promotionRedemptions  PromotionRedemption[]
+  auditLogs             AuditLog[]                   @relation("AuditActor")
+  deactivatedBy         User?                        @relation("UserDeactivatedBy", fields: [deactivatedById], references: [id], onDelete: SetNull)
+  deactivatedUsers      User[]                       @relation("UserDeactivatedBy")
+}
+
+model Course {
+  id               String                    @id @default(cuid())
+  slug             String                    @unique
+  title            String
+  shortDescription String
+  description      String                    @db.LongText
+  priceInCents     Int
+  duration         String
+  format           String
+  level            String
+  accentFrom       String
+  accentTo         String
+  category         String
+  audienceJson     Json
+  outcomesJson     Json
+  methodologyJson  Json
+  faqJson          Json
+  seoTitle         String
+  seoDescription   String
+  status           CourseStatus              @default(ACTIVE)
+  clonedFromId     String?
+  createdAt        DateTime                  @default(now())
+  updatedAt        DateTime                  @updatedAt
+  modules          CourseModule[]
+  editions         CourseEdition[]
+  teacherAssignments CourseTeacherAssignment[]
+  purchases        Purchase[]
+  enrollments      CourseEnrollment[]
+  promotions       Promotion[]
+  promotionRedemptions PromotionRedemption[]
+  clonedFrom       Course?                   @relation("CourseClones", fields: [clonedFromId], references: [id], onDelete: SetNull)
+  clones           Course[]                  @relation("CourseClones")
+}
+
+model CourseModule {
+  id               String    @id @default(cuid())
+  courseId         String
+  moduleKey        String
+  title            String
+  description      String    @db.LongText
+  estimatedTime    String
+  resourcesSummary String
+  position         Int
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  course           Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@unique([courseId, moduleKey])
+  @@index([courseId, position])
+}
+
+model CourseEdition {
+  id               String                       @id @default(cuid())
+  courseId         String
+  label            String
+  editionNumber    Int
+  status           CourseEditionStatus          @default(ACTIVE)
+  startsAt         DateTime?
+  endsAt           DateTime?
+  graceAccessDays  Int                          @default(0)
+  accessUntil      DateTime?
+  isActive         Boolean                      @default(true)
+  createdAt        DateTime                     @default(now())
+  updatedAt        DateTime                     @updatedAt
+  course           Course                       @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  teacherAssignments CourseEditionTeacherAssignment[]
+  enrollments      CourseEnrollment[]
+  purchases        Purchase[]
+
+  @@unique([courseId, editionNumber])
+  @@index([courseId, isActive, status])
+}
+
+model CourseTeacherAssignment {
+  id           String   @id @default(cuid())
+  courseId     String
+  userId       String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  course       Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([courseId, userId])
+  @@index([userId])
+}
+
+model CourseEditionTeacherAssignment {
+  id             String       @id @default(cuid())
+  courseEditionId String
+  userId         String
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  courseEdition  CourseEdition @relation(fields: [courseEditionId], references: [id], onDelete: Cascade)
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([courseEditionId, userId])
+  @@index([userId])
+}
+
+model Purchase {
+  id                      String         @id @default(cuid())
+  userId                  String
+  courseId                String
+  courseEditionId         String?
+  status                  PurchaseStatus @default(PENDING)
+  subtotalInCents         Int
+  discountInCents         Int            @default(0)
+  taxInCents              Int            @default(0)
+  totalInCents            Int
+  promotionId             String?
+  promotionCode           String?
+  stripeCheckoutSessionId String?        @unique
+  stripePaymentIntentId   String?        @unique
+  courseSlugSnapshot      String
+  courseTitleSnapshot     String
+  createdAt               DateTime       @default(now())
+  updatedAt               DateTime       @updatedAt
+  user                    User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course                  Course         @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  courseEdition           CourseEdition? @relation(fields: [courseEditionId], references: [id], onDelete: SetNull)
+  promotion               Promotion?     @relation(fields: [promotionId], references: [id], onDelete: SetNull)
+  enrollment              CourseEnrollment?
+  promotionRedemption     PromotionRedemption?
+
+  @@index([userId, courseId, status])
+  @@index([courseEditionId, status])
+}
+
+model CourseEnrollment {
+  id              String                 @id @default(cuid())
+  userId          String
+  courseId        String
+  courseEditionId String?
+  purchaseId      String?                @unique
+  status          CourseEnrollmentStatus @default(ACTIVE)
+  accessStartsAt  DateTime               @default(now())
+  accessUntil     DateTime?
+  deactivatedAt   DateTime?
+  deactivatedById String?
+  notes           String?                @db.LongText
+  createdAt       DateTime               @default(now())
+  updatedAt       DateTime               @updatedAt
+  user            User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course          Course                 @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  courseEdition   CourseEdition?         @relation(fields: [courseEditionId], references: [id], onDelete: SetNull)
+  purchase        Purchase?              @relation(fields: [purchaseId], references: [id], onDelete: SetNull)
+
+  @@index([userId, status])
+  @@index([courseId, status])
+  @@index([courseEditionId, status])
+}
+
+model Promotion {
+  id              String                @id @default(cuid())
+  code            String                @unique
+  description     String?               @db.LongText
+  discountType    PromotionDiscountType
+  amountInCents   Int
+  isActive        Boolean               @default(true)
+  validFrom       DateTime?
+  validUntil      DateTime?
+  usageLimit      Int?
+  scope           PromotionScope        @default(GLOBAL)
+  courseId        String?
+  createdById     String?
+  updatedById     String?
+  createdAt       DateTime              @default(now())
+  updatedAt       DateTime              @updatedAt
+  course          Course?               @relation(fields: [courseId], references: [id], onDelete: SetNull)
+  createdBy       User?                 @relation("PromotionCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  updatedBy       User?                 @relation("PromotionUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+  purchases       Purchase[]
+  redemptions     PromotionRedemption[]
+
+  @@index([isActive, code])
+  @@index([courseId, isActive])
+}
+
+model PromotionRedemption {
+  id              String    @id @default(cuid())
+  promotionId     String
+  purchaseId      String    @unique
+  userId          String
+  courseId        String
+  discountInCents Int
+  createdAt       DateTime  @default(now())
+  promotion       Promotion @relation(fields: [promotionId], references: [id], onDelete: Cascade)
+  purchase        Purchase  @relation(fields: [purchaseId], references: [id], onDelete: Cascade)
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course          Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@index([promotionId, createdAt])
+  @@index([userId, createdAt])
+}
+
+model NotificationPreference {
+  userId       String   @id
+  emailEnabled Boolean  @default(true)
+  webEnabled   Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model UserNotification {
+  id           String               @id @default(cuid())
+  userId       String
+  category     NotificationCategory
+  title        String
+  body         String               @db.LongText
+  linkPath     String
+  metadataJson String?              @db.LongText
+  readAt       DateTime?
+  createdAt    DateTime             @default(now())
+  user         User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, readAt, createdAt])
+}
+
+model AuditLog {
+  id           String          @id @default(cuid())
+  actorId      String?
+  action       AuditAction
+  entityType   AuditEntityType
+  entityId     String
+  entityLabel  String?
+  metadataJson String?         @db.LongText
+  createdAt    DateTime        @default(now())
+  actor        User?           @relation("AuditActor", fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([createdAt])
+  @@index([actorId, createdAt])
+  @@index([entityType, entityId, createdAt])
+}
+
+model CourseMembership {
+  id         String     @id @default(cuid())
+  userId     String
+  courseSlug String
+  role       CourseRole @default(STUDENT)
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, courseSlug])
+  @@index([courseSlug, role])
+}
+
+model CourseModuleProgress {
+  id          String   @id @default(cuid())
+  userId      String
+  courseSlug  String
+  moduleId    String   @default("")
+  moduleIndex Int?
+  completedAt DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, courseSlug, moduleId])
+  @@index([userId, courseSlug, moduleIndex])
+  @@index([userId, courseSlug])
+  @@index([courseSlug])
+}
+
+model ForumSpace {
+  id            String            @id @default(cuid())
+  courseSlug    String
+  editionLabel  String
+  editionNumber Int
+  status        ForumSpaceStatus  @default(ACTIVE)
+  startsAt      DateTime?
+  endsAt        DateTime?
+  archivedAt    DateTime?
+  archivedById  String?
+  deletedAt     DateTime?
+  deletedById   String?
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+  categories    ForumCategory[]
+
+  @@index([courseSlug, status])
+  @@unique([courseSlug, editionNumber])
+}
+
+model ForumCategory {
+  id           String        @id @default(cuid())
+  courseSlug   String
+  forumSpaceId String?
+  slug         String
+  title        String
+  description  String
+  sortOrder    Int           @default(0)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  forumSpace   ForumSpace?   @relation(fields: [forumSpaceId], references: [id], onDelete: Cascade)
+  threads      ForumThread[]
+
+  @@unique([forumSpaceId, slug])
+  @@index([courseSlug, sortOrder])
+  @@index([courseSlug, slug])
+  @@index([forumSpaceId, sortOrder])
+}
+
+model ForumThread {
+  id             String           @id @default(cuid())
+  categoryId     String
+  authorId       String
+  authorRole     CourseRole
+  type           ForumThreadType  @default(DISCUSSION)
+  title          String
+  body           String           @db.LongText
+  isPinned       Boolean          @default(false)
+  isClosed       Boolean          @default(false)
+  isResolved     Boolean          @default(false)
+  resolvedPostId String?
+  isReadOnly     Boolean          @default(false)
+  scheduledFor   DateTime?
+  publishedAt    DateTime?
+  editedAt       DateTime?
+  deletedAt      DateTime?
+  deletedById    String?
+  lastActivityAt DateTime         @default(now())
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  author         User             @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  category       ForumCategory    @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  resolvedPost   ForumPost?       @relation("ResolvedForumPost", fields: [resolvedPostId], references: [id], onDelete: SetNull)
+  posts          ForumPost[]
+  attachments    ForumAttachment[]
+  reports        ForumReport[]
+
+  @@index([categoryId, isPinned, lastActivityAt])
+  @@index([categoryId, type, deletedAt])
+}
+
+model ForumPost {
+  id                String           @id @default(cuid())
+  threadId          String
+  authorId          String
+  authorRole        CourseRole
+  body              String           @db.LongText
+  editedAt          DateTime?
+  deletedAt         DateTime?
+  deletedById       String?
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+  author            User             @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  thread            ForumThread      @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  resolvedByThreads ForumThread[]    @relation("ResolvedForumPost")
+  attachments       ForumAttachment[]
+  reports           ForumReport[]
+
+  @@index([threadId, createdAt])
+  @@index([threadId, deletedAt])
+}
+
+model ForumAttachment {
+  id          String              @id @default(cuid())
+  threadId    String?
+  postId      String?
+  kind        ForumAttachmentKind
+  label       String
+  url         String
+  mimeType    String?
+  sizeInBytes Int?
+  storageKey  String?
+  createdById String
+  createdAt   DateTime            @default(now())
+  thread      ForumThread?        @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  post        ForumPost?          @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@index([threadId])
+  @@index([postId])
+}
+
+model ForumReport {
+  id           String            @id @default(cuid())
+  threadId     String?
+  postId       String?
+  reportedById String
+  reason       String
+  notes        String?           @db.LongText
+  status       ForumReportStatus @default(OPEN)
+  resolvedAt   DateTime?
+  resolvedById String?
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+  thread       ForumThread?      @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  post         ForumPost?        @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@index([status, createdAt])
+  @@index([threadId])
+  @@index([postId])
+}
+
+model ForumNotification {
+  id         String                @id @default(cuid())
+  userId     String
+  courseSlug String
+  type       ForumNotificationType
+  title      String
+  body       String                @db.LongText
+  linkPath   String
+  readAt     DateTime?
+  createdAt  DateTime              @default(now())
+  user       User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, readAt, createdAt])
+}
+
+model ForumAuditLog {
+  id          String          @id @default(cuid())
+  courseSlug  String
+  forumSpaceId String?
+  threadId    String?
+  postId      String?
+  actorId     String
+  actorRole   CourseRole
+  action      ForumAuditAction
+  metadataJson String?        @db.LongText
+  createdAt   DateTime        @default(now())
+
+  @@index([courseSlug, createdAt])
+  @@index([forumSpaceId, createdAt])
+  @@index([threadId, createdAt])
+}
+
+enum UserGlobalRole {
+  STUDENT
+  TEACHER
+  ADMIN
+}
+
+enum CourseStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum CourseEditionStatus {
+  ACTIVE
+  SCHEDULED
+  CLOSED
+  CANCELLED
+}
+
+enum CourseEnrollmentStatus {
+  ACTIVE
+  CANCELLED
+  REVOKED
+  EXPIRED
+}
+
+enum PromotionDiscountType {
+  PERCENTAGE
+  FIXED_AMOUNT
+}
+
+enum PromotionScope {
+  GLOBAL
+  COURSE
+}
+
+enum NotificationCategory {
+  PURCHASE
+  COURSE
+  FORUM
+  SYSTEM
+}
+
+enum AuditEntityType {
+  USER
+  COURSE
+  COURSE_EDITION
+  COURSE_ENROLLMENT
+  PROMOTION
+  PURCHASE
+  NOTIFICATION_PREFERENCE
+}
+
+enum AuditAction {
+  COURSE_CREATED
+  COURSE_UPDATED
+  COURSE_CLONED
+  COURSE_TEACHER_ASSIGNED
+  COURSE_TEACHER_UNASSIGNED
+  COURSE_ARCHIVED
+  EDITION_CREATED
+  EDITION_UPDATED
+  EDITION_CLOSED
+  USER_CREATED
+  USER_DEACTIVATED
+  USER_REACTIVATED
+  USER_ADMIN_GRANTED
+  USER_ADMIN_REVOKED
+  USER_TEACHER_GRANTED
+  USER_TEACHER_REVOKED
+  ENROLLMENT_CREATED
+  ENROLLMENT_DEACTIVATED
+  ENROLLMENT_REACTIVATED
+  PROMOTION_CREATED
+  PROMOTION_UPDATED
+  PROMOTION_ACTIVATED
+  PROMOTION_DEACTIVATED
+  PURCHASE_CREATED
+  PURCHASE_PAID
+  PURCHASE_FAILED
+  PROMOTION_APPLIED
+  NOTIFICATION_PREFERENCES_UPDATED
+}
+
+enum CourseRole {
+  STUDENT
+  TEACHER
+  ADMIN
+}
+
+enum ForumSpaceStatus {
+  ACTIVE
+  ARCHIVED
+  DELETED
+}
+
+enum ForumThreadType {
+  DISCUSSION
+  ANNOUNCEMENT
+}
+
+enum ForumAttachmentKind {
+  FILE
+  IMAGE
+  LINK
+  VIDEO
+}
+
+enum ForumReportStatus {
+  OPEN
+  REVIEWED
+  DISMISSED
+  ACTION_TAKEN
+}
+
+enum ForumNotificationType {
+  THREAD_REPLY
+  MENTION
+  TEACHER_ANNOUNCEMENT
+  THREAD_REPORTED
+  MODERATION_ACTION
+}
+
+enum ForumAuditAction {
+  THREAD_CREATED
+  THREAD_UPDATED
+  THREAD_PINNED
+  THREAD_UNPINNED
+  THREAD_CLOSED
+  THREAD_REOPENED
+  THREAD_DELETED
+  THREAD_RESTORED
+  POST_CREATED
+  POST_UPDATED
+  POST_DELETED
+  POST_RESTORED
+  POST_MARKED_RESOLVED
+  POST_UNMARKED_RESOLVED
+  REPORT_CREATED
+  REPORT_REVIEWED
+  REPORT_DISMISSED
+  SPACE_ARCHIVED
+  SPACE_RESTORED
+  SPACE_DELETED
+}
+
+enum PurchaseStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+  CANCELLED
+}

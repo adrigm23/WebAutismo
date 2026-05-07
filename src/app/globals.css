@@ -1,0 +1,147 @@
+@import "tailwindcss";
+
+:root {
+  --color-background: #f8f6f3;
+  --color-surface: #f1eeea;
+  --color-surface-strong: #ffffff;
+  --color-ink: #222221;
+  --color-muted: #5d6875;
+  --color-border: #c9d4df;
+  --color-primary: #0c71c3;
+  --color-primary-strong: #085ea5;
+  --color-primary-soft: #d3e4ff;
+  --color-secondary: #2ea3f2;
+  --color-accent: #ffb606;
+  --color-accent-soft: #fff1cc;
+  --color-success: #0a6d54;
+  --color-teal: var(--color-primary);
+  --color-coral: var(--color-accent);
+  --color-gold: var(--color-accent);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--color-background);
+  color: var(--color-ink);
+  font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+  text-rendering: optimizeLegibility;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+.font-display {
+  font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+}
+
+.site-container {
+  margin-inline: auto;
+  width: 100%;
+  max-width: 1200px;
+  padding-inline: 1.5rem;
+}
+
+@media (min-width: 1024px) {
+  .site-container {
+    padding-inline: 2rem;
+  }
+}
+
+.prose-course p {
+  margin: 0;
+}
+
+.prose-course ul {
+  margin: 0;
+  padding-left: 1.25rem;
+}
+
+.thin-divider {
+  border-top: 1px solid rgba(12, 113, 195, 0.18);
+}
+
+.surface-panel {
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid var(--color-border);
+  box-shadow: 0 18px 44px rgba(34, 34, 33, 0.06);
+}
+
+.grid-mesh {
+  background-image:
+    linear-gradient(rgba(12, 113, 195, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(12, 113, 195, 0.08) 1px, transparent 1px);
+  background-position: center;
+  background-size: 28px 28px;
+}
+
+.course-art {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, #173d62 0%, #081724 100%);
+}
+
+.course-art::before {
+  content: "";
+  position: absolute;
+  inset: -22%;
+  background:
+    radial-gradient(circle at 24% 30%, rgba(97, 194, 255, 0.42), transparent 24%),
+    radial-gradient(circle at 78% 18%, rgba(255, 182, 6, 0.28), transparent 18%),
+    radial-gradient(circle at 50% 80%, rgba(46, 163, 242, 0.22), transparent 28%);
+  opacity: 0.9;
+}
+
+.course-art::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(5, 16, 25, 0.08), rgba(5, 16, 25, 0.4));
+}
+
+.campus-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(12, 113, 195, 0.45) transparent;
+}
+
+.campus-scrollbar::-webkit-scrollbar {
+  width: 8px;
+}
+
+.campus-scrollbar::-webkit-scrollbar-thumb {
+  border-radius: 9999px;
+  background: rgba(12, 113, 195, 0.34);
+}
+
+.campus-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.prose-copy p + p {
+  margin-top: 1.5rem;
+}
+
+details > summary {
+  list-style: none;
+}
+
+details > summary::-webkit-details-marker {
+  display: none;
+}
