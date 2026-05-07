@@ -1,6 +1,7 @@
 import type { CourseRole, UserGlobalRole } from "@prisma/client";
 import type { CatalogCourse } from "@/lib/course-catalog";
 import { getCatalogCourseBySlug, getCatalogCourses } from "@/lib/course-catalog";
+import { getDemoUserById, isDemoUserId } from "@/lib/demo-auth";
 import {
   canViewCourseProgress,
   getGlobalRoleLabel,
@@ -67,6 +68,51 @@ export const defaultCourseCategories: CommunityCategoryDefinition[] = [
     sortOrder: 5
   }
 ];
+
+function getDemoCourseRole(userId: string): CourseRole | null {
+  const demoUser = getDemoUserById(userId);
+
+  if (!demoUser) {
+    return null;
+  }
+
+  return demoUser.globalRole;
+}
+
+async function buildDemoUserCourseSpaces(userId: string) {
+  const role = getDemoCourseRole(userId);
+
+  if (!role) {
+    return [] as UserCourseSpace[];
+  }
+
+  const courses = await getCatalogCourses();
+
+  return courses.slice(0, 1).map((course) => ({
+    course,
+    role,
+    purchase:
+      role === "STUDENT"
+        ? {
+            id: `demo-purchase-${course.slug}`,
+            createdAt: new Date("2026-05-07T09:00:00.000Z"),
+            totalInCents: course.priceInCents,
+            discountInCents: 0,
+            status: "PAID" as const
+          }
+        : null,
+    enrollment:
+      role === "STUDENT"
+        ? {
+            id: `demo-enrollment-${course.slug}`,
+            status: "ACTIVE" as const,
+            accessStartsAt: new Date("2026-05-07T09:00:00.000Z"),
+            accessUntil: null
+          }
+        : null,
+    accessState: "active" as const
+  }));
+}
 
 async function getNextForumEditionNumber(courseSlug: string) {
   const latestSpace = await getDb().forumSpace.findFirst({
@@ -262,6 +308,10 @@ export async function ensureCourseMembershipForUser(input: {
   email?: string;
   courseSlug: string;
 }) {
+  if (isDemoUserId(input.userId)) {
+    return null;
+  }
+
   const snapshot = await getAccessSnapshot({
     userId: input.userId,
     courseSlug: input.courseSlug
@@ -331,6 +381,10 @@ export async function getCourseRoleForUser(input: {
   email?: string;
   courseSlug: string;
 }) {
+  if (isDemoUserId(input.userId)) {
+    return getDemoCourseRole(input.userId);
+  }
+
   const snapshot = await getAccessSnapshot({
     userId: input.userId,
     courseSlug: input.courseSlug
@@ -350,6 +404,25 @@ export async function canAccessCourseCommunity(input: {
   email?: string;
   courseSlug: string;
 }) {
+  if (isDemoUserId(input.userId)) {
+    const role = getDemoCourseRole(input.userId);
+
+    return {
+      allowed: Boolean(role),
+      role,
+      enrollment:
+        role === "STUDENT"
+          ? {
+              id: `demo-enrollment-${input.courseSlug}`,
+              status: "ACTIVE" as const,
+              accessStartsAt: new Date("2026-05-07T09:00:00.000Z"),
+              accessUntil: null,
+              accessState: "active" as const
+            }
+          : null
+    };
+  }
+
   const snapshot = await getAccessSnapshot({
     userId: input.userId,
     courseSlug: input.courseSlug
@@ -378,6 +451,10 @@ export async function canAccessCourseCommunity(input: {
 }
 
 export async function getUserCourseSpaces(input: { userId: string; email?: string }) {
+  if (isDemoUserId(input.userId)) {
+    return buildDemoUserCourseSpaces(input.userId);
+  }
+
   const [user, courses] = await Promise.all([
     getDb().user.findUnique({
       where: {

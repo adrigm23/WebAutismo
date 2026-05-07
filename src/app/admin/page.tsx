@@ -6,13 +6,151 @@ import { AdminPageHeader } from "@/components/admin/admin-page-header";
 import { AdminStatusBadge } from "@/components/admin/admin-status-badge";
 import { getAuditActionLabel } from "@/lib/admin-console";
 import { requireAdminConsoleUser } from "@/lib/admin-console-server";
+import { isDemoUserId } from "@/lib/demo-auth";
 import { parseAuditMetadata } from "@/lib/audit";
 import { resolveEditionAccessUntil } from "@/lib/course-editions";
 import { getDb } from "@/lib/prisma";
 import { formatCompactNumber, formatRelativeTime } from "@/lib/utils";
 
 export default async function AdminDashboardPage() {
-  await requireAdminConsoleUser("/admin");
+  const user = await requireAdminConsoleUser("/admin");
+
+  if (isDemoUserId(user.id)) {
+    return (
+      <div className="space-y-9">
+        <AdminPageHeader
+          actions={
+            <>
+              <ButtonLink href="/admin/users" variant="secondary">
+                Ver usuarios demo
+              </ButtonLink>
+              <ButtonLink href="/mi-cuenta">Volver a mi cuenta</ButtonLink>
+            </>
+          }
+          description="Modo demo sin base de datos. Las metricas y alertas de esta vista son simuladas para revisar la interfaz."
+          title="Dashboard general"
+        />
+
+        <section className="grid gap-5 xl:grid-cols-[1.6fr_1fr_1fr]">
+          <AdminMetricCard
+            accent="primary"
+            icon={<UsersRound className="h-6 w-6" strokeWidth={1.8} />}
+            label="Usuarios activos"
+            meta={
+              <div>
+                <div>
+                  <strong>1</strong> admin
+                </div>
+                <div>
+                  <strong>1</strong> docente
+                </div>
+                <div>
+                  <strong>1</strong> alumno
+                </div>
+              </div>
+            }
+            value="3"
+          />
+          <AdminMetricCard
+            accent="neutral"
+            icon={<BookCopy className="h-6 w-6" strokeWidth={1.8} />}
+            label="Cursos activos"
+            meta="Catalogo de demostracion"
+            value="3"
+          />
+          <AdminMetricCard
+            accent="primary"
+            icon={<Layers3 className="h-6 w-6" strokeWidth={1.8} />}
+            label="Ediciones abiertas"
+            meta="1 matricula demo activa"
+            value="1"
+          />
+        </section>
+
+        <section className="grid gap-6 xl:grid-cols-[0.92fr_1.25fr]">
+          <div className="space-y-4">
+            <div className="flex items-center gap-3">
+              <AlertTriangle className="h-6 w-6 text-[#c43a2f]" strokeWidth={1.9} />
+              <h2 className="text-[2.1rem] font-semibold tracking-[-0.06em] text-[var(--color-ink)]">
+                Alertas operativas
+              </h2>
+            </div>
+
+            <Card className="rounded-[1.9rem] border-[#f3b8b2] bg-[#fff0ee] p-6 shadow-none">
+              <p className="text-lg font-semibold text-[#a72b20]">Conexion de base pendiente</p>
+              <p className="mt-2 text-base leading-7 text-[#a6473f]">
+                Esta administracion se esta mostrando con datos simulados hasta conectar la base de
+                datos definitiva.
+              </p>
+            </Card>
+
+            <Card className="rounded-[1.9rem] border-[#f0d098] bg-[#fff1cf] p-6 shadow-none">
+              <p className="text-lg font-semibold text-[#7c5300]">Acciones deshabilitadas</p>
+              <p className="mt-2 text-base leading-7 text-[#805c16]">
+                En modo demo puedes recorrer la interfaz, pero las altas, cambios de rol y
+                auditorias no se guardan.
+              </p>
+            </Card>
+          </div>
+
+          <Card className="overflow-hidden rounded-[1.9rem] border-[#cfd8e2]">
+            <div className="flex items-center justify-between gap-4 border-b border-[#d9e0e8] px-7 py-6">
+              <div>
+                <h2 className="text-[2.1rem] font-semibold tracking-[-0.06em] text-[var(--color-ink)]">
+                  Actividad reciente
+                </h2>
+                <p className="mt-2 text-[1rem] text-[#4c6075]">
+                  Registro de ejemplo para validar la experiencia visual.
+                </p>
+              </div>
+            </div>
+
+            <div className="divide-y divide-[#dde4eb]">
+              {[
+                {
+                  id: "demo-audit-1",
+                  actor: "Admin Demo",
+                  action: "USER_ADMIN_GRANTED",
+                  entityLabel: "admin.demo@autismo.local",
+                  createdAt: new Date("2026-05-07T09:10:00.000Z")
+                },
+                {
+                  id: "demo-audit-2",
+                  actor: "Admin Demo",
+                  action: "COURSE_CREATED",
+                  entityLabel: "Curso de demostracion",
+                  createdAt: new Date("2026-05-07T09:05:00.000Z")
+                }
+              ].map((log) => (
+                <div className="flex flex-wrap items-start gap-5 px-7 py-6" key={log.id}>
+                  <div className="grid h-14 w-14 place-items-center rounded-full bg-[rgba(12,113,195,0.12)] text-base font-semibold text-[var(--color-primary)]">
+                    AD
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-3">
+                      <p className="text-[1.18rem] font-semibold text-[var(--color-ink)]">
+                        {log.actor}
+                      </p>
+                      <AdminStatusBadge tone="primary">
+                        {getAuditActionLabel(log.action as never)}
+                      </AdminStatusBadge>
+                    </div>
+                    <p className="mt-2 text-[1.02rem] leading-7 text-[#394d61]">
+                      {log.entityLabel}
+                    </p>
+                    <p className="mt-2 text-sm font-medium text-[#68788a]">
+                      {formatRelativeTime(log.createdAt)}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Card>
+        </section>
+      </div>
+    );
+  }
+
   const now = new Date();
   const db = getDb();
   const [

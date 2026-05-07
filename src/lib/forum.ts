@@ -11,6 +11,7 @@ import {
 import { sendForumNotification } from "@/lib/notifications";
 import { isStaffCourseRole, type CourseRole } from "@/lib/course-roles";
 import { getDb } from "@/lib/prisma";
+import { isDemoUserId } from "@/lib/demo-auth";
 
 type ForumViewerRole = CourseRole | null | undefined;
 
@@ -984,38 +985,51 @@ async function publishDueAnnouncementsForCourse(courseSlug: string) {
 }
 
 export async function getForumCategories(courseSlug: string, viewerRole?: ForumViewerRole) {
-  await publishDueAnnouncementsForCourse(courseSlug);
-  const activeSpace = await ensureCourseCommunity(courseSlug);
+  try {
+    await publishDueAnnouncementsForCourse(courseSlug);
+    const activeSpace = await ensureCourseCommunity(courseSlug);
 
-  const categories = (await getDb().forumCategory.findMany({
-    where: {
-      forumSpaceId: activeSpace.id
-    },
-    orderBy: {
-      sortOrder: "asc"
-    }
-  })) as Array<{
-    id: string;
-    forumSpaceId: string | null;
-    slug: string;
-    title: string;
-    description: string;
-  }>;
+    const categories = (await getDb().forumCategory.findMany({
+      where: {
+        forumSpaceId: activeSpace.id
+      },
+      orderBy: {
+        sortOrder: "asc"
+      }
+    })) as Array<{
+      id: string;
+      forumSpaceId: string | null;
+      slug: string;
+      title: string;
+      description: string;
+    }>;
 
-  const visibleCounts = await Promise.all(
-    categories.map((category) =>
-      getDb().forumThread.count({
-        where: buildThreadWhere(category.id, undefined, viewerRole)
-      })
-    )
-  );
+    const visibleCounts = await Promise.all(
+      categories.map((category) =>
+        getDb().forumThread.count({
+          where: buildThreadWhere(category.id, undefined, viewerRole)
+        })
+      )
+    );
 
-  return categories.map((category, index) => ({
-    ...category,
-    _count: {
-      threads: visibleCounts[index]
-    }
-  })) as ForumCategorySummary[];
+    return categories.map((category, index) => ({
+      ...category,
+      _count: {
+        threads: visibleCounts[index]
+      }
+    })) as ForumCategorySummary[];
+  } catch {
+    return defaultCourseCategories.map((category) => ({
+      id: `demo-${courseSlug}-${category.slug}`,
+      forumSpaceId: null,
+      slug: category.slug,
+      title: category.title,
+      description: category.description,
+      _count: {
+        threads: 0
+      }
+    }));
+  }
 }
 
 export async function getForumCategory(courseSlug: string, categorySlug: string) {
@@ -2711,6 +2725,13 @@ export async function getUserForumNotifications(input: {
   courseSlugs: string[];
   limit?: number;
 }) {
+  if (isDemoUserId(input.userId)) {
+    return {
+      notifications: [],
+      unreadCount: 0
+    };
+  }
+
   const courseSlugs = Array.from(new Set(input.courseSlugs.filter(Boolean)));
 
   await Promise.all(courseSlugs.map((courseSlug) => publishDueAnnouncementsForCourse(courseSlug)));

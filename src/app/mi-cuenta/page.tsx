@@ -20,6 +20,7 @@ import { CourseArtwork } from "@/components/course-artwork";
 import { Badge } from "@/components/ui/badge";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { isDemoUserId } from "@/lib/demo-auth";
 import { requireUser } from "@/lib/auth";
 import { getCourseProgressSummariesForUser } from "@/lib/course-progress";
 import { getRoleLabel, getUserCourseSpaces } from "@/lib/course-community";
@@ -41,6 +42,7 @@ export const metadata: Metadata = {
 
 export default async function AccountPage() {
   const user = await requireUser("/mi-cuenta");
+  const isDemoUser = isDemoUserId(user.id);
   const [spaces, preference] = await Promise.all([
     getUserCourseSpaces({
       userId: user.id,
@@ -89,6 +91,16 @@ export default async function AccountPage() {
         </div>
 
         <section className="mt-16">
+          {isDemoUser ? (
+            <Card className="mb-8 border-[#f0d098] bg-[#fff1cf] p-6">
+              <p className="text-lg font-semibold text-[#7c5300]">Modo demo activo</p>
+              <p className="mt-2 text-base leading-7 text-[#805c16]">
+                Estas navegando con una cuenta de prueba sin base de datos. Puedes revisar las
+                vistas por rol, pero los cambios no se guardan.
+              </p>
+            </Card>
+          ) : null}
+
           <div className="mb-6 flex items-center justify-between gap-4">
             <div className="flex items-center gap-4">
               <Bell className="h-7 w-7 text-[var(--color-primary)]" />

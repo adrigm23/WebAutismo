@@ -4,6 +4,8 @@ import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { cache } from "react";
+import { getDemoUserById, isDemoUserId } from "@/lib/demo-auth";
+import { isDatabaseConnectionError } from "@/lib/db-errors";
 import { getDb } from "@/lib/prisma";
 
 const SESSION_COOKIE = "academy_session";
@@ -128,32 +130,44 @@ export const getCurrentUser = cache(async () => {
     return null;
   }
 
-  const user = await getDb().user.findUnique({
-    where: { id: userId },
-    select: {
-      id: true,
-      name: true,
-      email: true,
-      globalRole: true,
-      isActive: true,
-      createdAt: true
-    }
-  });
-
-  if (!user) {
-    return null;
+  if (isDemoUserId(userId)) {
+    return getDemoUserById(userId);
   }
 
-  const bootstrappedRole = await ensureBootstrapAdmin({
-    userId: user.id,
-    email: user.email,
-    currentRole: user.globalRole
-  });
+  try {
+    const user = await getDb().user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        globalRole: true,
+        isActive: true,
+        createdAt: true
+      }
+    });
 
-  return {
-    ...user,
-    globalRole: bootstrappedRole ?? user.globalRole
-  };
+    if (!user) {
+      return null;
+    }
+
+    const bootstrappedRole = await ensureBootstrapAdmin({
+      userId: user.id,
+      email: user.email,
+      currentRole: user.globalRole
+    });
+
+    return {
+      ...user,
+      globalRole: bootstrappedRole ?? user.globalRole
+    };
+  } catch (error) {
+    if (isDatabaseConnectionError(error)) {
+      return null;
+    }
+
+    throw error;
+  }
 });
 
 export async function requireUser(returnTo?: string) {

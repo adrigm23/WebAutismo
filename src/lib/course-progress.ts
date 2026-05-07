@@ -1,4 +1,5 @@
 import type { CourseModule } from "../data/courses.ts";
+import { getDemoUserById, isDemoUserId } from "./demo-auth.ts";
 import { getCatalogCourseBySlug } from "./course-catalog.ts";
 import { getDb } from "./prisma.ts";
 
@@ -50,6 +51,23 @@ type CourseLearnerProgressRow = {
   completionRate: number;
   lastCompletedAt: Date | null;
 };
+
+function getDemoProgressRecords(input: {
+  userId: string;
+  course: CourseProgressCourseShape;
+}): PersistedModuleProgressRecord[] {
+  const demoUser = getDemoUserById(input.userId);
+
+  if (!demoUser || demoUser.globalRole !== "STUDENT") {
+    return [];
+  }
+
+  return input.course.modules.slice(0, Math.min(2, input.course.modules.length)).map((module, index) => ({
+    moduleId: module.id,
+    moduleIndex: index,
+    completedAt: new Date(`2026-05-0${index + 5}T09:00:00.000Z`)
+  }));
+}
 
 function getModuleFromLegacyIndex(course: CourseProgressCourseShape, moduleIndex: number | null) {
   if (moduleIndex === null || moduleIndex < 0 || moduleIndex >= course.modules.length) {
@@ -203,6 +221,10 @@ export async function getCourseProgressDetailsForUser(input: {
   userId: string;
   course: CourseProgressCourseShape;
 }) {
+  if (isDemoUserId(input.userId)) {
+    return normalizeCourseProgress(input.course, getDemoProgressRecords(input));
+  }
+
   await upgradeLegacyCourseProgressRecords({
     userId: input.userId,
     courses: [input.course]
@@ -235,6 +257,20 @@ export async function getCourseProgressSummariesForUser(input: {
   userId: string;
   courseSlugs: string[];
 }) {
+  if (isDemoUserId(input.userId)) {
+    const uniqueCourseSlugs = Array.from(new Set(input.courseSlugs)).filter(Boolean);
+    const courseList = (
+      await Promise.all(uniqueCourseSlugs.map((courseSlug) => getCatalogCourseBySlug(courseSlug)))
+    ).filter((course): course is NonNullable<typeof course> => Boolean(course));
+
+    return new Map(
+      courseList.map((course) => [
+        course.slug,
+        normalizeCourseProgress(course, getDemoProgressRecords({ userId: input.userId, course }))
+      ])
+    );
+  }
+
   const uniqueCourseSlugs = Array.from(new Set(input.courseSlugs)).filter(Boolean);
 
   if (uniqueCourseSlugs.length === 0) {

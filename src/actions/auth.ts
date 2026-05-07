@@ -4,6 +4,8 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { writeAuditLog } from "@/lib/audit";
 import { createSession, ensureBootstrapAdmin, hashPassword, verifyPassword } from "@/lib/auth";
+import { getDemoUserByEmail, isValidDemoPassword } from "@/lib/demo-auth";
+import { isDatabaseConnectionError } from "@/lib/db-errors";
 import { getDb } from "@/lib/prisma";
 import { getSafeRedirect } from "@/lib/redirect";
 
@@ -34,106 +36,137 @@ export async function registerAction(
   _: AuthFormState,
   formData: FormData
 ): Promise<AuthFormState> {
-  const parsed = registerSchema.safeParse({
-    name: formData.get("name"),
-    email: formData.get("email"),
-    password: formData.get("password"),
-    confirmPassword: formData.get("confirmPassword"),
-    next: formData.get("next")
-  });
+  try {
+    const parsed = registerSchema.safeParse({
+      name: formData.get("name"),
+      email: formData.get("email"),
+      password: formData.get("password"),
+      confirmPassword: formData.get("confirmPassword"),
+      next: formData.get("next")
+    });
 
-  if (!parsed.success) {
-    return {
-      error: parsed.error.issues[0]?.message || "Revisa los datos del formulario."
-    };
-  }
-
-  const db = getDb();
-  const normalizedEmail = parsed.data.email.toLowerCase();
-  const existingUser = await db.user.findUnique({
-    where: { email: normalizedEmail }
-  });
-
-  if (existingUser) {
-    return { error: "Ya existe una cuenta con ese correo." };
-  }
-
-  const passwordHash = await hashPassword(parsed.data.password);
-  const user = await db.user.create({
-    data: {
-      name: parsed.data.name.trim(),
-      email: normalizedEmail,
-      passwordHash,
-      notificationPreference: {
-        create: {}
+    if (!parsed.success) {
+      return {
+        error: parsed.error.issues[0]?.message || "Revisa los datos del formulario."
       }
     }
-  });
 
-  const globalRole =
-    (await ensureBootstrapAdmin({
-      userId: user.id,
-      email: user.email,
-      currentRole: user.globalRole
-    })) ?? user.globalRole;
+    const db = getDb();
+    const normalizedEmail = parsed.data.email.toLowerCase();
+    const existingUser = await db.user.findUnique({
+      where: { email: normalizedEmail }
+    });
 
-  await writeAuditLog({
-    actorId: user.id,
-    action: "USER_CREATED",
-    entityType: "USER",
-    entityId: user.id,
-    entityLabel: user.email,
-    metadata: {
-      globalRole
+    if (existingUser) {
+      return { error: "Ya existe una cuenta con ese correo." };
     }
-  });
 
-  await createSession(user.id);
-  redirect(getSafeRedirect(parsed.data.next, "/mi-cuenta"));
+    const passwordHash = await hashPassword(parsed.data.password);
+    const user = await db.user.create({
+      data: {
+        name: parsed.data.name.trim(),
+        email: normalizedEmail,
+        passwordHash,
+        notificationPreference: {
+          create: {}
+        }
+      }
+    });
+
+    const globalRole =
+      (await ensureBootstrapAdmin({
+        userId: user.id,
+        email: user.email,
+        currentRole: user.globalRole
+      })) ?? user.globalRole;
+
+    await writeAuditLog({
+      actorId: user.id,
+      action: "USER_CREATED",
+      entityType: "USER",
+      entityId: user.id,
+      entityLabel: user.email,
+      metadata: {
+        globalRole
+      }
+    });
+
+    await createSession(user.id);
+    redirect(getSafeRedirect(parsed.data.next, "/mi-cuenta"));
+  } catch (error) {
+    if (isDatabaseConnectionError(error)) {
+      return {
+        error: "No se puede conectar con la base de datos en este momento. Revisa DATABASE_URL en Vercel."
+      };
+    }
+
+    throw error;
+  }
 }
 
 export async function loginAction(
   _: AuthFormState,
   formData: FormData
 ): Promise<AuthFormState> {
-  const parsed = loginSchema.safeParse({
-    email: formData.get("email"),
-    password: formData.get("password"),
-    next: formData.get("next")
-  });
+  try {
+    const parsed = loginSchema.safeParse({
+      email: formData.get("email"),
+      password: formData.get("password"),
+      next: formData.get("next")
+    });
 
-  if (!parsed.success) {
-    return {
-      error: parsed.error.issues[0]?.message || "Revisa los datos del formulario."
-    };
-  }
-
-  const user = await getDb().user.findUnique({
-    where: {
-      email: parsed.data.email.toLowerCase()
+    if (!parsed.success) {
+      return {
+        error: parsed.error.issues[0]?.message || "Revisa los datos del formulario."
+      };
     }
-  });
 
-  if (!user) {
-    return { error: "No existe una cuenta con ese correo." };
+    const demoUser = getDemoUserByEmail(parsed.data.email);
+
+    if (demoUser) {
+      if (!isValidDemoPassword(parsed.data.password)) {
+        return { error: "La contrasena no es correcta." };
+      }
+
+      await createSession(demoUser.id);
+      redirect(getSafeRedirect(parsed.data.next, "/mi-cuenta"));
+    }
+
+    const user = await getDb().user.findUnique({
+      where: {
+        email: parsed.data.email.toLowerCase()
+      }
+    });
+
+    if (!user) {
+      return { error: "No existe una cuenta con ese correo." };
+    }
+
+    if (!user.isActive) {
+      return { error: "Tu cuenta esta desactivada. Contacta con administracion." };
+    }
+
+    const isValidPassword = await verifyPassword(parsed.data.password, user.passwordHash);
+
+    if (!isValidPassword) {
+      return { error: "La contrasena no es correcta." };
+    }
+
+    await ensureBootstrapAdmin({
+      userId: user.id,
+      email: user.email,
+      currentRole: user.globalRole
+    });
+
+    await createSession(user.id);
+    redirect(getSafeRedirect(parsed.data.next, "/mi-cuenta"));
+  } catch (error) {
+    if (isDatabaseConnectionError(error)) {
+      return {
+        error: "No se puede conectar con la base de datos en este momento. Revisa DATABASE_URL en Vercel."
+      };
+    }
+
+    throw error;
   }
-
-  if (!user.isActive) {
-    return { error: "Tu cuenta esta desactivada. Contacta con administracion." };
-  }
-
-  const isValidPassword = await verifyPassword(parsed.data.password, user.passwordHash);
-
-  if (!isValidPassword) {
-    return { error: "La contrasena no es correcta." };
-  }
-
-  await ensureBootstrapAdmin({
-    userId: user.id,
-    email: user.email,
-    currentRole: user.globalRole
-  });
-
-  await createSession(user.id);
-  redirect(getSafeRedirect(parsed.data.next, "/mi-cuenta"));
 }

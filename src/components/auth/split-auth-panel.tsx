@@ -49,6 +49,14 @@ export function SplitAuthPanel({
               showForgotLink
               submitLabel="Acceder"
             />
+
+            <div className="mt-6 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] px-5 py-4 text-sm leading-7 text-[var(--color-muted)]">
+              <p className="font-semibold text-[var(--color-ink)]">Acceso demo temporal</p>
+              <p>Admin: admin.demo@autismo.local</p>
+              <p>Docente: docente.demo@autismo.local</p>
+              <p>Alumno: alumno.demo@autismo.local</p>
+              <p>Contrasena: demo12345</p>
+            </div>
           </section>
 
           <section

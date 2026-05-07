@@ -1,8 +1,19 @@
 import type { ForumNotificationType, NotificationCategory } from "@prisma/client";
+import { isDemoUserId } from "@/lib/demo-auth";
 import { sendNotificationEmail } from "@/lib/email";
 import { getDb } from "@/lib/prisma";
 
 export async function ensureNotificationPreference(userId: string) {
+  if (isDemoUserId(userId)) {
+    return {
+      userId,
+      emailEnabled: true,
+      webEnabled: true,
+      createdAt: new Date("2026-05-07T09:00:00.000Z"),
+      updatedAt: new Date("2026-05-07T09:00:00.000Z")
+    };
+  }
+
   return getDb().notificationPreference.upsert({
     where: {
       userId
@@ -132,6 +143,13 @@ export async function getUserPlatformNotifications(input: {
   userId: string;
   limit?: number;
 }) {
+  if (isDemoUserId(input.userId)) {
+    return {
+      notifications: [],
+      unreadCount: 0
+    };
+  }
+
   const [notifications, unreadCount] = await Promise.all([
     getDb().userNotification.findMany({
       where: {
