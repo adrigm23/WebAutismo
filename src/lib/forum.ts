@@ -3,6 +3,7 @@ import path from "path";
 import type { ForumAuditAction, ForumNotificationType } from "@prisma/client";
 import {
   createDefaultForumCategoriesForSpace,
+  defaultCourseCategories,
   ensureActiveForumSpace,
   ensureCourseCommunity,
   getArchivedForumSpaces,
@@ -984,7 +985,10 @@ async function publishDueAnnouncementsForCourse(courseSlug: string) {
   }
 }
 
-export async function getForumCategories(courseSlug: string, viewerRole?: ForumViewerRole) {
+export async function getForumCategories(
+  courseSlug: string,
+  viewerRole?: ForumViewerRole
+): Promise<ForumCategorySummary[]> {
   try {
     await publishDueAnnouncementsForCourse(courseSlug);
     const activeSpace = await ensureCourseCommunity(courseSlug);

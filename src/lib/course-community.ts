@@ -36,6 +36,26 @@ export type UserCourseSpace = {
   accessState: "active" | "scheduled" | "expired" | "inactive";
 };
 
+export type CourseCommunityAccess =
+  | {
+      allowed: false;
+      role: null;
+      enrollment: null;
+    }
+  | {
+      allowed: true;
+      role: CourseRole;
+      enrollment:
+        | {
+            id: string;
+            status: "ACTIVE" | "CANCELLED" | "REVOKED" | "EXPIRED";
+            accessStartsAt: Date;
+            accessUntil: Date | null;
+            accessState: "active" | "scheduled" | "expired" | "inactive";
+          }
+        | null;
+    };
+
 export const defaultCourseCategories: CommunityCategoryDefinition[] = [
   {
     slug: "anuncios",
@@ -403,12 +423,20 @@ export async function canAccessCourseCommunity(input: {
   userId: string;
   email?: string;
   courseSlug: string;
-}) {
+}): Promise<CourseCommunityAccess> {
   if (isDemoUserId(input.userId)) {
     const role = getDemoCourseRole(input.userId);
 
+    if (!role) {
+      return {
+        allowed: false,
+        role: null,
+        enrollment: null
+      };
+    }
+
     return {
-      allowed: Boolean(role),
+      allowed: true,
       role,
       enrollment:
         role === "STUDENT"
@@ -429,13 +457,13 @@ export async function canAccessCourseCommunity(input: {
   });
 
   if (!snapshot?.viewerRole) {
-    return { allowed: false as const, role: null, enrollment: null };
+    return { allowed: false, role: null, enrollment: null };
   }
 
   await ensureCourseMembershipForUser(input);
 
   return {
-    allowed: true as const,
+    allowed: true,
     role: snapshot.viewerRole,
     enrollment: snapshot.latestEnrollment
       ? {
