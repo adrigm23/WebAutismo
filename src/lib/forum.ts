@@ -167,6 +167,28 @@ export type ForumNotificationListItem = {
 
 const FORUM_SELF_EDIT_WINDOW_MS = 15 * 60 * 1000;
 
+function buildDemoForumSpaceHistory(courseSlug: string) {
+  const now = new Date();
+
+  return {
+    activeSpace: {
+      id: `demo-space-${courseSlug}`,
+      courseSlug,
+      editionNumber: 1,
+      editionLabel: "Edicion demo",
+      status: "ACTIVE" as const,
+      createdAt: now,
+      updatedAt: now,
+      archivedAt: null,
+      deletedAt: null,
+      categoryCount: defaultCourseCategories.length,
+      threadCount: 0
+    },
+    archivedSpaces: [],
+    deletedSpaces: []
+  };
+}
+
 export function canEditForumContent(input: {
   currentUserId: string;
   authorId: string;
@@ -1037,14 +1059,32 @@ export async function getForumCategories(
 }
 
 export async function getForumCategory(courseSlug: string, categorySlug: string) {
-  const activeSpace = await ensureCourseCommunity(courseSlug);
+  try {
+    const activeSpace = await ensureCourseCommunity(courseSlug);
 
-  return getDb().forumCategory.findFirst({
-    where: {
-      forumSpaceId: activeSpace.id,
-      slug: categorySlug
+    return getDb().forumCategory.findFirst({
+      where: {
+        forumSpaceId: activeSpace.id,
+        slug: categorySlug
+      }
+    });
+  } catch {
+    const fallback = defaultCourseCategories.find((category) => category.slug === categorySlug);
+
+    if (!fallback) {
+      return null;
     }
-  });
+
+    return {
+      id: `demo-${courseSlug}-${fallback.slug}`,
+      courseSlug,
+      forumSpaceId: null,
+      slug: fallback.slug,
+      title: fallback.title,
+      description: fallback.description,
+      sortOrder: fallback.sortOrder
+    };
+  }
 }
 
 export async function getForumThreads(
@@ -1053,35 +1093,56 @@ export async function getForumThreads(
   query?: ForumThreadQuery,
   viewerRole?: ForumViewerRole
 ) {
-  await publishDueAnnouncementsForCourse(courseSlug);
-  const category = await getForumCategory(courseSlug, categorySlug);
+  try {
+    await publishDueAnnouncementsForCourse(courseSlug);
+    const category = await getForumCategory(courseSlug, categorySlug);
 
-  if (!category) {
-    return null;
-  }
+    if (!category) {
+      return null;
+    }
 
-  const threads = (await getDb().forumThread.findMany({
-    where: buildThreadWhere(category.id, query, viewerRole),
-    orderBy: buildThreadOrderBy(query?.sort),
-    include: {
-      author: {
-        select: {
-          id: true,
-          name: true
-        }
-      },
-      _count: {
-        select: {
-          posts: true
+    const threads = (await getDb().forumThread.findMany({
+      where: buildThreadWhere(category.id, query, viewerRole),
+      orderBy: buildThreadOrderBy(query?.sort),
+      include: {
+        author: {
+          select: {
+            id: true,
+            name: true
+          }
+        },
+        _count: {
+          select: {
+            posts: true
+          }
         }
       }
-    }
-  })) as ForumThreadListItem[];
+    })) as ForumThreadListItem[];
 
-  return {
-    category,
-    threads
-  };
+    return {
+      category,
+      threads
+    };
+  } catch {
+    const fallback = defaultCourseCategories.find((category) => category.slug === categorySlug);
+
+    if (!fallback) {
+      return null;
+    }
+
+    return {
+      category: {
+        id: `demo-${courseSlug}-${fallback.slug}`,
+        courseSlug,
+        forumSpaceId: null,
+        slug: fallback.slug,
+        title: fallback.title,
+        description: fallback.description,
+        sortOrder: fallback.sortOrder
+      },
+      threads: []
+    };
+  }
 }
 
 export async function getForumThreadById(input: {
@@ -1090,136 +1151,144 @@ export async function getForumThreadById(input: {
   threadId: string;
   viewerRole?: ForumViewerRole;
 }) {
-  await publishDueAnnouncementsForCourse(input.courseSlug);
-  const category = await getForumCategory(input.courseSlug, input.categorySlug);
+  try {
+    await publishDueAnnouncementsForCourse(input.courseSlug);
+    const category = await getForumCategory(input.courseSlug, input.categorySlug);
 
-  if (!category) {
-    return null;
-  }
+    if (!category) {
+      return null;
+    }
 
-  const thread = (await getDb().forumThread.findFirst({
-    where: {
-      id: input.threadId,
-      categoryId: category.id,
-      deletedAt: null,
-      ...buildVisibilityWhere(input.viewerRole)
-    },
-    include: {
-      author: {
-        select: {
-          id: true,
-          name: true
-        }
+    const thread = (await getDb().forumThread.findFirst({
+      where: {
+        id: input.threadId,
+        categoryId: category.id,
+        deletedAt: null,
+        ...buildVisibilityWhere(input.viewerRole)
       },
-      attachments: {
-        select: {
-          id: true,
-          kind: true,
-          label: true,
-          url: true,
-          mimeType: true,
-          sizeInBytes: true
-        }
-      },
-      posts: {
-        orderBy: {
-          createdAt: "asc"
+      include: {
+        author: {
+          select: {
+            id: true,
+            name: true
+          }
         },
-        include: {
-          attachments: {
-            select: {
-              id: true,
-              kind: true,
-              label: true,
-              url: true,
-              mimeType: true,
-              sizeInBytes: true
-            }
+        attachments: {
+          select: {
+            id: true,
+            kind: true,
+            label: true,
+            url: true,
+            mimeType: true,
+            sizeInBytes: true
+          }
+        },
+        posts: {
+          orderBy: {
+            createdAt: "asc"
           },
-          author: {
-            select: {
-              id: true,
-              name: true
+          include: {
+            attachments: {
+              select: {
+                id: true,
+                kind: true,
+                label: true,
+                url: true,
+                mimeType: true,
+                sizeInBytes: true
+              }
+            },
+            author: {
+              select: {
+                id: true,
+                name: true
+              }
             }
           }
         }
       }
-    }
-  })) as ForumThreadDetail | null;
+    })) as ForumThreadDetail | null;
 
-  if (!thread) {
+    if (!thread) {
+      return null;
+    }
+
+    return {
+      category,
+      thread
+    };
+  } catch {
     return null;
   }
-
-  return {
-    category,
-    thread
-  };
 }
 
 export async function getForumSpaceHistory(courseSlug: string) {
-  await publishDueAnnouncementsForCourse(courseSlug);
-  const activeSpace = await ensureActiveForumSpace(courseSlug);
-  const [archivedSpaces, deletedSpaces] = await Promise.all([
-    getArchivedForumSpaces(courseSlug),
-    getDeletedForumSpaces(courseSlug)
-  ]);
+  try {
+    await publishDueAnnouncementsForCourse(courseSlug);
+    const activeSpace = await ensureActiveForumSpace(courseSlug);
+    const [archivedSpaces, deletedSpaces] = await Promise.all([
+      getArchivedForumSpaces(courseSlug),
+      getDeletedForumSpaces(courseSlug)
+    ]);
 
-  const [activeCategories, activeThreads] = await Promise.all([
-    getDb().forumCategory.count({
-      where: {
-        forumSpaceId: activeSpace.id
-      }
-    }),
-    getDb().forumThread.count({
-      where: {
-        category: {
-          is: {
-            forumSpaceId: activeSpace.id
-          }
-        },
-        deletedAt: null
-      }
-    })
-  ]);
+    const [activeCategories, activeThreads] = await Promise.all([
+      getDb().forumCategory.count({
+        where: {
+          forumSpaceId: activeSpace.id
+        }
+      }),
+      getDb().forumThread.count({
+        where: {
+          category: {
+            is: {
+              forumSpaceId: activeSpace.id
+            }
+          },
+          deletedAt: null
+        }
+      })
+    ]);
 
-  const archivedSummaries = await Promise.all(
-    archivedSpaces.map(async (space) => {
-      const [categoryCount, threadCount] = await Promise.all([
-        getDb().forumCategory.count({
-          where: {
-            forumSpaceId: space.id
-          }
-        }),
-        getDb().forumThread.count({
-          where: {
-            category: {
-              is: {
-                forumSpaceId: space.id
-              }
-            },
-            deletedAt: null
-          }
-        })
-      ]);
+    const archivedSummaries = await Promise.all(
+      archivedSpaces.map(async (space) => {
+        const [categoryCount, threadCount] = await Promise.all([
+          getDb().forumCategory.count({
+            where: {
+              forumSpaceId: space.id
+            }
+          }),
+          getDb().forumThread.count({
+            where: {
+              category: {
+                is: {
+                  forumSpaceId: space.id
+                }
+              },
+              deletedAt: null
+            }
+          })
+        ]);
 
-      return {
-        ...space,
-        categoryCount,
-        threadCount
-      };
-    })
-  );
+        return {
+          ...space,
+          categoryCount,
+          threadCount
+        };
+      })
+    );
 
-  return {
-    activeSpace: {
-      ...activeSpace,
-      categoryCount: activeCategories,
-      threadCount: activeThreads
-    },
-    archivedSpaces: archivedSummaries,
-    deletedSpaces
-  };
+    return {
+      activeSpace: {
+        ...activeSpace,
+        categoryCount: activeCategories,
+        threadCount: activeThreads
+      },
+      archivedSpaces: archivedSummaries,
+      deletedSpaces
+    };
+  } catch {
+    return buildDemoForumSpaceHistory(courseSlug);
+  }
 }
 
 export async function getForumModerationDashboard(courseSlug: string) {
