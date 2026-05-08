@@ -85,6 +85,9 @@ const createTeacherSchema = z.object({
 
 export async function createTeacherAction(formData: FormData) {
   const admin = await requireAdminUser();
+  const returnTo = String(formData.get("returnTo") ?? "").trim() || "/admin";
+  const withError = (code: string) =>
+    `${returnTo}${returnTo.includes("?") ? "&" : "?"}error=${encodeURIComponent(code)}`;
   const parsed = createTeacherSchema.safeParse({
     name: formData.get("name"),
     email: formData.get("email"),
@@ -92,7 +95,7 @@ export async function createTeacherAction(formData: FormData) {
   });
 
   if (!parsed.success) {
-    redirect("/admin?error=teacher");
+    redirect(withError("teacher"));
   }
 
   const db = getDb();
@@ -104,7 +107,7 @@ export async function createTeacherAction(formData: FormData) {
   });
 
   if (existing) {
-    redirect("/admin?error=teacher-exists");
+    redirect(withError("teacher-exists"));
   }
 
   const passwordHash = await hashPassword(parsed.data.password);
@@ -132,7 +135,7 @@ export async function createTeacherAction(formData: FormData) {
   });
 
   revalidateAdminViews();
-  redirect("/admin");
+  redirect(returnTo);
 }
 
 export async function updateUserRoleAction(formData: FormData) {

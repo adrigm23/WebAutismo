@@ -441,6 +441,7 @@ export default async function AdminUsersPage({ searchParams }: UsersPageProps) {
           </div>
 
           <form action={createTeacherAction} className="mt-6 space-y-4">
+            <input name="returnTo" type="hidden" value="/admin/users" />
             <Input name="name" placeholder="Nombre y apellidos" required />
             <Input name="email" placeholder="correo@dominio.com" required type="email" />
             <Input

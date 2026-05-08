@@ -17,14 +17,14 @@ export type AdminNavigationItem = {
 };
 
 export const adminNavigation: AdminNavigationItem[] = [
-  { href: "/admin", label: "Dashboard", shortLabel: "Dashboard", icon: "layout-dashboard" },
-  { href: "/admin/users", label: "Usuarios", shortLabel: "Usuarios", icon: "users-round" },
+  { href: "/admin", label: "Panel de control", shortLabel: "Panel", icon: "layout-dashboard" },
+  { href: "/admin/users", label: "Gestion de usuarios", shortLabel: "Usuarios", icon: "users-round" },
   { href: "/admin/teachers", label: "Portal docente", shortLabel: "Docentes", icon: "graduation-cap" },
-  { href: "/admin/courses", label: "Catalogo", shortLabel: "Cursos", icon: "book-copy" },
+  { href: "/admin/courses", label: "Catalogo de cursos", shortLabel: "Cursos", icon: "book-copy" },
   { href: "/admin/editions", label: "Ediciones", shortLabel: "Ediciones", icon: "layers-3" },
   { href: "/admin/promotions", label: "Promociones", shortLabel: "Promociones", icon: "tickets" },
-  { href: "/admin/audit", label: "Auditoria", shortLabel: "Auditoria", icon: "scroll-text" },
-  { href: "/admin/supervision", label: "Supervision", shortLabel: "Supervision", icon: "chart-column-big" }
+  { href: "/admin/audit", label: "Registro de auditoria", shortLabel: "Auditoria", icon: "scroll-text" },
+  { href: "/admin/supervision", label: "Supervision academica", shortLabel: "Supervision", icon: "chart-column-big" }
 ];
 
 export function isAdminRoute(pathname: string) {
@@ -37,7 +37,7 @@ export function getAdminSearchPlaceholder(pathname: string) {
   }
 
   if (pathname.startsWith("/admin/teachers")) {
-    return "Buscar docentes o cursos...";
+    return "Buscar docentes, cursos asignados...";
   }
 
   if (pathname.startsWith("/admin/courses")) {
@@ -53,7 +53,7 @@ export function getAdminSearchPlaceholder(pathname: string) {
   }
 
   if (pathname.startsWith("/admin/audit")) {
-    return "Buscar logs, actores, entidades...";
+    return "Buscar registros, actores, entidades...";
   }
 
   if (pathname.startsWith("/admin/supervision")) {

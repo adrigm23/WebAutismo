@@ -59,12 +59,59 @@ function AdminNavIcon({ name }: { name: string }) {
   }
 }
 
+function getPrimaryAction(input: {
+  pathname: string;
+  searchParams: URLSearchParams;
+  isDemoAdmin: boolean;
+}) {
+  if (input.isDemoAdmin) {
+    return null;
+  }
+
+  if (input.pathname.startsWith("/admin/teachers")) {
+    return { href: "/admin/teachers#create-teacher", label: "+ Crear docente" };
+  }
+
+  if (input.pathname.startsWith("/admin/editions")) {
+    return { href: "/admin/editions?create=1#create-edition", label: "+ Nueva edicion" };
+  }
+
+  if (input.pathname.startsWith("/admin/promotions")) {
+    return { href: "/admin/promotions?create=1#create-promotion", label: "+ Crear cupon" };
+  }
+
+  if (input.pathname.startsWith("/admin/audit")) {
+    const q = input.searchParams.get("q") ?? "";
+    const range = input.searchParams.get("range") ?? "7d";
+    const actorId = input.searchParams.get("actorId") ?? "ALL";
+    const action = input.searchParams.get("action") ?? "ALL";
+    const entity = input.searchParams.get("entity") ?? "ALL";
+
+    return {
+      href: `/admin/audit/export?range=${encodeURIComponent(range)}&actorId=${encodeURIComponent(actorId)}&action=${encodeURIComponent(action)}&entity=${encodeURIComponent(entity)}&q=${encodeURIComponent(q)}`,
+      label: "Exportar CSV"
+    };
+  }
+
+  if (input.pathname.startsWith("/admin/courses")) {
+    return { href: "/admin/courses?create=1#create-course", label: "+ Nuevo curso" };
+  }
+
+  return { href: "/admin/courses?create=1#create-course", label: "+ Nuevo curso" };
+}
+
 export function AdminShell({ user, children }: AdminShellProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const searchPlaceholder = getAdminSearchPlaceholder(pathname);
   const searchValue = searchParams.get("q") ?? "";
   const isDemoAdmin = isDemoUserId(user.id);
+  const preservedSearchParams = Array.from(searchParams.entries()).filter(([key]) => key !== "q");
+  const primaryAction = getPrimaryAction({
+    pathname,
+    searchParams: new URLSearchParams(searchParams.toString()),
+    isDemoAdmin
+  });
   const navigationItems = isDemoAdmin
     ? adminNavigation.filter((item) => item.href === "/admin" || item.href === "/admin/users")
     : adminNavigation;
@@ -82,7 +129,7 @@ export function AdminShell({ user, children }: AdminShellProps) {
                 Cordoba
               </div>
               <p className="mt-3 text-[0.82rem] font-semibold uppercase tracking-[0.26em] text-[#22384f]">
-                Admin Console
+                Panel de administracion
               </p>
             </Link>
           </div>
@@ -92,14 +139,14 @@ export function AdminShell({ user, children }: AdminShellProps) {
               <div className="rounded-2xl border border-[#d6dde6] bg-white px-5 py-4 text-sm leading-6 text-[#4b6074]">
                 Modo demo: dashboard y usuarios.
               </div>
-            ) : (
+            ) : primaryAction ? (
               <ButtonLink
                 className="w-full justify-center rounded-2xl py-4 text-base shadow-none"
-                href="/admin/courses?create=1"
+                href={primaryAction.href}
               >
-                + Nuevo curso
+                {primaryAction.label}
               </ButtonLink>
-            )}
+            ) : null}
           </div>
 
           <nav className="mt-10 flex-1 space-y-2 px-7">
@@ -133,7 +180,7 @@ export function AdminShell({ user, children }: AdminShellProps) {
                 href="mailto:formacion@autismocordoba.org"
               >
                 <CircleHelp className="h-[1.05rem] w-[1.05rem]" strokeWidth={2} />
-                <span>Support</span>
+                <span>Soporte</span>
               </a>
 
               <form action={logoutAction}>
@@ -142,7 +189,7 @@ export function AdminShell({ user, children }: AdminShellProps) {
                   type="submit"
                 >
                   <LogOut className="h-[1.05rem] w-[1.05rem]" strokeWidth={2} />
-                  <span>Salir</span>
+                  <span>Cerrar sesion</span>
                 </button>
               </form>
             </div>
@@ -154,11 +201,14 @@ export function AdminShell({ user, children }: AdminShellProps) {
             <div className="flex flex-wrap items-center justify-between gap-4 px-5 py-4 sm:px-7 xl:px-10">
               <div className="lg:hidden">
                 <Link className="text-[1.65rem] font-bold tracking-[-0.06em] text-[var(--color-primary)]" href="/admin">
-                  Campus Admin
+                  Autismo Cordoba Admin
                 </Link>
               </div>
 
               <form action={pathname} className="w-full max-w-[34rem]">
+                {preservedSearchParams.map(([key, value]) => (
+                  <input key={`${key}-${value}`} name={key} type="hidden" value={value} />
+                ))}
                 <label className="relative block">
                   <span className="pointer-events-none absolute left-5 top-1/2 -translate-y-1/2 text-[#53657a]">
                     <Search className="hidden h-5 w-5 sm:block" strokeWidth={1.8} />
