@@ -18,6 +18,8 @@ import {
   getSearchParamValue
 } from "@/lib/admin-console";
 import { requireAdminConsoleUser } from "@/lib/admin-console-server";
+import { demoAdminPromotions } from "@/lib/admin-demo";
+import { isDemoUserId } from "@/lib/demo-auth";
 import { getDb } from "@/lib/prisma";
 import { formatDate, formatPrice } from "@/lib/utils";
 
@@ -54,12 +56,127 @@ function resolvePromotionVisualState(input: {
 }
 
 export default async function AdminPromotionsPage({ searchParams }: PromotionsPageProps) {
-  await requireAdminConsoleUser("/admin/promotions");
+  const currentUser = await requireAdminConsoleUser("/admin/promotions");
   const params = await searchParams;
   const q = getSearchParamValue(params.q);
   const status = getSearchParamValue(params.status, "ALL");
   const promotionId = getSearchParamValue(params.promotionId);
   const create = getSearchParamValue(params.create);
+
+  if (isDemoUserId(currentUser.id)) {
+    const visiblePromotions = demoAdminPromotions.filter((promotion) => {
+      const matchesQ =
+        !q ||
+        promotion.code.toLowerCase().includes(q.toLowerCase()) ||
+        (promotion.description?.toLowerCase().includes(q.toLowerCase()) ?? false) ||
+        (promotion.courseTitle?.toLowerCase().includes(q.toLowerCase()) ?? false);
+      if (!matchesQ) return false;
+      if (status === "ALL") return true;
+      const visualState = resolvePromotionVisualState({
+        isActive: promotion.isActive,
+        validUntil: promotion.validUntil,
+        usageLimit: promotion.usageLimit,
+        redemptionCount: promotion.redemptionCount
+      });
+      if (status === "ACTIVE") return visualState.label === "Activa";
+      if (status === "EXPIRED") return visualState.label === "Caducada";
+      if (status === "EXHAUSTED") return visualState.label === "Agotada";
+      if (status === "INACTIVE") return visualState.label === "Desactivada";
+      return true;
+    });
+    const selectedDemoPromotion =
+      visiblePromotions.find((promotion) => promotion.id === promotionId) ?? visiblePromotions[0] ?? null;
+
+    return (
+      <div className="space-y-9">
+        <AdminPageHeader
+          actions={<ButtonLink href="/admin/courses" variant="secondary">Volver a cursos</ButtonLink>}
+          description="Promociones demo para revisar tabla, estados y detalle lateral sin persistencia real."
+          title="Promociones"
+        />
+        <section className="grid gap-5 xl:grid-cols-3">
+          <AdminMetricCard accent="primary" icon={<Tickets className="h-6 w-6" strokeWidth={1.8} />} label="Promociones activas" meta="Checkout demo" value={demoAdminPromotions.filter((promotion) => promotion.isActive).length} />
+          <AdminMetricCard accent="warning" icon={<TrendingUp className="h-6 w-6" strokeWidth={1.8} />} label="Usos este mes" meta="Canjes simulados" value={73} />
+          <AdminMetricCard accent="neutral" icon={<Gift className="h-6 w-6" strokeWidth={1.8} />} label="Ahorro generado" meta="Importe acumulado demo" value={formatPrice(152000)} />
+        </section>
+        <section className="grid gap-6 2xl:grid-cols-[1.25fr_0.88fr]">
+          <Card className="overflow-hidden rounded-[2rem]">
+            <div className="border-b border-[#dde4ec] px-7 py-6">
+              <form className="grid gap-3 md:grid-cols-[1fr_220px_auto]">
+                <Input defaultValue={q} name="q" placeholder="Buscar cupones..." />
+                <select className="h-12 rounded-xl border border-[var(--color-border)] bg-white px-4 text-sm" defaultValue={status} name="status">
+                  <option value="ALL">Todos los estados</option>
+                  <option value="ACTIVE">Activas</option>
+                  <option value="EXPIRED">Caducadas</option>
+                  <option value="EXHAUSTED">Agotadas</option>
+                  <option value="INACTIVE">Desactivadas</option>
+                </select>
+                <SubmitButton pendingLabel="Aplicando..." variant="secondary">Aplicar</SubmitButton>
+              </form>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="min-w-full text-left">
+                <thead>
+                  <tr className="border-b border-[#dde4ec] text-sm uppercase tracking-[0.16em] text-[#3b4f64]">
+                    <th className="px-7 py-4">Codigo</th>
+                    <th className="px-4 py-4">Descuento</th>
+                    <th className="px-4 py-4">Ambito</th>
+                    <th className="px-4 py-4">Uso</th>
+                    <th className="px-7 py-4">Estado</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#e0e7ee]">
+                  {visiblePromotions.map((promotion) => {
+                    const visualState = resolvePromotionVisualState({
+                      isActive: promotion.isActive,
+                      validUntil: promotion.validUntil,
+                      usageLimit: promotion.usageLimit,
+                      redemptionCount: promotion.redemptionCount
+                    });
+
+                    return (
+                      <tr key={promotion.id}>
+                        <td className="px-7 py-5">
+                          <Link href={`/admin/promotions?promotionId=${promotion.id}`}>
+                            <span className="block text-[1.18rem] font-semibold text-[var(--color-ink)]">{promotion.code}</span>
+                            <span className="mt-1 block text-sm text-[#647487]">
+                              {promotion.validUntil ? `Hasta ${formatDate(promotion.validUntil)}` : "Sin caducidad"}
+                            </span>
+                          </Link>
+                        </td>
+                        <td className="px-4 py-5 text-[#32465a]">
+                          {getPromotionDiscountSummary({
+                            discountType: promotion.discountType as never,
+                            amountInCents: promotion.amountInCents
+                          })}
+                        </td>
+                        <td className="px-4 py-5 text-[#32465a]">{promotion.scope === "GLOBAL" ? "Global" : promotion.courseTitle ?? "Curso especifico"}</td>
+                        <td className="px-4 py-5 text-[#32465a]">{promotion.redemptionCount}{promotion.usageLimit ? ` / ${promotion.usageLimit}` : " / ilimitado"}</td>
+                        <td className="px-7 py-5"><AdminStatusBadge tone={visualState.tone}>{visualState.label}</AdminStatusBadge></td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </Card>
+          {selectedDemoPromotion ? (
+            <Card className="rounded-[2rem] p-7">
+              <h2 className="text-[1.8rem] font-semibold tracking-[-0.05em] text-[var(--color-ink)]">Detalle de promocion</h2>
+              <p className="mt-2 text-sm leading-7 text-[#56697d]">{selectedDemoPromotion.description}</p>
+              <div className="mt-5 space-y-4 rounded-[1.4rem] border border-[#d9e1e8] bg-[#fbfcfd] p-5 text-sm leading-7 text-[#44586d]">
+                <div><strong>Codigo:</strong> {selectedDemoPromotion.code}</div>
+                <div><strong>Descuento:</strong> {getPromotionDiscountSummary({ discountType: selectedDemoPromotion.discountType as never, amountInCents: selectedDemoPromotion.amountInCents })}</div>
+                <div><strong>Ambito:</strong> {selectedDemoPromotion.scope === "GLOBAL" ? "Global" : selectedDemoPromotion.courseTitle}</div>
+                <div><strong>Validez:</strong> {selectedDemoPromotion.validFrom ? formatDate(selectedDemoPromotion.validFrom) : "Sin inicio"} - {selectedDemoPromotion.validUntil ? formatDate(selectedDemoPromotion.validUntil) : "Sin caducidad"}</div>
+              </div>
+            </Card>
+          ) : null}
+        </section>
+      </div>
+    );
+  }
+
   const db = getDb();
   const monthStart = new Date();
   monthStart.setDate(1);

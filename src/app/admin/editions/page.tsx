@@ -17,6 +17,8 @@ import {
   getSearchParamValue
 } from "@/lib/admin-console";
 import { requireAdminConsoleUser } from "@/lib/admin-console-server";
+import { demoAdminEditions } from "@/lib/admin-demo";
+import { isDemoUserId } from "@/lib/demo-auth";
 import { resolveEditionAccessUntil } from "@/lib/course-editions";
 import { getDb } from "@/lib/prisma";
 import { formatDate } from "@/lib/utils";
@@ -31,12 +33,84 @@ type EditionsPageProps = {
 };
 
 export default async function AdminEditionsPage({ searchParams }: EditionsPageProps) {
-  await requireAdminConsoleUser("/admin/editions");
+  const currentUser = await requireAdminConsoleUser("/admin/editions");
   const params = await searchParams;
   const q = getSearchParamValue(params.q);
   const status = getSearchParamValue(params.status, "ALL");
   const editionId = getSearchParamValue(params.editionId);
   const create = getSearchParamValue(params.create);
+
+  if (isDemoUserId(currentUser.id)) {
+    const visibleEditions = demoAdminEditions.filter((edition) => {
+      const matchesQ =
+        !q ||
+        edition.label.toLowerCase().includes(q.toLowerCase()) ||
+        edition.courseTitle.toLowerCase().includes(q.toLowerCase());
+      const matchesStatus = status === "ALL" || edition.status === status;
+      return matchesQ && matchesStatus;
+    });
+    const selectedDemoEdition =
+      visibleEditions.find((edition) => edition.id === editionId) ?? visibleEditions[0] ?? null;
+    const activeStudents = demoAdminEditions.reduce((sum, edition) => sum + edition.enrollments, 0);
+    const activeEditionsCount = demoAdminEditions.filter((edition) => edition.status === "ACTIVE").length;
+
+    return (
+      <div className="space-y-9">
+        <AdminPageHeader
+          actions={<ButtonLink href="/admin/courses" variant="secondary">Volver a cursos</ButtonLink>}
+          description="Vista demo del calendario de cohortes y ventanas de acceso posteriores."
+          title="Ediciones"
+        />
+        <section className="grid gap-5 xl:grid-cols-[1.1fr_1fr_1fr]">
+          <Card className="rounded-[2rem] p-6">
+            <div className="flex items-center gap-3">
+              <Info className="h-5 w-5 text-[var(--color-primary)]" strokeWidth={1.8} />
+              <h2 className="text-[1.8rem] font-semibold tracking-[-0.05em] text-[var(--color-ink)]">Ciclo de acceso</h2>
+            </div>
+            <div className="mt-5 space-y-3">
+              <div className="rounded-[1.2rem] bg-[#f6fafc] px-4 py-4 text-sm leading-7 text-[#394d61]"><strong>Abierta:</strong> la edicion esta activa y el alumnado interactua con el contenido.</div>
+              <div className="rounded-[1.2rem] border border-[#f0d098] bg-[#fff1cf] px-4 py-4 text-sm leading-7 text-[#7d5a14]"><strong>Finalizada con acceso:</strong> la convocatoria termino, pero la consulta sigue abierta.</div>
+              <div className="rounded-[1.2rem] bg-[#f1f4f7] px-4 py-4 text-sm leading-7 text-[#4a5d71]"><strong>Cerrada:</strong> ya no se puede acceder al material.</div>
+            </div>
+          </Card>
+          <AdminMetricCard accent="primary" icon={<UsersRound className="h-6 w-6" strokeWidth={1.8} />} label="Alumnado en ediciones" meta="Datos simulados" value={activeStudents} />
+          <AdminMetricCard accent="neutral" icon={<Layers3 className="h-6 w-6" strokeWidth={1.8} />} label="Ediciones activas" meta="Seguimiento demo" value={activeEditionsCount} />
+        </section>
+        <section className="grid gap-6 2xl:grid-cols-[1.15fr_0.85fr]">
+          <div className="grid gap-5 xl:grid-cols-2">
+            {visibleEditions.map((edition) => (
+              <Link className="block rounded-[2rem] border border-[#d5dee7] bg-white p-6 text-left shadow-[0_16px_36px_rgba(15,44,76,0.05)]" href={`/admin/editions?editionId=${edition.id}`} key={edition.id}>
+                <div className="flex items-center justify-between gap-3">
+                  <AdminStatusBadge tone={getEditionStatusTone(edition.status as never)}>{getEditionStatusLabel(edition.status as never)}</AdminStatusBadge>
+                  <span className="text-xs font-semibold uppercase tracking-[0.18em] text-[#68798b]">{edition.label}</span>
+                </div>
+                <h3 className="mt-5 text-[1.65rem] font-semibold tracking-[-0.05em] text-[var(--color-ink)]">{edition.courseTitle}</h3>
+                <div className="mt-4 grid gap-4 text-sm leading-7 text-[#46586c] md:grid-cols-2">
+                  <div><p className="font-semibold text-[#25384b]">Calendario</p><p className="mt-1">{formatDate(edition.startsAt)} - {formatDate(edition.endsAt)}</p></div>
+                  <div><p className="font-semibold text-[#25384b]">Consulta posterior</p><p className="mt-1">{formatDate(edition.accessUntil)}</p></div>
+                </div>
+                <p className="mt-5 text-sm text-[#5f7083]">{edition.enrollments} alumnos</p>
+              </Link>
+            ))}
+          </div>
+          {selectedDemoEdition ? (
+            <Card className="rounded-[2rem] p-7">
+              <h2 className="text-[1.8rem] font-semibold tracking-[-0.05em] text-[var(--color-ink)]">Detalle de edicion</h2>
+              <p className="mt-2 text-sm leading-7 text-[#5a6d80]">{selectedDemoEdition.courseTitle} - {selectedDemoEdition.label}</p>
+              <div className="mt-5 space-y-4 rounded-[1.4rem] border border-[#d9e1e8] bg-[#fbfcfd] p-5 text-sm leading-7 text-[#44586d]">
+                <div><strong>Estado:</strong> {getEditionStatusLabel(selectedDemoEdition.status as never)}</div>
+                <div><strong>Inicio:</strong> {formatDate(selectedDemoEdition.startsAt)}</div>
+                <div><strong>Fin:</strong> {formatDate(selectedDemoEdition.endsAt)}</div>
+                <div><strong>Acceso hasta:</strong> {formatDate(selectedDemoEdition.accessUntil)}</div>
+                <div><strong>Alumnado:</strong> {selectedDemoEdition.enrollments}</div>
+              </div>
+            </Card>
+          ) : null}
+        </section>
+      </div>
+    );
+  }
+
   const db = getDb();
 
   const [editions, courses] = await Promise.all([

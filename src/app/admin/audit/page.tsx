@@ -15,6 +15,8 @@ import {
 } from "@/lib/admin-console";
 import { requireAdminConsoleUser } from "@/lib/admin-console-server";
 import { parseAuditMetadata } from "@/lib/audit";
+import { demoAdminAuditLogs } from "@/lib/admin-demo";
+import { isDemoUserId } from "@/lib/demo-auth";
 import { getDb } from "@/lib/prisma";
 import { cn, formatDateTime } from "@/lib/utils";
 
@@ -64,7 +66,7 @@ const entityOptions: AuditEntityType[] = [
 ];
 
 export default async function AdminAuditPage({ searchParams }: AuditPageProps) {
-  await requireAdminConsoleUser("/admin/audit");
+  const currentUser = await requireAdminConsoleUser("/admin/audit");
   const params = await searchParams;
   const q = getSearchParamValue(params.q);
   const range = getSearchParamValue(params.range, "7d");
@@ -72,6 +74,151 @@ export default async function AdminAuditPage({ searchParams }: AuditPageProps) {
   const action = getSearchParamValue(params.action, "ALL");
   const entity = getSearchParamValue(params.entity, "ALL");
   const logId = getSearchParamValue(params.logId);
+
+  if (isDemoUserId(currentUser.id)) {
+    const demoLogs = demoAdminAuditLogs.filter((log) => {
+      const matchesQ =
+        !q ||
+        log.entityLabel.toLowerCase().includes(q.toLowerCase()) ||
+        log.actor.name.toLowerCase().includes(q.toLowerCase());
+      const matchesAction = action === "ALL" || log.action === action;
+      const matchesEntity = entity === "ALL" || log.entityType === entity;
+
+      return matchesQ && matchesAction && matchesEntity;
+    });
+    const selectedDemoLog = demoLogs.find((entry) => entry.id === logId) ?? demoLogs[0] ?? null;
+
+    const buildDemoQuery = (nextLogId?: string) => {
+      const qs = new URLSearchParams();
+      if (q) qs.set("q", q);
+      if (range !== "7d") qs.set("range", range);
+      if (actorId !== "ALL") qs.set("actorId", actorId);
+      if (action !== "ALL") qs.set("action", action);
+      if (entity !== "ALL") qs.set("entity", entity);
+      if (nextLogId) qs.set("logId", nextLogId);
+      return `/admin/audit${qs.size > 0 ? `?${qs.toString()}` : ""}`;
+    };
+
+    return (
+      <div className="space-y-8">
+        <AdminPageHeader
+          actions={<ButtonLink href="/admin" variant="secondary">Volver al panel</ButtonLink>}
+          description="Registro demo para validar la experiencia visual de la auditoria mientras la base real sigue desconectada."
+          title="Registro de auditoria"
+        />
+
+        <Card className="rounded-[2rem] p-6">
+          <form className="grid gap-4 xl:grid-cols-[minmax(0,1.3fr)_220px_220px_220px_220px]">
+            <div className="space-y-2">
+              <label className="text-xs font-semibold uppercase tracking-[0.16em] text-[#506174]">Buscar</label>
+              <div className="relative">
+                <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#607185]" strokeWidth={1.8} />
+                <Input className="pl-10" defaultValue={q} name="q" placeholder="Buscar registros..." />
+              </div>
+            </div>
+            <FilterSelect defaultValue={range} icon={<CalendarRange className="h-4 w-4" strokeWidth={1.8} />} label="Rango" name="range">
+              <option value="7d">Ultimos 7 dias</option>
+              <option value="30d">Ultimos 30 dias</option>
+              <option value="ALL">Todo el historico</option>
+            </FilterSelect>
+            <FilterSelect defaultValue={actorId} icon={<UserRoundSearch className="h-4 w-4" strokeWidth={1.8} />} label="Actor" name="actorId">
+              <option value="ALL">Todos los actores</option>
+              <option value="demo-admin">Admin Demo</option>
+            </FilterSelect>
+            <FilterSelect defaultValue={action} icon={<ShieldCheck className="h-4 w-4" strokeWidth={1.8} />} label="Accion" name="action">
+              <option value="ALL">Todas las acciones</option>
+              {actionOptions.map((option) => (
+                <option key={option} value={option}>{getAuditActionLabel(option)}</option>
+              ))}
+            </FilterSelect>
+            <div className="space-y-2">
+              <label className="text-xs font-semibold uppercase tracking-[0.16em] text-[#506174]">Entidad</label>
+              <div className="flex gap-3">
+                <select className="h-12 flex-1 rounded-xl border border-[var(--color-border)] bg-white px-4 text-sm text-[var(--color-ink)]" defaultValue={entity} name="entity">
+                  <option value="ALL">Todas las entidades</option>
+                  {entityOptions.map((option) => (
+                    <option key={option} value={option}>{getEntityTypeLabel(option)}</option>
+                  ))}
+                </select>
+                <SubmitButton pendingLabel="Filtrando..." variant="secondary">Filtrar</SubmitButton>
+              </div>
+            </div>
+          </form>
+        </Card>
+
+        <section className="grid gap-6 2xl:grid-cols-[minmax(0,1.25fr)_420px]">
+          <Card className="overflow-hidden rounded-[2rem]">
+            <div className="border-b border-[#dde4ec] px-7 py-6">
+              <h2 className="text-[2rem] font-semibold tracking-[-0.06em] text-[var(--color-ink)]">Flujo de eventos</h2>
+              <p className="mt-2 text-sm text-[#52667b]">{demoLogs.length} registros visibles de demostracion</p>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="min-w-full text-left">
+                <thead>
+                  <tr className="border-b border-[#dde4ec] text-sm uppercase tracking-[0.16em] text-[#3b4f64]">
+                    <th className="px-7 py-4">Fecha y hora</th>
+                    <th className="px-4 py-4">Accion</th>
+                    <th className="px-4 py-4">Actor</th>
+                    <th className="px-7 py-4">Entidad</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#e0e7ee]">
+                  {demoLogs.map((log) => (
+                    <tr className={cn(selectedDemoLog?.id === log.id && "bg-[#f5f9ff]")} key={log.id}>
+                      <td className="px-7 py-5 text-[#304458]">{formatDateTime(log.createdAt)}</td>
+                      <td className="px-4 py-5">
+                        <AdminStatusBadge tone={getAuditActionTone(log.action as AuditAction)}>
+                          {getAuditActionLabel(log.action as AuditAction)}
+                        </AdminStatusBadge>
+                      </td>
+                      <td className="px-4 py-5 text-[#304458]">
+                        <div className="font-medium text-[var(--color-ink)]">{log.actor.name}</div>
+                        <div className="mt-1 text-sm text-[#5f7184]">{log.actor.email}</div>
+                      </td>
+                      <td className="px-7 py-5">
+                        <Link className="block font-medium text-[var(--color-primary)]" href={buildDemoQuery(log.id)}>
+                          {log.entityLabel}
+                        </Link>
+                        <p className="mt-1 text-sm text-[#607185]">{getEntityTypeLabel(log.entityType as AuditEntityType)}</p>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </Card>
+
+          {selectedDemoLog ? (
+            <Card className="rounded-[2rem] p-7">
+              <div className="flex items-center justify-between gap-4">
+                <AdminStatusBadge tone={getAuditActionTone(selectedDemoLog.action as AuditAction)}>
+                  {getAuditActionLabel(selectedDemoLog.action as AuditAction)}
+                </AdminStatusBadge>
+                <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[#607185]">
+                  {getEntityTypeLabel(selectedDemoLog.entityType as AuditEntityType)}
+                </p>
+              </div>
+              <h2 className="mt-5 text-[2rem] font-semibold tracking-[-0.06em] text-[var(--color-ink)]">{selectedDemoLog.entityLabel}</h2>
+              <p className="mt-2 text-sm leading-7 text-[#596b7f]">Evento {selectedDemoLog.id} registrado el {formatDateTime(selectedDemoLog.createdAt)}.</p>
+              <div className="mt-6 grid gap-3 sm:grid-cols-2">
+                <DetailField label="Actor" value={selectedDemoLog.actor.name} />
+                <DetailField label="Correo" value={selectedDemoLog.actor.email} />
+                <DetailField label="Entidad" value={getEntityTypeLabel(selectedDemoLog.entityType as AuditEntityType)} />
+                <DetailField label="Registro" value={selectedDemoLog.entityId} />
+              </div>
+              <div className="mt-6">
+                <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[#34475b]">Metadata JSON</p>
+                <pre className="mt-3 overflow-x-auto rounded-[1.5rem] bg-[#1f252b] p-5 text-sm leading-7 text-[#eaf0f6]">
+                  {JSON.stringify(selectedDemoLog.metadata, null, 2)}
+                </pre>
+              </div>
+            </Card>
+          ) : null}
+        </section>
+      </div>
+    );
+  }
+
   const db = getDb();
   const now = new Date();
   const rangeStart =

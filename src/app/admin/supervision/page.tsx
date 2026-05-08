@@ -15,6 +15,8 @@ import {
   getUserInitials
 } from "@/lib/admin-console";
 import { requireAdminConsoleUser } from "@/lib/admin-console-server";
+import { demoAdminSupervisionRows } from "@/lib/admin-demo";
+import { isDemoUserId } from "@/lib/demo-auth";
 import { getEnrollmentAccessState } from "@/lib/course-editions";
 import { getDb } from "@/lib/prisma";
 import { formatDate, formatDateTime } from "@/lib/utils";
@@ -70,13 +72,110 @@ function summarizeProgress(input: {
 }
 
 export default async function AdminSupervisionPage({ searchParams }: SupervisionPageProps) {
-  await requireAdminConsoleUser("/admin/supervision");
+  const currentUser = await requireAdminConsoleUser("/admin/supervision");
   const params = await searchParams;
   const q = getSearchParamValue(params.q);
   const courseId = getSearchParamValue(params.courseId, "ALL");
   const teacherId = getSearchParamValue(params.teacherId, "ALL");
   const accessStateFilter = getSearchParamValue(params.accessState, "ALL");
   const enrollmentId = getSearchParamValue(params.enrollmentId);
+
+  if (isDemoUserId(currentUser.id)) {
+    const visibleRows = demoAdminSupervisionRows.filter((row) => {
+      const matchesQ =
+        !q ||
+        row.studentName.toLowerCase().includes(q.toLowerCase()) ||
+        row.studentEmail.toLowerCase().includes(q.toLowerCase()) ||
+        row.courseTitle.toLowerCase().includes(q.toLowerCase());
+      const matchesAccess = accessStateFilter === "ALL" || row.accessState === accessStateFilter;
+      return matchesQ && matchesAccess;
+    });
+    const selectedDemoEnrollment =
+      visibleRows.find((row) => row.id === enrollmentId) ?? visibleRows[0] ?? null;
+    const expiringSoonCount = visibleRows.filter((row) => row.accessState === "active").length;
+    const averageProgress =
+      visibleRows.length > 0
+        ? Math.round(visibleRows.reduce((sum, row) => sum + row.completionRate, 0) / visibleRows.length)
+        : 0;
+
+    return (
+      <div className="space-y-9">
+        <AdminPageHeader
+          description="Seguimiento demo del alumnado y de la vigencia de sus accesos."
+          title="Supervision academica"
+        />
+        <section className="grid gap-5 xl:grid-cols-3">
+          <AdminMetricCard accent="primary" icon={<UsersRound className="h-6 w-6" strokeWidth={1.8} />} label="Matriculas visibles" meta="Muestra simulada" value={visibleRows.length} />
+          <AdminMetricCard accent="danger" icon={<AlertTriangle className="h-6 w-6" strokeWidth={1.8} />} label="Accesos que expiran pronto" meta="Ejemplo de seguimiento" value={expiringSoonCount} />
+          <AdminMetricCard accent="warning" label="Progreso medio" meta="Sobre filas demo" value={`${averageProgress}%`} />
+        </section>
+        <section className="grid gap-6 2xl:grid-cols-[1.22fr_0.78fr]">
+          <Card className="overflow-hidden rounded-[2rem]">
+            <div className="border-b border-[#dde4ec] px-7 py-6">
+              <h2 className="text-[2rem] font-semibold tracking-[-0.06em] text-[var(--color-ink)]">Seguimiento de matriculas</h2>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="min-w-full text-left">
+                <thead>
+                  <tr className="border-b border-[#dde4ec] text-sm uppercase tracking-[0.16em] text-[#3b4f64]">
+                    <th className="px-7 py-4">Alumno</th>
+                    <th className="px-4 py-4">Curso y edicion</th>
+                    <th className="px-4 py-4">Progreso</th>
+                    <th className="px-4 py-4">Ultima actividad</th>
+                    <th className="px-7 py-4">Acceso</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#e0e7ee]">
+                  {visibleRows.map((row) => (
+                    <tr key={row.id}>
+                      <td className="px-7 py-5">
+                        <Link href={`/admin/supervision?enrollmentId=${row.id}`}>
+                          <span className="block text-[1.1rem] font-semibold text-[var(--color-ink)]">{row.studentName}</span>
+                          <span className="mt-1 block text-sm text-[#647487]">{row.studentEmail}</span>
+                        </Link>
+                      </td>
+                      <td className="px-4 py-5 text-[#34485c]">
+                        <div>{row.courseTitle}</div>
+                        <div className="mt-1 text-sm text-[#617386]">{row.editionLabel}</div>
+                      </td>
+                      <td className="px-4 py-5 text-[#34485c]">{row.completionRate}% - {row.completedModules}/{row.totalModules} modulos</td>
+                      <td className="px-4 py-5 text-[#34485c]">{formatDateTime(row.lastCompletedAt)}</td>
+                      <td className="px-7 py-5">
+                        <AdminStatusBadge tone={getAccessStateTone(row.accessState as never)}>
+                          {getAccessStateLabel(row.accessState as never)}
+                        </AdminStatusBadge>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </Card>
+
+          {selectedDemoEnrollment ? (
+            <Card className="rounded-[2rem] p-7">
+              <div className="flex items-center gap-4">
+                <div className="grid h-14 w-14 place-items-center rounded-full bg-[rgba(12,113,195,0.12)] text-base font-semibold text-[var(--color-primary)]">
+                  {getUserInitials(selectedDemoEnrollment.studentName)}
+                </div>
+                <div>
+                  <h2 className="text-[1.8rem] font-semibold tracking-[-0.05em] text-[var(--color-ink)]">{selectedDemoEnrollment.studentName}</h2>
+                  <p className="text-sm text-[#5a6c80]">{selectedDemoEnrollment.courseTitle}</p>
+                </div>
+              </div>
+              <div className="mt-6 grid gap-4 text-sm text-[#405365] md:grid-cols-2">
+                <div><p className="font-semibold text-[#24384b]">Estado matricula</p><p className="mt-1">{getEnrollmentStatusLabel(selectedDemoEnrollment.status as never)}</p></div>
+                <div><p className="font-semibold text-[#24384b]">Acceso hasta</p><p className="mt-1">{formatDate(selectedDemoEnrollment.accessUntil)}</p></div>
+                <div><p className="font-semibold text-[#24384b]">Ultima actividad</p><p className="mt-1">{formatDateTime(selectedDemoEnrollment.lastCompletedAt)}</p></div>
+                <div><p className="font-semibold text-[#24384b]">Docentes del curso</p><p className="mt-1">{selectedDemoEnrollment.teachers.join(", ")}</p></div>
+              </div>
+            </Card>
+          ) : null}
+        </section>
+      </div>
+    );
+  }
+
   const db = getDb();
   const now = new Date();
 

@@ -112,9 +112,7 @@ export function AdminShell({ user, children }: AdminShellProps) {
     searchParams: new URLSearchParams(searchParams.toString()),
     isDemoAdmin
   });
-  const navigationItems = isDemoAdmin
-    ? adminNavigation.filter((item) => item.href === "/admin" || item.href === "/admin/users")
-    : adminNavigation;
+  const navigationItems = adminNavigation;
 
   return (
     <div className="min-h-screen bg-[#f7f4ef] text-[var(--color-ink)]">

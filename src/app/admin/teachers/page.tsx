@@ -19,6 +19,8 @@ import {
   getUserInitials
 } from "@/lib/admin-console";
 import { requireAdminConsoleUser } from "@/lib/admin-console-server";
+import { demoAdminTeachers } from "@/lib/admin-demo";
+import { isDemoUserId } from "@/lib/demo-auth";
 import { getDb } from "@/lib/prisma";
 import { cn, formatCompactNumber, formatDate } from "@/lib/utils";
 
@@ -54,11 +56,188 @@ type TeacherSummary = {
 };
 
 export default async function AdminTeachersPage({ searchParams }: TeachersPageProps) {
-  await requireAdminConsoleUser("/admin/teachers");
+  const currentUser = await requireAdminConsoleUser("/admin/teachers");
   const params = await searchParams;
   const q = getSearchParamValue(params.q);
   const view = getSearchParamValue(params.view, "all");
   const teacherId = getSearchParamValue(params.teacherId);
+
+  if (isDemoUserId(currentUser.id)) {
+    const demoTeachers = demoAdminTeachers
+      .filter((teacher) => {
+        const matchesQ =
+          !q ||
+          teacher.name.toLowerCase().includes(q.toLowerCase()) ||
+          teacher.email.toLowerCase().includes(q.toLowerCase()) ||
+          teacher.courseAssignments.some((course) =>
+            course.title.toLowerCase().includes(q.toLowerCase())
+          );
+
+        if (view === "high") {
+          return matchesQ && teacher.activeStudents >= 75;
+        }
+
+        if (view === "pending") {
+          return matchesQ && teacher.courseAssignments.length < 1;
+        }
+
+        return matchesQ;
+      })
+      .map((teacher) => ({
+        ...teacher,
+        globalRole: "TEACHER" as UserGlobalRole,
+        courseAssignments: teacher.courseAssignments.map((assignment) => ({
+          courseId: assignment.id,
+          course: {
+            id: assignment.id,
+            title: assignment.title,
+            slug: assignment.slug,
+            editions: assignment.editions.map((edition, index) => ({
+              id: `${assignment.id}-${index}`,
+              label: edition
+            }))
+          }
+        }))
+      }));
+
+    const selectedDemoTeacher =
+      demoTeachers.find((teacher) => teacher.id === teacherId) ?? demoTeachers[0] ?? null;
+    const totalStudents = demoAdminTeachers.reduce((sum, teacher) => sum + teacher.activeStudents, 0);
+    const totalEditions = demoAdminTeachers.reduce((sum, teacher) => sum + teacher.activeEditions, 0);
+
+    const buildDemoQuery = (input?: { nextView?: string; nextTeacherId?: string }) => {
+      const qs = new URLSearchParams();
+      const nextView = input?.nextView ?? view;
+      const nextTeacherId = input?.nextTeacherId ?? teacherId;
+
+      if (q) {
+        qs.set("q", q);
+      }
+
+      if (nextView && nextView !== "all") {
+        qs.set("view", nextView);
+      }
+
+      if (nextTeacherId) {
+        qs.set("teacherId", nextTeacherId);
+      }
+
+      return `/admin/teachers${qs.size > 0 ? `?${qs.toString()}` : ""}`;
+    };
+
+    return (
+      <div className="space-y-8">
+        <AdminPageHeader
+          actions={<ButtonLink href="/admin/users" variant="secondary">Ver usuarios demo</ButtonLink>}
+          description="Vista demo del portal docente. La asignacion de cursos y la carga academica se muestran con datos simulados."
+          title="Portal docente"
+        />
+
+        <section className="grid gap-5 xl:grid-cols-3">
+          <AdminMetricCard accent="primary" icon={<GraduationCap className="h-6 w-6" strokeWidth={1.8} />} label="Docentes activos" meta="3 cuentas de ejemplo" value={demoAdminTeachers.length} />
+          <AdminMetricCard accent="neutral" icon={<UsersRound className="h-6 w-6" strokeWidth={1.8} />} label="Alumnado supervisado" meta="Carga agregada simulada" value={formatCompactNumber(totalStudents)} />
+          <AdminMetricCard accent="warning" icon={<BookCopy className="h-6 w-6" strokeWidth={1.8} />} label="Ediciones en curso" meta="Seguimiento operativo demo" value={totalEditions} />
+        </section>
+
+        <Card className="rounded-[2rem] p-5">
+          <div className="flex flex-wrap gap-2">
+            {[
+              { id: "all", label: "Todo activo", count: demoAdminTeachers.length },
+              { id: "high", label: "Carga alta", count: demoAdminTeachers.filter((teacher) => teacher.activeStudents >= 75).length },
+              { id: "pending", label: "Sin asignar", count: demoAdminTeachers.filter((teacher) => teacher.courseAssignments.length < 1).length }
+            ].map(({ id, label, count }) => (
+              <ButtonLink
+                className={cn("rounded-full px-4 py-2 text-sm shadow-none", view === id && "bg-[var(--color-primary-soft)]")}
+                href={buildDemoQuery({ nextView: id })}
+                key={id}
+                variant={view === id ? "secondary" : "ghost"}
+              >
+                {label}
+                <span className="ml-2 text-xs opacity-70">{count}</span>
+              </ButtonLink>
+            ))}
+          </div>
+        </Card>
+
+        <section className="grid gap-6 2xl:grid-cols-[minmax(0,1.55fr)_420px]">
+          <div className="grid gap-5 xl:grid-cols-2">
+            {demoTeachers.map((teacher) => (
+              <TeacherCard
+                isSelected={selectedDemoTeacher?.id === teacher.id}
+                key={teacher.id}
+                teacher={teacher}
+                teacherHref={buildDemoQuery({ nextTeacherId: teacher.id })}
+              />
+            ))}
+          </div>
+
+          {selectedDemoTeacher ? (
+            <Card className="overflow-hidden rounded-[2rem]">
+              <div className="border-b border-[#dde4ec] px-7 py-7">
+                <div className="flex items-start gap-4">
+                  <div className="grid h-14 w-14 place-items-center rounded-full bg-[rgba(12,113,195,0.12)] text-base font-semibold text-[var(--color-primary)]">
+                    {getUserInitials(selectedDemoTeacher.name)}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <h2 className="text-[2rem] font-semibold leading-none tracking-[-0.06em] text-[var(--color-ink)]">
+                      {selectedDemoTeacher.name}
+                    </h2>
+                    <p className="mt-2 truncate text-sm text-[#5b6d80]">{selectedDemoTeacher.email}</p>
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      <AdminStatusBadge tone="warning">Docente titular</AdminStatusBadge>
+                      <AdminStatusBadge tone={selectedDemoTeacher.activeStudents >= 75 ? "danger" : "primary"}>
+                        {selectedDemoTeacher.activeStudents >= 75 ? "Carga alta" : "Carga estable"}
+                      </AdminStatusBadge>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-6 grid gap-3 sm:grid-cols-3">
+                  <div className="rounded-[1.4rem] bg-[#f6fafc] px-4 py-4">
+                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#5a6c80]">Alta</p>
+                    <p className="mt-2 text-base font-semibold text-[var(--color-ink)]">{formatDate(selectedDemoTeacher.createdAt)}</p>
+                  </div>
+                  <div className="rounded-[1.4rem] bg-[#f6fafc] px-4 py-4">
+                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#5a6c80]">Cursos</p>
+                    <p className="mt-2 text-base font-semibold text-[var(--color-ink)]">{selectedDemoTeacher.courseAssignments.length} asignados</p>
+                  </div>
+                  <div className="rounded-[1.4rem] bg-[#f6fafc] px-4 py-4">
+                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#5a6c80]">Revision</p>
+                    <p className="mt-2 text-base font-semibold text-[var(--color-ink)]">{formatDate(selectedDemoTeacher.updatedAt)}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="px-7 py-7">
+                <div className={cn("rounded-[1.5rem] border px-5 py-4 text-sm leading-7", selectedDemoTeacher.activeStudents >= 75 ? "border-[#f3b3ac] bg-[#fff2f0] text-[#a03329]" : "border-[#dbe6ef] bg-[#f7fafc] text-[#44586d]")}>
+                  <div className="flex items-center gap-3 font-semibold">
+                    <AlertTriangle className="h-4 w-4" strokeWidth={1.8} />
+                    {selectedDemoTeacher.activeStudents >= 75 ? "Alerta de carga alta" : "Seguimiento operativo estable"}
+                  </div>
+                  <p className="mt-2">
+                    Esta cuenta se muestra en modo demostracion. Los cambios reales en asignaciones siguen deshabilitados hasta conectar la base de datos.
+                  </p>
+                </div>
+
+                <div className="mt-6">
+                  <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[#314255]">Asignacion de cursos</p>
+                  <div className="mt-4 space-y-3">
+                    {selectedDemoTeacher.courseAssignments.map((assignment) => (
+                      <div className="rounded-[1.2rem] border border-[#d9e1e8] bg-[#fbfcfd] px-4 py-4 text-sm text-[#33475b]" key={assignment.courseId}>
+                        <div className="font-medium text-[var(--color-ink)]">{assignment.course.title}</div>
+                        <div className="mt-1 text-xs uppercase tracking-[0.14em] text-[#6a7b8d]">/cursos/{assignment.course.slug}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </Card>
+          ) : null}
+        </section>
+      </div>
+    );
+  }
+
   const db = getDb();
 
   const [teachers, allCourses, activeEnrollmentCounts] = await Promise.all([

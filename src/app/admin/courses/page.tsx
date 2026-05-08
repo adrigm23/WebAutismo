@@ -21,6 +21,8 @@ import {
   getSearchParamValue
 } from "@/lib/admin-console";
 import { requireAdminConsoleUser } from "@/lib/admin-console-server";
+import { demoAdminCourses } from "@/lib/admin-demo";
+import { isDemoUserId } from "@/lib/demo-auth";
 import { getDb } from "@/lib/prisma";
 import { formatPrice } from "@/lib/utils";
 
@@ -34,12 +36,131 @@ type CoursesPageProps = {
 };
 
 export default async function AdminCoursesPage({ searchParams }: CoursesPageProps) {
-  await requireAdminConsoleUser("/admin/courses");
+  const currentUser = await requireAdminConsoleUser("/admin/courses");
   const params = await searchParams;
   const q = getSearchParamValue(params.q);
   const status = getSearchParamValue(params.status, "ALL");
   const courseId = getSearchParamValue(params.courseId);
   const create = getSearchParamValue(params.create);
+
+  if (isDemoUserId(currentUser.id)) {
+    const visibleCourses = demoAdminCourses.filter((course) => {
+      const matchesQ =
+        !q ||
+        course.title.toLowerCase().includes(q.toLowerCase()) ||
+        course.slug.toLowerCase().includes(q.toLowerCase()) ||
+        course.teachers.some((teacher) => teacher.toLowerCase().includes(q.toLowerCase()));
+      const matchesStatus = status === "ALL" || course.status === status;
+      return matchesQ && matchesStatus;
+    });
+    const selectedDemoCourse =
+      visibleCourses.find((course) => course.id === courseId) ?? visibleCourses[0] ?? null;
+    const activeEditions = demoAdminCourses.reduce((sum, course) => sum + course.activeEditions, 0);
+    const inactiveCourses = demoAdminCourses.filter((course) => course.status === "INACTIVE").length;
+
+    return (
+      <div className="space-y-9">
+        <AdminPageHeader
+          actions={<ButtonLink href="/admin/promotions" variant="secondary">Ir a promociones</ButtonLink>}
+          description="Catalogo demo para validar estructura, estados y panel de gestion sin dependencia de la base de datos."
+          title="Catalogo de cursos"
+        />
+
+        <section className="grid gap-5 xl:grid-cols-3">
+          <AdminMetricCard accent="primary" icon={<BookCopy className="h-6 w-6" strokeWidth={1.8} />} label="Cursos totales" meta="Base curricular demo" value={demoAdminCourses.length} />
+          <AdminMetricCard accent="neutral" icon={<Layers3 className="h-6 w-6" strokeWidth={1.8} />} label="Ediciones activas" meta="Sesiones simuladas" value={activeEditions} />
+          <AdminMetricCard accent="warning" icon={<PencilLine className="h-6 w-6" strokeWidth={1.8} />} label="Cursos inactivos" meta="Pendientes de activar" value={inactiveCourses} />
+        </section>
+
+        <Card className="overflow-hidden rounded-[2rem]" id="course-filters">
+          <div className="border-b border-[#dde4ec] px-7 py-6">
+            <form className="grid gap-3 md:grid-cols-[1fr_220px_auto]">
+              <Input defaultValue={q} name="q" placeholder="Filtrar cursos..." />
+              <select className="h-12 rounded-xl border border-[var(--color-border)] bg-white px-4 text-sm" defaultValue={status} name="status">
+                <option value="ALL">Todos los estados</option>
+                <option value="ACTIVE">Activos</option>
+                <option value="INACTIVE">Inactivos</option>
+              </select>
+              <SubmitButton pendingLabel="Aplicando..." variant="secondary">Aplicar</SubmitButton>
+            </form>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="min-w-full text-left">
+              <thead>
+                <tr className="border-b border-[#dde4ec] text-sm uppercase tracking-[0.16em] text-[#3b4f64]">
+                  <th className="px-7 py-4">Curso</th>
+                  <th className="px-4 py-4">Estado</th>
+                  <th className="px-4 py-4">Precio</th>
+                  <th className="px-4 py-4">Detalle</th>
+                  <th className="px-7 py-4 text-right">Acciones</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#e0e7ee]">
+                {visibleCourses.map((course) => (
+                  <tr className="align-top" key={course.id}>
+                    <td className="px-7 py-6">
+                      <Link href={`/admin/courses?courseId=${course.id}`}>
+                        <span className="block text-[1.16rem] font-semibold text-[var(--color-ink)]">{course.title}</span>
+                        <span className="mt-1 block text-sm text-[#647487]">/cursos/{course.slug}</span>
+                      </Link>
+                    </td>
+                    <td className="px-4 py-6">
+                      <AdminStatusBadge tone={getCourseStatusTone(course.status as "ACTIVE" | "INACTIVE")}>
+                        {getCourseStatusLabel(course.status as "ACTIVE" | "INACTIVE")}
+                      </AdminStatusBadge>
+                    </td>
+                    <td className="px-4 py-6 text-[1.08rem] font-medium text-[var(--color-ink)]">{formatPrice(course.priceInCents)}</td>
+                    <td className="px-4 py-6 text-sm leading-7 text-[#405365]">
+                      <div>{course.modules} modulos</div>
+                      <div>{course.editions} ediciones</div>
+                      <div>{course.teachers.length > 0 ? `${course.teachers.length} docentes` : "Sin docentes"}</div>
+                    </td>
+                    <td className="px-7 py-6 text-right">
+                      <ButtonLink href={`/admin/courses?courseId=${course.id}`} variant="secondary">Gestionar</ButtonLink>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </Card>
+
+        {selectedDemoCourse ? (
+          <Card className="rounded-[2rem] p-7">
+            <div className="flex flex-wrap items-start justify-between gap-5">
+              <div>
+                <h2 className="text-[2rem] font-semibold tracking-[-0.06em] text-[var(--color-ink)]">{selectedDemoCourse.title}</h2>
+                <p className="mt-2 text-sm text-[#5f7083]">Slug: {selectedDemoCourse.slug}</p>
+                <p className="mt-3 max-w-3xl text-sm leading-7 text-[#5f7083]">{selectedDemoCourse.shortDescription}</p>
+              </div>
+              <AdminStatusBadge tone={getCourseStatusTone(selectedDemoCourse.status as "ACTIVE" | "INACTIVE")}>
+                {getCourseStatusLabel(selectedDemoCourse.status as "ACTIVE" | "INACTIVE")}
+              </AdminStatusBadge>
+            </div>
+            <div className="mt-8 grid gap-6 xl:grid-cols-2">
+              <div>
+                <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[#314255]">Docentes asignados</p>
+                <div className="mt-4 space-y-3">
+                  {selectedDemoCourse.teachers.length > 0 ? selectedDemoCourse.teachers.map((teacher) => (
+                    <div className="rounded-[1.3rem] border border-[#d9e1e8] bg-[#fbfcfd] px-4 py-3" key={teacher}>
+                      <p className="font-medium text-[var(--color-ink)]">{teacher}</p>
+                    </div>
+                  )) : <p className="text-sm text-[#607285]">Sin docentes asignados.</p>}
+                </div>
+              </div>
+              <div>
+                <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[#314255]">Resumen operativo</p>
+                <div className="mt-4 rounded-[1.4rem] border border-[#d9e1e8] bg-[#fbfcfd] p-5 text-sm leading-7 text-[#44586d]">
+                  Esta seccion esta en modo demo. Puedes revisar la composicion y la jerarquia visual, pero los cambios no se guardan hasta conectar la base de datos.
+                </div>
+              </div>
+            </div>
+          </Card>
+        ) : null}
+      </div>
+    );
+  }
+
   const db = getDb();
 
   const [courses, teacherCandidates] = await Promise.all([
