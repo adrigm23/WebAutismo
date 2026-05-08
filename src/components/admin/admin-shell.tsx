@@ -22,6 +22,7 @@ import {
 import { logoutAction } from "@/actions/session";
 import { ButtonLink } from "@/components/ui/button";
 import { adminNavigation, getAdminSearchPlaceholder, getUserInitials } from "@/lib/admin-console";
+import { isDemoUserId } from "@/lib/demo-auth";
 import { cn } from "@/lib/utils";
 
 type AdminShellProps = {
@@ -63,6 +64,10 @@ export function AdminShell({ user, children }: AdminShellProps) {
   const searchParams = useSearchParams();
   const searchPlaceholder = getAdminSearchPlaceholder(pathname);
   const searchValue = searchParams.get("q") ?? "";
+  const isDemoAdmin = isDemoUserId(user.id);
+  const navigationItems = isDemoAdmin
+    ? adminNavigation.filter((item) => item.href === "/admin" || item.href === "/admin/users")
+    : adminNavigation;
 
   return (
     <div className="min-h-screen bg-[#f7f4ef] text-[var(--color-ink)]">
@@ -83,16 +88,22 @@ export function AdminShell({ user, children }: AdminShellProps) {
           </div>
 
           <div className="px-7">
-            <ButtonLink
-              className="w-full justify-center rounded-2xl py-4 text-base shadow-none"
-              href="/admin/courses?create=1"
-            >
-              + Nuevo curso
-            </ButtonLink>
+            {isDemoAdmin ? (
+              <div className="rounded-2xl border border-[#d6dde6] bg-white px-5 py-4 text-sm leading-6 text-[#4b6074]">
+                Modo demo: dashboard y usuarios.
+              </div>
+            ) : (
+              <ButtonLink
+                className="w-full justify-center rounded-2xl py-4 text-base shadow-none"
+                href="/admin/courses?create=1"
+              >
+                + Nuevo curso
+              </ButtonLink>
+            )}
           </div>
 
           <nav className="mt-10 flex-1 space-y-2 px-7">
-            {adminNavigation.map((item) => {
+            {navigationItems.map((item) => {
               const isActive =
                 item.href === "/admin"
                   ? pathname === item.href

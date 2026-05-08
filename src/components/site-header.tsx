@@ -21,8 +21,6 @@ export function SiteHeader({ user }: SiteHeaderProps) {
   const isAccountActive = pathname === "/mi-cuenta";
 
   if (
-    pathname === "/acceder" ||
-    pathname === "/registro" ||
     pathname === "/admin" ||
     pathname.startsWith("/admin/") ||
     pathname.startsWith("/checkout/") ||
