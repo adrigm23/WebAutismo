@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { getCurrentUser } from "@/lib/auth";
 import { canModerateCourse, getCourseRoleForUser } from "@/lib/course-community";
+import { isDatabaseConnectionError } from "@/lib/db-errors";
 import {
   persistForumAttachments,
   prepareForumAttachmentDrafts
@@ -210,6 +211,12 @@ function parseAttachmentDrafts(formData: FormData) {
   }
 }
 
+function forumUnavailableErrorState() {
+  return {
+    error: "El foro no puede guardar cambios ahora mismo porque la base de datos no esta disponible."
+  } satisfies ForumFormState;
+}
+
 export async function createForumThreadAction(
   _: ForumFormState,
   formData: FormData
@@ -247,28 +254,38 @@ export async function createForumThreadAction(
     return { error: scheduledForResult.error };
   }
 
-  const thread = await createForumThread({
-    courseSlug: parsed.data.courseSlug,
-    categorySlug: parsed.data.categorySlug,
-    authorId: user.id,
-    authorRole: role,
-    authorName: user.name,
-    title: parsed.data.title.trim(),
-    body: parsed.data.body.trim(),
-    type: parsed.data.threadType,
-    isPinned: canModerateCourse(role) && Boolean(parsed.data.isPinned),
-    isReadOnly: Boolean(parsed.data.isReadOnly),
-    scheduledFor:
-      parsed.data.threadType === "ANNOUNCEMENT" ? scheduledForResult.value : null
-  });
+  let thread;
 
-  await persistForumAttachments({
-    courseSlug: parsed.data.courseSlug,
-    parentType: "thread",
-    parentId: thread.id,
-    createdById: user.id,
-    attachments: attachmentDrafts.drafts
-  });
+  try {
+    thread = await createForumThread({
+      courseSlug: parsed.data.courseSlug,
+      categorySlug: parsed.data.categorySlug,
+      authorId: user.id,
+      authorRole: role,
+      authorName: user.name,
+      title: parsed.data.title.trim(),
+      body: parsed.data.body.trim(),
+      type: parsed.data.threadType,
+      isPinned: canModerateCourse(role) && Boolean(parsed.data.isPinned),
+      isReadOnly: Boolean(parsed.data.isReadOnly),
+      scheduledFor:
+        parsed.data.threadType === "ANNOUNCEMENT" ? scheduledForResult.value : null
+    });
+
+    await persistForumAttachments({
+      courseSlug: parsed.data.courseSlug,
+      parentType: "thread",
+      parentId: thread.id,
+      createdById: user.id,
+      attachments: attachmentDrafts.drafts
+    });
+  } catch (error) {
+    if (isDatabaseConnectionError(error)) {
+      return forumUnavailableErrorState();
+    }
+
+    throw error;
+  }
 
   const nextPath = `/mis-cursos/${parsed.data.courseSlug}/foro/${parsed.data.categorySlug}/${thread.id}`;
   revalidateForumPaths(parsed.data.courseSlug, parsed.data.categorySlug, thread.id);
@@ -313,21 +330,31 @@ export async function createForumReplyAction(
     return { error: attachmentDrafts.error };
   }
 
-  const post = await createForumReply({
-    threadId: parsed.data.threadId,
-    authorId: user.id,
-    authorRole: role,
-    authorName: user.name,
-    body: parsed.data.body.trim()
-  });
+  let post;
 
-  await persistForumAttachments({
-    courseSlug: parsed.data.courseSlug,
-    parentType: "post",
-    parentId: post.id,
-    createdById: user.id,
-    attachments: attachmentDrafts.drafts
-  });
+  try {
+    post = await createForumReply({
+      threadId: parsed.data.threadId,
+      authorId: user.id,
+      authorRole: role,
+      authorName: user.name,
+      body: parsed.data.body.trim()
+    });
+
+    await persistForumAttachments({
+      courseSlug: parsed.data.courseSlug,
+      parentType: "post",
+      parentId: post.id,
+      createdById: user.id,
+      attachments: attachmentDrafts.drafts
+    });
+  } catch (error) {
+    if (isDatabaseConnectionError(error)) {
+      return forumUnavailableErrorState();
+    }
+
+    throw error;
+  }
 
   const nextPath = `/mis-cursos/${parsed.data.courseSlug}/foro/${parsed.data.categorySlug}/${parsed.data.threadId}`;
   revalidateForumPaths(parsed.data.courseSlug, parsed.data.categorySlug, parsed.data.threadId);
@@ -393,33 +420,41 @@ export async function editForumThreadAction(
     return { error: scheduledForResult.error };
   }
 
-  await updateForumThread({
-    threadId: parsed.data.threadId,
-    title: parsed.data.title.trim(),
-    body: parsed.data.body.trim(),
-    editorId: user.id,
-    editorRole: role,
-    editorName: user.name,
-    type: canModerateCourse(role) ? parsed.data.threadType : threadRecord.thread.type,
-    isPinned: canModerateCourse(role)
-      ? Boolean(parsed.data.isPinned)
-      : threadRecord.thread.isPinned,
-    isReadOnly: canModerateCourse(role)
-      ? Boolean(parsed.data.isReadOnly)
-      : threadRecord.thread.isReadOnly,
-    scheduledFor:
-      canModerateCourse(role) && parsed.data.threadType === "ANNOUNCEMENT"
-        ? scheduledForResult.value
-        : threadRecord.thread.scheduledFor
-  });
+  try {
+    await updateForumThread({
+      threadId: parsed.data.threadId,
+      title: parsed.data.title.trim(),
+      body: parsed.data.body.trim(),
+      editorId: user.id,
+      editorRole: role,
+      editorName: user.name,
+      type: canModerateCourse(role) ? parsed.data.threadType : threadRecord.thread.type,
+      isPinned: canModerateCourse(role)
+        ? Boolean(parsed.data.isPinned)
+        : threadRecord.thread.isPinned,
+      isReadOnly: canModerateCourse(role)
+        ? Boolean(parsed.data.isReadOnly)
+        : threadRecord.thread.isReadOnly,
+      scheduledFor:
+        canModerateCourse(role) && parsed.data.threadType === "ANNOUNCEMENT"
+          ? scheduledForResult.value
+          : threadRecord.thread.scheduledFor
+    });
 
-  await persistForumAttachments({
-    courseSlug: parsed.data.courseSlug,
-    parentType: "thread",
-    parentId: parsed.data.threadId,
-    createdById: user.id,
-    attachments: attachmentDrafts.drafts
-  });
+    await persistForumAttachments({
+      courseSlug: parsed.data.courseSlug,
+      parentType: "thread",
+      parentId: parsed.data.threadId,
+      createdById: user.id,
+      attachments: attachmentDrafts.drafts
+    });
+  } catch (error) {
+    if (isDatabaseConnectionError(error)) {
+      return forumUnavailableErrorState();
+    }
+
+    throw error;
+  }
 
   const nextPath = `/mis-cursos/${parsed.data.courseSlug}/foro/${parsed.data.categorySlug}/${parsed.data.threadId}`;
   revalidateForumPaths(parsed.data.courseSlug, parsed.data.categorySlug, parsed.data.threadId);
@@ -477,20 +512,28 @@ export async function editForumPostAction(
     return { error: attachmentDrafts.error };
   }
 
-  await updateForumPost({
-    postId: parsed.data.postId,
-    body: parsed.data.body.trim(),
-    editorId: user.id,
-    editorRole: role
-  });
+  try {
+    await updateForumPost({
+      postId: parsed.data.postId,
+      body: parsed.data.body.trim(),
+      editorId: user.id,
+      editorRole: role
+    });
 
-  await persistForumAttachments({
-    courseSlug: parsed.data.courseSlug,
-    parentType: "post",
-    parentId: parsed.data.postId,
-    createdById: user.id,
-    attachments: attachmentDrafts.drafts
-  });
+    await persistForumAttachments({
+      courseSlug: parsed.data.courseSlug,
+      parentType: "post",
+      parentId: parsed.data.postId,
+      createdById: user.id,
+      attachments: attachmentDrafts.drafts
+    });
+  } catch (error) {
+    if (isDatabaseConnectionError(error)) {
+      return forumUnavailableErrorState();
+    }
+
+    throw error;
+  }
 
   const nextPath = `/mis-cursos/${parsed.data.courseSlug}/foro/${parsed.data.categorySlug}/${parsed.data.threadId}`;
   revalidateForumPaths(parsed.data.courseSlug, parsed.data.categorySlug, parsed.data.threadId);

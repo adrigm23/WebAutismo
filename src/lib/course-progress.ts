@@ -1,4 +1,5 @@
 import type { CourseModule } from "../data/courses.ts";
+import { isDatabaseConnectionError } from "./db-errors.ts";
 import { getDemoUserById, isDemoUserId } from "./demo-auth.ts";
 import { getCatalogCourseBySlug } from "./course-catalog.ts";
 import { getDb } from "./prisma.ts";
@@ -67,6 +68,34 @@ function getDemoProgressRecords(input: {
     moduleIndex: index,
     completedAt: new Date(`2026-05-0${index + 5}T09:00:00.000Z`)
   }));
+}
+
+function buildDemoLearnerProgressRowsForCourse(course: CourseProgressCourseShape) {
+  const demoStudent = getDemoUserById("demo-student");
+
+  if (!demoStudent) {
+    return [] as CourseLearnerProgressRow[];
+  }
+
+  const summary = normalizeCourseProgress(
+    course,
+    getDemoProgressRecords({
+      userId: demoStudent.id,
+      course
+    })
+  );
+
+  return [
+    {
+      userId: demoStudent.id,
+      learnerName: demoStudent.name,
+      learnerEmail: demoStudent.email,
+      completedModules: summary.completedModules,
+      totalModules: summary.totalModules,
+      completionRate: summary.completionRate,
+      lastCompletedAt: summary.lastCompletedAt
+    }
+  ] satisfies CourseLearnerProgressRow[];
 }
 
 function getModuleFromLegacyIndex(course: CourseProgressCourseShape, moduleIndex: number | null) {
@@ -405,66 +434,74 @@ export async function getLearnerProgressRowsForCourse(courseSlug: string): Promi
     return [];
   }
 
-  const [enrollments, progressRecords] = await Promise.all([
-    getDb().courseEnrollment.findMany({
-      where: {
-        course: {
-          slug: courseSlug
-        }
-      },
-      include: {
-        user: {
-          select: {
-            id: true,
-            name: true,
-            email: true
+  try {
+    const [enrollments, progressRecords] = await Promise.all([
+      getDb().courseEnrollment.findMany({
+        where: {
+          course: {
+            slug: courseSlug
           }
+        },
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true
+            }
+          }
+        },
+        orderBy: {
+          createdAt: "desc"
         }
-      },
-      orderBy: {
-        createdAt: "desc"
-      }
-    }),
-    getDb().courseModuleProgress.findMany({
-      where: {
-        courseSlug
-      },
-      select: {
-        userId: true,
-        moduleId: true,
-        moduleIndex: true,
-        completedAt: true
-      }
-    })
-  ]);
+      }),
+      getDb().courseModuleProgress.findMany({
+        where: {
+          courseSlug
+        },
+        select: {
+          userId: true,
+          moduleId: true,
+          moduleIndex: true,
+          completedAt: true
+        }
+      })
+    ]);
 
-  const latestEnrollmentByUser = new Map<string, (typeof enrollments)[number]>();
+    const latestEnrollmentByUser = new Map<string, (typeof enrollments)[number]>();
 
-  for (const enrollment of enrollments) {
-    if (!latestEnrollmentByUser.has(enrollment.userId)) {
-      latestEnrollmentByUser.set(enrollment.userId, enrollment);
+    for (const enrollment of enrollments) {
+      if (!latestEnrollmentByUser.has(enrollment.userId)) {
+        latestEnrollmentByUser.set(enrollment.userId, enrollment);
+      }
     }
+
+    const progressByUser = new Map<string, PersistedModuleProgressRecord[]>();
+
+    for (const record of progressRecords) {
+      const bucket = progressByUser.get(record.userId) ?? [];
+      bucket.push(record);
+      progressByUser.set(record.userId, bucket);
+    }
+
+    return Array.from(latestEnrollmentByUser.values()).map((enrollment) => {
+      const summary = normalizeCourseProgress(course, progressByUser.get(enrollment.userId) ?? []);
+
+      return {
+        userId: enrollment.user.id,
+        learnerName: enrollment.user.name,
+        learnerEmail: enrollment.user.email,
+        completedModules: summary.completedModules,
+        totalModules: summary.totalModules,
+        completionRate: summary.completionRate,
+        lastCompletedAt: summary.lastCompletedAt
+      };
+    });
+  } catch (error) {
+    if (isDatabaseConnectionError(error)) {
+      return buildDemoLearnerProgressRowsForCourse(course);
+    }
+
+    throw error;
   }
-
-  const progressByUser = new Map<string, PersistedModuleProgressRecord[]>();
-
-  for (const record of progressRecords) {
-    const bucket = progressByUser.get(record.userId) ?? [];
-    bucket.push(record);
-    progressByUser.set(record.userId, bucket);
-  }
-
-  return Array.from(latestEnrollmentByUser.values()).map((enrollment) => {
-    const summary = normalizeCourseProgress(course, progressByUser.get(enrollment.userId) ?? []);
-
-    return {
-      userId: enrollment.user.id,
-      learnerName: enrollment.user.name,
-      learnerEmail: enrollment.user.email,
-      completedModules: summary.completedModules,
-      totalModules: summary.totalModules,
-      completionRate: summary.completionRate,
-      lastCompletedAt: summary.lastCompletedAt
-    };
-  });
 }

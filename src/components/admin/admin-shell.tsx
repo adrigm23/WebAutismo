@@ -135,7 +135,7 @@ export function AdminShell({ user, children }: AdminShellProps) {
           <div className="px-7">
             {isDemoAdmin ? (
               <div className="rounded-2xl border border-[#d6dde6] bg-white px-5 py-4 text-sm leading-6 text-[#4b6074]">
-                Modo demo: dashboard y usuarios.
+                Modo demo: secciones del panel con datos simulados.
               </div>
             ) : primaryAction ? (
               <ButtonLink

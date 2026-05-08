@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import type { CourseEnrollmentStatus } from "@prisma/client";
 import { BarChart3, ChevronLeft } from "lucide-react";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
@@ -7,6 +8,8 @@ import { requireUser } from "@/lib/auth";
 import { getCatalogCourseBySlug } from "@/lib/course-catalog";
 import { canAccessCourseCommunity, getRoleLabel } from "@/lib/course-community";
 import { getEnrollmentAccessState } from "@/lib/course-editions";
+import { isDatabaseConnectionError } from "@/lib/db-errors";
+import { isDemoUserId } from "@/lib/demo-auth";
 import { canViewCourseProgress } from "@/lib/course-permissions";
 import { getLearnerProgressRowsForCourse } from "@/lib/course-progress";
 import { getDb } from "@/lib/prisma";
@@ -59,26 +62,43 @@ export default async function CourseTrackingPage({ params }: TrackingPageProps) 
     redirect(`/mis-cursos/${slug}`);
   }
 
-  const [progressRows, enrollments] = await Promise.all([
-    getLearnerProgressRowsForCourse(slug),
-    getDb().courseEnrollment.findMany({
-      where: {
-        course: {
-          slug
-        }
-      },
-      include: {
-        user: {
-          select: {
-            id: true
+  let progressRows = [] as Awaited<ReturnType<typeof getLearnerProgressRowsForCourse>>;
+  let enrollments: Array<{
+    userId: string;
+    status: CourseEnrollmentStatus;
+    accessStartsAt: Date;
+    accessUntil: Date | null;
+    user: { id: string };
+  }> = [];
+
+  try {
+    [progressRows, enrollments] = await Promise.all([
+      getLearnerProgressRowsForCourse(slug),
+      getDb().courseEnrollment.findMany({
+        where: {
+          course: {
+            slug
           }
+        },
+        include: {
+          user: {
+            select: {
+              id: true
+            }
+          }
+        },
+        orderBy: {
+          createdAt: "desc"
         }
-      },
-      orderBy: {
-        createdAt: "desc"
-      }
-    })
-  ]);
+      })
+    ]);
+  } catch (error) {
+    if (!isDatabaseConnectionError(error)) {
+      throw error;
+    }
+
+    progressRows = await getLearnerProgressRowsForCourse(slug);
+  }
 
   const latestEnrollmentByUser = new Map<string, (typeof enrollments)[number]>();
 
@@ -126,7 +146,9 @@ export default async function CourseTrackingPage({ params }: TrackingPageProps) 
                   accessStartsAt: enrollment.accessStartsAt,
                   accessUntil: enrollment.accessUntil
                 })
-              : "inactive";
+              : isDemoUserId(user.id)
+                ? "active"
+                : "inactive";
 
             return (
               <Card className="p-6" key={row.userId}>
