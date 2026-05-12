@@ -43,7 +43,7 @@ export type CourseProgressDetails = CourseProgressSummary & {
   modules: CourseModuleProgressState[];
 };
 
-type CourseLearnerProgressRow = {
+export type CourseLearnerProgressRow = {
   userId: string;
   learnerName: string;
   learnerEmail: string;

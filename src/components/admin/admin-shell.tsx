@@ -23,6 +23,7 @@ import { logoutAction } from "@/actions/session";
 import { ButtonLink } from "@/components/ui/button";
 import { adminNavigation, getAdminSearchPlaceholder, getUserInitials } from "@/lib/admin-console";
 import { isDemoUserId } from "@/lib/demo-auth";
+import { siteConfig } from "@/lib/site";
 import { cn } from "@/lib/utils";
 
 type AdminShellProps = {
@@ -120,14 +121,11 @@ export function AdminShell({ user, children }: AdminShellProps) {
         <aside className="hidden border-r border-[#d6dde6] bg-[#f6f3ee] lg:flex lg:flex-col">
           <div className="px-8 pb-7 pt-10">
             <Link className="block" href="/admin">
-              <div className="text-[2.6rem] font-bold tracking-[-0.07em] text-[var(--color-primary)]">
-                Autismo
-              </div>
-              <div className="text-[2.1rem] font-bold tracking-[-0.08em] text-[#103456]">
-                Cordoba
+              <div className="text-[2.5rem] font-bold tracking-[-0.07em] text-[var(--color-primary)]">
+                {siteConfig.shortName}
               </div>
               <p className="mt-3 text-[0.82rem] font-semibold uppercase tracking-[0.26em] text-[#22384f]">
-                Panel de administracion
+                Administracion del campus
               </p>
             </Link>
           </div>
@@ -199,7 +197,7 @@ export function AdminShell({ user, children }: AdminShellProps) {
             <div className="flex flex-wrap items-center justify-between gap-4 px-5 py-4 sm:px-7 xl:px-10">
               <div className="lg:hidden">
                 <Link className="text-[1.65rem] font-bold tracking-[-0.06em] text-[var(--color-primary)]" href="/admin">
-                  Autismo Cordoba Admin
+                  {siteConfig.shortName} Admin
                 </Link>
               </div>
 
@@ -230,7 +228,7 @@ export function AdminShell({ user, children }: AdminShellProps) {
                 </Link>
                 <Link
                   className="grid h-11 w-11 place-items-center rounded-full border border-transparent transition hover:border-[#c8d2de] hover:bg-white"
-                  href="/mi-cuenta"
+                  href={`mailto:${siteConfig.supportEmail}`}
                 >
                   <CircleHelp className="h-5 w-5" strokeWidth={1.9} />
                 </Link>

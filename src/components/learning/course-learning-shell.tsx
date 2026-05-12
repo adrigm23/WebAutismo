@@ -9,12 +9,12 @@ import {
   Compass,
   FileText,
   FolderOpen,
-  MessageSquareText,
-  LineChart
+  LineChart,
+  MessageSquareText
 } from "lucide-react";
+import { CourseArtwork } from "@/components/course-artwork";
 import { CourseProgressToggleForm } from "@/components/learning/course-progress-toggle-form";
 import { CourseResourceManager } from "@/components/learning/course-resource-manager";
-import { CourseArtwork } from "@/components/course-artwork";
 import { Badge } from "@/components/ui/badge";
 import type { CatalogCourse } from "@/lib/course-catalog";
 import type { CourseProgressDetails } from "@/lib/course-progress";
@@ -55,30 +55,66 @@ export function CourseLearningShell({
   const [sidebarTab, setSidebarTab] = useState<SidebarTab>("content");
   const [selectedModuleIndex, setSelectedModuleIndex] = useState(0);
   const currentModule = progress.modules[selectedModuleIndex] ?? progress.modules[0] ?? null;
+  const introCopy = canModerate
+    ? "Este espacio organiza el programa, los recursos, los ejercicios y el acceso al foro privado del curso. Desde aqui puedes coordinar materiales y revisar el seguimiento del alumnado."
+    : "Este espacio organiza el programa, los recursos disponibles y el acceso al foro privado del curso. El seguimiento es manual y verificable: puedes marcar cada modulo cuando realmente lo hayas revisado.";
 
   return (
-    <div className="min-h-screen bg-[var(--color-background)]">
-      <div className="flex items-center justify-between border-b border-[rgba(12,113,195,0.14)] bg-white px-6 py-5 lg:px-12">
-        <div className="flex min-w-0 items-center gap-5">
-          <Link
-            className="whitespace-nowrap text-xl font-medium text-[var(--color-primary)]"
-            href="/mi-cuenta"
-          >
-            Volver a Mi cuenta
-          </Link>
-          <div className="hidden h-12 w-px bg-[var(--color-border)] lg:block" />
-          <h1 className="truncate text-[1.9rem] font-semibold tracking-[-0.04em] text-[var(--color-ink)]">
-            {course.title}
-          </h1>
-        </div>
+    <div className="min-h-screen bg-[linear-gradient(180deg,#f8f6f1_0%,#f4f7fb_52%,#fbfaf8_100%)]">
+      <div className="sticky top-0 z-30 border-b border-[rgba(12,113,195,0.14)] bg-white/95 backdrop-blur-md">
+        <div className="flex flex-col gap-4 px-6 py-5 lg:px-12">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div className="flex min-w-0 items-center gap-5">
+              <Link
+                className="whitespace-nowrap text-xl font-medium text-[var(--color-primary)]"
+                href="/mi-cuenta"
+              >
+                Volver al dashboard
+              </Link>
+              <div className="hidden h-12 w-px bg-[var(--color-border)] lg:block" />
+              <h1 className="truncate text-[1.9rem] font-semibold tracking-[-0.04em] text-[var(--color-ink)]">
+                {course.title}
+              </h1>
+            </div>
 
-        <div className="hidden items-center gap-3 lg:flex">
-          <Badge tone={canModerate ? "teacher" : "student"}>{roleLabel}</Badge>
-          <Badge tone="muted">{canModerate ? "Espacio de seguimiento" : "Acceso vigente"}</Badge>
+            <div className="hidden items-center gap-3 lg:flex">
+              <Badge tone={canModerate ? "teacher" : "student"}>{roleLabel}</Badge>
+              <Badge tone="muted">{canModerate ? "Espacio de seguimiento" : "Acceso vigente"}</Badge>
+            </div>
+          </div>
+
+          <nav aria-label="Navegacion del campus" className="flex flex-wrap items-center gap-3">
+            <Link
+              className="rounded-full bg-[var(--color-primary-soft)] px-4 py-2 text-sm font-semibold text-[var(--color-primary)]"
+              href={`/mis-cursos/${course.slug}`}
+            >
+              Campus
+            </Link>
+            <Link
+              className="rounded-full border border-[var(--color-border)] px-4 py-2 text-sm font-semibold text-[var(--color-ink)] transition hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]"
+              href={`/mis-cursos/${course.slug}/foro`}
+            >
+              Foro
+            </Link>
+            {canModerate ? (
+              <Link
+                className="rounded-full border border-[var(--color-border)] px-4 py-2 text-sm font-semibold text-[var(--color-ink)] transition hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]"
+                href={`/mis-cursos/${course.slug}/seguimiento`}
+              >
+                Seguimiento
+              </Link>
+            ) : null}
+            <Link
+              className="rounded-full border border-[var(--color-border)] px-4 py-2 text-sm font-semibold text-[var(--color-ink)] transition hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]"
+              href="/mi-cuenta"
+            >
+              Mi cuenta
+            </Link>
+          </nav>
         </div>
       </div>
 
-      <div className="grid min-h-[calc(100vh-93px)] lg:grid-cols-[1fr_400px]">
+      <div className="grid min-h-[calc(100vh-141px)] lg:grid-cols-[1fr_400px]">
         <section className="px-6 py-10 lg:px-12">
           <div className="overflow-hidden rounded-[30px] border border-[rgba(12,113,195,0.14)] bg-white shadow-[0_22px_48px_rgba(34,34,33,0.06)]">
             <div className="grid gap-8 px-6 py-6 lg:grid-cols-[minmax(0,1.1fr)_minmax(18rem,0.9fr)] lg:px-8 lg:py-8">
@@ -91,16 +127,12 @@ export function CourseLearningShell({
                 <h2 className="mt-5 text-5xl font-semibold tracking-[-0.05em] text-[var(--color-ink)]">
                   Campus del curso
                 </h2>
-                <p className="mt-4 max-w-3xl text-lg leading-8 text-[var(--color-muted)]">
-                  Este espacio organiza el programa, los recursos disponibles y el acceso al
-                  foro privado del curso. El seguimiento es manual y verificable: puedes marcar
-                  cada modulo cuando realmente lo hayas revisado.
-                </p>
+                <p className="mt-4 max-w-3xl text-lg leading-8 text-[var(--color-muted)]">{introCopy}</p>
 
                 {editionLabel ? (
                   <p className="mt-4 text-sm leading-7 text-[var(--color-muted)]">
                     Edicion asociada: <strong className="text-[var(--color-ink)]">{editionLabel}</strong>
-                    {accessUntil ? ` · Acceso previsto hasta ${formatDate(accessUntil)}` : ""}
+                    {accessUntil ? ` | Acceso previsto hasta ${formatDate(accessUntil)}` : ""}
                   </p>
                 ) : null}
 
@@ -170,7 +202,7 @@ export function CourseLearningShell({
                       className="inline-flex items-center rounded-xl border border-[var(--color-primary)] px-4 py-3 text-sm font-semibold text-[var(--color-primary)]"
                       href="/mi-cuenta"
                     >
-                      Volver a Mi cuenta
+                      Volver al dashboard
                     </Link>
                     {canModerate ? (
                       <Link
@@ -233,9 +265,7 @@ export function CourseLearningShell({
             <>
               <div className="flex items-center justify-between border-b border-[rgba(12,113,195,0.14)] px-6 py-6">
                 <div>
-                  <p className="text-[1.75rem] font-medium text-[var(--color-ink)]">
-                    Programa del curso
-                  </p>
+                  <p className="text-[1.75rem] font-medium text-[var(--color-ink)]">Programa del curso</p>
                   <p className="mt-2 text-sm text-[var(--color-muted)]">
                     Marca cada modulo cuando ya lo hayas revisado.
                   </p>
@@ -270,9 +300,7 @@ export function CourseLearningShell({
 
                       {isCurrentModule ? (
                         <div className="space-y-4 border-t border-[rgba(12,113,195,0.08)] bg-[var(--color-surface)] px-6 py-5">
-                          <p className="text-[1rem] leading-7 text-[var(--color-ink)]">
-                            {module.description}
-                          </p>
+                          <p className="text-[1rem] leading-7 text-[var(--color-ink)]">{module.description}</p>
                           <div className="flex flex-wrap gap-3 text-sm text-[var(--color-muted)]">
                             <span>{module.estimatedTime}</span>
                             <span>{module.resourcesSummary}</span>
@@ -308,7 +336,7 @@ export function CourseLearningShell({
                 <div>
                   <p className="text-lg font-semibold text-[var(--color-ink)]">Biblioteca del curso</p>
                   <p className="text-sm text-[var(--color-muted)]">
-                    Materiales, ejercicios y referencias disponibles en esta edición.
+                    Materiales, ejercicios y referencias disponibles en esta edicion.
                   </p>
                 </div>
               </div>
@@ -344,9 +372,7 @@ export function CourseLearningShell({
                   >
                     <div className="flex items-start justify-between gap-4">
                       <div>
-                        <p className="text-lg font-semibold text-[var(--color-ink)]">
-                          {category.title}
-                        </p>
+                        <p className="text-lg font-semibold text-[var(--color-ink)]">{category.title}</p>
                         <p className="mt-3 text-sm leading-7 text-[var(--color-muted)]">
                           {category.description}
                         </p>

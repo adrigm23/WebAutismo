@@ -16,15 +16,22 @@ import {
   markAllForumNotificationsReadAction,
   markForumNotificationReadAction
 } from "@/actions/forum";
+import { StudentAccountDashboard } from "@/components/account/student-account-dashboard";
+import { TeacherAccountDashboard } from "@/components/account/teacher-account-dashboard";
 import { CourseArtwork } from "@/components/course-artwork";
 import { Badge } from "@/components/ui/badge";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { isDemoUserId } from "@/lib/demo-auth";
 import { requireUser } from "@/lib/auth";
-import { getCourseProgressSummariesForUser } from "@/lib/course-progress";
+import {
+  getCourseProgressDetailsForUser,
+  getLearnerProgressRowsForCourse,
+  getCourseProgressSummariesForUser
+} from "@/lib/course-progress";
 import { getRoleLabel, getUserCourseSpaces } from "@/lib/course-community";
 import { isStaffCourseRole } from "@/lib/course-roles";
+import { getCampusResources } from "@/lib/course-resources";
 import { getUserForumNotifications } from "@/lib/forum";
 import {
   ensureNotificationPreference,
@@ -64,6 +71,95 @@ export default async function AccountPage() {
   const firstName = user.name.split(" ")[0] || user.name;
   const staffSpaces = spaces.filter((space) => isStaffCourseRole(space.role));
   const studentSpaces = spaces.filter((space) => !isStaffCourseRole(space.role));
+
+  if (staffSpaces.length > 0 || user.globalRole === "TEACHER") {
+    const [resourceEntries, learnerEntries] = await Promise.all([
+      Promise.all(
+        staffSpaces.map(async (space) => [
+          space.course.slug,
+          await getCampusResources({
+            course: space.course,
+            viewerUserId: user.id,
+            canModerate: true
+          })
+        ] as const)
+      ),
+      Promise.all(
+        staffSpaces.map(async (space) => [
+          space.course.slug,
+          await getLearnerProgressRowsForCourse(space.course.slug)
+        ] as const)
+      )
+    ]);
+
+    const resourcesByCourse = new Map(resourceEntries);
+    const learnersByCourse = new Map(learnerEntries);
+
+    return (
+      <TeacherAccountDashboard
+        firstName={firstName}
+        forumNotifications={forumNotifications}
+        fullName={user.name}
+        hasTeacherRoleWithoutCourses={user.globalRole === "TEACHER" && staffSpaces.length === 0}
+        isDemoUser={isDemoUser}
+        platformNotifications={platformNotifications}
+        preference={preference}
+        teacherCourses={staffSpaces.map((space) => ({
+          space,
+          learners: learnersByCourse.get(space.course.slug) ?? [],
+          resources: resourcesByCourse.get(space.course.slug) ?? []
+        }))}
+      />
+    );
+  }
+
+  if (user.globalRole === "STUDENT") {
+    const [progressEntries, resourceEntries] = await Promise.all([
+      Promise.all(
+        studentSpaces.map(async (space) => [
+          space.course.slug,
+          await getCourseProgressDetailsForUser({
+            userId: user.id,
+            course: space.course
+          })
+        ] as const)
+      ),
+      Promise.all(
+        studentSpaces.map(async (space) => [
+          space.course.slug,
+          await getCampusResources({
+            course: space.course,
+            viewerUserId: user.id,
+            canModerate: false
+          })
+        ] as const)
+      )
+    ]);
+
+    const progressByCourse = new Map(progressEntries);
+    const resourcesByCourse = new Map(resourceEntries);
+    const studentCourses = studentSpaces.map((space) => ({
+      space,
+      progress: progressByCourse.get(space.course.slug),
+      resources: resourcesByCourse.get(space.course.slug) ?? []
+    }));
+
+    return (
+      <StudentAccountDashboard
+        firstName={firstName}
+        forumNotifications={forumNotifications}
+        fullName={user.name}
+        isDemoUser={isDemoUser}
+        platformNotifications={platformNotifications}
+        preference={preference}
+        studentCourses={studentCourses.filter((course) => Boolean(course.progress)).map((course) => ({
+          ...course,
+          progress: course.progress!
+        }))}
+      />
+    );
+  }
+
   const progressByCourse = await getCourseProgressSummariesForUser({
     userId: user.id,
     courseSlugs: studentSpaces.map((space) => space.course.slug)
@@ -72,14 +168,43 @@ export default async function AccountPage() {
   return (
     <div className="pb-24 pt-14 lg:pt-16">
       <div className="site-container">
+        <div className="mb-8 flex flex-wrap items-center justify-between gap-3 rounded-[28px] border border-[rgba(12,113,195,0.14)] bg-white px-5 py-4 shadow-[0_18px_32px_rgba(34,34,33,0.05)]">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-muted)]">
+              Campus privado
+            </p>
+            <p className="mt-1 text-sm text-[var(--color-ink)]">
+              Navegacion rapida para cuenta, cursos y coordinacion.
+            </p>
+          </div>
+
+          <div className="flex flex-wrap gap-3">
+            <ButtonLink href="#acceso-rapido" variant="secondary">
+              Accesos
+            </ButtonLink>
+            <ButtonLink href="#cursos" variant="ghost">
+              Cursos
+            </ButtonLink>
+            {staffSpaces.length ? (
+              <ButtonLink href="#coordinacion" variant="ghost">
+                Coordinacion
+              </ButtonLink>
+            ) : null}
+            <ButtonLink href="#preferencias" variant="ghost">
+              Preferencias
+            </ButtonLink>
+          </div>
+        </div>
+
         <div className="flex flex-wrap items-start justify-between gap-6">
           <div className="max-w-4xl">
             <h1 className="text-[4.2rem] font-semibold tracking-[-0.08em] text-[var(--color-ink)]">
               Hola, {firstName}
             </h1>
             <p className="mt-4 text-[1.18rem] leading-10 text-[var(--color-ink)]/84">
-              Aqui tienes tu acceso actual al campus, tus avisos recientes y la configuracion
-              operativa de tu cuenta.
+              {staffSpaces.length
+                ? "Aqui tienes tus accesos al campus, tus espacios docentes y la configuracion operativa de tu cuenta."
+                : "Aqui tienes tu acceso actual al campus, tus avisos recientes y la configuracion operativa de tu cuenta."}
             </p>
           </div>
 
@@ -90,7 +215,73 @@ export default async function AccountPage() {
           ) : null}
         </div>
 
-        <section className="mt-16">
+        <section className="mt-12" id="acceso-rapido">
+          <div className="mb-6 flex items-center gap-4">
+            <GraduationCap className="h-7 w-7 text-[var(--color-primary)]" />
+            <h2 className="text-[3rem] font-semibold tracking-[-0.06em] text-[var(--color-ink)]">
+              Acceso rapido al campus
+            </h2>
+          </div>
+
+          {spaces.length ? (
+            <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
+              {spaces.map((space) => {
+                const isStaff = isStaffCourseRole(space.role);
+                const progress = isStaff ? null : progressByCourse.get(space.course.slug);
+
+                return (
+                  <Card className="p-6" key={`quick-${space.course.slug}-${space.role}`}>
+                    <div className="flex flex-wrap items-center gap-3">
+                      <Badge tone={isStaff ? "teacher" : "student"}>
+                        {isStaff ? getRoleLabel(space.role) : "Alumno"}
+                      </Badge>
+                      <Badge tone="muted">{space.course.level}</Badge>
+                    </div>
+
+                    <h3 className="mt-4 text-[1.55rem] font-semibold leading-tight text-[var(--color-ink)]">
+                      {space.course.title}
+                    </h3>
+
+                    <p className="mt-3 text-sm leading-7 text-[var(--color-muted)]">
+                      {isStaff
+                        ? "Abre el campus del curso o entra al seguimiento del alumnado desde tu espacio docente."
+                        : progress
+                          ? `${progress.completedModules} de ${progress.totalModules} modulos marcados como revisados.`
+                          : "Accede al contenido, recursos y foro privado del curso."}
+                    </p>
+
+                    <div className="mt-6 flex flex-wrap gap-3">
+                      <ButtonLink href={`/mis-cursos/${space.course.slug}`}>
+                        {isStaff ? "Entrar al campus" : "Abrir curso"}
+                      </ButtonLink>
+                      {isStaff ? (
+                        <ButtonLink href={`/mis-cursos/${space.course.slug}/seguimiento`} variant="secondary">
+                          Ver seguimiento
+                        </ButtonLink>
+                      ) : (
+                        <ButtonLink href={`/mis-cursos/${space.course.slug}/foro`} variant="secondary">
+                          Ir al foro
+                        </ButtonLink>
+                      )}
+                    </div>
+                  </Card>
+                );
+              })}
+            </div>
+          ) : (
+            <Card className="p-8">
+              <p className="text-[1.04rem] leading-8 text-[var(--color-ink)]/84">
+                Todavia no tienes cursos asociados. Cuando completes una compra o te asignen un
+                curso, apareceran aqui con su estado de acceso real.
+              </p>
+              <ButtonLink className="mt-6" href="/cursos">
+                Explorar cursos
+              </ButtonLink>
+            </Card>
+          )}
+        </section>
+
+        <section className="mt-16" id="avisos-plataforma">
           {isDemoUser ? (
             <Card className="mb-8 border-[#f0d098] bg-[#fff1cf] p-6">
               <p className="text-lg font-semibold text-[#7c5300]">Modo demo activo</p>
@@ -168,7 +359,7 @@ export default async function AccountPage() {
           )}
         </section>
 
-        <section className="mt-16">
+        <section className="mt-16" id="avisos-foro">
           <div className="mb-6 flex items-center justify-between gap-4">
             <div className="flex items-center gap-4">
               <Bell className="h-7 w-7 text-[var(--color-primary)]" />
@@ -237,7 +428,7 @@ export default async function AccountPage() {
           )}
         </section>
 
-        <section className="mt-16">
+        <section className="mt-16" id="cursos">
           <div className="mb-6 flex items-center gap-4">
             <GraduationCap className="h-7 w-7 text-[var(--color-primary)]" />
             <h2 className="text-[3rem] font-semibold tracking-[-0.06em] text-[var(--color-ink)]">
@@ -352,7 +543,7 @@ export default async function AccountPage() {
           )}
         </section>
 
-        <section className="mt-20">
+        <section className="mt-20" id="coordinacion">
           <div className="mb-6 flex items-center gap-4">
             <ShieldCheck className="h-7 w-7 text-[var(--color-accent)]" />
             <h2 className="text-[3rem] font-semibold tracking-[-0.06em] text-[var(--color-ink)]">
@@ -401,7 +592,7 @@ export default async function AccountPage() {
           )}
         </section>
 
-        <section className="mt-20">
+        <section className="mt-20" id="preferencias">
           <div className="mb-6 flex items-center gap-4">
             <Settings2 className="h-7 w-7 text-[var(--color-primary)]" />
             <h2 className="text-[3rem] font-semibold tracking-[-0.06em] text-[var(--color-ink)]">

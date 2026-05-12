@@ -248,35 +248,53 @@ export default async function CourseTrackingPage({ params }: TrackingPageProps) 
   );
 
   return (
-    <div className="pb-20 pt-14 lg:pt-16">
+    <div className="bg-[linear-gradient(180deg,#f8f6f1_0%,#f4f7fb_52%,#fbfaf8_100%)] pb-20 pt-14 lg:pt-16">
       <div className="site-container space-y-8">
         <Link
-          className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--color-primary)]"
+          className="inline-flex items-center gap-2 rounded-full bg-[var(--color-primary-soft)] px-4 py-2 text-sm font-semibold text-[var(--color-primary)]"
           href={`/mis-cursos/${slug}`}
         >
           <ChevronLeft className="h-4 w-4" />
           Volver al curso
         </Link>
 
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[var(--color-primary)]">
-              Seguimiento academico
-            </p>
-            <h1 className="mt-3 text-[3.6rem] font-semibold tracking-[-0.08em] text-[var(--color-ink)]">
-              {course.title}
-            </h1>
-            <p className="mt-3 max-w-3xl text-[1.06rem] leading-8 text-[var(--color-ink)]/84">
-              Vista para {getRoleLabel(access.role)}. Aqui puedes revisar tanto el progreso manual
-              por modulo como las entregas reales de ejercicios publicadas dentro del campus.
-            </p>
+        <Card className="overflow-hidden border-[rgba(12,113,195,0.16)] bg-[linear-gradient(135deg,rgba(255,255,255,0.98),rgba(229,238,248,0.82))] p-8 lg:p-10">
+          <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+            <div className="max-w-4xl">
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge tone="teacher">{getRoleLabel(access.role)}</Badge>
+                <Badge tone="muted">Seguimiento academico</Badge>
+              </div>
+              <h1 className="mt-4 text-[3.6rem] font-semibold tracking-[-0.08em] text-[var(--color-ink)]">
+                {course.title}
+              </h1>
+              <p className="mt-4 max-w-3xl text-[1.06rem] leading-8 text-[var(--color-ink)]/84">
+                Aqui puedes revisar tanto el progreso manual por modulo como las entregas reales de
+                ejercicios publicadas dentro del campus.
+              </p>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="rounded-2xl border border-[var(--color-border)] bg-white px-5 py-4 text-sm text-[var(--color-muted)]">
+                {exerciseSummary.pending > 0
+                  ? `${exerciseSummary.pending} entregas pendientes`
+                  : `${progressRows.length} alumnos con historico`}
+              </div>
+              <Link
+                className="inline-flex items-center rounded-xl border border-[var(--color-primary)] px-4 py-3 text-sm font-semibold text-[var(--color-primary)] transition hover:bg-[var(--color-primary-soft)]"
+                href={`/mis-cursos/${slug}`}
+              >
+                Ir al campus
+              </Link>
+              <Link
+                className="inline-flex items-center rounded-xl border border-[var(--color-primary)] px-4 py-3 text-sm font-semibold text-[var(--color-primary)] transition hover:bg-[var(--color-primary-soft)]"
+                href={`/mis-cursos/${slug}/foro`}
+              >
+                Abrir foro
+              </Link>
+            </div>
           </div>
-          <div className="rounded-2xl border border-[var(--color-border)] bg-white px-5 py-4 text-sm text-[var(--color-muted)]">
-            {exerciseSummary.pending > 0
-              ? `${exerciseSummary.pending} entregas pendientes`
-              : `${progressRows.length} alumnos con historico`}
-          </div>
-        </div>
+        </Card>
 
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           <Card className="p-5">
