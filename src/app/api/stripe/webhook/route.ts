@@ -2,7 +2,11 @@ import type Stripe from "stripe";
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import { getDb } from "@/lib/prisma";
-import { grantCourseAccess } from "@/lib/purchases";
+import {
+  grantCourseAccess,
+  markPurchaseFailedByStripeSessionId,
+  validateStripeCheckoutSessionAgainstPurchase
+} from "@/lib/purchases";
 import { getStripe } from "@/lib/stripe";
 
 export async function POST(request: Request) {
@@ -45,6 +49,38 @@ export async function POST(request: Request) {
     const promotionCode = session.metadata?.promotionCode || null;
 
     if (purchaseId && userId && courseSlug) {
+      const purchase = await getDb().purchase.findUnique({
+        where: {
+          id: purchaseId
+        },
+        select: {
+          id: true,
+          userId: true,
+          totalInCents: true,
+          stripeCheckoutSessionId: true
+        }
+      });
+
+      if (!purchase) {
+        return NextResponse.json({ error: "Purchase not found for Stripe session." }, { status: 404 });
+      }
+
+      const validation = validateStripeCheckoutSessionAgainstPurchase({
+        purchase,
+        session
+      });
+
+      if (!validation.ok) {
+        await markPurchaseFailedByStripeSessionId(session.id);
+
+        return NextResponse.json(
+          {
+            error: validation.reason
+          },
+          { status: 400 }
+        );
+      }
+
       await grantCourseAccess({
         userId,
         courseSlug,
@@ -56,14 +92,7 @@ export async function POST(request: Request) {
         promotionCode
       });
     } else if (session.id) {
-      await getDb().purchase.updateMany({
-        where: {
-          stripeCheckoutSessionId: session.id
-        },
-        data: {
-          status: "FAILED"
-        }
-      });
+      await markPurchaseFailedByStripeSessionId(session.id);
     }
   }
 

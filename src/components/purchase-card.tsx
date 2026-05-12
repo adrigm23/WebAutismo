@@ -1,22 +1,14 @@
 import { BadgeCheck, CalendarCheck2, Clock3, Lock, MonitorPlay } from "lucide-react";
-import { PurchaseForm } from "@/components/purchase-form";
 import { ButtonLink } from "@/components/ui/button";
 import type { CatalogCourse } from "@/lib/course-catalog";
 import { formatPrice } from "@/lib/utils";
 
 type PurchaseCardProps = {
   course: CatalogCourse;
-  isAuthenticated: boolean;
-  ownsCourse: boolean;
   purchaseMode: "live" | "demo";
 };
 
-export function PurchaseCard({
-  course,
-  isAuthenticated,
-  ownsCourse,
-  purchaseMode
-}: PurchaseCardProps) {
+export function PurchaseCard({ course, purchaseMode }: PurchaseCardProps) {
   const isLiveMode = purchaseMode === "live";
 
   return (
@@ -66,28 +58,9 @@ export function PurchaseCard({
       ) : null}
 
       <div className="mt-10">
-        {ownsCourse ? (
-          <ButtonLink className="w-full" href={`/mis-cursos/${course.slug}`}>
-            Ir al curso
-          </ButtonLink>
-        ) : isAuthenticated ? (
-          <PurchaseForm
-            buttonLabel={isLiveMode ? "Continuar con la compra" : "Activar acceso demo"}
-            buttonVariant="accent"
-            courseSlug={course.slug}
-            courseEditionId={course.activeEdition?.id ?? null}
-            pendingLabel={isLiveMode ? "Preparando pasarela..." : "Activando acceso local..."}
-          />
-        ) : (
-          <div className="space-y-3">
-            <ButtonLink className="w-full" href={`/registro?next=/checkout/${course.slug}`} variant="accent">
-              Crear cuenta para continuar
-            </ButtonLink>
-            <ButtonLink className="w-full" href={`/acceder?next=/checkout/${course.slug}`} variant="secondary">
-              Ya tengo cuenta
-            </ButtonLink>
-          </div>
-        )}
+        <ButtonLink className="w-full" href={`/checkout/${course.slug}`} variant="accent">
+          {isLiveMode ? "Continuar con la compra" : "Revisar acceso demo"}
+        </ButtonLink>
       </div>
 
       <p className="mt-8 text-center text-sm font-medium text-[var(--color-ink)]">

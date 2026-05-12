@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { SplitAuthPanel } from "@/components/auth/split-auth-panel";
 import { getCurrentUser } from "@/lib/auth";
+import { isDemoAuthEnabled } from "@/lib/env";
 import { getSafeRedirect } from "@/lib/redirect";
 import { firstValue } from "@/lib/utils";
 
@@ -26,5 +27,5 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
     redirect(safeNext);
   }
 
-  return <SplitAuthPanel emphasis="login" next={safeNext} />;
+  return <SplitAuthPanel emphasis="login" next={safeNext} showDemoNotice={isDemoAuthEnabled()} />;
 }

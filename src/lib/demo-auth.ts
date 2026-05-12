@@ -1,4 +1,5 @@
 import type { UserGlobalRole } from "@prisma/client";
+import { getRequiredEnv, isDemoAuthEnabled } from "@/lib/env";
 
 export type DemoUser = {
   id: string;
@@ -10,7 +11,6 @@ export type DemoUser = {
 };
 
 const DEMO_CREATED_AT = new Date("2026-05-07T09:00:00.000Z");
-const DEFAULT_DEMO_PASSWORD = "demo12345";
 
 const demoUsers: DemoUser[] = [
   {
@@ -40,11 +40,11 @@ const demoUsers: DemoUser[] = [
 ];
 
 export function getDemoPassword() {
-  return process.env.DEMO_AUTH_PASSWORD || DEFAULT_DEMO_PASSWORD;
+  return getRequiredEnv("DEMO_AUTH_PASSWORD");
 }
 
 export function getDemoUsers() {
-  return demoUsers;
+  return isDemoAuthEnabled() ? demoUsers : [];
 }
 
 export function isDemoUserId(userId: string) {
@@ -52,13 +52,21 @@ export function isDemoUserId(userId: string) {
 }
 
 export function getDemoUserById(userId: string) {
+  if (!isDemoAuthEnabled()) {
+    return null;
+  }
+
   return demoUsers.find((user) => user.id === userId) ?? null;
 }
 
 export function getDemoUserByEmail(email: string) {
+  if (!isDemoAuthEnabled()) {
+    return null;
+  }
+
   return demoUsers.find((user) => user.email === email.trim().toLowerCase()) ?? null;
 }
 
 export function isValidDemoPassword(password: string) {
-  return password === getDemoPassword();
+  return isDemoAuthEnabled() && password === getDemoPassword();
 }

@@ -7,10 +7,16 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
-    "test:unit": "node --experimental-strip-types tests/run-tests.ts",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "vitest run --configLoader runner",
+    "test:unit": "vitest run --configLoader runner tests/unit",
+    "test:integration": "vitest run --configLoader runner tests/integration",
+    "test:e2e": "tsx scripts/run-e2e.ts",
     "attachments:migrate": "node scripts/migrate-forum-attachments.mjs",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
+    "db:bootstrap-real": "node --experimental-strip-types scripts/bootstrap-real-data.mjs",
     "postinstall": "prisma generate"
   },
   "dependencies": {
@@ -33,10 +39,14 @@
     "@types/node": "^22.15.17",
     "@types/react": "^19.1.4",
     "@types/react-dom": "^19.1.5",
+    "@playwright/test": "^1.54.1",
     "eslint": "^9.26.0",
     "eslint-config-next": "^16.0.0",
+    "prettier": "^3.6.2",
     "prisma": "^6.7.0",
     "tailwindcss": "^4.1.7",
-    "typescript": "^5.8.3"
+    "tsx": "^4.20.3",
+    "typescript": "^5.8.3",
+    "vitest": "^3.2.4"
   }
 }

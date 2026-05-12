@@ -1,8 +1,8 @@
-import { access, readFile } from "fs/promises";
-import path from "path";
+import { readFile } from "fs/promises";
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { canAccessCourseCommunity } from "@/lib/course-community";
+import { resolveForumAttachmentFilePath } from "@/lib/forum-attachment-storage";
 import { getDb } from "@/lib/prisma";
 
 type AttachmentContext = {
@@ -31,19 +31,6 @@ type AttachmentContext = {
 
 function getAttachmentCourseSlug(attachment: AttachmentContext) {
   return attachment.thread?.category.courseSlug ?? attachment.post?.thread.category.courseSlug ?? null;
-}
-
-async function resolveStoredFilePath(storageKey: string) {
-  const privatePath = path.join(process.cwd(), "storage", storageKey);
-
-  try {
-    await access(privatePath);
-    return privatePath;
-  } catch {
-    const legacyPath = path.join(process.cwd(), "public", "uploads", storageKey);
-    await access(legacyPath);
-    return legacyPath;
-  }
 }
 
 export async function GET(
@@ -108,7 +95,7 @@ export async function GET(
   }
 
   try {
-    const filePath = await resolveStoredFilePath(attachment.storageKey);
+    const filePath = await resolveForumAttachmentFilePath(attachment.storageKey);
     const fileBuffer = await readFile(filePath);
     const isInlineImage = attachment.kind === "IMAGE";
     const headers = new Headers();

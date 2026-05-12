@@ -30,6 +30,15 @@ type PurchaseEmailPayload = {
   slug: string;
 };
 
+function escapeHtml(value: string) {
+  return value
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
 export async function sendEmailMessage(input: SendEmailInput) {
   const resend = getResend();
   const from = process.env.EMAIL_FROM;
@@ -56,23 +65,30 @@ export async function sendNotificationEmail(input: {
   actionUrl?: string;
 }) {
   const accountUrl = absoluteUrl("/mi-cuenta");
+  const safeTitle = escapeHtml(input.title);
+  const safeName = escapeHtml(input.name);
+  const safeBody = escapeHtml(input.body);
+  const safeActionLabel = input.actionLabel ? escapeHtml(input.actionLabel) : null;
+  const safeActionUrl = input.actionUrl ? escapeHtml(input.actionUrl) : null;
+  const safeAccountUrl = escapeHtml(accountUrl);
+  const safeSiteName = escapeHtml(siteConfig.name);
 
   await sendEmailMessage({
     to: input.email,
     subject: input.subject,
     html: `
       <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #173039">
-        <h1 style="font-size: 24px; margin-bottom: 12px;">${input.title}</h1>
-        <p>Hola ${input.name},</p>
-        <p>${input.body}</p>
+        <h1 style="font-size: 24px; margin-bottom: 12px;">${safeTitle}</h1>
+        <p>Hola ${safeName},</p>
+        <p>${safeBody}</p>
         ${
-          input.actionLabel && input.actionUrl
-            ? `<p><a href="${input.actionUrl}" style="display: inline-block; background: #0d6356; color: white; padding: 12px 18px; border-radius: 999px; text-decoration: none;">${input.actionLabel}</a></p>`
+          safeActionLabel && safeActionUrl
+            ? `<p><a href="${safeActionUrl}" style="display: inline-block; background: #0d6356; color: white; padding: 12px 18px; border-radius: 999px; text-decoration: none;">${safeActionLabel}</a></p>`
             : ""
         }
         <p>Tambien puedes revisar tu cuenta aqui:</p>
-        <p><a href="${accountUrl}">${accountUrl}</a></p>
-        <p>${siteConfig.name}</p>
+        <p><a href="${safeAccountUrl}">${safeAccountUrl}</a></p>
+        <p>${safeSiteName}</p>
       </div>
     `
   });

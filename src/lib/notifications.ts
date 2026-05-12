@@ -2,6 +2,7 @@ import type { ForumNotificationType, NotificationCategory } from "@prisma/client
 import { isDemoUserId } from "@/lib/demo-auth";
 import { sendNotificationEmail } from "@/lib/email";
 import { getDb } from "@/lib/prisma";
+import { absoluteUrl } from "@/lib/site";
 
 export async function ensureNotificationPreference(userId: string) {
   if (isDemoUserId(userId)) {
@@ -77,9 +78,7 @@ export async function sendPlatformNotification(input: {
       title: input.title,
       body: input.body,
       actionLabel: "Abrir notificacion",
-      actionUrl: input.linkPath.startsWith("http")
-        ? input.linkPath
-        : `${process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"}${input.linkPath}`
+      actionUrl: input.linkPath.startsWith("http") ? input.linkPath : absoluteUrl(input.linkPath)
     });
   }
 }
@@ -132,9 +131,7 @@ export async function sendForumNotification(input: {
       title: input.title,
       body: input.body,
       actionLabel: "Abrir foro",
-      actionUrl: input.linkPath.startsWith("http")
-        ? input.linkPath
-        : `${process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"}${input.linkPath}`
+      actionUrl: input.linkPath.startsWith("http") ? input.linkPath : absoluteUrl(input.linkPath)
     });
   }
 }

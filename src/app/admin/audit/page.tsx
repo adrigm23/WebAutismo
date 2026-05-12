@@ -1,16 +1,16 @@
-import type { ReactNode } from "react";
-import Link from "next/link";
 import type { AuditAction, AuditEntityType } from "@prisma/client";
 import { CalendarRange, Download, Filter, Search, ShieldCheck, UserRoundSearch } from "lucide-react";
+import { AuditDetailCard } from "@/components/admin/audit/audit-detail-card";
+import { AuditLogTableCard } from "@/components/admin/audit/audit-log-table-card";
+import { FilterSelect } from "@/components/admin/audit/filter-select";
+import { getEntityTypeLabel } from "@/components/admin/audit/audit-utils";
 import { AdminPageHeader } from "@/components/admin/admin-page-header";
-import { AdminStatusBadge } from "@/components/admin/admin-status-badge";
 import { ButtonLink } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { SubmitButton } from "@/components/ui/submit-button";
 import {
   getAuditActionLabel,
-  getAuditActionTone,
   getSearchParamValue
 } from "@/lib/admin-console";
 import { requireAdminConsoleUser } from "@/lib/admin-console-server";
@@ -18,7 +18,6 @@ import { parseAuditMetadata } from "@/lib/audit";
 import { demoAdminAuditLogs } from "@/lib/admin-demo";
 import { isDemoUserId } from "@/lib/demo-auth";
 import { getDb } from "@/lib/prisma";
-import { cn, formatDateTime } from "@/lib/utils";
 
 type AuditPageProps = {
   searchParams: Promise<{
@@ -87,6 +86,29 @@ export default async function AdminAuditPage({ searchParams }: AuditPageProps) {
       return matchesQ && matchesAction && matchesEntity;
     });
     const selectedDemoLog = demoLogs.find((entry) => entry.id === logId) ?? demoLogs[0] ?? null;
+    const demoLogRows = demoLogs.map((log) => ({
+      id: log.id,
+      createdAt: log.createdAt,
+      action: log.action as AuditAction,
+      entityType: log.entityType as AuditEntityType,
+      entityLabel: log.entityLabel,
+      actorName: log.actor.name,
+      actorEmail: log.actor.email,
+      href: "",
+      isSelected: selectedDemoLog?.id === log.id
+    }));
+    const selectedDemoLogDetail = selectedDemoLog
+      ? {
+          id: selectedDemoLog.id,
+          action: selectedDemoLog.action as AuditAction,
+          entityType: selectedDemoLog.entityType as AuditEntityType,
+          entityLabel: selectedDemoLog.entityLabel,
+          entityId: selectedDemoLog.entityId,
+          createdAt: selectedDemoLog.createdAt,
+          actorName: selectedDemoLog.actor.name,
+          actorEmail: selectedDemoLog.actor.email
+        }
+      : null;
 
     const buildDemoQuery = (nextLogId?: string) => {
       const qs = new URLSearchParams();
@@ -98,6 +120,10 @@ export default async function AdminAuditPage({ searchParams }: AuditPageProps) {
       if (nextLogId) qs.set("logId", nextLogId);
       return `/admin/audit${qs.size > 0 ? `?${qs.toString()}` : ""}`;
     };
+    const resolvedDemoLogRows = demoLogRows.map((log) => ({
+      ...log,
+      href: buildDemoQuery(log.id)
+    }));
 
     return (
       <div className="space-y-8">
@@ -147,72 +173,16 @@ export default async function AdminAuditPage({ searchParams }: AuditPageProps) {
         </Card>
 
         <section className="grid gap-6 2xl:grid-cols-[minmax(0,1.25fr)_420px]">
-          <Card className="overflow-hidden rounded-[2rem]">
-            <div className="border-b border-[#dde4ec] px-7 py-6">
-              <h2 className="text-[2rem] font-semibold tracking-[-0.06em] text-[var(--color-ink)]">Flujo de eventos</h2>
-              <p className="mt-2 text-sm text-[#52667b]">{demoLogs.length} registros visibles de demostracion</p>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="min-w-full text-left">
-                <thead>
-                  <tr className="border-b border-[#dde4ec] text-sm uppercase tracking-[0.16em] text-[#3b4f64]">
-                    <th className="px-7 py-4">Fecha y hora</th>
-                    <th className="px-4 py-4">Accion</th>
-                    <th className="px-4 py-4">Actor</th>
-                    <th className="px-7 py-4">Entidad</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[#e0e7ee]">
-                  {demoLogs.map((log) => (
-                    <tr className={cn(selectedDemoLog?.id === log.id && "bg-[#f5f9ff]")} key={log.id}>
-                      <td className="px-7 py-5 text-[#304458]">{formatDateTime(log.createdAt)}</td>
-                      <td className="px-4 py-5">
-                        <AdminStatusBadge tone={getAuditActionTone(log.action as AuditAction)}>
-                          {getAuditActionLabel(log.action as AuditAction)}
-                        </AdminStatusBadge>
-                      </td>
-                      <td className="px-4 py-5 text-[#304458]">
-                        <div className="font-medium text-[var(--color-ink)]">{log.actor.name}</div>
-                        <div className="mt-1 text-sm text-[#5f7184]">{log.actor.email}</div>
-                      </td>
-                      <td className="px-7 py-5">
-                        <Link className="block font-medium text-[var(--color-primary)]" href={buildDemoQuery(log.id)}>
-                          {log.entityLabel}
-                        </Link>
-                        <p className="mt-1 text-sm text-[#607185]">{getEntityTypeLabel(log.entityType as AuditEntityType)}</p>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </Card>
+          <AuditLogTableCard
+            countLabel={`${demoLogs.length} registros visibles de demostracion`}
+            logs={resolvedDemoLogRows}
+          />
 
-          {selectedDemoLog ? (
-            <Card className="rounded-[2rem] p-7">
-              <div className="flex items-center justify-between gap-4">
-                <AdminStatusBadge tone={getAuditActionTone(selectedDemoLog.action as AuditAction)}>
-                  {getAuditActionLabel(selectedDemoLog.action as AuditAction)}
-                </AdminStatusBadge>
-                <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[#607185]">
-                  {getEntityTypeLabel(selectedDemoLog.entityType as AuditEntityType)}
-                </p>
-              </div>
-              <h2 className="mt-5 text-[2rem] font-semibold tracking-[-0.06em] text-[var(--color-ink)]">{selectedDemoLog.entityLabel}</h2>
-              <p className="mt-2 text-sm leading-7 text-[#596b7f]">Evento {selectedDemoLog.id} registrado el {formatDateTime(selectedDemoLog.createdAt)}.</p>
-              <div className="mt-6 grid gap-3 sm:grid-cols-2">
-                <DetailField label="Actor" value={selectedDemoLog.actor.name} />
-                <DetailField label="Correo" value={selectedDemoLog.actor.email} />
-                <DetailField label="Entidad" value={getEntityTypeLabel(selectedDemoLog.entityType as AuditEntityType)} />
-                <DetailField label="Registro" value={selectedDemoLog.entityId} />
-              </div>
-              <div className="mt-6">
-                <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[#34475b]">Metadata JSON</p>
-                <pre className="mt-3 overflow-x-auto rounded-[1.5rem] bg-[#1f252b] p-5 text-sm leading-7 text-[#eaf0f6]">
-                  {JSON.stringify(selectedDemoLog.metadata, null, 2)}
-                </pre>
-              </div>
-            </Card>
+          {selectedDemoLogDetail ? (
+            <AuditDetailCard
+              log={selectedDemoLogDetail}
+              selectedMetadata={selectedDemoLog.metadata}
+            />
           ) : null}
         </section>
       </div>
@@ -282,7 +252,6 @@ export default async function AdminAuditPage({ searchParams }: AuditPageProps) {
 
   const selectedLog = logs.find((entry) => entry.id === logId) ?? logs[0] ?? null;
   const selectedMetadata = parseAuditMetadata(selectedLog?.metadataJson ?? null);
-  const metadataEntries = selectedMetadata ? Object.entries(selectedMetadata) : [];
 
   const buildAuditQuery = (nextLogId?: string) => {
     const qs = new URLSearchParams();
@@ -313,6 +282,29 @@ export default async function AdminAuditPage({ searchParams }: AuditPageProps) {
 
     return `/admin/audit${qs.size > 0 ? `?${qs.toString()}` : ""}`;
   };
+  const logRows = logs.map((log) => ({
+    id: log.id,
+    createdAt: log.createdAt,
+    action: log.action,
+    entityType: log.entityType,
+    entityLabel: log.entityLabel,
+    actorName: log.actor?.name ?? "Sistema",
+    actorEmail: log.actor?.email ?? "Proceso interno",
+    href: buildAuditQuery(log.id),
+    isSelected: selectedLog?.id === log.id
+  }));
+  const selectedLogDetail = selectedLog
+    ? {
+        id: selectedLog.id,
+        action: selectedLog.action,
+        entityType: selectedLog.entityType,
+        entityLabel: selectedLog.entityLabel,
+        entityId: selectedLog.entityId,
+        createdAt: selectedLog.createdAt,
+        actorName: selectedLog.actor?.name ?? "Sistema",
+        actorEmail: selectedLog.actor?.email ?? "Proceso interno"
+      }
+    : null;
 
   return (
     <div className="space-y-8">
@@ -410,240 +402,21 @@ export default async function AdminAuditPage({ searchParams }: AuditPageProps) {
       </Card>
 
       <section className="grid gap-6 2xl:grid-cols-[minmax(0,1.25fr)_420px]">
-        <Card className="overflow-hidden rounded-[2rem]">
-          <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#dde4ec] px-7 py-6">
-            <div>
-              <h2 className="text-[2rem] font-semibold tracking-[-0.06em] text-[var(--color-ink)]">
-                Flujo de eventos
-              </h2>
-              <p className="mt-2 text-sm text-[#52667b]">
-                {logs.length} registros visibles en el rango seleccionado
-              </p>
-            </div>
-            <div className="rounded-full bg-[#eef3f8] px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-[#4e6276]">
-              {range === "ALL" ? "Historico completo" : range === "30d" ? "Ventana 30 dias" : "Ventana 7 dias"}
-            </div>
-          </div>
+        <AuditLogTableCard
+          countLabel={`${logs.length} registros visibles en el rango seleccionado`}
+          logs={logRows}
+          rangeLabel={
+            range === "ALL" ? "Historico completo" : range === "30d" ? "Ventana 30 dias" : "Ventana 7 dias"
+          }
+        />
 
-          <div className="overflow-x-auto">
-            <table className="min-w-full text-left">
-              <thead>
-                <tr className="border-b border-[#dde4ec] text-sm uppercase tracking-[0.16em] text-[#3b4f64]">
-                  <th className="px-7 py-4">Fecha y hora</th>
-                  <th className="px-4 py-4">Accion</th>
-                  <th className="px-4 py-4">Actor</th>
-                  <th className="px-7 py-4">Entidad</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#e0e7ee]">
-                {logs.map((log) => {
-                  const isSelected = selectedLog?.id === log.id;
-
-                  return (
-                    <tr
-                      className={cn(
-                        "align-top transition hover:bg-[#f8fbfe]",
-                        isSelected && "bg-[#f5f9ff]"
-                      )}
-                      key={log.id}
-                    >
-                      <td
-                        className={cn(
-                          "px-7 py-5 text-[#304458]",
-                          isSelected && "border-l-4 border-[var(--color-primary)] pl-6"
-                        )}
-                      >
-                        {formatDateTime(log.createdAt)}
-                      </td>
-                      <td className="px-4 py-5">
-                        <AdminStatusBadge tone={getAuditActionTone(log.action)}>
-                          {getAuditActionLabel(log.action)}
-                        </AdminStatusBadge>
-                      </td>
-                      <td className="px-4 py-5 text-[#304458]">
-                        <div className="font-medium text-[var(--color-ink)]">
-                          {log.actor?.name ?? "Sistema"}
-                        </div>
-                        <div className="mt-1 text-sm text-[#5f7184]">
-                          {log.actor?.email ?? "Proceso interno"}
-                        </div>
-                      </td>
-                      <td className="px-7 py-5">
-                        <Link
-                          className="block font-medium text-[var(--color-primary)]"
-                          href={buildAuditQuery(log.id)}
-                        >
-                          {log.entityLabel ?? log.entityType}
-                        </Link>
-                        <p className="mt-1 text-sm text-[#607185]">
-                          {getEntityTypeLabel(log.entityType)}
-                        </p>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        </Card>
-
-        {selectedLog ? (
-          <Card className="rounded-[2rem] p-7">
-            <div className="flex items-center justify-between gap-4">
-              <AdminStatusBadge tone={getAuditActionTone(selectedLog.action)}>
-                {getAuditActionLabel(selectedLog.action)}
-              </AdminStatusBadge>
-              <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[#607185]">
-                {getEntityTypeLabel(selectedLog.entityType)}
-              </p>
-            </div>
-
-            <h2 className="mt-5 text-[2rem] font-semibold tracking-[-0.06em] text-[var(--color-ink)]">
-              {selectedLog.entityLabel ?? selectedLog.entityId}
-            </h2>
-            <p className="mt-2 text-sm leading-7 text-[#596b7f]">
-              Evento {selectedLog.id} registrado el {formatDateTime(selectedLog.createdAt)}.
-            </p>
-
-            <div className="mt-6 grid gap-3 sm:grid-cols-2">
-              <DetailField
-                label="Actor"
-                value={selectedLog.actor?.name ?? "Sistema"}
-              />
-              <DetailField
-                label="Correo"
-                value={selectedLog.actor?.email ?? "Proceso interno"}
-              />
-              <DetailField
-                label="Entidad"
-                value={getEntityTypeLabel(selectedLog.entityType)}
-              />
-              <DetailField
-                label="Registro"
-                value={selectedLog.entityId}
-              />
-            </div>
-
-            {metadataEntries.length > 0 ? (
-              <div className="mt-6 rounded-[1.5rem] border border-[#d9e1e8] bg-[#fbfcfd] p-5">
-                <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[#34475b]">
-                  Resumen tecnico
-                </p>
-                <div className="mt-4 space-y-3">
-                  {metadataEntries.slice(0, 4).map(([key, value]) => (
-                    <div
-                      className="flex items-start justify-between gap-4 border-b border-[#e6ebf0] pb-3 last:border-b-0 last:pb-0"
-                      key={key}
-                    >
-                      <span className="text-sm font-medium text-[#46586d]">{formatMetadataKey(key)}</span>
-                      <span className="max-w-[14rem] text-right text-sm text-[#5c6e80]">
-                        {formatMetadataValue(value)}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ) : null}
-
-            <div className="mt-6">
-              <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[#34475b]">
-                Metadata JSON
-              </p>
-              <pre className="mt-3 overflow-x-auto rounded-[1.5rem] bg-[#1f252b] p-5 text-sm leading-7 text-[#eaf0f6]">
-                {JSON.stringify(selectedMetadata ?? {}, null, 2)}
-              </pre>
-            </div>
-          </Card>
+        {selectedLogDetail ? (
+          <AuditDetailCard
+            log={selectedLogDetail}
+            selectedMetadata={selectedMetadata ?? {}}
+          />
         ) : null}
       </section>
     </div>
   );
-}
-
-function FilterSelect(props: {
-  defaultValue: string;
-  icon: ReactNode;
-  label: string;
-  name: string;
-  children: ReactNode;
-}) {
-  return (
-    <div className="space-y-2">
-      <label className="text-xs font-semibold uppercase tracking-[0.16em] text-[#506174]">
-        {props.label}
-      </label>
-      <div className="relative">
-        <div className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[#607185]">
-          {props.icon}
-        </div>
-        <select
-          className="h-12 w-full rounded-xl border border-[var(--color-border)] bg-white pl-10 pr-4 text-sm text-[var(--color-ink)]"
-          defaultValue={props.defaultValue}
-          name={props.name}
-        >
-          {props.children}
-        </select>
-      </div>
-    </div>
-  );
-}
-
-function DetailField({
-  label,
-  value
-}: {
-  label: string;
-  value: string;
-}) {
-  return (
-    <div className="rounded-[1.4rem] bg-[#f6fafc] px-4 py-4">
-      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#5a6c80]">{label}</p>
-      <p className="mt-2 text-sm font-medium leading-6 text-[var(--color-ink)]">{value}</p>
-    </div>
-  );
-}
-
-function getEntityTypeLabel(entityType: AuditEntityType) {
-  switch (entityType) {
-    case "USER":
-      return "Usuario";
-    case "COURSE":
-      return "Curso";
-    case "COURSE_EDITION":
-      return "Edicion";
-    case "COURSE_ENROLLMENT":
-      return "Matricula";
-    case "PROMOTION":
-      return "Promocion";
-    case "PURCHASE":
-      return "Compra";
-    case "NOTIFICATION_PREFERENCE":
-      return "Preferencias";
-    default:
-      return entityType;
-  }
-}
-
-function formatMetadataKey(key: string) {
-  return key
-    .replace(/([a-z])([A-Z])/g, "$1 $2")
-    .replace(/[_-]+/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-}
-
-function formatMetadataValue(value: unknown) {
-  if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
-    return String(value);
-  }
-
-  if (Array.isArray(value)) {
-    return `${value.length} elementos`;
-  }
-
-  if (value && typeof value === "object") {
-    return `${Object.keys(value).length} claves`;
-  }
-
-  return "Sin datos";
 }

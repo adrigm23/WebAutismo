@@ -10,14 +10,15 @@ import {
   FileText,
   FolderOpen,
   MessageSquareText,
-  LineChart,
-  ShieldCheck
+  LineChart
 } from "lucide-react";
 import { CourseProgressToggleForm } from "@/components/learning/course-progress-toggle-form";
+import { CourseResourceManager } from "@/components/learning/course-resource-manager";
 import { CourseArtwork } from "@/components/course-artwork";
 import { Badge } from "@/components/ui/badge";
 import type { CatalogCourse } from "@/lib/course-catalog";
 import type { CourseProgressDetails } from "@/lib/course-progress";
+import type { CampusResourceItem } from "@/lib/course-resources";
 import { cn, formatDate } from "@/lib/utils";
 
 type LearningShellProps = {
@@ -31,11 +32,7 @@ type LearningShellProps = {
       threads: number;
     };
   }>;
-  resources: Array<{
-    id: string;
-    title: string;
-    description: string;
-  }>;
+  resources: CampusResourceItem[];
   progress: CourseProgressDetails;
   roleLabel: string;
   canModerate: boolean;
@@ -304,36 +301,24 @@ export function CourseLearningShell({
 
           {sidebarTab === "resources" ? (
             <div className="campus-scrollbar flex-1 space-y-4 overflow-y-auto px-6 py-6">
-              {resources.map((resource) => (
-                <div
-                  className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5"
-                  key={resource.id}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="grid h-11 w-11 place-items-center rounded-full bg-white text-[var(--color-primary)]">
-                      {resource.id === "guia" ? (
-                        <FileText className="h-5 w-5" />
-                      ) : (
-                        <ShieldCheck className="h-5 w-5" />
-                      )}
-                    </div>
-                    <div>
-                      <p className="text-lg font-semibold text-[var(--color-ink)]">
-                        {resource.title}
-                      </p>
-                      <Badge tone={canModerate ? "teacher" : "student"}>{roleLabel}</Badge>
-                    </div>
-                  </div>
-                  <p className="mt-4 text-sm leading-7 text-[var(--color-muted)]">
-                    {resource.description}
+              <div className="flex items-center gap-3">
+                <div className="grid h-11 w-11 place-items-center rounded-full bg-white text-[var(--color-primary)]">
+                  <FileText className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="text-lg font-semibold text-[var(--color-ink)]">Biblioteca del curso</p>
+                  <p className="text-sm text-[var(--color-muted)]">
+                    Materiales, ejercicios y referencias disponibles en esta edición.
                   </p>
                 </div>
-              ))}
-              <div className="rounded-2xl border border-dashed border-[rgba(12,113,195,0.18)] bg-white p-5 text-sm leading-7 text-[var(--color-muted)]">
-                Los recursos visibles aqui representan el material actualmente modelado en la
-                plataforma. Si se incorporan nuevas descargas o recursos privados, apareceran
-                aqui como accesos directos verificables.
               </div>
+
+              <CourseResourceManager
+                canModerate={canModerate}
+                course={course}
+                resources={resources}
+                roleLabel={roleLabel}
+              />
             </div>
           ) : null}
 

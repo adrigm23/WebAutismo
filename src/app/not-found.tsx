@@ -9,7 +9,7 @@ export default function NotFound() {
           Error 404
         </p>
         <h1 className="mt-4 font-display text-4xl text-[var(--color-ink)]">
-          No hemos encontrado la página que buscas
+          No hemos encontrado la pagina que buscas
         </h1>
         <p className="mx-auto mt-4 max-w-xl text-sm leading-7 text-[var(--color-muted)]">
           Puede que el curso ya no exista o que la URL no sea correcta.

@@ -1,30 +1,24 @@
-import Link from "next/link";
 import { BookCopy, Layers3, PencilLine } from "lucide-react";
-import {
-  assignTeacherToCourseAction,
-  cloneCourseAction,
-  createCourseAction,
-  createCourseEditionAction,
-  unassignTeacherFromCourseAction,
-  updateCourseAction
-} from "@/actions/admin";
 import { AdminMetricCard } from "@/components/admin/admin-metric-card";
 import { AdminPageHeader } from "@/components/admin/admin-page-header";
-import { AdminStatusBadge } from "@/components/admin/admin-status-badge";
+import { CourseDetailCard } from "@/components/admin/courses/course-detail-card";
+import { CourseFiltersCard } from "@/components/admin/courses/course-filters-card";
+import { CourseTableCard } from "@/components/admin/courses/course-table-card";
+import { CreateCourseCard } from "@/components/admin/courses/create-course-card";
+import { CreateCourseEditionCard } from "@/components/admin/courses/create-course-edition-card";
+import { DemoCourseDetailCard } from "@/components/admin/courses/demo-course-detail-card";
+import type {
+  CourseFilterStatus,
+  CourseTableRow,
+  DemoCourseDetail,
+  EditableCourseDetail
+} from "@/components/admin/courses/types";
 import { ButtonLink } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { SubmitButton } from "@/components/ui/submit-button";
-import {
-  getCourseStatusLabel,
-  getCourseStatusTone,
-  getSearchParamValue
-} from "@/lib/admin-console";
+import { getSearchParamValue } from "@/lib/admin-console";
 import { requireAdminConsoleUser } from "@/lib/admin-console-server";
 import { demoAdminCourses } from "@/lib/admin-demo";
 import { isDemoUserId } from "@/lib/demo-auth";
 import { getDb } from "@/lib/prisma";
-import { formatPrice } from "@/lib/utils";
 
 type CoursesPageProps = {
   searchParams: Promise<{
@@ -35,11 +29,36 @@ type CoursesPageProps = {
   }>;
 };
 
+function buildCourseHref(input: {
+  q: string;
+  status: CourseFilterStatus;
+  courseId: string;
+  create: string;
+}) {
+  const qs = new URLSearchParams();
+
+  if (input.q) {
+    qs.set("q", input.q);
+  }
+
+  if (input.status !== "ALL") {
+    qs.set("status", input.status);
+  }
+
+  if (input.create === "1") {
+    qs.set("create", "1");
+  }
+
+  qs.set("courseId", input.courseId);
+
+  return `/admin/courses?${qs.toString()}`;
+}
+
 export default async function AdminCoursesPage({ searchParams }: CoursesPageProps) {
   const currentUser = await requireAdminConsoleUser("/admin/courses");
   const params = await searchParams;
   const q = getSearchParamValue(params.q);
-  const status = getSearchParamValue(params.status, "ALL");
+  const status = getSearchParamValue(params.status, "ALL") as CourseFilterStatus;
   const courseId = getSearchParamValue(params.courseId);
   const create = getSearchParamValue(params.create);
 
@@ -57,106 +76,71 @@ export default async function AdminCoursesPage({ searchParams }: CoursesPageProp
       visibleCourses.find((course) => course.id === courseId) ?? visibleCourses[0] ?? null;
     const activeEditions = demoAdminCourses.reduce((sum, course) => sum + course.activeEditions, 0);
     const inactiveCourses = demoAdminCourses.filter((course) => course.status === "INACTIVE").length;
+    const demoRows: CourseTableRow[] = visibleCourses.map((course) => ({
+      id: course.id,
+      href: buildCourseHref({
+        q,
+        status,
+        courseId: course.id,
+        create
+      }),
+      title: course.title,
+      slug: course.slug,
+      status: course.status as "ACTIVE" | "INACTIVE",
+      priceInCents: course.priceInCents,
+      modulesCount: course.modules,
+      editionsCount: course.editions,
+      teachersCount: course.teachers.length
+    }));
+    const demoDetail: DemoCourseDetail | null = selectedDemoCourse
+      ? {
+          title: selectedDemoCourse.title,
+          slug: selectedDemoCourse.slug,
+          shortDescription: selectedDemoCourse.shortDescription,
+          status: selectedDemoCourse.status as "ACTIVE" | "INACTIVE",
+          teachers: selectedDemoCourse.teachers
+        }
+      : null;
 
     return (
       <div className="space-y-9">
         <AdminPageHeader
-          actions={<ButtonLink href="/admin/promotions" variant="secondary">Ir a promociones</ButtonLink>}
+          actions={
+            <ButtonLink href="/admin/promotions" variant="secondary">
+              Ir a promociones
+            </ButtonLink>
+          }
           description="Catalogo demo para validar estructura, estados y panel de gestion sin dependencia de la base de datos."
           title="Catalogo de cursos"
         />
 
         <section className="grid gap-5 xl:grid-cols-3">
-          <AdminMetricCard accent="primary" icon={<BookCopy className="h-6 w-6" strokeWidth={1.8} />} label="Cursos totales" meta="Base curricular demo" value={demoAdminCourses.length} />
-          <AdminMetricCard accent="neutral" icon={<Layers3 className="h-6 w-6" strokeWidth={1.8} />} label="Ediciones activas" meta="Sesiones simuladas" value={activeEditions} />
-          <AdminMetricCard accent="warning" icon={<PencilLine className="h-6 w-6" strokeWidth={1.8} />} label="Cursos inactivos" meta="Pendientes de activar" value={inactiveCourses} />
+          <AdminMetricCard
+            accent="primary"
+            icon={<BookCopy className="h-6 w-6" strokeWidth={1.8} />}
+            label="Cursos totales"
+            meta="Base curricular demo"
+            value={demoAdminCourses.length}
+          />
+          <AdminMetricCard
+            accent="neutral"
+            icon={<Layers3 className="h-6 w-6" strokeWidth={1.8} />}
+            label="Ediciones activas"
+            meta="Sesiones simuladas"
+            value={activeEditions}
+          />
+          <AdminMetricCard
+            accent="warning"
+            icon={<PencilLine className="h-6 w-6" strokeWidth={1.8} />}
+            label="Cursos inactivos"
+            meta="Pendientes de activar"
+            value={inactiveCourses}
+          />
         </section>
 
-        <Card className="overflow-hidden rounded-[2rem]" id="course-filters">
-          <div className="border-b border-[#dde4ec] px-7 py-6">
-            <form className="grid gap-3 md:grid-cols-[1fr_220px_auto]">
-              <Input defaultValue={q} name="q" placeholder="Filtrar cursos..." />
-              <select className="h-12 rounded-xl border border-[var(--color-border)] bg-white px-4 text-sm" defaultValue={status} name="status">
-                <option value="ALL">Todos los estados</option>
-                <option value="ACTIVE">Activos</option>
-                <option value="INACTIVE">Inactivos</option>
-              </select>
-              <SubmitButton pendingLabel="Aplicando..." variant="secondary">Aplicar</SubmitButton>
-            </form>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="min-w-full text-left">
-              <thead>
-                <tr className="border-b border-[#dde4ec] text-sm uppercase tracking-[0.16em] text-[#3b4f64]">
-                  <th className="px-7 py-4">Curso</th>
-                  <th className="px-4 py-4">Estado</th>
-                  <th className="px-4 py-4">Precio</th>
-                  <th className="px-4 py-4">Detalle</th>
-                  <th className="px-7 py-4 text-right">Acciones</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#e0e7ee]">
-                {visibleCourses.map((course) => (
-                  <tr className="align-top" key={course.id}>
-                    <td className="px-7 py-6">
-                      <Link href={`/admin/courses?courseId=${course.id}`}>
-                        <span className="block text-[1.16rem] font-semibold text-[var(--color-ink)]">{course.title}</span>
-                        <span className="mt-1 block text-sm text-[#647487]">/cursos/{course.slug}</span>
-                      </Link>
-                    </td>
-                    <td className="px-4 py-6">
-                      <AdminStatusBadge tone={getCourseStatusTone(course.status as "ACTIVE" | "INACTIVE")}>
-                        {getCourseStatusLabel(course.status as "ACTIVE" | "INACTIVE")}
-                      </AdminStatusBadge>
-                    </td>
-                    <td className="px-4 py-6 text-[1.08rem] font-medium text-[var(--color-ink)]">{formatPrice(course.priceInCents)}</td>
-                    <td className="px-4 py-6 text-sm leading-7 text-[#405365]">
-                      <div>{course.modules} modulos</div>
-                      <div>{course.editions} ediciones</div>
-                      <div>{course.teachers.length > 0 ? `${course.teachers.length} docentes` : "Sin docentes"}</div>
-                    </td>
-                    <td className="px-7 py-6 text-right">
-                      <ButtonLink href={`/admin/courses?courseId=${course.id}`} variant="secondary">Gestionar</ButtonLink>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </Card>
-
-        {selectedDemoCourse ? (
-          <Card className="rounded-[2rem] p-7">
-            <div className="flex flex-wrap items-start justify-between gap-5">
-              <div>
-                <h2 className="text-[2rem] font-semibold tracking-[-0.06em] text-[var(--color-ink)]">{selectedDemoCourse.title}</h2>
-                <p className="mt-2 text-sm text-[#5f7083]">Slug: {selectedDemoCourse.slug}</p>
-                <p className="mt-3 max-w-3xl text-sm leading-7 text-[#5f7083]">{selectedDemoCourse.shortDescription}</p>
-              </div>
-              <AdminStatusBadge tone={getCourseStatusTone(selectedDemoCourse.status as "ACTIVE" | "INACTIVE")}>
-                {getCourseStatusLabel(selectedDemoCourse.status as "ACTIVE" | "INACTIVE")}
-              </AdminStatusBadge>
-            </div>
-            <div className="mt-8 grid gap-6 xl:grid-cols-2">
-              <div>
-                <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[#314255]">Docentes asignados</p>
-                <div className="mt-4 space-y-3">
-                  {selectedDemoCourse.teachers.length > 0 ? selectedDemoCourse.teachers.map((teacher) => (
-                    <div className="rounded-[1.3rem] border border-[#d9e1e8] bg-[#fbfcfd] px-4 py-3" key={teacher}>
-                      <p className="font-medium text-[var(--color-ink)]">{teacher}</p>
-                    </div>
-                  )) : <p className="text-sm text-[#607285]">Sin docentes asignados.</p>}
-                </div>
-              </div>
-              <div>
-                <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[#314255]">Resumen operativo</p>
-                <div className="mt-4 rounded-[1.4rem] border border-[#d9e1e8] bg-[#fbfcfd] p-5 text-sm leading-7 text-[#44586d]">
-                  Esta seccion esta en modo demo. Puedes revisar la composicion y la jerarquia visual, pero los cambios no se guardan hasta conectar la base de datos.
-                </div>
-              </div>
-            </div>
-          </Card>
-        ) : null}
+        <CourseFiltersCard q={q} status={status} />
+        <CourseTableCard rows={demoRows} />
+        {demoDetail ? <DemoCourseDetailCard course={demoDetail} /> : null}
       </div>
     );
   }
@@ -230,6 +214,48 @@ export default async function AdminCoursesPage({ searchParams }: CoursesPageProp
     0
   );
   const draftCourses = courses.filter((course) => course.status === "INACTIVE").length;
+  const tableRows: CourseTableRow[] = courses.map((course) => ({
+    id: course.id,
+    href: buildCourseHref({
+      q,
+      status,
+      courseId: course.id,
+      create
+    }),
+    title: course.title,
+    slug: course.slug,
+    status: course.status,
+    priceInCents: course.priceInCents,
+    modulesCount: course.modules.length,
+    editionsCount: course.editions.length,
+    teachersCount: course.teacherAssignments.length
+  }));
+  const editableDetail: EditableCourseDetail | null = selectedCourse
+    ? {
+        id: selectedCourse.id,
+        slug: selectedCourse.slug,
+        title: selectedCourse.title,
+        shortDescription: selectedCourse.shortDescription,
+        status: selectedCourse.status,
+        priceInCents: selectedCourse.priceInCents,
+        teacherAssignments: selectedCourse.teacherAssignments.map((assignment) => ({
+          id: assignment.id,
+          userId: assignment.user.id,
+          name: assignment.user.name,
+          email: assignment.user.email
+        })),
+        teacherCandidates: teacherCandidates.map((teacher) => ({
+          id: teacher.id,
+          name: teacher.name,
+          email: teacher.email
+        })),
+        editions: selectedCourse.editions.map((edition) => ({
+          id: edition.id,
+          label: edition.label,
+          status: edition.status
+        }))
+      }
+    : null;
 
   return (
     <div className="space-y-9">
@@ -270,238 +296,17 @@ export default async function AdminCoursesPage({ searchParams }: CoursesPageProp
         />
       </section>
 
-      <Card className="overflow-hidden rounded-[2rem]" id="course-filters">
-        <div className="border-b border-[#dde4ec] px-7 py-6">
-          <form className="grid gap-3 md:grid-cols-[1fr_220px_auto]">
-            <Input defaultValue={q} name="q" placeholder="Filtrar cursos..." />
-            <select
-              className="h-12 rounded-xl border border-[var(--color-border)] bg-white px-4 text-sm"
-              defaultValue={status}
-              name="status"
-            >
-              <option value="ALL">Todos los estados</option>
-              <option value="ACTIVE">Activos</option>
-              <option value="INACTIVE">Inactivos</option>
-            </select>
-            <SubmitButton pendingLabel="Aplicando..." variant="secondary">
-              Aplicar
-            </SubmitButton>
-          </form>
-        </div>
-
-        <div className="overflow-x-auto">
-          <table className="min-w-full text-left">
-            <thead>
-              <tr className="border-b border-[#dde4ec] text-sm uppercase tracking-[0.16em] text-[#3b4f64]">
-                <th className="px-7 py-4">Curso</th>
-                <th className="px-4 py-4">Estado</th>
-                <th className="px-4 py-4">Precio</th>
-                <th className="px-4 py-4">Detalle</th>
-                <th className="px-7 py-4 text-right">Acciones</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[#e0e7ee]">
-              {courses.map((course) => (
-                <tr className="align-top" key={course.id}>
-                  <td className="px-7 py-6">
-                    <Link href={`/admin/courses?courseId=${course.id}`}>
-                      <span className="block text-[1.16rem] font-semibold text-[var(--color-ink)]">
-                        {course.title}
-                      </span>
-                      <span className="mt-1 block text-sm text-[#647487]">/cursos/{course.slug}</span>
-                    </Link>
-                  </td>
-                  <td className="px-4 py-6">
-                    <AdminStatusBadge tone={getCourseStatusTone(course.status)}>
-                      {getCourseStatusLabel(course.status)}
-                    </AdminStatusBadge>
-                  </td>
-                  <td className="px-4 py-6 text-[1.08rem] font-medium text-[var(--color-ink)]">
-                    {formatPrice(course.priceInCents)}
-                  </td>
-                  <td className="px-4 py-6 text-sm leading-7 text-[#405365]">
-                    <div>{course.modules.length} modulos</div>
-                    <div>{course.editions.length} ediciones</div>
-                    <div>
-                      {course.teacherAssignments.length > 0
-                        ? `${course.teacherAssignments.length} docentes`
-                        : "Sin docentes"}
-                    </div>
-                  </td>
-                  <td className="px-7 py-6 text-right">
-                    <ButtonLink href={`/admin/courses?courseId=${course.id}`} variant="secondary">
-                      Gestionar
-                    </ButtonLink>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </Card>
+      <CourseFiltersCard q={q} status={status} />
+      <CourseTableCard rows={tableRows} />
 
       <section className="grid gap-6 2xl:grid-cols-[1.15fr_0.85fr]">
         <div className="space-y-6">
-          {selectedCourse ? (
-            <Card className="rounded-[2rem] p-7">
-              <div className="flex flex-wrap items-start justify-between gap-5">
-                <div>
-                  <h2 className="text-[2rem] font-semibold tracking-[-0.06em] text-[var(--color-ink)]">
-                    {selectedCourse.title}
-                  </h2>
-                  <p className="mt-2 text-sm text-[#5f7083]">Slug: {selectedCourse.slug}</p>
-                </div>
-                <AdminStatusBadge tone={getCourseStatusTone(selectedCourse.status)}>
-                  {getCourseStatusLabel(selectedCourse.status)}
-                </AdminStatusBadge>
-              </div>
-
-              <form action={updateCourseAction} className="mt-6 grid gap-4">
-                <input name="courseId" type="hidden" value={selectedCourse.id} />
-                <div className="grid gap-4 md:grid-cols-2">
-                  <Input defaultValue={selectedCourse.title} name="title" />
-                  <Input defaultValue={selectedCourse.shortDescription} name="shortDescription" />
-                </div>
-                <div className="grid gap-4 md:grid-cols-[180px_220px_auto]">
-                  <Input defaultValue={String(selectedCourse.priceInCents)} name="priceInCents" type="number" />
-                  <select
-                    className="h-12 rounded-xl border border-[var(--color-border)] bg-white px-4 text-sm"
-                    defaultValue={selectedCourse.status}
-                    name="status"
-                  >
-                    <option value="ACTIVE">Activo</option>
-                    <option value="INACTIVE">Inactivo</option>
-                  </select>
-                  <SubmitButton pendingLabel="Guardando..." variant="secondary">
-                    Guardar cambios
-                  </SubmitButton>
-                </div>
-              </form>
-
-              <div className="mt-8 grid gap-6 xl:grid-cols-2">
-                <div>
-                  <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[#314255]">
-                    Docentes asignados
-                  </p>
-                  <div className="mt-4 space-y-3">
-                    {selectedCourse.teacherAssignments.length > 0 ? (
-                      selectedCourse.teacherAssignments.map((assignment) => (
-                        <form
-                          action={unassignTeacherFromCourseAction}
-                          className="flex items-center justify-between gap-3 rounded-[1.3rem] border border-[#d9e1e8] bg-[#fbfcfd] px-4 py-3"
-                          key={assignment.id}
-                        >
-                          <input name="courseId" type="hidden" value={selectedCourse.id} />
-                          <input name="teacherUserId" type="hidden" value={assignment.user.id} />
-                          <div>
-                            <p className="font-medium text-[var(--color-ink)]">{assignment.user.name}</p>
-                            <p className="text-sm text-[#5a6c7f]">{assignment.user.email}</p>
-                          </div>
-                          <SubmitButton pendingLabel="Quitando..." variant="ghost">
-                            Quitar
-                          </SubmitButton>
-                        </form>
-                      ))
-                    ) : (
-                      <p className="text-sm text-[#607285]">Sin docentes asignados.</p>
-                    )}
-                  </div>
-
-                  <form action={assignTeacherToCourseAction} className="mt-4 flex flex-wrap gap-3">
-                    <input name="courseId" type="hidden" value={selectedCourse.id} />
-                    <select
-                      className="h-12 min-w-[14rem] flex-1 rounded-xl border border-[var(--color-border)] bg-white px-4 text-sm"
-                      name="teacherUserId"
-                    >
-                      {teacherCandidates.map((teacher) => (
-                        <option key={teacher.id} value={teacher.id}>
-                          {teacher.name} · {teacher.email}
-                        </option>
-                      ))}
-                    </select>
-                    <SubmitButton pendingLabel="Asignando...">Asignar docente</SubmitButton>
-                  </form>
-                </div>
-
-                <div>
-                  <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[#314255]">
-                    Clonado rapido
-                  </p>
-                  <form action={cloneCourseAction} className="mt-4 space-y-4">
-                    <input name="sourceSlug" type="hidden" value={selectedCourse.slug} />
-                    <Input name="title" placeholder="Nuevo titulo del clon" required />
-                    <Input name="slug" placeholder="nuevo-slug" required />
-                    <SubmitButton pendingLabel="Clonando..." variant="secondary">
-                      Clonar este curso
-                    </SubmitButton>
-                  </form>
-                </div>
-              </div>
-
-              <div className="mt-8">
-                <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[#314255]">
-                  Ediciones del curso
-                </p>
-                <div className="mt-4 flex flex-wrap gap-2">
-                  {selectedCourse.editions.map((edition) => (
-                    <AdminStatusBadge key={edition.id} tone={edition.status === "ACTIVE" ? "primary" : "neutral"}>
-                      {edition.label}
-                    </AdminStatusBadge>
-                  ))}
-                </div>
-              </div>
-            </Card>
-          ) : null}
+          {editableDetail ? <CourseDetailCard course={editableDetail} /> : null}
         </div>
 
         <div className="space-y-6">
-          {(create === "1" || courses.length === 0) ? (
-            <Card className="rounded-[2rem] p-7" id="create-course">
-              <h2 className="text-[1.8rem] font-semibold tracking-[-0.05em] text-[var(--color-ink)]">
-                Crear curso
-              </h2>
-              <form action={createCourseAction} className="mt-5 space-y-4">
-                <Input name="title" placeholder="Titulo del curso" required />
-                <Input name="slug" placeholder="slug-del-curso" required />
-                <Input name="shortDescription" placeholder="Descripcion corta" required />
-                <Input min="0" name="priceInCents" placeholder="Precio en centimos" required type="number" />
-                <SubmitButton className="w-full" pendingLabel="Creando curso...">
-                  Crear curso
-                </SubmitButton>
-              </form>
-            </Card>
-          ) : null}
-
-          {selectedCourse ? (
-            <Card className="rounded-[2rem] p-7">
-              <h2 className="text-[1.8rem] font-semibold tracking-[-0.05em] text-[var(--color-ink)]">
-                Crear edicion
-              </h2>
-              <form action={createCourseEditionAction} className="mt-5 space-y-4">
-                <input name="courseId" type="hidden" value={selectedCourse.id} />
-                <Input name="label" placeholder="Etiqueta visible" required />
-                <div className="grid gap-4 md:grid-cols-2">
-                  <Input name="startsAt" type="datetime-local" />
-                  <Input name="endsAt" type="datetime-local" />
-                </div>
-                <div className="grid gap-4 md:grid-cols-3">
-                  <Input name="accessUntil" type="datetime-local" />
-                  <Input defaultValue="0" name="graceAccessDays" type="number" />
-                  <select
-                    className="h-12 rounded-xl border border-[var(--color-border)] bg-white px-4 text-sm"
-                    name="status"
-                  >
-                    <option value="ACTIVE">Activa</option>
-                    <option value="SCHEDULED">Programada</option>
-                    <option value="CLOSED">Cerrada</option>
-                  </select>
-                </div>
-                <SubmitButton className="w-full" pendingLabel="Creando edicion..." variant="secondary">
-                  Crear edicion
-                </SubmitButton>
-              </form>
-            </Card>
-          ) : null}
+          {create === "1" || courses.length === 0 ? <CreateCourseCard /> : null}
+          {selectedCourse ? <CreateCourseEditionCard courseId={selectedCourse.id} /> : null}
         </div>
       </section>
     </div>

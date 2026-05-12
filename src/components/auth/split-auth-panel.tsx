@@ -7,11 +7,13 @@ import { cn } from "@/lib/utils";
 type SplitAuthPanelProps = {
   next?: string;
   emphasis?: "login" | "register";
+  showDemoNotice?: boolean;
 };
 
 export function SplitAuthPanel({
   next,
-  emphasis = "login"
+  emphasis = "login",
+  showDemoNotice = false
 }: SplitAuthPanelProps) {
   return (
     <div className="min-h-screen bg-[var(--color-background)] px-6 py-14 lg:px-8">
@@ -21,7 +23,7 @@ export function SplitAuthPanel({
             <Landmark className="h-7 w-7" />
           </div>
           <p className="text-4xl font-bold tracking-[-0.05em] text-[var(--color-primary)]">
-            Autismo Córdoba
+            Autismo Cordoba
           </p>
         </div>
 
@@ -34,10 +36,10 @@ export function SplitAuthPanel({
           >
             <div className="max-w-md">
               <h1 className="text-5xl font-semibold tracking-[-0.05em] text-[var(--color-ink)]">
-                Inicia sesión
+                Inicia sesion
               </h1>
               <p className="mt-4 text-lg leading-8 text-[var(--color-muted)]">
-                Accede a tu panel de aprendizaje y continúa tu desarrollo profesional.
+                Accede a tu panel de aprendizaje y continua tu desarrollo profesional.
               </p>
             </div>
 
@@ -50,13 +52,15 @@ export function SplitAuthPanel({
               submitLabel="Acceder"
             />
 
-            <div className="mt-6 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] px-5 py-4 text-sm leading-7 text-[var(--color-muted)]">
-              <p className="font-semibold text-[var(--color-ink)]">Acceso demo temporal</p>
-              <p>Admin: admin.demo@autismo.local</p>
-              <p>Docente: docente.demo@autismo.local</p>
-              <p>Alumno: alumno.demo@autismo.local</p>
-              <p>Contrasena: demo12345</p>
-            </div>
+            {showDemoNotice ? (
+              <div className="mt-6 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] px-5 py-4 text-sm leading-7 text-[var(--color-muted)]">
+                <p className="font-semibold text-[var(--color-ink)]">Modo demo habilitado</p>
+                <p>
+                  El acceso demo solo esta disponible en entornos locales habilitados por
+                  variables de entorno. Las credenciales no se exponen en la interfaz.
+                </p>
+              </div>
+            ) : null}
           </section>
 
           <section
@@ -70,12 +74,12 @@ export function SplitAuthPanel({
                 Crea tu cuenta
               </h2>
               <p className="mt-4 text-lg leading-8 text-[var(--color-muted)]">
-                Únete a nuestra comunidad para acceder al catálogo completo de recursos.
+                Unete a nuestra comunidad para acceder al catalogo completo de recursos.
               </p>
             </div>
 
             <div className="mt-10 rounded-2xl border border-[var(--color-border)] bg-white px-5 py-4 text-sm leading-7 text-[var(--color-muted)]">
-              Tu información está protegida mediante encriptación de nivel institucional. Nunca
+              Tu informacion esta protegida mediante encriptacion de nivel institucional. Nunca
               compartiremos tus datos personales.
             </div>
 
@@ -90,9 +94,9 @@ export function SplitAuthPanel({
         </div>
 
         <div className="mt-12 flex flex-wrap items-center justify-center gap-6 text-sm text-[var(--color-muted)]">
-          <span>Ayuda y Soporte</span>
+          <span>Ayuda y soporte</span>
           <span className="h-1 w-1 rounded-full bg-[var(--color-border)]" />
-          <span>Aviso Legal</span>
+          <span>Aviso legal</span>
         </div>
       </div>
     </div>

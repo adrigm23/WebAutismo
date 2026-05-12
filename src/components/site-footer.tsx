@@ -1,23 +1,7 @@
-"use client";
-
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { siteConfig } from "@/lib/site";
 
 export function SiteFooter() {
-  const pathname = usePathname();
-
-  if (
-    pathname === "/acceder" ||
-    pathname === "/registro" ||
-    pathname === "/admin" ||
-    pathname.startsWith("/admin/") ||
-    pathname.startsWith("/checkout/") ||
-    pathname.startsWith("/mis-cursos/")
-  ) {
-    return null;
-  }
-
   return (
     <footer className="mt-16 border-t border-[rgba(12,113,195,0.12)] bg-white/76">
       <div className="site-container grid gap-10 py-14 lg:grid-cols-[1.5fr_1fr_1fr]">
@@ -40,11 +24,11 @@ export function SiteFooter() {
             <Link className="block hover:text-[var(--color-primary)]" href="/">
               Inicio
             </Link>
+            <Link className="block hover:text-[var(--color-primary)]" href="/plataforma">
+              Plataforma
+            </Link>
             <Link className="block hover:text-[var(--color-primary)]" href="/cursos">
               Cursos
-            </Link>
-            <Link className="block hover:text-[var(--color-primary)]" href="/mi-cuenta">
-              Mi cuenta
             </Link>
           </div>
         </div>

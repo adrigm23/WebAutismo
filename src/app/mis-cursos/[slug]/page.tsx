@@ -7,9 +7,9 @@ import { getCourseProgressDetailsForUser } from "@/lib/course-progress";
 import {
   canAccessCourseCommunity,
   canModerateCourse,
-  getCampusResources,
   getRoleLabel
 } from "@/lib/course-community";
+import { getCampusResources } from "@/lib/course-resources";
 import { getForumCategories } from "@/lib/forum";
 
 type MyCoursePageProps = {
@@ -50,9 +50,15 @@ export default async function MyCoursePage({ params }: MyCoursePageProps) {
     redirect(`/checkout/${course.slug}`);
   }
 
-  const forumCategories = await getForumCategories(course.slug, access.role);
-  const resources = getCampusResources(course);
   const canModerate = canModerateCourse(access.role);
+  const [forumCategories, resources] = await Promise.all([
+    getForumCategories(course.slug, access.role),
+    getCampusResources({
+      course,
+      viewerUserId: user.id,
+      canModerate
+    })
+  ]);
   const progress = await getCourseProgressDetailsForUser({
     userId: user.id,
     course

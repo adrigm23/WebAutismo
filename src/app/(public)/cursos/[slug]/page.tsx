@@ -13,15 +13,21 @@ import {
 import { CourseArtwork } from "@/components/course-artwork";
 import { PurchaseCard } from "@/components/purchase-card";
 import { Card } from "@/components/ui/card";
-import { getCurrentUser } from "@/lib/auth";
-import { getCatalogCourseBySlug } from "@/lib/course-catalog";
-import { userOwnsCourse } from "@/lib/purchases";
+import { getCatalogCourseBySlug, getCatalogCourses } from "@/lib/course-catalog";
 import { absoluteUrl } from "@/lib/site";
 import { getStripe } from "@/lib/stripe";
 
 type CoursePageProps = {
   params: Promise<{ slug: string }>;
 };
+
+export const revalidate = 3600;
+export const dynamicParams = false;
+
+export async function generateStaticParams() {
+  const courses = await getCatalogCourses();
+  return courses.map((course) => ({ slug: course.slug }));
+}
 
 export async function generateMetadata({
   params
@@ -60,8 +66,6 @@ export default async function CoursePage({ params }: CoursePageProps) {
     notFound();
   }
 
-  const user = await getCurrentUser();
-  const ownsCourse = user ? await userOwnsCourse(user.id, course.slug) : false;
   const purchaseMode = getStripe() ? "live" : "demo";
   const leadEdition = course.activeEdition;
 
@@ -165,12 +169,7 @@ export default async function CoursePage({ params }: CoursePageProps) {
           </div>
 
           <aside className="lg:sticky lg:top-28">
-            <PurchaseCard
-              course={course}
-              isAuthenticated={Boolean(user)}
-              ownsCourse={ownsCourse}
-              purchaseMode={purchaseMode}
-            />
+            <PurchaseCard course={course} purchaseMode={purchaseMode} />
           </aside>
         </div>
 

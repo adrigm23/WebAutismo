@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState } from "react";
 import { loginAction, registerAction, type AuthFormState } from "@/actions/auth";
 import { Input } from "@/components/ui/input";
@@ -38,28 +39,38 @@ export function AuthForm({
       ) : null}
 
       <label className="block space-y-2">
-        <span className="text-sm font-medium text-[var(--color-ink)]">Correo electrónico</span>
-        <Input name="email" placeholder="tu@email.com" required type="email" />
+        <span className="text-sm font-medium text-[var(--color-ink)]">Correo electronico</span>
+        <Input autoComplete="email" name="email" placeholder="tu@email.com" required type="email" />
       </label>
 
       <label className="block space-y-2">
         <div className="flex items-center justify-between gap-3">
-          <span className="text-sm font-medium text-[var(--color-ink)]">Contraseña</span>
+          <span className="text-sm font-medium text-[var(--color-ink)]">Contrasena</span>
           {mode === "login" && showForgotLink ? (
-            <span className="text-sm font-medium text-[var(--color-primary)]">
-              ¿Olvidaste tu contraseña?
-            </span>
+            <Link
+              className="text-sm font-medium text-[var(--color-primary)] underline-offset-4 hover:underline"
+              href="mailto:formacion@autismocordoba.org?subject=Recuperacion%20de%20contrasena"
+            >
+              Has olvidado tu contrasena?
+            </Link>
           ) : null}
         </div>
-        <Input name="password" placeholder="••••••••" required type="password" />
+        <Input
+          autoComplete={mode === "login" ? "current-password" : "new-password"}
+          name="password"
+          placeholder="Introduce tu contrasena"
+          required
+          type="password"
+        />
       </label>
 
       {mode === "register" ? (
         <label className="block space-y-2">
-          <span className="text-sm font-medium text-[var(--color-ink)]">Confirmar contraseña</span>
+          <span className="text-sm font-medium text-[var(--color-ink)]">Confirmar contrasena</span>
           <Input
+            autoComplete="new-password"
             name="confirmPassword"
-            placeholder="••••••••"
+            placeholder="Repite tu contrasena"
             required
             type="password"
           />
@@ -69,7 +80,11 @@ export function AuthForm({
       <input name="next" type="hidden" value={next || ""} />
 
       {state.error ? (
-        <p className="rounded-2xl border border-[#efb3a6] bg-[#fff1ec] px-4 py-3 text-sm text-[#9b4128]">
+        <p
+          aria-live="polite"
+          className="rounded-2xl border border-[#efb3a6] bg-[#fff1ec] px-4 py-3 text-sm text-[#9b4128]"
+          role="status"
+        >
           {state.error}
         </p>
       ) : null}

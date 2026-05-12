@@ -6,6 +6,8 @@ output
 .env.local
 dist
 coverage
+playwright-report
+test-results
 storage
 *.log
 *.tsbuildinfo

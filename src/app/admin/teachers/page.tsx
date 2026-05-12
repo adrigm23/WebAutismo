@@ -1,28 +1,25 @@
 import type { UserGlobalRole } from "@prisma/client";
-import Link from "next/link";
-import { AlertTriangle, BookCopy, GraduationCap, Search, UserPlus, UsersRound } from "lucide-react";
-import {
-  createTeacherAction,
-  syncTeacherCourseAssignmentsAction
-} from "@/actions/admin";
+import { BookCopy, GraduationCap, Search, UsersRound } from "lucide-react";
 import { AdminMetricCard } from "@/components/admin/admin-metric-card";
 import { AdminPageHeader } from "@/components/admin/admin-page-header";
-import { AdminStatusBadge } from "@/components/admin/admin-status-badge";
+import { CreateTeacherCard } from "@/components/admin/teachers/create-teacher-card";
+import { DemoTeacherDetailCard } from "@/components/admin/teachers/demo-teacher-detail-card";
+import { TeacherCard } from "@/components/admin/teachers/teacher-card";
+import { TeacherDetailCard } from "@/components/admin/teachers/teacher-detail-card";
+import type {
+  TeacherCourseOption,
+  TeacherSummary
+} from "@/components/admin/teachers/types";
 import { ButtonLink } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { SubmitButton } from "@/components/ui/submit-button";
-import {
-  getRoleFilterLabel,
-  getRoleTone,
-  getSearchParamValue,
-  getUserInitials
-} from "@/lib/admin-console";
+import { getSearchParamValue } from "@/lib/admin-console";
 import { requireAdminConsoleUser } from "@/lib/admin-console-server";
 import { demoAdminTeachers } from "@/lib/admin-demo";
 import { isDemoUserId } from "@/lib/demo-auth";
 import { getDb } from "@/lib/prisma";
-import { cn, formatCompactNumber, formatDate } from "@/lib/utils";
+import { cn, formatCompactNumber } from "@/lib/utils";
 
 type TeachersPageProps = {
   searchParams: Promise<{
@@ -30,29 +27,6 @@ type TeachersPageProps = {
     view?: string | string[];
     teacherId?: string | string[];
   }>;
-};
-
-type TeacherSummary = {
-  id: string;
-  name: string;
-  email: string;
-  globalRole: UserGlobalRole;
-  createdAt: Date;
-  updatedAt: Date;
-  courseAssignments: Array<{
-    courseId: string;
-    course: {
-      id: string;
-      title: string;
-      slug: string;
-      editions: Array<{
-        id: string;
-        label: string;
-      }>;
-    };
-  }>;
-  activeStudents: number;
-  activeEditions: number;
 };
 
 export default async function AdminTeachersPage({ searchParams }: TeachersPageProps) {
@@ -171,68 +145,7 @@ export default async function AdminTeachersPage({ searchParams }: TeachersPagePr
             ))}
           </div>
 
-          {selectedDemoTeacher ? (
-            <Card className="overflow-hidden rounded-[2rem]">
-              <div className="border-b border-[#dde4ec] px-7 py-7">
-                <div className="flex items-start gap-4">
-                  <div className="grid h-14 w-14 place-items-center rounded-full bg-[rgba(12,113,195,0.12)] text-base font-semibold text-[var(--color-primary)]">
-                    {getUserInitials(selectedDemoTeacher.name)}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <h2 className="text-[2rem] font-semibold leading-none tracking-[-0.06em] text-[var(--color-ink)]">
-                      {selectedDemoTeacher.name}
-                    </h2>
-                    <p className="mt-2 truncate text-sm text-[#5b6d80]">{selectedDemoTeacher.email}</p>
-                    <div className="mt-4 flex flex-wrap gap-2">
-                      <AdminStatusBadge tone="warning">Docente titular</AdminStatusBadge>
-                      <AdminStatusBadge tone={selectedDemoTeacher.activeStudents >= 75 ? "danger" : "primary"}>
-                        {selectedDemoTeacher.activeStudents >= 75 ? "Carga alta" : "Carga estable"}
-                      </AdminStatusBadge>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mt-6 grid gap-3 sm:grid-cols-3">
-                  <div className="rounded-[1.4rem] bg-[#f6fafc] px-4 py-4">
-                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#5a6c80]">Alta</p>
-                    <p className="mt-2 text-base font-semibold text-[var(--color-ink)]">{formatDate(selectedDemoTeacher.createdAt)}</p>
-                  </div>
-                  <div className="rounded-[1.4rem] bg-[#f6fafc] px-4 py-4">
-                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#5a6c80]">Cursos</p>
-                    <p className="mt-2 text-base font-semibold text-[var(--color-ink)]">{selectedDemoTeacher.courseAssignments.length} asignados</p>
-                  </div>
-                  <div className="rounded-[1.4rem] bg-[#f6fafc] px-4 py-4">
-                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#5a6c80]">Revision</p>
-                    <p className="mt-2 text-base font-semibold text-[var(--color-ink)]">{formatDate(selectedDemoTeacher.updatedAt)}</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="px-7 py-7">
-                <div className={cn("rounded-[1.5rem] border px-5 py-4 text-sm leading-7", selectedDemoTeacher.activeStudents >= 75 ? "border-[#f3b3ac] bg-[#fff2f0] text-[#a03329]" : "border-[#dbe6ef] bg-[#f7fafc] text-[#44586d]")}>
-                  <div className="flex items-center gap-3 font-semibold">
-                    <AlertTriangle className="h-4 w-4" strokeWidth={1.8} />
-                    {selectedDemoTeacher.activeStudents >= 75 ? "Alerta de carga alta" : "Seguimiento operativo estable"}
-                  </div>
-                  <p className="mt-2">
-                    Esta cuenta se muestra en modo demostracion. Los cambios reales en asignaciones siguen deshabilitados hasta conectar la base de datos.
-                  </p>
-                </div>
-
-                <div className="mt-6">
-                  <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[#314255]">Asignacion de cursos</p>
-                  <div className="mt-4 space-y-3">
-                    {selectedDemoTeacher.courseAssignments.map((assignment) => (
-                      <div className="rounded-[1.2rem] border border-[#d9e1e8] bg-[#fbfcfd] px-4 py-4 text-sm text-[#33475b]" key={assignment.courseId}>
-                        <div className="font-medium text-[var(--color-ink)]">{assignment.course.title}</div>
-                        <div className="mt-1 text-xs uppercase tracking-[0.14em] text-[#6a7b8d]">/cursos/{assignment.course.slug}</div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </Card>
-          ) : null}
+          {selectedDemoTeacher ? <DemoTeacherDetailCard selectedTeacher={selectedDemoTeacher} /> : null}
         </section>
       </div>
     );
@@ -385,6 +298,8 @@ export default async function AdminTeachersPage({ searchParams }: TeachersPagePr
     return `/admin/teachers${qs.size > 0 ? `?${qs.toString()}` : ""}`;
   };
 
+  const courseOptions: TeacherCourseOption[] = allCourses;
+
   return (
     <div className="space-y-8">
       <AdminPageHeader
@@ -495,260 +410,12 @@ export default async function AdminTeachersPage({ searchParams }: TeachersPagePr
 
         <div className="space-y-6 2xl:sticky 2xl:top-6 2xl:self-start">
           {selectedTeacher ? (
-            <Card className="overflow-hidden rounded-[2rem]">
-              <div className="border-b border-[#dde4ec] px-7 py-7">
-                <div className="flex items-start gap-4">
-                  <div className="grid h-14 w-14 place-items-center rounded-full bg-[rgba(12,113,195,0.12)] text-base font-semibold text-[var(--color-primary)]">
-                    {getUserInitials(selectedTeacher.name)}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <h2 className="text-[2rem] font-semibold leading-none tracking-[-0.06em] text-[var(--color-ink)]">
-                      {selectedTeacher.name}
-                    </h2>
-                    <p className="mt-2 truncate text-sm text-[#5b6d80]">{selectedTeacher.email}</p>
-                    <div className="mt-4 flex flex-wrap gap-2">
-                      <AdminStatusBadge tone={getRoleTone(selectedTeacher.globalRole)}>
-                        {getRoleFilterLabel(selectedTeacher.globalRole)}
-                      </AdminStatusBadge>
-                      <AdminStatusBadge
-                        tone={selectedTeacher.activeStudents >= 75 ? "danger" : "primary"}
-                      >
-                        {selectedTeacher.activeStudents >= 75 ? "Carga alta" : "Carga estable"}
-                      </AdminStatusBadge>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mt-6 grid gap-3 sm:grid-cols-3">
-                  <div className="rounded-[1.4rem] bg-[#f6fafc] px-4 py-4">
-                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#5a6c80]">
-                      Alta
-                    </p>
-                    <p className="mt-2 text-base font-semibold text-[var(--color-ink)]">
-                      {formatDate(selectedTeacher.createdAt)}
-                    </p>
-                  </div>
-                  <div className="rounded-[1.4rem] bg-[#f6fafc] px-4 py-4">
-                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#5a6c80]">
-                      Cursos
-                    </p>
-                    <p className="mt-2 text-base font-semibold text-[var(--color-ink)]">
-                      {selectedTeacher.courseAssignments.length} asignados
-                    </p>
-                  </div>
-                  <div className="rounded-[1.4rem] bg-[#f6fafc] px-4 py-4">
-                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#5a6c80]">
-                      Revision
-                    </p>
-                    <p className="mt-2 text-base font-semibold text-[var(--color-ink)]">
-                      {formatDate(selectedTeacher.updatedAt)}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="px-7 py-7">
-                <div
-                  className={cn(
-                    "rounded-[1.5rem] border px-5 py-4 text-sm leading-7",
-                    selectedTeacher.activeStudents >= 75
-                      ? "border-[#f3b3ac] bg-[#fff2f0] text-[#a03329]"
-                      : "border-[#dbe6ef] bg-[#f7fafc] text-[#44586d]"
-                  )}
-                >
-                  <div className="flex items-center gap-3 font-semibold">
-                    <AlertTriangle className="h-4 w-4" strokeWidth={1.8} />
-                    {selectedTeacher.activeStudents >= 75
-                      ? "Alerta de carga alta"
-                      : "Seguimiento operativo estable"}
-                  </div>
-                  <p className="mt-2">
-                    {selectedTeacher.activeStudents >= 75
-                      ? "La carga actual supera el umbral recomendado. Conviene revisar apoyo docente, ediciones abiertas y reparto de cursos."
-                      : "La distribucion de alumnado y cursos permanece dentro del rango previsto para esta cuenta docente."}
-                  </p>
-                </div>
-
-                <form action={syncTeacherCourseAssignmentsAction} className="mt-6 space-y-5">
-                  <input name="teacherUserId" type="hidden" value={selectedTeacher.id} />
-
-                  <div>
-                    <div className="flex items-center justify-between gap-4">
-                      <div>
-                        <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[#314255]">
-                          Asignacion de cursos
-                        </p>
-                        <p className="mt-2 text-sm leading-6 text-[#5c6f83]">
-                          Marca los cursos que deben quedar bajo supervision de este docente.
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="mt-4 space-y-3">
-                      {allCourses.map((course) => {
-                        const checked = selectedTeacher.courseAssignments.some(
-                          (assignment) => assignment.courseId === course.id
-                        );
-
-                        return (
-                          <label
-                            className="flex items-start gap-3 rounded-[1.2rem] border border-[#d9e1e8] bg-[#fbfcfd] px-4 py-4 text-sm text-[#33475b]"
-                            key={course.id}
-                          >
-                            <input
-                              defaultChecked={checked}
-                              name="courseIds"
-                              type="checkbox"
-                              value={course.id}
-                            />
-                            <span className="min-w-0 flex-1">
-                              <span className="block font-medium text-[var(--color-ink)]">
-                                {course.title}
-                              </span>
-                              <span className="mt-1 block text-xs uppercase tracking-[0.14em] text-[#6a7b8d]">
-                                /cursos/{course.slug}
-                              </span>
-                            </span>
-                          </label>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  <div>
-                    <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[#314255]">
-                      Ediciones activas
-                    </p>
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      {selectedTeacher.courseAssignments.flatMap((assignment) =>
-                        assignment.course.editions.map((edition) => (
-                          <AdminStatusBadge key={edition.id} tone="neutral">
-                            {assignment.course.title} - {edition.label}
-                          </AdminStatusBadge>
-                        ))
-                      )}
-                      {selectedTeacher.courseAssignments.length === 0 ? (
-                        <p className="text-sm text-[#647589]">Sin cursos ni ediciones asignadas.</p>
-                      ) : null}
-                    </div>
-                  </div>
-
-                  <SubmitButton className="w-full" pendingLabel="Guardando asignaciones...">
-                    Guardar asignaciones
-                  </SubmitButton>
-                </form>
-              </div>
-            </Card>
+            <TeacherDetailCard allCourses={courseOptions} selectedTeacher={selectedTeacher} />
           ) : null}
 
-          <Card className="rounded-[2rem] p-7" id="create-teacher">
-            <div className="flex items-start gap-4">
-              <div className="grid h-12 w-12 place-items-center rounded-2xl bg-[rgba(12,113,195,0.12)] text-[var(--color-primary)]">
-                <UserPlus className="h-5 w-5" strokeWidth={1.8} />
-              </div>
-              <div>
-                <h2 className="text-[1.8rem] font-semibold tracking-[-0.05em] text-[var(--color-ink)]">
-                  Alta de docente
-                </h2>
-                <p className="mt-2 text-sm leading-7 text-[#52667b]">
-                  Crea una cuenta activa con acceso inmediato al campus y al seguimiento academico.
-                </p>
-              </div>
-            </div>
-
-            <form action={createTeacherAction} className="mt-6 space-y-4">
-              <input name="returnTo" type="hidden" value="/admin/teachers" />
-              <Input name="name" placeholder="Nombre y apellidos" required />
-              <Input name="email" placeholder="correo@dominio.com" required type="email" />
-              <Input
-                minLength={8}
-                name="password"
-                placeholder="Contrasena temporal"
-                required
-                type="password"
-              />
-              <div className="rounded-[1.4rem] border border-[#d8e0e8] bg-[#f7fafc] px-4 py-4 text-sm leading-7 text-[#4c6074]">
-                La cuenta se crea como docente, activa y con preferencias basicas de notificacion.
-              </div>
-              <SubmitButton className="w-full" pendingLabel="Creando docente...">
-                Crear docente
-              </SubmitButton>
-            </form>
-          </Card>
+          <CreateTeacherCard />
         </div>
       </section>
-    </div>
-  );
-}
-
-function TeacherCard({
-  teacher,
-  teacherHref,
-  isSelected
-}: {
-  teacher: TeacherSummary;
-  teacherHref: string;
-  isSelected: boolean;
-}) {
-  return (
-    <Link
-      className={cn(
-        "block rounded-[2rem] border border-[#d4dde6] bg-white p-6 text-left shadow-[0_16px_36px_rgba(15,44,76,0.05)] transition hover:border-[var(--color-primary)] hover:shadow-[0_22px_42px_rgba(15,44,76,0.08)]",
-        isSelected && "border-[var(--color-primary)] ring-2 ring-[rgba(12,113,195,0.08)]"
-      )}
-      href={teacherHref}
-    >
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex items-start gap-4">
-          <div className="grid h-12 w-12 place-items-center rounded-full bg-[#eef2f6] text-base font-semibold text-[#2d3d4c]">
-            {getUserInitials(teacher.name)}
-          </div>
-          <div className="min-w-0">
-            <p className="truncate text-[1.3rem] font-semibold leading-none text-[var(--color-ink)]">
-              {teacher.name}
-            </p>
-            <p className="mt-2 truncate text-sm text-[#5b6d80]">{teacher.email}</p>
-          </div>
-        </div>
-
-        {teacher.activeStudents >= 75 ? (
-          <span className="mt-1 h-3 w-3 rounded-full bg-[#cf3328]" />
-        ) : null}
-      </div>
-
-      <div className="mt-5 flex flex-wrap gap-2">
-        <AdminStatusBadge tone={getRoleTone(teacher.globalRole)}>
-          {getRoleFilterLabel(teacher.globalRole)}
-        </AdminStatusBadge>
-        <AdminStatusBadge tone={teacher.activeStudents >= 75 ? "danger" : "neutral"}>
-          {teacher.activeStudents} alumnos
-        </AdminStatusBadge>
-      </div>
-
-      <div className="mt-6 grid grid-cols-3 gap-3 border-t border-[#e3e9f0] pt-5">
-        <TeacherStat label="Alumnos" value={teacher.activeStudents} />
-        <TeacherStat label="Ediciones" value={teacher.activeEditions} />
-        <TeacherStat label="Cursos" value={teacher.courseAssignments.length} />
-      </div>
-    </Link>
-  );
-}
-
-function TeacherStat({
-  label,
-  value
-}: {
-  label: string;
-  value: string | number;
-}) {
-  return (
-    <div>
-      <p className="text-[1.45rem] font-semibold tracking-[-0.04em] text-[var(--color-ink)]">
-        {value}
-      </p>
-      <p className="mt-1 text-xs font-semibold uppercase tracking-[0.16em] text-[#627487]">
-        {label}
-      </p>
     </div>
   );
 }

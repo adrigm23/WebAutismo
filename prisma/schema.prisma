@@ -28,6 +28,9 @@ model User {
   notificationPreference NotificationPreference?
   courseAssignments     CourseTeacherAssignment[]
   editionAssignments    CourseEditionTeacherAssignment[]
+  courseResources       CourseResource[]             @relation("CourseResourceCreatedBy")
+  resourceSubmissions   CourseResourceSubmission[]   @relation("CourseResourceSubmissionStudent")
+  reviewedSubmissions   CourseResourceSubmission[]   @relation("CourseResourceSubmissionReviewer")
   enrollments           CourseEnrollment[]
   createdPromotions     Promotion[]                  @relation("PromotionCreatedBy")
   updatedPromotions     Promotion[]                  @relation("PromotionUpdatedBy")
@@ -62,6 +65,7 @@ model Course {
   updatedAt        DateTime                  @updatedAt
   modules          CourseModule[]
   editions         CourseEdition[]
+  resources        CourseResource[]
   teacherAssignments CourseTeacherAssignment[]
   purchases        Purchase[]
   enrollments      CourseEnrollment[]
@@ -83,9 +87,67 @@ model CourseModule {
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
   course           Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  resources        CourseResource[]
 
   @@unique([courseId, moduleKey])
   @@index([courseId, position])
+}
+
+model CourseResource {
+  id          String               @id @default(cuid())
+  courseId    String
+  moduleId    String?
+  createdById String
+  type        CourseResourceType
+  source      CourseResourceSource
+  title       String
+  description String?              @db.LongText
+  linkUrl     String?
+  storageKey  String?
+  mimeType    String?
+  sizeInBytes Int?
+  dueAt       DateTime?
+  passingScore Float?
+  isPublished Boolean              @default(true)
+  sortOrder   Int                  @default(0)
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+  course      Course               @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  module      CourseModule?        @relation(fields: [moduleId], references: [id], onDelete: SetNull)
+  createdBy   User                 @relation("CourseResourceCreatedBy", fields: [createdById], references: [id], onDelete: Cascade)
+  submissions CourseResourceSubmission[]
+
+  @@index([courseId, isPublished, sortOrder, createdAt])
+  @@index([moduleId, sortOrder])
+  @@index([createdById, createdAt])
+}
+
+model CourseResourceSubmission {
+  id           String                         @id @default(cuid())
+  resourceId   String
+  studentId    String
+  reviewerId   String?
+  body         String?                        @db.LongText
+  linkUrl      String?
+  storageKey   String?
+  attachmentLabel String?
+  mimeType     String?
+  sizeInBytes  Int?
+  status       CourseResourceSubmissionStatus @default(SUBMITTED)
+  score        Float?
+  feedback     String?                        @db.LongText
+  submittedAt  DateTime                       @default(now())
+  reviewedAt   DateTime?
+  createdAt    DateTime                       @default(now())
+  updatedAt    DateTime                       @updatedAt
+  resource     CourseResource                 @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+  student      User                           @relation("CourseResourceSubmissionStudent", fields: [studentId], references: [id], onDelete: Cascade)
+  reviewer     User?                          @relation("CourseResourceSubmissionReviewer", fields: [reviewerId], references: [id], onDelete: SetNull)
+
+  @@unique([resourceId, studentId])
+  @@index([resourceId, status, submittedAt])
+  @@index([studentId, submittedAt])
+  @@index([reviewerId, reviewedAt])
 }
 
 model CourseEdition {
@@ -488,6 +550,22 @@ enum CourseEnrollmentStatus {
   CANCELLED
   REVOKED
   EXPIRED
+}
+
+enum CourseResourceType {
+  MATERIAL
+  EXERCISE
+}
+
+enum CourseResourceSource {
+  FILE
+  LINK
+}
+
+enum CourseResourceSubmissionStatus {
+  SUBMITTED
+  REVIEWED
+  CHANGES_REQUESTED
 }
 
 enum PromotionDiscountType {

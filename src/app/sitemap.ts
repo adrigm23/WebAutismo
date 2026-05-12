@@ -3,7 +3,7 @@ import { getCatalogCourses } from "@/lib/course-catalog";
 import { absoluteUrl } from "@/lib/site";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const staticRoutes = ["", "/cursos", "/acceder", "/registro"];
+  const staticRoutes = ["", "/plataforma", "/cursos"];
   const courses = await getCatalogCourses();
 
   return [

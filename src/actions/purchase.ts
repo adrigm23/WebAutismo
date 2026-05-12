@@ -62,6 +62,7 @@ export async function startPurchaseAction(
 
     if (stripe) {
       const session = await stripe.checkout.sessions.create({
+        client_reference_id: pendingPurchase.id,
         mode: "payment",
         customer_email: user.email,
         line_items: [

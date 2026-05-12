@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { cache } from "react";
 import { getDemoUserById, isDemoUserId } from "@/lib/demo-auth";
 import { isDatabaseConnectionError } from "@/lib/db-errors";
+import { getRequiredEnv, isDemoAuthEnabled, isProductionEnv } from "@/lib/env";
 import { getDb } from "@/lib/prisma";
 
 const SESSION_COOKIE = "academy_session";
@@ -25,17 +26,7 @@ function getBootstrapAdminEmails() {
 }
 
 function getSessionSecret() {
-  const secret = process.env.SESSION_SECRET;
-
-  if (secret) {
-    return new TextEncoder().encode(secret);
-  }
-
-  if (process.env.NODE_ENV === "production") {
-    throw new Error("SESSION_SECRET is required in production.");
-  }
-
-  return new TextEncoder().encode("development-session-secret");
+  return new TextEncoder().encode(getRequiredEnv("SESSION_SECRET"));
 }
 
 export async function hashPassword(password: string) {
@@ -61,7 +52,7 @@ export async function createSession(userId: string) {
   cookieStore.set(SESSION_COOKIE, token, {
     httpOnly: true,
     sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
+    secure: isProductionEnv(),
     path: "/",
     maxAge: SESSION_DURATION_SECONDS
   });
@@ -131,6 +122,10 @@ export const getCurrentUser = cache(async () => {
   }
 
   if (isDemoUserId(userId)) {
+    if (!isDemoAuthEnabled()) {
+      return null;
+    }
+
     return getDemoUserById(userId);
   }
 

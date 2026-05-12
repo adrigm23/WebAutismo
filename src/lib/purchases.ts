@@ -1,4 +1,5 @@
 import { PurchaseStatus } from "@prisma/client";
+import type Stripe from "stripe";
 import { writeAuditLog } from "@/lib/audit";
 import { getCatalogCourseBySlug, getCatalogCourses } from "@/lib/course-catalog";
 import { resolveEditionAccessUntil } from "@/lib/course-editions";
@@ -30,6 +31,24 @@ export type ResolvedPurchasePricing = {
   promotionCode: string | null;
   validation: PromotionValidationResult | null;
 };
+
+type StoredPurchaseSnapshot = {
+  id: string;
+  userId: string;
+  courseId: string;
+  subtotalInCents: number;
+  discountInCents: number;
+  taxInCents: number;
+  totalInCents: number;
+  promotionId: string | null;
+  promotionCode: string | null;
+  stripeCheckoutSessionId: string | null;
+  stripePaymentIntentId: string | null;
+};
+
+type StripeCheckoutValidationResult =
+  | { ok: true }
+  | { ok: false; reason: string };
 
 type CreatePendingPurchaseInput = {
   userId: string;
@@ -167,6 +186,56 @@ export async function createPendingPurchase(input: CreatePendingPurchaseInput) {
   return purchase;
 }
 
+export function validateStripeCheckoutSessionAgainstPurchase(input: {
+  purchase: Pick<
+    StoredPurchaseSnapshot,
+    "totalInCents" | "stripeCheckoutSessionId" | "userId"
+  >;
+  session: Pick<
+    Stripe.Checkout.Session,
+    "amount_total" | "currency" | "id" | "metadata" | "payment_status"
+  >;
+}): StripeCheckoutValidationResult {
+  if (input.session.payment_status !== "paid" && input.session.payment_status !== "no_payment_required") {
+    return { ok: false, reason: "Stripe session is not paid." };
+  }
+
+  if (input.session.amount_total !== input.purchase.totalInCents) {
+    return { ok: false, reason: "Stripe session amount does not match the stored purchase total." };
+  }
+
+  if ((input.session.currency ?? "").toLowerCase() !== "eur") {
+    return { ok: false, reason: "Stripe session currency is invalid for this purchase." };
+  }
+
+  if (
+    input.purchase.stripeCheckoutSessionId &&
+    input.purchase.stripeCheckoutSessionId !== input.session.id
+  ) {
+    return { ok: false, reason: "Stripe session id does not match the stored purchase." };
+  }
+
+  if (
+    input.session.metadata?.userId &&
+    input.session.metadata.userId !== input.purchase.userId
+  ) {
+    return { ok: false, reason: "Stripe session metadata user does not match the stored purchase." };
+  }
+
+  return { ok: true };
+}
+
+export async function markPurchaseFailedByStripeSessionId(stripeCheckoutSessionId: string) {
+  return getDb().purchase.updateMany({
+    where: {
+      stripeCheckoutSessionId
+    },
+    data: {
+      status: PurchaseStatus.FAILED
+    }
+  });
+}
+
 async function createOrUpdateEnrollment(input: {
   userId: string;
   courseId: string;
@@ -252,15 +321,6 @@ export async function grantCourseAccess(input: GrantCourseAccessInput) {
     courseSlug: input.courseSlug,
     courseEditionId: input.courseEditionId
   });
-  const pricing = await resolvePurchasePricing({
-    subtotalInCents: course.priceInCents,
-    promotionCode: input.promotionCode,
-    courseId: course.id
-  });
-
-  if (pricing.validation && !pricing.validation.ok) {
-    throw new Error(pricing.validation.reason);
-  }
 
   const existingPurchase = input.purchaseId
     ? await getDb().purchase.findUnique({
@@ -276,6 +336,26 @@ export async function grantCourseAccess(input: GrantCourseAccessInput) {
         })
       : null;
 
+  if (existingPurchase && existingPurchase.userId !== input.userId) {
+    throw new Error("The stored purchase does not belong to the current user.");
+  }
+
+  if (existingPurchase && existingPurchase.courseId !== course.id) {
+    throw new Error("The stored purchase does not belong to the requested course.");
+  }
+
+  const pricing = existingPurchase
+    ? null
+    : await resolvePurchasePricing({
+        subtotalInCents: course.priceInCents,
+        promotionCode: input.promotionCode,
+        courseId: course.id
+      });
+
+  if (pricing?.validation && !pricing.validation.ok) {
+    throw new Error(pricing.validation.reason);
+  }
+
   const purchase = existingPurchase
     ? await getDb().purchase.update({
         where: {
@@ -285,12 +365,6 @@ export async function grantCourseAccess(input: GrantCourseAccessInput) {
           status: PurchaseStatus.PAID,
           courseId: course.id,
           courseEditionId: edition?.id ?? null,
-          subtotalInCents: pricing.subtotalInCents,
-          discountInCents: pricing.discountInCents,
-          taxInCents: pricing.taxInCents,
-          totalInCents: pricing.totalInCents,
-          promotionId: pricing.promotionId,
-          promotionCode: pricing.promotionCode,
           stripeCheckoutSessionId: input.stripeCheckoutSessionId ?? existingPurchase.stripeCheckoutSessionId,
           stripePaymentIntentId: input.stripePaymentIntentId ?? existingPurchase.stripePaymentIntentId,
           courseSlugSnapshot: course.slug,
@@ -303,12 +377,12 @@ export async function grantCourseAccess(input: GrantCourseAccessInput) {
           courseId: course.id,
           courseEditionId: edition?.id ?? null,
           status: PurchaseStatus.PAID,
-          subtotalInCents: pricing.subtotalInCents,
-          discountInCents: pricing.discountInCents,
-          taxInCents: pricing.taxInCents,
-          totalInCents: pricing.totalInCents,
-          promotionId: pricing.promotionId,
-          promotionCode: pricing.promotionCode,
+          subtotalInCents: pricing!.subtotalInCents,
+          discountInCents: pricing!.discountInCents,
+          taxInCents: pricing!.taxInCents,
+          totalInCents: pricing!.totalInCents,
+          promotionId: pricing!.promotionId,
+          promotionCode: pricing!.promotionCode,
           stripeCheckoutSessionId: input.stripeCheckoutSessionId ?? null,
           stripePaymentIntentId: input.stripePaymentIntentId ?? null,
           courseSlugSnapshot: course.slug,
@@ -325,20 +399,20 @@ export async function grantCourseAccess(input: GrantCourseAccessInput) {
     purchaseId: purchase.id
   });
 
-  if (pricing.promotionId && pricing.discountInCents > 0) {
+  if (purchase.promotionId && purchase.discountInCents > 0) {
     await getDb().promotionRedemption.upsert({
       where: {
         purchaseId: purchase.id
       },
       update: {
-        discountInCents: pricing.discountInCents
+        discountInCents: purchase.discountInCents
       },
       create: {
-        promotionId: pricing.promotionId,
+        promotionId: purchase.promotionId,
         purchaseId: purchase.id,
         userId: input.userId,
         courseId: course.id,
-        discountInCents: pricing.discountInCents
+        discountInCents: purchase.discountInCents
       }
     });
 
@@ -346,12 +420,12 @@ export async function grantCourseAccess(input: GrantCourseAccessInput) {
       actorId: input.userId,
       action: "PROMOTION_APPLIED",
       entityType: "PROMOTION",
-      entityId: pricing.promotionId,
-      entityLabel: pricing.promotionCode,
+      entityId: purchase.promotionId,
+      entityLabel: purchase.promotionCode,
       metadata: {
         purchaseId: purchase.id,
         courseSlug: course.slug,
-        discountInCents: pricing.discountInCents
+        discountInCents: purchase.discountInCents
       }
     });
   }

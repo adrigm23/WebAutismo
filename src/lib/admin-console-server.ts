@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/auth";
 import { isDemoUserId } from "@/lib/demo-auth";
 import { canManageUsers } from "@/lib/course-permissions";
+import { isDemoAuthEnabled } from "@/lib/env";
 
 const demoAdminEnabledRoutes = new Set([
   "/admin",
@@ -16,6 +17,10 @@ const demoAdminEnabledRoutes = new Set([
 
 export async function requireAdminConsoleUser(returnTo = "/admin") {
   const user = await requireUser(returnTo);
+
+  if (isDemoUserId(user.id) && !isDemoAuthEnabled()) {
+    redirect("/acceder");
+  }
 
   if (!canManageUsers(user.globalRole)) {
     redirect("/mi-cuenta");

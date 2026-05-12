@@ -1,6 +1,7 @@
 @import "tailwindcss";
 
 :root {
+  --font-sans: "Segoe UI", -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
   --color-background: #f8f6f3;
   --color-surface: #f1eeea;
   --color-surface-strong: #ffffff;

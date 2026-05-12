@@ -1,6 +1,8 @@
 import { cache } from "react";
+import { Prisma } from "@prisma/client";
 import type { Course as LegacyCourse, CourseFaq, CourseModule, CourseTeacher } from "../data/courses.ts";
 import { courses as legacyCourses } from "../data/courses.ts";
+import { isLegacyCatalogFallbackEnabled } from "./env.ts";
 import { resolveEditionAccessUntil, isEditionVisible } from "./course-editions.ts";
 import { getDb } from "./prisma.ts";
 
@@ -238,6 +240,26 @@ function toLegacyCourseCreateData(course: LegacyCourse) {
   };
 }
 
+function isDatabaseConnectionError(error: unknown) {
+  if (error instanceof Prisma.PrismaClientInitializationError) {
+    return true;
+  }
+
+  if (!(error instanceof Error)) {
+    return false;
+  }
+
+  return (
+    error.name === "PrismaClientInitializationError" ||
+    error.message.includes("Can't reach database server") ||
+    error.message.includes("Can't connect to database server")
+  );
+}
+
+function shouldUseLegacyCatalogFallback(error: unknown) {
+  return isLegacyCatalogFallbackEnabled() || isDatabaseConnectionError(error);
+}
+
 export async function bootstrapCatalogFromLegacyIfNeeded() {
   const db = getDb();
   const existingCount = await db.course.count();
@@ -277,8 +299,6 @@ export async function bootstrapCatalogFromLegacyIfNeeded() {
 }
 
 async function fetchCatalogCoursesFromDb(includeInactive = false) {
-  await bootstrapCatalogFromLegacyIfNeeded();
-
   const records = await getDb().course.findMany({
     where: includeInactive ? {} : { status: "ACTIVE" },
     include: {
@@ -307,15 +327,17 @@ async function fetchCatalogCoursesFromDb(includeInactive = false) {
 export const getCatalogCourses = cache(async (includeInactive = false) => {
   try {
     return await fetchCatalogCoursesFromDb(includeInactive);
-  } catch {
+  } catch (error) {
+    if (!shouldUseLegacyCatalogFallback(error)) {
+      throw error;
+    }
+
     return legacyCourses.map((course) => toLegacyCatalogCourse(course));
   }
 });
 
 export const getCatalogCourseBySlug = cache(async (slug: string) => {
   try {
-    await bootstrapCatalogFromLegacyIfNeeded();
-
     const record = await getDb().course.findUnique({
       where: { slug },
       include: {
@@ -336,7 +358,11 @@ export const getCatalogCourseBySlug = cache(async (slug: string) => {
     });
 
     return record ? toCatalogCourse(record) : null;
-  } catch {
+  } catch (error) {
+    if (!shouldUseLegacyCatalogFallback(error)) {
+      throw error;
+    }
+
     const legacyCourse = legacyCourses.find((course) => course.slug === slug);
     return legacyCourse ? toLegacyCatalogCourse(legacyCourse) : null;
   }

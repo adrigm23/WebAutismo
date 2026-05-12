@@ -650,23 +650,3 @@ export function canModerateCourse(role: CourseRole) {
     viewerRole: role
   });
 }
-
-export function getCampusResources(course: CatalogCourse) {
-  const teacherSummary = course.teachers.length
-    ? course.teachers.map((teacher) => `${teacher.name}. ${teacher.role}. ${teacher.bio}`).join(" ")
-    : "El equipo docente se asigna desde administracion por curso y edicion.";
-
-  return [
-    {
-      id: "guia",
-      title: "Guia del alumno",
-      description:
-        "Normas del campus, funcionamiento del curso, participacion en foros y uso del area privada."
-    },
-    {
-      id: "docentes",
-      title: course.teachers.length > 1 ? "Equipo docente" : "Docente asignado",
-      description: teacherSummary
-    }
-  ];
-}

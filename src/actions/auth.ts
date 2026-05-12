@@ -32,6 +32,11 @@ const loginSchema = z.object({
   next: z.string().optional()
 });
 
+function getOptionalString(formData: FormData, key: string) {
+  const value = formData.get(key);
+  return typeof value === "string" && value.length > 0 ? value : undefined;
+}
+
 export async function registerAction(
   _: AuthFormState,
   formData: FormData
@@ -42,7 +47,7 @@ export async function registerAction(
       email: formData.get("email"),
       password: formData.get("password"),
       confirmPassword: formData.get("confirmPassword"),
-      next: formData.get("next")
+      next: getOptionalString(formData, "next")
     });
 
     if (!parsed.success) {
@@ -112,7 +117,7 @@ export async function loginAction(
     const parsed = loginSchema.safeParse({
       email: formData.get("email"),
       password: formData.get("password"),
-      next: formData.get("next")
+      next: getOptionalString(formData, "next")
     });
 
     if (!parsed.success) {
