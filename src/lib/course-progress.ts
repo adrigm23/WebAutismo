@@ -1,4 +1,4 @@
-import type { CourseModule } from "../data/courses.ts";
+import type { CatalogCourseModule } from "./course-catalog.ts";
 import { isDatabaseConnectionError } from "./db-errors.ts";
 import { getDemoUserById, isDemoUserId } from "./demo-auth.ts";
 import { getCatalogCourseBySlug } from "./course-catalog.ts";
@@ -6,7 +6,7 @@ import { getDb } from "./prisma.ts";
 
 type CourseProgressCourseShape = {
   slug: string;
-  modules: CourseModule[];
+  modules: CatalogCourseModule[];
 };
 
 type PersistedModuleProgressRecord = {
@@ -111,7 +111,17 @@ export function resolveCourseModuleId(
   progress: Pick<PersistedModuleProgressRecord, "moduleId" | "moduleIndex">
 ) {
   if (progress.moduleId) {
-    return progress.moduleId;
+    const directMatch = course.modules.find((module) => module.id === progress.moduleId);
+
+    if (directMatch) {
+      return directMatch.id;
+    }
+
+    const legacyKeyMatch = course.modules.find((module) => module.moduleKey === progress.moduleId);
+
+    if (legacyKeyMatch) {
+      return legacyKeyMatch.id;
+    }
   }
 
   return getModuleFromLegacyIndex(course, progress.moduleIndex)?.id ?? null;

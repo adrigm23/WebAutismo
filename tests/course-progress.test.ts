@@ -8,6 +8,28 @@ import {
 const course = courses[0];
 
 export function runCourseProgressTests() {
+  const databaseCourse = {
+    slug: "curso-db",
+    modules: [
+      {
+        id: "module-db-1",
+        moduleKey: "modulo-legado-1",
+        title: "Modulo 1",
+        description: "",
+        estimatedTime: "",
+        resourcesSummary: ""
+      },
+      {
+        id: "module-db-2",
+        moduleKey: "modulo-legado-2",
+        title: "Modulo 2",
+        description: "",
+        estimatedTime: "",
+        resourcesSummary: ""
+      }
+    ]
+  };
+
   assert.equal(
     resolveCourseModuleId(course, {
       moduleId: "prevencion-y-apoyos",
@@ -30,6 +52,14 @@ export function runCourseProgressTests() {
       moduleIndex: 99
     }),
     null
+  );
+
+  assert.equal(
+    resolveCourseModuleId(databaseCourse, {
+      moduleId: "modulo-legado-2",
+      moduleIndex: 0
+    }),
+    "module-db-2"
   );
 
   const progress = normalizeCourseProgress(course, [

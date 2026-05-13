@@ -1,11 +1,16 @@
 "use server";
 
+import { Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { getCurrentUser } from "@/lib/auth";
 import { writeAuditLog } from "@/lib/audit";
 import { getCatalogCourseBySlug } from "@/lib/course-catalog";
-import { canAccessCourseCommunity, canModerateCourse } from "@/lib/course-community";
+import {
+  canAccessCourseCommunity,
+  canAccessCourseCommunityForCourse,
+  canModerateCourse
+} from "@/lib/course-community";
 import {
   createCourseResource,
   deleteCourseResource,
@@ -15,6 +20,7 @@ import {
   updateCourseResource,
   upsertCourseResourceSubmission
 } from "@/lib/course-resources";
+import { isDatabaseConnectionError } from "@/lib/db-errors";
 import { sendPlatformNotification } from "@/lib/notifications";
 import { getDb } from "@/lib/prisma";
 
@@ -28,8 +34,11 @@ export type CourseSubmissionFormState = {
   success?: string;
 };
 
-function revalidateCourseResourceViews(courseSlug: string) {
+function revalidateCourseCampusView(courseSlug: string) {
   revalidatePath(`/mis-cursos/${courseSlug}`);
+}
+
+function revalidateCourseTrackingView(courseSlug: string) {
   revalidatePath(`/mis-cursos/${courseSlug}/seguimiento`);
 }
 
@@ -88,6 +97,30 @@ const reviewCourseResourceSubmissionSchema = z.object({
   feedback: z.string().min(8, "Escribe un feedback mas util para el alumno.").max(4000)
 });
 
+async function writeAuditLogSafely(...args: Parameters<typeof writeAuditLog>) {
+  try {
+    await writeAuditLog(...args);
+  } catch (error) {
+    console.error("Audit log write failed during course resource action:", error);
+  }
+}
+
+function getCourseResourceActionError(error: unknown, fallbackMessage: string) {
+  if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2003") {
+    return "El modulo seleccionado ya no es valido para este curso. Recarga la pagina y vuelve a intentarlo.";
+  }
+
+  if (isDatabaseConnectionError(error)) {
+    return "No se ha podido conectar con la base de datos en este momento. Intentalo de nuevo en unos segundos.";
+  }
+
+  if (error instanceof Error && error.message) {
+    return error.message;
+  }
+
+  return fallbackMessage;
+}
+
 export async function createCourseResourceAction(
   _: CourseResourceFormState,
   formData: FormData
@@ -120,10 +153,10 @@ export async function createCourseResourceAction(
     return { error: "El curso indicado no existe." };
   }
 
-  const access = await canAccessCourseCommunity({
+  const access = await canAccessCourseCommunityForCourse({
     userId: user.id,
     email: user.email,
-    courseSlug: course.slug
+    course
   });
 
   if (!access.allowed || !canModerateCourse(access.role)) {
@@ -181,45 +214,55 @@ export async function createCourseResourceAction(
     }
   }
 
-  const resource = await createCourseResource({
-    courseId: course.id,
-    moduleId,
-    createdById: user.id,
-    type: parsed.data.type,
-    source: parsed.data.source,
-    title: parsed.data.title,
-    description: parsed.data.description,
-    linkUrl: parsed.data.source === "LINK" ? parsed.data.linkUrl : null,
-    dueAt,
-    passingScore,
-    file: parsed.data.source === "FILE" && file instanceof File ? file : null
-  });
-
-  await writeAuditLog({
-    actorId: user.id,
-    action: "COURSE_RESOURCE_CREATED",
-    entityType: "COURSE_RESOURCE",
-    entityId: resource.id,
-    entityLabel: resource.title,
-    metadata: {
+  try {
+    const resource = await createCourseResource({
       courseId: course.id,
-      courseSlug: course.slug,
       moduleId,
-      resourceType: resource.type,
-      resourceSource: resource.source,
-      dueAt: resource.dueAt?.toISOString() ?? null,
-      passingScore: resource.passingScore
+      createdById: user.id,
+      type: parsed.data.type,
+      source: parsed.data.source,
+      title: parsed.data.title,
+      description: parsed.data.description,
+      linkUrl: parsed.data.source === "LINK" ? parsed.data.linkUrl : null,
+      dueAt,
+      passingScore,
+      file: parsed.data.source === "FILE" && file instanceof File ? file : null
+    });
+
+    await writeAuditLogSafely({
+      actorId: user.id,
+      action: "COURSE_RESOURCE_CREATED",
+      entityType: "COURSE_RESOURCE",
+      entityId: resource.id,
+      entityLabel: resource.title,
+      metadata: {
+        courseId: course.id,
+        courseSlug: course.slug,
+        moduleId,
+        resourceType: resource.type,
+        resourceSource: resource.source,
+        dueAt: resource.dueAt?.toISOString() ?? null,
+        passingScore: resource.passingScore
+      }
+    });
+
+    revalidateCourseCampusView(course.slug);
+
+    if (resource.type === "EXERCISE") {
+      revalidateCourseTrackingView(course.slug);
     }
-  });
 
-  revalidateCourseResourceViews(course.slug);
-
-  return {
-    success:
-      parsed.data.type === "EXERCISE"
-        ? "Ejercicio publicado correctamente."
-        : "Recurso publicado correctamente."
-  };
+    return {
+      success:
+        parsed.data.type === "EXERCISE"
+          ? "Ejercicio publicado correctamente."
+          : "Recurso publicado correctamente."
+    };
+  } catch (error) {
+    return {
+      error: getCourseResourceActionError(error, "No se ha podido publicar el recurso.")
+    };
+  }
 }
 
 export async function deleteCourseResourceAction(formData: FormData) {
@@ -271,7 +314,7 @@ export async function deleteCourseResourceAction(formData: FormData) {
   }
 
   await deleteCourseResource(resource.id);
-  await writeAuditLog({
+  await writeAuditLogSafely({
     actorId: user.id,
     action: "COURSE_RESOURCE_DELETED",
     entityType: "COURSE_RESOURCE",
@@ -285,7 +328,11 @@ export async function deleteCourseResourceAction(formData: FormData) {
     }
   });
 
-  revalidateCourseResourceViews(parsed.data.courseSlug);
+  revalidateCourseCampusView(parsed.data.courseSlug);
+
+  if (resource.type === "EXERCISE") {
+    revalidateCourseTrackingView(parsed.data.courseSlug);
+  }
 }
 
 export async function updateCourseResourceAction(
@@ -319,10 +366,10 @@ export async function updateCourseResourceAction(
     return { error: "El curso indicado no existe." };
   }
 
-  const access = await canAccessCourseCommunity({
+  const access = await canAccessCourseCommunityForCourse({
     userId: user.id,
     email: user.email,
-    courseSlug: course.slug
+    course
   });
 
   if (!access.allowed || !canModerateCourse(access.role)) {
@@ -398,41 +445,51 @@ export async function updateCourseResourceAction(
 
   const file = formData.get("file");
 
-  const updatedResource = await updateCourseResource({
-    resourceId: resource.id,
-    moduleId,
-    title: parsed.data.title,
-    description: parsed.data.description,
-    linkUrl: resource.source === "LINK" ? parsed.data.linkUrl : null,
-    dueAt,
-    passingScore,
-    file: file instanceof File && file.size > 0 ? file : null
-  });
+  try {
+    const updatedResource = await updateCourseResource({
+      resourceId: resource.id,
+      moduleId,
+      title: parsed.data.title,
+      description: parsed.data.description,
+      linkUrl: resource.source === "LINK" ? parsed.data.linkUrl : null,
+      dueAt,
+      passingScore,
+      file: file instanceof File && file.size > 0 ? file : null
+    });
 
-  await writeAuditLog({
-    actorId: user.id,
-    action: "COURSE_RESOURCE_UPDATED",
-    entityType: "COURSE_RESOURCE",
-    entityId: updatedResource.id,
-    entityLabel: updatedResource.title,
-    metadata: {
-      courseSlug: course.slug,
-      previousTitle: resource.title,
-      moduleId: updatedResource.moduleId,
-      resourceType: resource.type,
-      resourceSource: resource.source,
-      isPublished: resource.isPublished,
-      dueAt: updatedResource.dueAt?.toISOString() ?? null,
-      passingScore: updatedResource.passingScore,
-      fileReplaced: file instanceof File && file.size > 0
+    await writeAuditLogSafely({
+      actorId: user.id,
+      action: "COURSE_RESOURCE_UPDATED",
+      entityType: "COURSE_RESOURCE",
+      entityId: updatedResource.id,
+      entityLabel: updatedResource.title,
+      metadata: {
+        courseSlug: course.slug,
+        previousTitle: resource.title,
+        moduleId: updatedResource.moduleId,
+        resourceType: resource.type,
+        resourceSource: resource.source,
+        isPublished: resource.isPublished,
+        dueAt: updatedResource.dueAt?.toISOString() ?? null,
+        passingScore: updatedResource.passingScore,
+        fileReplaced: file instanceof File && file.size > 0
+      }
+    });
+
+    revalidateCourseCampusView(course.slug);
+
+    if (resource.type === "EXERCISE") {
+      revalidateCourseTrackingView(course.slug);
     }
-  });
 
-  revalidateCourseResourceViews(course.slug);
-
-  return {
-    success: "Recurso actualizado correctamente."
-  };
+    return {
+      success: "Recurso actualizado correctamente."
+    };
+  } catch (error) {
+    return {
+      error: getCourseResourceActionError(error, "No se ha podido actualizar el recurso.")
+    };
+  }
 }
 
 export async function toggleCourseResourcePublicationAction(formData: FormData) {
@@ -470,6 +527,7 @@ export async function toggleCourseResourcePublicationAction(formData: FormData) 
       id: true,
       title: true,
       isPublished: true,
+      type: true,
       course: {
         select: {
           slug: true
@@ -487,7 +545,7 @@ export async function toggleCourseResourcePublicationAction(formData: FormData) 
     isPublished: parsed.data.publish === "true"
   });
 
-  await writeAuditLog({
+  await writeAuditLogSafely({
     actorId: user.id,
     action: updatedResource.isPublished
       ? "COURSE_RESOURCE_PUBLISHED"
@@ -502,7 +560,11 @@ export async function toggleCourseResourcePublicationAction(formData: FormData) 
     }
   });
 
-  revalidateCourseResourceViews(parsed.data.courseSlug);
+  revalidateCourseCampusView(parsed.data.courseSlug);
+
+  if (resource.type === "EXERCISE") {
+    revalidateCourseTrackingView(parsed.data.courseSlug);
+  }
 }
 
 export async function moveCourseResourceAction(formData: FormData) {
@@ -558,7 +620,7 @@ export async function moveCourseResourceAction(formData: FormData) {
   });
 
   if (moveResult) {
-    await writeAuditLog({
+    await writeAuditLogSafely({
       actorId: user.id,
       action: "COURSE_RESOURCE_REORDERED",
       entityType: "COURSE_RESOURCE",
@@ -573,7 +635,7 @@ export async function moveCourseResourceAction(formData: FormData) {
     });
   }
 
-  revalidateCourseResourceViews(parsed.data.courseSlug);
+  revalidateCourseCampusView(parsed.data.courseSlug);
 }
 
 export async function submitCourseResourceSubmissionAction(
@@ -603,10 +665,10 @@ export async function submitCourseResourceSubmissionAction(
     return { error: "El curso indicado no existe." };
   }
 
-  const access = await canAccessCourseCommunity({
+  const access = await canAccessCourseCommunityForCourse({
     userId: user.id,
     email: user.email,
-    courseSlug: course.slug
+    course
   });
 
   if (!access.allowed) {
@@ -676,40 +738,47 @@ export async function submitCourseResourceSubmissionAction(
     }
   });
 
-  const submission = await upsertCourseResourceSubmission({
-    resourceId: resource.id,
-    studentId: user.id,
-    body: parsed.data.body,
-    linkUrl: parsed.data.linkUrl,
-    file: hasFile ? file : null
-  });
-
-  await writeAuditLog({
-    actorId: user.id,
-    action: previousSubmission
-      ? "COURSE_RESOURCE_SUBMISSION_UPDATED"
-      : "COURSE_RESOURCE_SUBMISSION_CREATED",
-    entityType: "COURSE_RESOURCE_SUBMISSION",
-    entityId: submission.id,
-    entityLabel: resource.title,
-    metadata: {
-      courseSlug: course.slug,
+  try {
+    const submission = await upsertCourseResourceSubmission({
       resourceId: resource.id,
-      resourceTitle: resource.title,
       studentId: user.id,
-      hasBody,
-      hasLink,
-      hasFile,
-      dueAt: resource.dueAt?.toISOString() ?? null,
-      passingScore: resource.passingScore
-    }
-  });
+      body: parsed.data.body,
+      linkUrl: parsed.data.linkUrl,
+      file: hasFile ? file : null
+    });
 
-  revalidateCourseResourceViews(course.slug);
+    await writeAuditLogSafely({
+      actorId: user.id,
+      action: previousSubmission
+        ? "COURSE_RESOURCE_SUBMISSION_UPDATED"
+        : "COURSE_RESOURCE_SUBMISSION_CREATED",
+      entityType: "COURSE_RESOURCE_SUBMISSION",
+      entityId: submission.id,
+      entityLabel: resource.title,
+      metadata: {
+        courseSlug: course.slug,
+        resourceId: resource.id,
+        resourceTitle: resource.title,
+        studentId: user.id,
+        hasBody,
+        hasLink,
+        hasFile,
+        dueAt: resource.dueAt?.toISOString() ?? null,
+        passingScore: resource.passingScore
+      }
+    });
 
-  return {
-    success: "Entrega guardada correctamente. El docente ya puede revisarla."
-  };
+    revalidateCourseCampusView(course.slug);
+    revalidateCourseTrackingView(course.slug);
+
+    return {
+      success: "Entrega guardada correctamente. El docente ya puede revisarla."
+    };
+  } catch (error) {
+    return {
+      error: getCourseResourceActionError(error, "No se ha podido guardar la entrega.")
+    };
+  }
 }
 
 export async function reviewCourseResourceSubmissionAction(
@@ -788,53 +857,60 @@ export async function reviewCourseResourceSubmissionAction(
     }
   }
 
-  const reviewedSubmission = await reviewCourseResourceSubmission({
-    submissionId: submission.id,
-    reviewerId: user.id,
-    status: parsed.data.status,
-    score,
-    feedback: parsed.data.feedback
-  });
-
-  await writeAuditLog({
-    actorId: user.id,
-    action:
-      parsed.data.status === "REVIEWED"
-        ? "COURSE_RESOURCE_SUBMISSION_REVIEWED"
-        : "COURSE_RESOURCE_SUBMISSION_CHANGES_REQUESTED",
-    entityType: "COURSE_RESOURCE_SUBMISSION",
-    entityId: reviewedSubmission.id,
-    entityLabel: submission.resource.title,
-    metadata: {
-      courseSlug: parsed.data.courseSlug,
-      resourceTitle: submission.resource.title,
-      studentId: submission.student.id,
-      studentEmail: submission.student.email,
+  try {
+    const reviewedSubmission = await reviewCourseResourceSubmission({
+      submissionId: submission.id,
+      reviewerId: user.id,
+      status: parsed.data.status,
       score,
-      reviewedAt: reviewedSubmission.reviewedAt?.toISOString() ?? null
-    }
-  });
+      feedback: parsed.data.feedback
+    });
 
-  await sendPlatformNotification({
-    userId: submission.student.id,
-    category: "COURSE",
-    title:
-      parsed.data.status === "REVIEWED"
-        ? "Tu entrega ya ha sido revisada"
-        : "Hay cambios solicitados en tu entrega",
-    body:
-      parsed.data.status === "REVIEWED"
-        ? `Ya puedes consultar el feedback docente${score !== null ? ` y tu nota (${score}/10)` : ""} de ${submission.resource.title}.`
-        : `Revisa el feedback docente y actualiza tu entrega de ${submission.resource.title}.`,
-    linkPath: `/mis-cursos/${parsed.data.courseSlug}`
-  });
+    await writeAuditLogSafely({
+      actorId: user.id,
+      action:
+        parsed.data.status === "REVIEWED"
+          ? "COURSE_RESOURCE_SUBMISSION_REVIEWED"
+          : "COURSE_RESOURCE_SUBMISSION_CHANGES_REQUESTED",
+      entityType: "COURSE_RESOURCE_SUBMISSION",
+      entityId: reviewedSubmission.id,
+      entityLabel: submission.resource.title,
+      metadata: {
+        courseSlug: parsed.data.courseSlug,
+        resourceTitle: submission.resource.title,
+        studentId: submission.student.id,
+        studentEmail: submission.student.email,
+        score,
+        reviewedAt: reviewedSubmission.reviewedAt?.toISOString() ?? null
+      }
+    });
 
-  revalidateCourseResourceViews(parsed.data.courseSlug);
+    await sendPlatformNotification({
+      userId: submission.student.id,
+      category: "COURSE",
+      title:
+        parsed.data.status === "REVIEWED"
+          ? "Tu entrega ya ha sido revisada"
+          : "Hay cambios solicitados en tu entrega",
+      body:
+        parsed.data.status === "REVIEWED"
+          ? `Ya puedes consultar el feedback docente${score !== null ? ` y tu nota (${score}/10)` : ""} de ${submission.resource.title}.`
+          : `Revisa el feedback docente y actualiza tu entrega de ${submission.resource.title}.`,
+      linkPath: `/mis-cursos/${parsed.data.courseSlug}`
+    });
 
-  return {
-    success:
-      parsed.data.status === "REVIEWED"
-        ? "Entrega revisada correctamente."
-        : "Se ha solicitado una nueva version al alumno."
-  };
+    revalidateCourseCampusView(parsed.data.courseSlug);
+    revalidateCourseTrackingView(parsed.data.courseSlug);
+
+    return {
+      success:
+        parsed.data.status === "REVIEWED"
+          ? "Entrega revisada correctamente."
+          : "Se ha solicitado una nueva version al alumno."
+    };
+  } catch (error) {
+    return {
+      error: getCourseResourceActionError(error, "No se ha podido guardar la revision.")
+    };
+  }
 }

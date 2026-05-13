@@ -1,3 +1,4 @@
+import { cache } from "react";
 import type { CourseRole, UserGlobalRole } from "@prisma/client";
 import type { CatalogCourse } from "@/lib/course-catalog";
 import { getCatalogCourseBySlug, getCatalogCourses } from "@/lib/course-catalog";
@@ -55,6 +56,8 @@ export type CourseCommunityAccess =
           }
         | null;
     };
+
+type AccessCourseInput = Pick<CatalogCourse, "id" | "slug">;
 
 export const defaultCourseCategories: CommunityCategoryDefinition[] = [
   {
@@ -221,42 +224,39 @@ export async function getDeletedForumSpaces(courseSlug: string) {
   });
 }
 
-async function getAccessSnapshot(input: { userId: string; courseSlug: string }) {
-  const [user, course] = await Promise.all([
-    getDb().user.findUnique({
-      where: {
-        id: input.userId
-      },
-      select: {
-        id: true,
-        globalRole: true,
-        isActive: true
-      }
-    }),
-    getCatalogCourseBySlug(input.courseSlug)
-  ]);
+const getAccessSnapshotForCourse = cache(async (userId: string, courseId: string, courseSlug: string) => {
+  const user = await getDb().user.findUnique({
+    where: {
+      id: userId
+    },
+    select: {
+      id: true,
+      globalRole: true,
+      isActive: true
+    }
+  });
 
-  if (!user || !course) {
+  if (!user) {
     return null;
   }
 
-  const [courseAssignment, editionAssignments, enrollments, latestPurchase] = await Promise.all([
+  const [courseAssignment, editionAssignment, enrollments] = await Promise.all([
     getDb().courseTeacherAssignment.findUnique({
       where: {
         courseId_userId: {
-          courseId: course.id,
-          userId: input.userId
+          courseId,
+          userId
         }
       },
       select: {
         id: true
       }
     }),
-    getDb().courseEditionTeacherAssignment.findMany({
+    getDb().courseEditionTeacherAssignment.findFirst({
       where: {
-        userId: input.userId,
+        userId,
         courseEdition: {
-          courseId: course.id
+          courseId
         }
       },
       select: {
@@ -265,8 +265,8 @@ async function getAccessSnapshot(input: { userId: string; courseSlug: string }) 
     }),
     getDb().courseEnrollment.findMany({
       where: {
-        userId: input.userId,
-        courseId: course.id
+        userId,
+        courseId
       },
       orderBy: {
         createdAt: "desc"
@@ -276,22 +276,6 @@ async function getAccessSnapshot(input: { userId: string; courseSlug: string }) 
         status: true,
         accessStartsAt: true,
         accessUntil: true
-      }
-    }),
-    getDb().purchase.findFirst({
-      where: {
-        userId: input.userId,
-        courseId: course.id
-      },
-      orderBy: {
-        createdAt: "desc"
-      },
-      select: {
-        id: true,
-        createdAt: true,
-        totalInCents: true,
-        discountInCents: true,
-        status: true
       }
     })
   ]);
@@ -309,19 +293,31 @@ async function getAccessSnapshot(input: { userId: string; courseSlug: string }) 
     globalRole: user.globalRole,
     isActive: user.isActive,
     hasCourseAssignment: Boolean(courseAssignment),
-    hasEditionAssignment: editionAssignments.length > 0,
+    hasEditionAssignment: Boolean(editionAssignment),
     hasActiveEnrollment: Boolean(activeEnrollment)
   });
 
   return {
     user,
-    course,
+    course: {
+      id: courseId,
+      slug: courseSlug
+    },
     viewerRole,
-    latestPurchase,
     latestEnrollment,
     activeEnrollment
   };
-}
+});
+
+const getAccessSnapshot = cache(async (userId: string, courseSlug: string) => {
+  const course = await getCatalogCourseBySlug(courseSlug);
+
+  if (!course) {
+    return null;
+  }
+
+  return getAccessSnapshotForCourse(userId, course.id, course.slug);
+});
 
 export async function ensureCourseMembershipForUser(input: {
   userId: string;
@@ -332,10 +328,7 @@ export async function ensureCourseMembershipForUser(input: {
     return null;
   }
 
-  const snapshot = await getAccessSnapshot({
-    userId: input.userId,
-    courseSlug: input.courseSlug
-  });
+  const snapshot = await getAccessSnapshot(input.userId, input.courseSlug);
 
   if (!snapshot?.viewerRole) {
     await getDb().courseMembership.deleteMany({
@@ -370,7 +363,20 @@ export async function ensureCourseCommunity(courseSlug: string) {
   const db = getDb();
   const activeSpace = await ensureActiveForumSpace(courseSlug);
 
-  await db.forumCategory.updateMany({
+  const existingCategory = await db.forumCategory.findFirst({
+    where: {
+      forumSpaceId: activeSpace.id
+    },
+    select: {
+      id: true
+    }
+  });
+
+  if (existingCategory) {
+    return activeSpace;
+  }
+
+  const orphanCategories = await db.forumCategory.updateMany({
     where: {
       courseSlug,
       forumSpaceId: null
@@ -380,13 +386,7 @@ export async function ensureCourseCommunity(courseSlug: string) {
     }
   });
 
-  const existingCategoryCount = await db.forumCategory.count({
-    where: {
-      forumSpaceId: activeSpace.id
-    }
-  });
-
-  if (existingCategoryCount === 0) {
+  if (orphanCategories.count === 0) {
     await createDefaultForumCategoriesForSpace({
       courseSlug,
       forumSpaceId: activeSpace.id
@@ -405,17 +405,12 @@ export async function getCourseRoleForUser(input: {
     return getDemoCourseRole(input.userId);
   }
 
-  const snapshot = await getAccessSnapshot({
-    userId: input.userId,
-    courseSlug: input.courseSlug
-  });
+  const snapshot = await getAccessSnapshot(input.userId, input.courseSlug);
 
   if (!snapshot?.viewerRole) {
-    await ensureCourseMembershipForUser(input);
     return null;
   }
 
-  await ensureCourseMembershipForUser(input);
   return snapshot.viewerRole;
 }
 
@@ -451,16 +446,65 @@ export async function canAccessCourseCommunity(input: {
     };
   }
 
-  const snapshot = await getAccessSnapshot({
-    userId: input.userId,
-    courseSlug: input.courseSlug
-  });
+  const snapshot = await getAccessSnapshot(input.userId, input.courseSlug);
 
   if (!snapshot?.viewerRole) {
     return { allowed: false, role: null, enrollment: null };
   }
 
-  await ensureCourseMembershipForUser(input);
+  return {
+    allowed: true,
+    role: snapshot.viewerRole,
+    enrollment: snapshot.latestEnrollment
+      ? {
+          ...snapshot.latestEnrollment,
+          accessState: getEnrollmentAccessState({
+            status: snapshot.latestEnrollment.status,
+            accessStartsAt: snapshot.latestEnrollment.accessStartsAt,
+            accessUntil: snapshot.latestEnrollment.accessUntil
+          })
+        }
+      : null
+  };
+}
+
+export async function canAccessCourseCommunityForCourse(input: {
+  userId: string;
+  email?: string;
+  course: AccessCourseInput;
+}): Promise<CourseCommunityAccess> {
+  if (isDemoUserId(input.userId)) {
+    const role = getDemoCourseRole(input.userId);
+
+    if (!role) {
+      return {
+        allowed: false,
+        role: null,
+        enrollment: null
+      };
+    }
+
+    return {
+      allowed: true,
+      role,
+      enrollment:
+        role === "STUDENT"
+          ? {
+              id: `demo-enrollment-${input.course.slug}`,
+              status: "ACTIVE" as const,
+              accessStartsAt: new Date("2026-05-07T09:00:00.000Z"),
+              accessUntil: null,
+              accessState: "active" as const
+            }
+          : null
+    };
+  }
+
+  const snapshot = await getAccessSnapshotForCourse(input.userId, input.course.id, input.course.slug);
+
+  if (!snapshot?.viewerRole) {
+    return { allowed: false, role: null, enrollment: null };
+  }
 
   return {
     allowed: true,
@@ -623,15 +667,6 @@ export async function getUserCourseSpaces(input: { userId: string; email?: strin
       } satisfies UserCourseSpace
     ];
   });
-
-  await Promise.all(
-    spaces.map((space) =>
-      ensureCourseMembershipForUser({
-        userId: input.userId,
-        courseSlug: space.course.slug
-      })
-    )
-  );
 
   return spaces;
 }

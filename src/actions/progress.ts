@@ -6,7 +6,7 @@ import { z } from "zod";
 import { getCurrentUser } from "@/lib/auth";
 import { getCatalogCourseBySlug } from "@/lib/course-catalog";
 import { setCourseModuleProgress } from "@/lib/course-progress";
-import { canAccessCourseCommunity } from "@/lib/course-community";
+import { canAccessCourseCommunityForCourse } from "@/lib/course-community";
 import { getSafeRedirect } from "@/lib/redirect";
 
 const updateCourseModuleProgressSchema = z.object({
@@ -40,10 +40,10 @@ export async function updateCourseModuleProgressAction(formData: FormData) {
     redirect("/cursos");
   }
 
-  const access = await canAccessCourseCommunity({
+  const access = await canAccessCourseCommunityForCourse({
     userId: user.id,
     email: user.email,
-    courseSlug: course.slug
+    course
   });
 
   if (!access.allowed) {

@@ -9,7 +9,7 @@ import { Card } from "@/components/ui/card";
 import { requireUser } from "@/lib/auth";
 import { getCatalogCourseBySlug } from "@/lib/course-catalog";
 import {
-  canAccessCourseCommunity,
+  canAccessCourseCommunityForCourse,
   canModerateCourse,
   getRoleLabel
 } from "@/lib/course-community";
@@ -50,10 +50,10 @@ export default async function CourseTrackingPage({ params }: TrackingPageProps) 
   }
 
   const user = await requireUser(`/mis-cursos/${slug}/seguimiento`);
-  const access = await canAccessCourseCommunity({
+  const access = await canAccessCourseCommunityForCourse({
     userId: user.id,
     email: user.email,
-    courseSlug: slug
+    course
   });
 
   if (!access.allowed) {

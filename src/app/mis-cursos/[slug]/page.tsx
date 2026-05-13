@@ -5,7 +5,7 @@ import { requireUser } from "@/lib/auth";
 import { getCatalogCourseBySlug } from "@/lib/course-catalog";
 import { getCourseProgressDetailsForUser } from "@/lib/course-progress";
 import {
-  canAccessCourseCommunity,
+  canAccessCourseCommunityForCourse,
   canModerateCourse,
   getRoleLabel
 } from "@/lib/course-community";
@@ -40,10 +40,10 @@ export default async function MyCoursePage({ params }: MyCoursePageProps) {
   }
 
   const user = await requireUser(`/mis-cursos/${course.slug}`);
-  const access = await canAccessCourseCommunity({
+  const access = await canAccessCourseCommunityForCourse({
     userId: user.id,
     email: user.email,
-    courseSlug: course.slug
+    course
   });
 
   if (!access.allowed) {
@@ -51,18 +51,18 @@ export default async function MyCoursePage({ params }: MyCoursePageProps) {
   }
 
   const canModerate = canModerateCourse(access.role);
-  const [forumCategories, resources] = await Promise.all([
+  const [forumCategories, resources, progress] = await Promise.all([
     getForumCategories(course.slug, access.role),
     getCampusResources({
       course,
       viewerUserId: user.id,
       canModerate
+    }),
+    getCourseProgressDetailsForUser({
+      userId: user.id,
+      course
     })
   ]);
-  const progress = await getCourseProgressDetailsForUser({
-    userId: user.id,
-    course
-  });
 
   return (
     <CourseLearningShell

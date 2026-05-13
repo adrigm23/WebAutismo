@@ -184,33 +184,36 @@ export async function getForumCategories(
     await publishDueAnnouncementsForCourse(courseSlug);
     const activeSpace = await ensureCourseCommunity(courseSlug);
 
-    const categories = (await getDb().forumCategory.findMany({
+    const categories = await getDb().forumCategory.findMany({
       where: {
         forumSpaceId: activeSpace.id
       },
       orderBy: {
         sortOrder: "asc"
+      },
+      select: {
+        id: true,
+        forumSpaceId: true,
+        slug: true,
+        title: true,
+        description: true,
+        _count: {
+          select: {
+            threads: {
+              where: {
+                deletedAt: null,
+                ...buildVisibilityWhere(viewerRole)
+              }
+            }
+          }
+        }
       }
-    })) as Array<{
-      id: string;
-      forumSpaceId: string | null;
-      slug: string;
-      title: string;
-      description: string;
-    }>;
+    });
 
-    const visibleCounts = await Promise.all(
-      categories.map((category) =>
-        getDb().forumThread.count({
-          where: buildThreadWhere(category.id, undefined, viewerRole)
-        })
-      )
-    );
-
-    return categories.map((category, index) => ({
+    return categories.map((category) => ({
       ...category,
       _count: {
-        threads: visibleCounts[index]
+        threads: category._count.threads
       }
     })) as ForumCategorySummary[];
   } catch {

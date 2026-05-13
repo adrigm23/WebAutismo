@@ -6,6 +6,10 @@ import { isLegacyCatalogFallbackEnabled } from "./env.ts";
 import { resolveEditionAccessUntil, isEditionVisible } from "./course-editions.ts";
 import { getDb } from "./prisma.ts";
 
+export type CatalogCourseModule = CourseModule & {
+  moduleKey?: string;
+};
+
 export type CatalogCourseEdition = {
   id: string;
   label: string;
@@ -18,8 +22,9 @@ export type CatalogCourseEdition = {
   isActive: boolean;
 };
 
-export type CatalogCourse = Omit<LegacyCourse, "teacher"> & {
+export type CatalogCourse = Omit<LegacyCourse, "teacher" | "modules"> & {
   id: string;
+  modules: CatalogCourseModule[];
   teachers: CourseTeacher[];
   editions: CatalogCourseEdition[];
   activeEdition: CatalogCourseEdition | null;
@@ -117,6 +122,7 @@ function toCatalogCourse(
     seoTitle: string;
     seoDescription: string;
     modules: Array<{
+      id: string;
       moduleKey: string;
       title: string;
       description: string;
@@ -184,8 +190,9 @@ function toCatalogCourse(
     modules: record.modules
       .sort((left, right) => left.position - right.position)
       .map(
-        (module): CourseModule => ({
-          id: module.moduleKey,
+        (module): CatalogCourseModule => ({
+          id: module.id,
+          moduleKey: module.moduleKey,
           title: module.title,
           description: module.description,
           estimatedTime: module.estimatedTime,
