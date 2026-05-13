@@ -18,7 +18,8 @@ export function formatDate(date: Date | string) {
   return new Intl.DateTimeFormat("es-ES", {
     day: "2-digit",
     month: "long",
-    year: "numeric"
+    year: "numeric",
+    timeZone: "Europe/Madrid"
   }).format(new Date(date));
 }
 
@@ -28,7 +29,8 @@ export function formatDateTime(date: Date | string) {
     month: "short",
     year: "numeric",
     hour: "2-digit",
-    minute: "2-digit"
+    minute: "2-digit",
+    timeZone: "Europe/Madrid"
   }).format(new Date(date));
 }
 

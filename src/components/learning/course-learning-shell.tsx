@@ -38,9 +38,10 @@ type LearningShellProps = {
   canModerate: boolean;
   editionLabel?: string | null;
   accessUntil?: Date | null;
+  activeTab: SidebarTab;
 };
 
-type SidebarTab = "content" | "resources" | "support";
+export type SidebarTab = "content" | "resources" | "support";
 
 export function CourseLearningShell({
   course,
@@ -50,9 +51,9 @@ export function CourseLearningShell({
   roleLabel,
   canModerate,
   editionLabel,
-  accessUntil
+  accessUntil,
+  activeTab
 }: LearningShellProps) {
-  const [sidebarTab, setSidebarTab] = useState<SidebarTab>("content");
   const [selectedModuleIndex, setSelectedModuleIndex] = useState(0);
   const currentModule = progress.modules[selectedModuleIndex] ?? progress.modules[0] ?? null;
   const introCopy = canModerate
@@ -244,24 +245,23 @@ export function CourseLearningShell({
               { id: "resources" as const, label: "Recursos", icon: FolderOpen },
               { id: "support" as const, label: "Soporte", icon: CircleHelp }
             ].map(({ id, label, icon: Icon }) => (
-              <button
+              <Link
                 className={cn(
                   "flex flex-1 items-center justify-center gap-2 border-b-2 px-4 py-6 text-lg font-medium transition",
-                  sidebarTab === id
+                  activeTab === id
                     ? "border-[var(--color-primary)] text-[var(--color-primary)]"
                     : "border-transparent text-[var(--color-ink)]"
                 )}
+                href={id === "content" ? `/mis-cursos/${course.slug}` : `/mis-cursos/${course.slug}?tab=${id}`}
                 key={id}
-                onClick={() => setSidebarTab(id)}
-                type="button"
               >
                 <Icon className="h-5 w-5" />
                 {label}
-              </button>
+              </Link>
             ))}
           </div>
 
-          {sidebarTab === "content" ? (
+          {activeTab === "content" ? (
             <>
               <div className="flex items-center justify-between border-b border-[rgba(12,113,195,0.14)] px-6 py-6">
                 <div>
@@ -327,7 +327,7 @@ export function CourseLearningShell({
             </>
           ) : null}
 
-          {sidebarTab === "resources" ? (
+          {activeTab === "resources" ? (
             <div className="campus-scrollbar flex-1 space-y-4 overflow-y-auto px-6 py-6">
               <div className="flex items-center gap-3">
                 <div className="grid h-11 w-11 place-items-center rounded-full bg-white text-[var(--color-primary)]">
@@ -350,7 +350,7 @@ export function CourseLearningShell({
             </div>
           ) : null}
 
-          {sidebarTab === "support" ? (
+          {activeTab === "support" ? (
             <div className="campus-scrollbar flex-1 space-y-4 overflow-y-auto px-6 py-6">
               <Link
                 className="block rounded-2xl border border-[var(--color-primary)] bg-white p-5 text-[var(--color-primary)] shadow-[0_16px_28px_rgba(12,113,195,0.08)] transition hover:bg-[var(--color-primary-soft)]"

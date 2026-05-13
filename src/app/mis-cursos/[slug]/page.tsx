@@ -11,10 +11,17 @@ import {
 } from "@/lib/course-community";
 import { getCampusResources } from "@/lib/course-resources";
 import { getForumCategories } from "@/lib/forum";
+import { firstValue } from "@/lib/utils";
 
 type MyCoursePageProps = {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ tab?: string | string[] }>;
 };
+
+function getSidebarTab(value: string | string[] | undefined) {
+  const candidate = firstValue(value);
+  return candidate === "resources" || candidate === "support" ? candidate : "content";
+}
 
 export async function generateMetadata({
   params
@@ -31,8 +38,9 @@ export async function generateMetadata({
   };
 }
 
-export default async function MyCoursePage({ params }: MyCoursePageProps) {
+export default async function MyCoursePage({ params, searchParams }: MyCoursePageProps) {
   const { slug } = await params;
+  const { tab } = await searchParams;
   const course = await getCatalogCourseBySlug(slug);
 
   if (!course) {
@@ -51,21 +59,26 @@ export default async function MyCoursePage({ params }: MyCoursePageProps) {
   }
 
   const canModerate = canModerateCourse(access.role);
-  const [forumCategories, resources, progress] = await Promise.all([
-    getForumCategories(course.slug, access.role),
-    getCampusResources({
-      course,
-      viewerUserId: user.id,
-      canModerate
-    }),
-    getCourseProgressDetailsForUser({
-      userId: user.id,
-      course
-    })
+  const activeTab = getSidebarTab(tab);
+  const progress = await getCourseProgressDetailsForUser({
+    userId: user.id,
+    course
+  });
+
+  const [forumCategories, resources] = await Promise.all([
+    activeTab === "support" ? getForumCategories(course.slug, access.role) : Promise.resolve([]),
+    activeTab === "resources"
+      ? getCampusResources({
+          course,
+          viewerUserId: user.id,
+          canModerate
+        })
+      : Promise.resolve([])
   ]);
 
   return (
     <CourseLearningShell
+      activeTab={activeTab}
       course={course}
       forumCategories={forumCategories}
       canModerate={canModerate}
