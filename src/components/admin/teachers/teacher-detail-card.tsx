@@ -1,5 +1,8 @@
 import { AlertTriangle } from "lucide-react";
-import { syncTeacherCourseAssignmentsAction } from "@/actions/admin";
+import {
+  syncTeacherCourseAssignmentsAction,
+  syncTeacherEditionAssignmentsAction
+} from "@/actions/admin";
 import { AdminStatusBadge } from "@/components/admin/admin-status-badge";
 import { Card } from "@/components/ui/card";
 import { SubmitButton } from "@/components/ui/submit-button";
@@ -44,7 +47,10 @@ export function TeacherDetailCard({
         <div className="mt-6 grid gap-3 sm:grid-cols-3">
           <StatBox label="Alta" value={formatDate(selectedTeacher.createdAt)} />
           <StatBox label="Cursos" value={`${selectedTeacher.courseAssignments.length} asignados`} />
-          <StatBox label="Revision" value={formatDate(selectedTeacher.updatedAt)} />
+          <StatBox
+            label="Ediciones"
+            value={`${selectedTeacher.editionAssignments.length} activas`}
+          />
         </div>
       </div>
 
@@ -111,24 +117,83 @@ export function TeacherDetailCard({
 
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[#314255]">
-              Ediciones activas
+              Asignacion de ediciones
             </p>
-            <div className="mt-3 flex flex-wrap gap-2">
-              {selectedTeacher.courseAssignments.flatMap((assignment) =>
-                assignment.course.editions.map((edition) => (
-                  <AdminStatusBadge key={edition.id} tone="neutral">
-                    {assignment.course.title} - {edition.label}
-                  </AdminStatusBadge>
-                ))
-              )}
-              {selectedTeacher.courseAssignments.length === 0 ? (
-                <p className="text-sm text-[#647589]">Sin cursos ni ediciones asignadas.</p>
-              ) : null}
-            </div>
+            <p className="mt-2 text-sm leading-6 text-[#5c6f83]">
+              Usa esta capa cuando quieras limitar la docencia a convocatorias concretas sin dar
+              acceso a todas las ediciones del curso.
+            </p>
           </div>
 
           <SubmitButton className="w-full" pendingLabel="Guardando asignaciones...">
             Guardar asignaciones
+          </SubmitButton>
+        </form>
+
+        <form action={syncTeacherEditionAssignmentsAction} className="mt-6 space-y-5">
+          <input name="teacherUserId" type="hidden" value={selectedTeacher.id} />
+
+          <div className="space-y-3">
+            {allCourses.some((course) => course.editions.length > 0) ? (
+              allCourses.map((course) => (
+                <div
+                  className="rounded-[1.3rem] border border-[#d9e1e8] bg-[#fbfcfd] px-4 py-4"
+                  key={course.id}
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                      <p className="font-medium text-[var(--color-ink)]">{course.title}</p>
+                      <p className="mt-1 text-xs uppercase tracking-[0.14em] text-[#6a7b8d]">
+                        /cursos/{course.slug}
+                      </p>
+                    </div>
+                    <AdminStatusBadge tone="neutral">
+                      {course.editions.length} ediciones visibles
+                    </AdminStatusBadge>
+                  </div>
+
+                  <div className="mt-4 space-y-3">
+                    {course.editions.length > 0 ? (
+                      course.editions.map((edition) => {
+                        const checked = selectedTeacher.editionAssignments.some(
+                          (assignment) => assignment.courseEditionId === edition.id
+                        );
+
+                        return (
+                          <label
+                            className="flex items-start gap-3 rounded-[1rem] border border-[#e1e8ef] bg-white px-4 py-3 text-sm text-[#33475b]"
+                            key={edition.id}
+                          >
+                            <input
+                              defaultChecked={checked}
+                              name="editionIds"
+                              type="checkbox"
+                              value={edition.id}
+                            />
+                            <span className="min-w-0 flex-1">
+                              <span className="block font-medium text-[var(--color-ink)]">
+                                {edition.label}
+                              </span>
+                              <span className="mt-1 block text-xs uppercase tracking-[0.14em] text-[#6a7b8d]">
+                                {edition.status === "ACTIVE" ? "activa" : "programada"}
+                              </span>
+                            </span>
+                          </label>
+                        );
+                      })
+                    ) : (
+                      <p className="text-sm text-[#647589]">Este curso no tiene ediciones activas o programadas.</p>
+                    )}
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p className="text-sm text-[#647589]">No hay ediciones activas o programadas para asignar.</p>
+            )}
+          </div>
+
+          <SubmitButton className="w-full" pendingLabel="Guardando ediciones..." variant="secondary">
+            Guardar ediciones asignadas
           </SubmitButton>
         </form>
       </div>

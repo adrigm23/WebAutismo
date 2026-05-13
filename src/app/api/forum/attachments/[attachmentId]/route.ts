@@ -1,8 +1,7 @@
-import { readFile } from "fs/promises";
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { canAccessCourseCommunity } from "@/lib/course-community";
-import { resolveForumAttachmentFilePath } from "@/lib/forum-attachment-storage";
+import { readStoredForumAttachmentContent } from "@/lib/forum-attachment-storage";
 import { getDb } from "@/lib/prisma";
 
 type AttachmentContext = {
@@ -95,8 +94,7 @@ export async function GET(
   }
 
   try {
-    const filePath = await resolveForumAttachmentFilePath(attachment.storageKey);
-    const fileBuffer = await readFile(filePath);
+    const fileBuffer = await readStoredForumAttachmentContent(attachment.storageKey);
     const isInlineImage = attachment.kind === "IMAGE";
     const headers = new Headers();
 

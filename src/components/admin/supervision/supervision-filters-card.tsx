@@ -1,5 +1,6 @@
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { ButtonLink } from "@/components/ui/button";
 import { SubmitButton } from "@/components/ui/submit-button";
 import type {
   SupervisionAccessState,
@@ -13,7 +14,8 @@ export function SupervisionFiltersCard({
   teacherId,
   accessState,
   courses,
-  teachers
+  teachers,
+  exportLinks
 }: {
   q: string;
   courseId: string;
@@ -21,6 +23,10 @@ export function SupervisionFiltersCard({
   accessState: "ALL" | SupervisionAccessState;
   courses: SupervisionCourseOption[];
   teachers: SupervisionTeacherOption[];
+  exportLinks?: Array<{
+    href: string;
+    label: string;
+  }>;
 }) {
   return (
     <Card className="rounded-[2rem] p-7">
@@ -65,6 +71,16 @@ export function SupervisionFiltersCard({
           Aplicar filtros
         </SubmitButton>
       </form>
+
+      {exportLinks?.length ? (
+        <div className="mt-5 flex flex-wrap gap-3 border-t border-[#e1e8ef] pt-5">
+          {exportLinks.map((link) => (
+            <ButtonLink href={link.href} key={link.href} variant="ghost">
+              {link.label}
+            </ButtonLink>
+          ))}
+        </div>
+      ) : null}
     </Card>
   );
 }

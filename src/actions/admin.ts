@@ -73,6 +73,13 @@ async function ensureNotLastAdmin(input: {
 
 function revalidateAdminViews() {
   revalidatePath("/admin");
+  revalidatePath("/admin/users");
+  revalidatePath("/admin/teachers");
+  revalidatePath("/admin/courses");
+  revalidatePath("/admin/editions");
+  revalidatePath("/admin/promotions");
+  revalidatePath("/admin/supervision");
+  revalidatePath("/admin/audit");
   revalidatePath("/cursos");
   revalidatePath("/mi-cuenta");
 }
@@ -555,6 +562,159 @@ export async function syncTeacherCourseAssignmentsAction(formData: FormData) {
       removedCourseIds: courseIdsToRemove
     }
   });
+
+  revalidateAdminViews();
+  redirect(`/admin/teachers?teacherId=${teacherUserId}`);
+}
+
+export async function syncTeacherEditionAssignmentsAction(formData: FormData) {
+  const admin = await requireAdminUser();
+  const teacherUserId = String(formData.get("teacherUserId") ?? "");
+  const requestedEditionIds = formData
+    .getAll("editionIds")
+    .map((value) => String(value))
+    .filter(Boolean);
+
+  if (!teacherUserId) {
+    redirect("/admin/teachers?error=teacher-edition-sync");
+  }
+
+  const db = getDb();
+  const teacher = await db.user.findUnique({
+    where: {
+      id: teacherUserId
+    },
+    select: {
+      id: true,
+      email: true,
+      globalRole: true
+    }
+  });
+
+  if (!teacher) {
+    redirect("/admin/teachers?error=teacher-edition-sync-missing");
+  }
+
+  const currentAssignments = await db.courseEditionTeacherAssignment.findMany({
+    where: {
+      userId: teacherUserId
+    },
+    select: {
+      courseEditionId: true
+    }
+  });
+  const existingEditionRows = await db.courseEdition.findMany({
+    where: {
+      id: {
+        in: requestedEditionIds
+      }
+    },
+    select: {
+      id: true,
+      label: true,
+      course: {
+        select: {
+          title: true
+        }
+      }
+    }
+  });
+
+  const validEditionIds = new Set(existingEditionRows.map((edition) => edition.id));
+  const currentEditionIds = new Set(
+    currentAssignments.map((assignment) => assignment.courseEditionId)
+  );
+  const nextEditionIds = new Set(requestedEditionIds.filter((editionId) => validEditionIds.has(editionId)));
+  const editionIdsToRemove = Array.from(currentEditionIds).filter((editionId) => !nextEditionIds.has(editionId));
+  const editionIdsToAdd = Array.from(nextEditionIds).filter((editionId) => !currentEditionIds.has(editionId));
+
+  if (editionIdsToRemove.length > 0) {
+    await db.courseEditionTeacherAssignment.deleteMany({
+      where: {
+        userId: teacherUserId,
+        courseEditionId: {
+          in: editionIdsToRemove
+        }
+      }
+    });
+  }
+
+  if (editionIdsToAdd.length > 0) {
+    await db.courseEditionTeacherAssignment.createMany({
+      data: editionIdsToAdd.map((courseEditionId) => ({
+        courseEditionId,
+        userId: teacherUserId
+      })),
+      skipDuplicates: true
+    });
+  }
+
+  if (teacher.globalRole === "STUDENT" && nextEditionIds.size > 0) {
+    await db.user.update({
+      where: {
+        id: teacher.id
+      },
+      data: {
+        globalRole: "TEACHER"
+      }
+    });
+  }
+
+  if (editionIdsToAdd.length > 0 || editionIdsToRemove.length > 0) {
+    const affectedEditionIds = [...editionIdsToAdd, ...editionIdsToRemove];
+    const affectedEditions = await db.courseEdition.findMany({
+      where: {
+        id: {
+          in: affectedEditionIds
+        }
+      },
+      select: {
+        id: true,
+        label: true,
+        course: {
+          select: {
+            title: true
+          }
+        }
+      }
+    });
+    const editionById = new Map(affectedEditions.map((edition) => [edition.id, edition]));
+
+    await Promise.all([
+      ...editionIdsToAdd.map((editionId) => {
+        const edition = editionById.get(editionId);
+        return writeAuditLog({
+          actorId: admin.id,
+          action: "COURSE_EDITION_TEACHER_ASSIGNED",
+          entityType: "COURSE_EDITION",
+          entityId: editionId,
+          entityLabel: edition
+            ? `${edition.course.title} | ${edition.label}`
+            : editionId,
+          metadata: {
+            teacherUserId: teacher.id,
+            teacherEmail: teacher.email
+          }
+        });
+      }),
+      ...editionIdsToRemove.map((editionId) => {
+        const edition = editionById.get(editionId);
+        return writeAuditLog({
+          actorId: admin.id,
+          action: "COURSE_EDITION_TEACHER_UNASSIGNED",
+          entityType: "COURSE_EDITION",
+          entityId: editionId,
+          entityLabel: edition
+            ? `${edition.course.title} | ${edition.label}`
+            : editionId,
+          metadata: {
+            teacherUserId: teacher.id,
+            teacherEmail: teacher.email
+          }
+        });
+      })
+    ]);
+  }
 
   revalidateAdminViews();
   redirect(`/admin/teachers?teacherId=${teacherUserId}`);

@@ -74,6 +74,30 @@ export default async function AdminSupervisionPage({ searchParams }: Supervision
     | SupervisionAccessState;
   const enrollmentId = getSearchParamValue(params.enrollmentId);
 
+  const buildExportHref = (dataset: "enrollments" | "progress" | "submissions" | "grades") => {
+    const qs = new URLSearchParams();
+
+    if (q) {
+      qs.set("q", q);
+    }
+
+    if (courseId !== "ALL") {
+      qs.set("courseId", courseId);
+    }
+
+    if (teacherId !== "ALL") {
+      qs.set("teacherId", teacherId);
+    }
+
+    if (accessStateFilter !== "ALL") {
+      qs.set("accessState", accessStateFilter);
+    }
+
+    qs.set("dataset", dataset);
+
+    return `/admin/supervision/export?${qs.toString()}`;
+  };
+
   if (isDemoUserId(currentUser.id)) {
     const visibleRows = demoAdminSupervisionRows.filter((row) => {
       const matchesQ =
@@ -198,13 +222,26 @@ export default async function AdminSupervisionPage({ searchParams }: Supervision
         ...(courseId !== "ALL" ? { courseId } : {}),
         ...(teacherId !== "ALL"
           ? {
-              course: {
-                teacherAssignments: {
-                  some: {
-                    userId: teacherId
+              OR: [
+                {
+                  course: {
+                    teacherAssignments: {
+                      some: {
+                        userId: teacherId
+                      }
+                    }
+                  }
+                },
+                {
+                  courseEdition: {
+                    teacherAssignments: {
+                      some: {
+                        userId: teacherId
+                      }
+                    }
                   }
                 }
-              }
+              ]
             }
           : {})
       },
@@ -374,6 +411,12 @@ export default async function AdminSupervisionPage({ searchParams }: Supervision
         accessState={accessStateFilter}
         courseId={courseId}
         courses={courses}
+        exportLinks={[
+          { href: buildExportHref("enrollments"), label: "Exportar matrículas" },
+          { href: buildExportHref("progress"), label: "Exportar progreso" },
+          { href: buildExportHref("submissions"), label: "Exportar entregas" },
+          { href: buildExportHref("grades"), label: "Exportar notas" }
+        ]}
         q={q}
         teacherId={teacherId}
         teachers={teachers}

@@ -1,5 +1,6 @@
-import { access, unlink } from "fs/promises";
+import { access, readFile, unlink } from "fs/promises";
 import path from "path";
+import { deleteStoredAsset, getStoredAssetContent } from "@/lib/stored-assets";
 
 function assertPathWithinRoot(resolvedPath: string, rootDirectory: string) {
   const relativePath = path.relative(rootDirectory, resolvedPath);
@@ -20,6 +21,17 @@ function resolveStorageKeyPath(rootDirectory: string, storageKey: string) {
 
 export function buildProtectedForumAttachmentUrl(id: string) {
   return `/api/forum/attachments/${id}`;
+}
+
+export async function readStoredForumAttachmentContent(storageKey: string) {
+  const assetContent = await getStoredAssetContent(storageKey);
+
+  if (assetContent) {
+    return Buffer.from(assetContent);
+  }
+
+  const filePath = await resolveForumAttachmentFilePath(storageKey);
+  return readFile(filePath);
 }
 
 export function legacyForumAttachmentUrlToStorageKey(url: string) {
@@ -47,6 +59,12 @@ export async function resolveForumAttachmentFilePath(storageKey: string) {
 }
 
 export async function removeStoredForumAttachment(storageKey: string) {
-  const filePath = await resolveForumAttachmentFilePath(storageKey);
-  await unlink(filePath);
+  await deleteStoredAsset(storageKey);
+
+  try {
+    const filePath = await resolveForumAttachmentFilePath(storageKey);
+    await unlink(filePath);
+  } catch {
+    // Ignore legacy filesystem cleanup failures when the attachment already lives in the database.
+  }
 }

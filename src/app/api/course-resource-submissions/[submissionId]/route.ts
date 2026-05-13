@@ -1,8 +1,7 @@
-import { readFile } from "fs/promises";
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { canAccessCourseCommunity, canModerateCourse } from "@/lib/course-community";
-import { resolveCourseResourceSubmissionFilePath } from "@/lib/course-resource-submission-storage";
+import { readStoredCourseResourceSubmissionContent } from "@/lib/course-resource-submission-storage";
 import { getDb } from "@/lib/prisma";
 
 export async function GET(
@@ -55,8 +54,7 @@ export async function GET(
   }
 
   try {
-    const filePath = await resolveCourseResourceSubmissionFilePath(submission.storageKey);
-    const fileBuffer = await readFile(filePath);
+    const fileBuffer = await readStoredCourseResourceSubmissionContent(submission.storageKey);
     const headers = new Headers();
 
     headers.set("Content-Type", submission.mimeType || "application/octet-stream");

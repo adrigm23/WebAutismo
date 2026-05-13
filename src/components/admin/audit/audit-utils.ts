@@ -10,6 +10,10 @@ export function getEntityTypeLabel(entityType: AuditEntityType) {
       return "Edicion";
     case "COURSE_ENROLLMENT":
       return "Matricula";
+    case "COURSE_RESOURCE":
+      return "Recurso del curso";
+    case "COURSE_RESOURCE_SUBMISSION":
+      return "Entrega de ejercicio";
     case "PROMOTION":
       return "Promocion";
     case "PURCHASE":

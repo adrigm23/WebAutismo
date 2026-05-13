@@ -188,6 +188,8 @@ export function getAuditActionLabel(action: AuditAction) {
     COURSE_CLONED: "Curso clonado",
     COURSE_TEACHER_ASSIGNED: "Docente asignado",
     COURSE_TEACHER_UNASSIGNED: "Docente desasignado",
+    COURSE_EDITION_TEACHER_ASSIGNED: "Docente asignado a edicion",
+    COURSE_EDITION_TEACHER_UNASSIGNED: "Docente retirado de edicion",
     EDITION_CREATED: "Edicion creada",
     EDITION_UPDATED: "Edicion actualizada",
     EDITION_CLOSED: "Edicion cerrada",
@@ -209,7 +211,17 @@ export function getAuditActionLabel(action: AuditAction) {
     PURCHASE_PAID: "Compra pagada",
     PURCHASE_FAILED: "Compra fallida",
     PROMOTION_APPLIED: "Promocion aplicada",
-    NOTIFICATION_PREFERENCES_UPDATED: "Preferencias actualizadas"
+    NOTIFICATION_PREFERENCES_UPDATED: "Preferencias actualizadas",
+    COURSE_RESOURCE_CREATED: "Recurso creado",
+    COURSE_RESOURCE_UPDATED: "Recurso actualizado",
+    COURSE_RESOURCE_DELETED: "Recurso eliminado",
+    COURSE_RESOURCE_PUBLISHED: "Recurso publicado",
+    COURSE_RESOURCE_UNPUBLISHED: "Recurso ocultado",
+    COURSE_RESOURCE_REORDERED: "Recurso reordenado",
+    COURSE_RESOURCE_SUBMISSION_CREATED: "Entrega creada",
+    COURSE_RESOURCE_SUBMISSION_UPDATED: "Entrega actualizada",
+    COURSE_RESOURCE_SUBMISSION_REVIEWED: "Entrega revisada",
+    COURSE_RESOURCE_SUBMISSION_CHANGES_REQUESTED: "Cambios solicitados"
   };
 
   return labels[action] ?? action;

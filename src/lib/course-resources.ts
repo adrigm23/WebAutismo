@@ -1,5 +1,4 @@
 import { randomUUID } from "crypto";
-import { mkdir, writeFile } from "fs/promises";
 import path from "path";
 import type {
   CourseResourceSource,
@@ -17,6 +16,7 @@ import {
   removeStoredCourseResource
 } from "@/lib/course-resource-storage";
 import { getDb } from "@/lib/prisma";
+import { upsertStoredAsset } from "@/lib/stored-assets";
 
 export type CampusResourceSubmissionItem = {
   id: string;
@@ -391,11 +391,10 @@ export async function createCourseResource(input: {
     storageKey = path.posix.join("course-resources", input.courseId, storedFileName);
     mimeType = input.file.type || null;
     sizeInBytes = input.file.size;
-    const targetDirectory = path.join(process.cwd(), "storage", "course-resources", input.courseId);
-    const targetPath = path.join(targetDirectory, storedFileName);
-
-    await mkdir(targetDirectory, { recursive: true });
-    await writeFile(targetPath, Buffer.from(await input.file.arrayBuffer()));
+    await upsertStoredAsset({
+      storageKey,
+      content: new Uint8Array(await input.file.arrayBuffer())
+    });
   }
 
   return getDb().courseResource.create({
@@ -476,11 +475,10 @@ export async function updateCourseResource(input: {
     storageKey = path.posix.join("course-resources", existing.courseId, storedFileName);
     mimeType = input.file.type || null;
     sizeInBytes = input.file.size;
-    const targetDirectory = path.join(process.cwd(), "storage", "course-resources", existing.courseId);
-    const targetPath = path.join(targetDirectory, storedFileName);
-
-    await mkdir(targetDirectory, { recursive: true });
-    await writeFile(targetPath, Buffer.from(await input.file.arrayBuffer()));
+    await upsertStoredAsset({
+      storageKey,
+      content: new Uint8Array(await input.file.arrayBuffer())
+    });
   }
 
   const updated = await getDb().courseResource.update({
@@ -622,16 +620,10 @@ export async function upsertCourseResourceSubmission(input: {
     attachmentLabel = input.file.name;
     mimeType = input.file.type || null;
     sizeInBytes = input.file.size;
-    const targetDirectory = path.join(
-      process.cwd(),
-      "storage",
-      "course-resource-submissions",
-      input.resourceId
-    );
-    const targetPath = path.join(targetDirectory, storedFileName);
-
-    await mkdir(targetDirectory, { recursive: true });
-    await writeFile(targetPath, Buffer.from(await input.file.arrayBuffer()));
+    await upsertStoredAsset({
+      storageKey,
+      content: new Uint8Array(await input.file.arrayBuffer())
+    });
   }
 
   const submission = await getDb().courseResourceSubmission.upsert({

@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { getCurrentUser } from "@/lib/auth";
+import { writeAuditLog } from "@/lib/audit";
 import { getCatalogCourseBySlug } from "@/lib/course-catalog";
 import { canAccessCourseCommunity, canModerateCourse } from "@/lib/course-community";
 import {
@@ -26,6 +27,11 @@ export type CourseSubmissionFormState = {
   error?: string;
   success?: string;
 };
+
+function revalidateCourseResourceViews(courseSlug: string) {
+  revalidatePath(`/mis-cursos/${courseSlug}`);
+  revalidatePath(`/mis-cursos/${courseSlug}/seguimiento`);
+}
 
 const createCourseResourceSchema = z.object({
   courseSlug: z.string().min(1),
@@ -175,7 +181,7 @@ export async function createCourseResourceAction(
     }
   }
 
-  await createCourseResource({
+  const resource = await createCourseResource({
     courseId: course.id,
     moduleId,
     createdById: user.id,
@@ -189,7 +195,24 @@ export async function createCourseResourceAction(
     file: parsed.data.source === "FILE" && file instanceof File ? file : null
   });
 
-  revalidatePath(`/mis-cursos/${course.slug}`);
+  await writeAuditLog({
+    actorId: user.id,
+    action: "COURSE_RESOURCE_CREATED",
+    entityType: "COURSE_RESOURCE",
+    entityId: resource.id,
+    entityLabel: resource.title,
+    metadata: {
+      courseId: course.id,
+      courseSlug: course.slug,
+      moduleId,
+      resourceType: resource.type,
+      resourceSource: resource.source,
+      dueAt: resource.dueAt?.toISOString() ?? null,
+      passingScore: resource.passingScore
+    }
+  });
+
+  revalidateCourseResourceViews(course.slug);
 
   return {
     success:
@@ -231,6 +254,10 @@ export async function deleteCourseResourceAction(formData: FormData) {
     },
     select: {
       id: true,
+      title: true,
+      type: true,
+      source: true,
+      moduleId: true,
       course: {
         select: {
           slug: true
@@ -244,8 +271,21 @@ export async function deleteCourseResourceAction(formData: FormData) {
   }
 
   await deleteCourseResource(resource.id);
-  revalidatePath(`/mis-cursos/${parsed.data.courseSlug}`);
-  revalidatePath(`/mis-cursos/${parsed.data.courseSlug}/seguimiento`);
+  await writeAuditLog({
+    actorId: user.id,
+    action: "COURSE_RESOURCE_DELETED",
+    entityType: "COURSE_RESOURCE",
+    entityId: resource.id,
+    entityLabel: resource.title,
+    metadata: {
+      courseSlug: parsed.data.courseSlug,
+      moduleId: resource.moduleId,
+      resourceType: resource.type,
+      resourceSource: resource.source
+    }
+  });
+
+  revalidateCourseResourceViews(parsed.data.courseSlug);
 }
 
 export async function updateCourseResourceAction(
@@ -295,6 +335,9 @@ export async function updateCourseResourceAction(
     },
     select: {
       id: true,
+      title: true,
+      type: true,
+      isPublished: true,
       source: true,
       course: {
         select: {
@@ -355,7 +398,7 @@ export async function updateCourseResourceAction(
 
   const file = formData.get("file");
 
-  await updateCourseResource({
+  const updatedResource = await updateCourseResource({
     resourceId: resource.id,
     moduleId,
     title: parsed.data.title,
@@ -366,8 +409,26 @@ export async function updateCourseResourceAction(
     file: file instanceof File && file.size > 0 ? file : null
   });
 
-  revalidatePath(`/mis-cursos/${course.slug}`);
-  revalidatePath(`/mis-cursos/${course.slug}/seguimiento`);
+  await writeAuditLog({
+    actorId: user.id,
+    action: "COURSE_RESOURCE_UPDATED",
+    entityType: "COURSE_RESOURCE",
+    entityId: updatedResource.id,
+    entityLabel: updatedResource.title,
+    metadata: {
+      courseSlug: course.slug,
+      previousTitle: resource.title,
+      moduleId: updatedResource.moduleId,
+      resourceType: resource.type,
+      resourceSource: resource.source,
+      isPublished: resource.isPublished,
+      dueAt: updatedResource.dueAt?.toISOString() ?? null,
+      passingScore: updatedResource.passingScore,
+      fileReplaced: file instanceof File && file.size > 0
+    }
+  });
+
+  revalidateCourseResourceViews(course.slug);
 
   return {
     success: "Recurso actualizado correctamente."
@@ -407,6 +468,8 @@ export async function toggleCourseResourcePublicationAction(formData: FormData) 
     },
     select: {
       id: true,
+      title: true,
+      isPublished: true,
       course: {
         select: {
           slug: true
@@ -419,13 +482,27 @@ export async function toggleCourseResourcePublicationAction(formData: FormData) 
     return;
   }
 
-  await setCourseResourcePublication({
+  const updatedResource = await setCourseResourcePublication({
     resourceId: resource.id,
     isPublished: parsed.data.publish === "true"
   });
 
-  revalidatePath(`/mis-cursos/${parsed.data.courseSlug}`);
-  revalidatePath(`/mis-cursos/${parsed.data.courseSlug}/seguimiento`);
+  await writeAuditLog({
+    actorId: user.id,
+    action: updatedResource.isPublished
+      ? "COURSE_RESOURCE_PUBLISHED"
+      : "COURSE_RESOURCE_UNPUBLISHED",
+    entityType: "COURSE_RESOURCE",
+    entityId: updatedResource.id,
+    entityLabel: resource.title,
+    metadata: {
+      courseSlug: parsed.data.courseSlug,
+      previousIsPublished: resource.isPublished,
+      nextIsPublished: updatedResource.isPublished
+    }
+  });
+
+  revalidateCourseResourceViews(parsed.data.courseSlug);
 }
 
 export async function moveCourseResourceAction(formData: FormData) {
@@ -461,6 +538,8 @@ export async function moveCourseResourceAction(formData: FormData) {
     },
     select: {
       id: true,
+      title: true,
+      sortOrder: true,
       course: {
         select: {
           slug: true
@@ -473,13 +552,28 @@ export async function moveCourseResourceAction(formData: FormData) {
     return;
   }
 
-  await moveCourseResource({
+  const moveResult = await moveCourseResource({
     resourceId: resource.id,
     direction: parsed.data.direction
   });
 
-  revalidatePath(`/mis-cursos/${parsed.data.courseSlug}`);
-  revalidatePath(`/mis-cursos/${parsed.data.courseSlug}/seguimiento`);
+  if (moveResult) {
+    await writeAuditLog({
+      actorId: user.id,
+      action: "COURSE_RESOURCE_REORDERED",
+      entityType: "COURSE_RESOURCE",
+      entityId: resource.id,
+      entityLabel: resource.title,
+      metadata: {
+        courseSlug: parsed.data.courseSlug,
+        direction: parsed.data.direction,
+        previousSortOrder: resource.sortOrder,
+        swappedWithResourceId: moveResult.targetId
+      }
+    });
+  }
+
+  revalidateCourseResourceViews(parsed.data.courseSlug);
 }
 
 export async function submitCourseResourceSubmissionAction(
@@ -532,6 +626,7 @@ export async function submitCourseResourceSubmissionAction(
       title: true,
       type: true,
       dueAt: true,
+      passingScore: true,
       course: {
         select: {
           slug: true
@@ -569,7 +664,19 @@ export async function submitCourseResourceSubmissionAction(
     }
   }
 
-  await upsertCourseResourceSubmission({
+  const previousSubmission = await getDb().courseResourceSubmission.findUnique({
+    where: {
+      resourceId_studentId: {
+        resourceId: resource.id,
+        studentId: user.id
+      }
+    },
+    select: {
+      id: true
+    }
+  });
+
+  const submission = await upsertCourseResourceSubmission({
     resourceId: resource.id,
     studentId: user.id,
     body: parsed.data.body,
@@ -577,8 +684,28 @@ export async function submitCourseResourceSubmissionAction(
     file: hasFile ? file : null
   });
 
-  revalidatePath(`/mis-cursos/${course.slug}`);
-  revalidatePath(`/mis-cursos/${course.slug}/seguimiento`);
+  await writeAuditLog({
+    actorId: user.id,
+    action: previousSubmission
+      ? "COURSE_RESOURCE_SUBMISSION_UPDATED"
+      : "COURSE_RESOURCE_SUBMISSION_CREATED",
+    entityType: "COURSE_RESOURCE_SUBMISSION",
+    entityId: submission.id,
+    entityLabel: resource.title,
+    metadata: {
+      courseSlug: course.slug,
+      resourceId: resource.id,
+      resourceTitle: resource.title,
+      studentId: user.id,
+      hasBody,
+      hasLink,
+      hasFile,
+      dueAt: resource.dueAt?.toISOString() ?? null,
+      passingScore: resource.passingScore
+    }
+  });
+
+  revalidateCourseResourceViews(course.slug);
 
   return {
     success: "Entrega guardada correctamente. El docente ya puede revisarla."
@@ -634,7 +761,8 @@ export async function reviewCourseResourceSubmissionAction(
       },
       student: {
         select: {
-          id: true
+          id: true,
+          email: true
         }
       }
     }
@@ -660,12 +788,31 @@ export async function reviewCourseResourceSubmissionAction(
     }
   }
 
-  await reviewCourseResourceSubmission({
+  const reviewedSubmission = await reviewCourseResourceSubmission({
     submissionId: submission.id,
     reviewerId: user.id,
     status: parsed.data.status,
     score,
     feedback: parsed.data.feedback
+  });
+
+  await writeAuditLog({
+    actorId: user.id,
+    action:
+      parsed.data.status === "REVIEWED"
+        ? "COURSE_RESOURCE_SUBMISSION_REVIEWED"
+        : "COURSE_RESOURCE_SUBMISSION_CHANGES_REQUESTED",
+    entityType: "COURSE_RESOURCE_SUBMISSION",
+    entityId: reviewedSubmission.id,
+    entityLabel: submission.resource.title,
+    metadata: {
+      courseSlug: parsed.data.courseSlug,
+      resourceTitle: submission.resource.title,
+      studentId: submission.student.id,
+      studentEmail: submission.student.email,
+      score,
+      reviewedAt: reviewedSubmission.reviewedAt?.toISOString() ?? null
+    }
   });
 
   await sendPlatformNotification({
@@ -682,8 +829,7 @@ export async function reviewCourseResourceSubmissionAction(
     linkPath: `/mis-cursos/${parsed.data.courseSlug}`
   });
 
-  revalidatePath(`/mis-cursos/${parsed.data.courseSlug}`);
-  revalidatePath(`/mis-cursos/${parsed.data.courseSlug}/seguimiento`);
+  revalidateCourseResourceViews(parsed.data.courseSlug);
 
   return {
     success:

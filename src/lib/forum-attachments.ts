@@ -1,8 +1,8 @@
 import { randomUUID } from "crypto";
-import { mkdir, writeFile } from "fs/promises";
 import path from "path";
 import { buildProtectedForumAttachmentUrl } from "@/lib/forum-attachment-storage";
 import { getDb } from "@/lib/prisma";
+import { upsertStoredAsset } from "@/lib/stored-assets";
 
 const MAX_ATTACHMENT_COUNT = 6;
 const MAX_FILE_SIZE_BYTES = 8 * 1024 * 1024;
@@ -113,15 +113,6 @@ export async function persistForumAttachments(input: {
   }
 
   const persistedRecords = [];
-  const uploadDirectory = path.join(
-    process.cwd(),
-    "storage",
-    "forum",
-    sanitizePathSegment(input.courseSlug),
-    sanitizePathSegment(input.parentId)
-  );
-
-  await mkdir(uploadDirectory, { recursive: true });
 
   for (const attachment of input.attachments) {
     if (attachment.source === "link") {
@@ -142,13 +133,14 @@ export async function persistForumAttachments(input: {
     }
 
     const storedFileName = `${randomUUID()}-${attachment.label}`;
-    const targetFilePath = path.join(uploadDirectory, storedFileName);
-    const fileBuffer = Buffer.from(await attachment.file.arrayBuffer());
     const storageKey = path
       .join("forum", sanitizePathSegment(input.courseSlug), sanitizePathSegment(input.parentId), storedFileName)
       .replace(/\\/g, "/");
 
-    await writeFile(targetFilePath, fileBuffer);
+    await upsertStoredAsset({
+      storageKey,
+      content: new Uint8Array(await attachment.file.arrayBuffer())
+    });
 
     const attachmentRecord = await getDb().forumAttachment.create({
       data: {

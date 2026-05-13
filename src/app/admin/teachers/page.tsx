@@ -60,6 +60,20 @@ export default async function AdminTeachersPage({ searchParams }: TeachersPagePr
       .map((teacher) => ({
         ...teacher,
         globalRole: "TEACHER" as UserGlobalRole,
+        editionAssignments: teacher.courseAssignments.flatMap((assignment) =>
+          assignment.editions.map((edition, index) => ({
+            courseEditionId: `${assignment.id}-${index}`,
+            courseEdition: {
+              id: `${assignment.id}-${index}`,
+              label: edition,
+              courseId: assignment.id,
+              course: {
+                title: assignment.title,
+                slug: assignment.slug
+              }
+            }
+          }))
+        ),
         courseAssignments: teacher.courseAssignments.map((assignment) => ({
           courseId: assignment.id,
           course: {
@@ -180,6 +194,20 @@ export default async function AdminTeachersPage({ searchParams }: TeachersPagePr
           : {})
       },
       include: {
+        editionAssignments: {
+          include: {
+            courseEdition: {
+              include: {
+                course: {
+                  select: {
+                    title: true,
+                    slug: true
+                  }
+                }
+              }
+            }
+          }
+        },
         courseAssignments: {
           include: {
             course: {
@@ -215,7 +243,23 @@ export default async function AdminTeachersPage({ searchParams }: TeachersPagePr
       select: {
         id: true,
         title: true,
-        slug: true
+        slug: true,
+        editions: {
+          where: {
+            isActive: true,
+            status: {
+              in: ["ACTIVE", "SCHEDULED"]
+            }
+          },
+          select: {
+            id: true,
+            label: true,
+            status: true
+          },
+          orderBy: {
+            startsAt: "asc"
+          }
+        }
       },
       orderBy: {
         title: "asc"
@@ -237,14 +281,20 @@ export default async function AdminTeachersPage({ searchParams }: TeachersPagePr
   );
 
   const teacherSummaries: TeacherSummary[] = teachers.map((teacher) => {
-    const activeStudents = teacher.courseAssignments.reduce(
-      (sum, assignment) => sum + (enrollmentCountByCourseId.get(assignment.course.id) ?? 0),
+    const supervisedCourseIds = new Set([
+      ...teacher.courseAssignments.map((assignment) => assignment.course.id),
+      ...teacher.editionAssignments.map((assignment) => assignment.courseEdition.courseId)
+    ]);
+    const activeStudents = Array.from(supervisedCourseIds).reduce(
+      (sum, supervisedCourseId) => sum + (enrollmentCountByCourseId.get(supervisedCourseId) ?? 0),
       0
     );
-    const activeEditions = teacher.courseAssignments.reduce(
-      (sum, assignment) => sum + assignment.course.editions.length,
-      0
-    );
+    const activeEditions = new Set([
+      ...teacher.courseAssignments.flatMap((assignment) =>
+        assignment.course.editions.map((edition) => edition.id)
+      ),
+      ...teacher.editionAssignments.map((assignment) => assignment.courseEditionId)
+    ]).size;
 
     return {
       ...teacher,
@@ -259,7 +309,7 @@ export default async function AdminTeachersPage({ searchParams }: TeachersPagePr
     }
 
     if (view === "pending") {
-      return teacher.courseAssignments.length === 0;
+      return teacher.courseAssignments.length === 0 && teacher.editionAssignments.length === 0;
     }
 
     return true;
@@ -349,7 +399,11 @@ export default async function AdminTeachersPage({ searchParams }: TeachersPagePr
               {
                 id: "pending",
                 label: "Sin asignar",
-                count: teacherSummaries.filter((teacher) => teacher.courseAssignments.length === 0).length
+                count: teacherSummaries.filter(
+                  (teacher) =>
+                    teacher.courseAssignments.length === 0 &&
+                    teacher.editionAssignments.length === 0
+                ).length
               }
             ].map(({ id, label, count }) => (
               <ButtonLink

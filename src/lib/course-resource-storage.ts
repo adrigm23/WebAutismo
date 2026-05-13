@@ -1,5 +1,6 @@
-import { access, unlink } from "fs/promises";
+import { access, readFile, unlink } from "fs/promises";
 import path from "path";
+import { deleteStoredAsset, getStoredAssetContent } from "@/lib/stored-assets";
 
 function assertPathWithinRoot(resolvedPath: string, rootDirectory: string) {
   const relativePath = path.relative(rootDirectory, resolvedPath);
@@ -19,6 +20,17 @@ export function buildProtectedCourseResourceUrl(id: string) {
   return `/api/course-resources/${id}`;
 }
 
+export async function readStoredCourseResourceContent(storageKey: string) {
+  const assetContent = await getStoredAssetContent(storageKey);
+
+  if (assetContent) {
+    return Buffer.from(assetContent);
+  }
+
+  const filePath = await resolveCourseResourceFilePath(storageKey);
+  return readFile(filePath);
+}
+
 export async function resolveCourseResourceFilePath(storageKey: string) {
   const storageRoot = path.resolve(process.cwd(), "storage");
   const resolvedPath = resolveStorageKeyPath(storageRoot, storageKey);
@@ -27,6 +39,12 @@ export async function resolveCourseResourceFilePath(storageKey: string) {
 }
 
 export async function removeStoredCourseResource(storageKey: string) {
-  const filePath = await resolveCourseResourceFilePath(storageKey);
-  await unlink(filePath);
+  await deleteStoredAsset(storageKey);
+
+  try {
+    const filePath = await resolveCourseResourceFilePath(storageKey);
+    await unlink(filePath);
+  } catch {
+    // Ignore legacy filesystem cleanup failures when the asset already lives in the database.
+  }
 }
