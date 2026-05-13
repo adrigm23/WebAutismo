@@ -277,63 +277,80 @@ export function StudentAccountDashboard({
   return (
     <div className="min-h-screen bg-[linear-gradient(180deg,#f9f6f1_0%,#f6f8fb_52%,#fbfaf7_100%)] pb-24">
       <header className="sticky top-0 z-40 border-b border-[rgba(12,113,195,0.14)] bg-[rgba(255,255,255,0.92)] backdrop-blur-md">
-        <div className="site-container flex flex-wrap items-center justify-between gap-4 py-4">
-          <div className="flex flex-wrap items-center gap-6">
+        <div className="site-container py-4">
+          <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+            <div className="flex items-center gap-6">
             <Link
-              className="text-[2rem] font-semibold tracking-[-0.05em] text-[var(--color-primary)]"
+              className="text-[1.8rem] font-semibold tracking-[-0.05em] text-[var(--color-primary)]"
               href="/mi-cuenta"
             >
               {siteConfig.shortName}
             </Link>
-
-            <nav aria-label="Navegacion privada del alumno" className="hidden items-center gap-3 md:flex">
-              <ButtonLink href="/mi-cuenta" variant="secondary">
-                Mi cuenta
-              </ButtonLink>
-              <ButtonLink href="#mis-cursos" variant="ghost">
-                Mis cursos
-              </ButtonLink>
-              <ButtonLink href={forumHref} variant="ghost">
-                Foro
-              </ButtonLink>
-              <a
-                className="inline-flex items-center justify-center rounded-xl px-5 py-3 text-sm font-semibold text-[var(--color-primary)] transition hover:bg-[var(--color-primary-soft)]"
-                href={`mailto:${siteConfig.supportEmail}`}
-              >
-                Soporte
-              </a>
-            </nav>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3">
-            <ButtonLink href="#actividad-reciente" variant="ghost">
-              <Bell className="mr-2 h-4 w-4" />
-              Avisos
-              {unreadSummary ? (
-                <span className="ml-2 rounded-full bg-[var(--color-primary)] px-2 py-0.5 text-xs text-white">
-                  {unreadSummary}
-                </span>
-              ) : null}
-            </ButtonLink>
-            <ButtonLink href="#preferencias" variant="ghost">
-              <Settings2 className="mr-2 h-4 w-4" />
-              Preferencias
-            </ButtonLink>
-            <div className="flex items-center gap-3 rounded-full border border-[var(--color-border)] bg-white px-3 py-2">
-              <div className="grid h-10 w-10 place-items-center rounded-full bg-[var(--color-primary-soft)] text-sm font-semibold text-[var(--color-primary)]">
-                {initials}
-              </div>
-              <div className="hidden min-w-0 sm:block">
-                <p className="truncate text-sm font-semibold text-[var(--color-ink)]">{fullName}</p>
-                <p className="text-xs text-[var(--color-muted)]">Alumno</p>
+            <div className="flex flex-col gap-4 xl:flex-1 xl:flex-row xl:items-center xl:justify-between">
+              <nav
+                aria-label="Navegacion privada del alumno"
+                className="flex flex-wrap items-center gap-2 xl:justify-center"
+              >
+                {[
+                  { label: "Mi cuenta", href: "/mi-cuenta", active: true },
+                  { label: "Mis cursos", href: "#mis-cursos", active: false },
+                  { label: "Foro", href: forumHref, active: false },
+                  { label: "Soporte", href: `mailto:${siteConfig.supportEmail}`, active: false }
+                ].map((item) => (
+                  <Link
+                    className={cn(
+                      "inline-flex items-center justify-center rounded-full px-4 py-2 text-sm font-semibold transition",
+                      item.active
+                        ? "border border-[var(--color-primary)] bg-white text-[var(--color-primary)]"
+                        : "text-[var(--color-ink)] hover:bg-[var(--color-primary-soft)] hover:text-[var(--color-primary)]"
+                    )}
+                    href={item.href}
+                    key={item.label}
+                  >
+                    {item.label}
+                  </Link>
+                ))}
+              </nav>
+
+              <div className="flex flex-wrap items-center gap-2 xl:justify-end">
+                <Link
+                  className="inline-flex items-center justify-center rounded-full px-3 py-2 text-sm font-semibold text-[var(--color-ink)] transition hover:bg-[var(--color-primary-soft)] hover:text-[var(--color-primary)]"
+                  href="#actividad-reciente"
+                >
+                  <Bell className="mr-2 h-4 w-4" />
+                  Avisos
+                  {unreadSummary ? (
+                    <span className="ml-2 rounded-full bg-[var(--color-primary)] px-2 py-0.5 text-xs text-white">
+                      {unreadSummary}
+                    </span>
+                  ) : null}
+                </Link>
+                <Link
+                  className="inline-flex items-center justify-center rounded-full px-3 py-2 text-sm font-semibold text-[var(--color-ink)] transition hover:bg-[var(--color-primary-soft)] hover:text-[var(--color-primary)]"
+                  href="#preferencias"
+                >
+                  <Settings2 className="mr-2 h-4 w-4" />
+                  Preferencias
+                </Link>
+                <div className="flex min-w-0 items-center gap-3 rounded-full border border-[var(--color-border)] bg-white px-3 py-2">
+                  <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[var(--color-primary-soft)] text-sm font-semibold text-[var(--color-primary)]">
+                    {initials}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-semibold text-[var(--color-ink)]">{fullName}</p>
+                    <p className="text-xs text-[var(--color-muted)]">Alumno</p>
+                  </div>
+                </div>
+                <form action={logoutAction}>
+                  <Button className="px-4 py-2" type="submit" variant="ghost">
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Salir
+                  </Button>
+                </form>
               </div>
             </div>
-            <form action={logoutAction}>
-              <Button type="submit" variant="ghost">
-                <LogOut className="mr-2 h-4 w-4" />
-                Salir
-              </Button>
-            </form>
           </div>
         </div>
       </header>

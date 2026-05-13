@@ -316,8 +316,8 @@ export function TeacherAccountDashboard({
 
   return (
     <div className="min-h-screen bg-[linear-gradient(180deg,#f8f6f1_0%,#f4f7fb_52%,#fbfaf8_100%)]">
-      <div className="mx-auto flex min-h-screen max-w-[1600px]">
-        <aside className="hidden w-[18.5rem] shrink-0 border-r border-[rgba(12,113,195,0.12)] bg-[rgba(255,255,255,0.72)] px-6 py-8 backdrop-blur-md xl:flex xl:flex-col">
+      <div className="mx-auto flex min-h-screen max-w-[1600px] items-start">
+        <aside className="hidden h-screen w-[18.5rem] shrink-0 self-start overflow-y-auto border-r border-[rgba(12,113,195,0.12)] bg-[rgba(255,255,255,0.72)] px-6 py-8 backdrop-blur-md xl:sticky xl:top-0 xl:flex xl:flex-col">
           <Link
             className="text-[1.6rem] font-semibold leading-tight tracking-[-0.04em] text-[var(--color-primary)]"
             href="/mi-cuenta"

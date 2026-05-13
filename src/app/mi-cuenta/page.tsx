@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 import {
   Bell,
   BookOpen,
@@ -49,6 +50,11 @@ export const metadata: Metadata = {
 
 export default async function AccountPage() {
   const user = await requireUser("/mi-cuenta");
+
+  if (user.globalRole === "ADMIN") {
+    redirect("/admin");
+  }
+
   const isDemoUser = isDemoUserId(user.id);
   const [spaces, preference] = await Promise.all([
     getUserCourseSpaces({

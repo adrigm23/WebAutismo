@@ -90,6 +90,10 @@ export async function ensureBootstrapAdmin(input: {
     return input.currentRole ?? null;
   }
 
+  if (input.currentRole === "ADMIN") {
+    return "ADMIN" as const;
+  }
+
   const db = getDb();
   const adminsCount = await db.user.count({
     where: {
@@ -97,7 +101,7 @@ export async function ensureBootstrapAdmin(input: {
     }
   });
 
-  if (adminsCount > 0 && input.currentRole !== "ADMIN") {
+  if (adminsCount > 0) {
     return input.currentRole ?? null;
   }
 
