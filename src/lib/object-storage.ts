@@ -6,7 +6,7 @@ import {
   getLegacyDatabaseStoredAssetContent,
   upsertLegacyDatabaseStoredAsset
 } from "@/lib/legacy-stored-assets";
-import { getBooleanEnv } from "@/lib/env";
+import { getBooleanEnv, isHostedDeploymentEnv } from "@/lib/env";
 import { captureOperationalWarning } from "@/lib/monitoring";
 
 export type ObjectStorageProvider = "vercel-blob" | "filesystem" | "database";
@@ -26,7 +26,12 @@ function getConfiguredObjectStorageProvider(): ObjectStorageProvider {
     return "filesystem";
   }
 
-  return process.env.BLOB_READ_WRITE_TOKEN?.trim() ? "vercel-blob" : "filesystem";
+  if (process.env.BLOB_READ_WRITE_TOKEN?.trim()) {
+    return "vercel-blob";
+  }
+
+  // Hosted deployments should never rely on ephemeral local filesystem storage for course files.
+  return isHostedDeploymentEnv() ? "database" : "filesystem";
 }
 
 export function getObjectStorageProvider() {
