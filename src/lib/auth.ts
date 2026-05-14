@@ -6,7 +6,12 @@ import { redirect } from "next/navigation";
 import { cache } from "react";
 import { getDemoUserById, isDemoUserId } from "@/lib/demo-auth";
 import { isDatabaseConnectionError } from "@/lib/db-errors";
-import { getRequiredEnv, isDemoAuthEnabled, isProductionEnv } from "@/lib/env";
+import {
+  getRequiredEnv,
+  isDemoAuthEnabled,
+  isEmailVerificationRequired,
+  isProductionEnv
+} from "@/lib/env";
 import { getDb } from "@/lib/prisma";
 
 const SESSION_COOKIE = "academy_session";
@@ -140,6 +145,7 @@ export const getCurrentUser = cache(async () => {
         id: true,
         name: true,
         email: true,
+        emailVerifiedAt: true,
         globalRole: true,
         isActive: true,
         createdAt: true
@@ -180,6 +186,10 @@ export async function requireUser(returnTo?: string) {
   if (!user.isActive) {
     await clearSession();
     redirect("/acceder?inactive=1");
+  }
+
+  if (isEmailVerificationRequired() && !user.emailVerifiedAt) {
+    redirect("/verificacion-pendiente");
   }
 
   return user;

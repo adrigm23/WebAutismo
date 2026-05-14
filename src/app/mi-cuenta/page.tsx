@@ -26,18 +26,17 @@ import { Card } from "@/components/ui/card";
 import { isDemoUserId } from "@/lib/demo-auth";
 import { requireUser } from "@/lib/auth";
 import {
-  getCourseProgressDetailsForUser,
-  getLearnerProgressRowsForCourse,
+  getDashboardNotificationSnapshot,
+  getStudentDashboardPendingSources,
+  getTeacherDashboardCourseSummaries
+} from "@/lib/account-dashboard";
+import {
+  getCourseProgressDetailsMapForUser,
+  getLearnerProgressSummariesForCatalogCourses,
   getCourseProgressSummariesForUser
 } from "@/lib/course-progress";
 import { getRoleLabel, getUserCourseSpaces } from "@/lib/course-community";
 import { isStaffCourseRole } from "@/lib/course-roles";
-import { getCampusResources } from "@/lib/course-resources";
-import { getUserForumNotifications } from "@/lib/forum";
-import {
-  ensureNotificationPreference,
-  getUserPlatformNotifications
-} from "@/lib/notifications";
 import { formatDate, formatDateTime } from "@/lib/utils";
 
 export const metadata: Metadata = {
@@ -56,108 +55,64 @@ export default async function AccountPage() {
   }
 
   const isDemoUser = isDemoUserId(user.id);
-  const [spaces, preference] = await Promise.all([
-    getUserCourseSpaces({
-      userId: user.id,
-      email: user.email
-    }),
-    ensureNotificationPreference(user.id)
-  ]);
-  const [forumNotifications, platformNotifications] = await Promise.all([
-    getUserForumNotifications({
-      userId: user.id,
-      courseSlugs: spaces.map((space) => space.course.slug),
-      limit: 6
-    }),
-    getUserPlatformNotifications({
-      userId: user.id,
-      limit: 6
-    })
-  ]);
+  const spaces = await getUserCourseSpaces({
+    userId: user.id,
+    email: user.email,
+    userGlobalRole: user.globalRole,
+    userIsActive: user.isActive
+  });
   const firstName = user.name.split(" ")[0] || user.name;
   const staffSpaces = spaces.filter((space) => isStaffCourseRole(space.role));
   const studentSpaces = spaces.filter((space) => !isStaffCourseRole(space.role));
+  const notificationSnapshotPromise = getDashboardNotificationSnapshot({
+    userId: user.id,
+    courseSlugs: spaces.map((space) => space.course.slug)
+  });
 
   if (staffSpaces.length > 0 || user.globalRole === "TEACHER") {
-    const [resourceEntries, learnerEntries] = await Promise.all([
-      Promise.all(
-        staffSpaces.map(async (space) => [
-          space.course.slug,
-          await getCampusResources({
-            course: space.course,
-            viewerUserId: user.id,
-            canModerate: true
-          })
-        ] as const)
-      ),
-      Promise.all(
-        staffSpaces.map(async (space) => [
-          space.course.slug,
-          await getLearnerProgressRowsForCourse(space.course.slug)
-        ] as const)
-      )
-    ]);
-
-    const resourcesByCourse = new Map(resourceEntries);
-    const learnersByCourse = new Map(learnerEntries);
+    const learnerSummariesByCourse = await getLearnerProgressSummariesForCatalogCourses(
+      staffSpaces.map((space) => space.course)
+    );
+    const teacherCourses = await getTeacherDashboardCourseSummaries({
+      spaces: staffSpaces,
+      learnerSummariesByCourse
+    });
 
     return (
       <TeacherAccountDashboard
         firstName={firstName}
-        forumNotifications={forumNotifications}
         fullName={user.name}
         hasTeacherRoleWithoutCourses={user.globalRole === "TEACHER" && staffSpaces.length === 0}
         isDemoUser={isDemoUser}
-        platformNotifications={platformNotifications}
-        preference={preference}
-        teacherCourses={staffSpaces.map((space) => ({
-          space,
-          learners: learnersByCourse.get(space.course.slug) ?? [],
-          resources: resourcesByCourse.get(space.course.slug) ?? []
-        }))}
+        notificationSnapshotPromise={notificationSnapshotPromise}
+        teacherCourses={teacherCourses}
       />
     );
   }
 
   if (user.globalRole === "STUDENT") {
-    const [progressEntries, resourceEntries] = await Promise.all([
-      Promise.all(
-        studentSpaces.map(async (space) => [
-          space.course.slug,
-          await getCourseProgressDetailsForUser({
-            userId: user.id,
-            course: space.course
-          })
-        ] as const)
-      ),
-      Promise.all(
-        studentSpaces.map(async (space) => [
-          space.course.slug,
-          await getCampusResources({
-            course: space.course,
-            viewerUserId: user.id,
-            canModerate: false
-          })
-        ] as const)
-      )
+    const [progressByCourse, pendingSources] = await Promise.all([
+      getCourseProgressDetailsMapForUser({
+        userId: user.id,
+        courses: studentSpaces.map((space) => space.course)
+      }),
+      getStudentDashboardPendingSources({
+        spaces: studentSpaces,
+        userId: user.id
+      })
     ]);
-
-    const progressByCourse = new Map(progressEntries);
-    const resourcesByCourse = new Map(resourceEntries);
     const studentCourses = studentSpaces.map((space) => ({
       space,
-      progress: progressByCourse.get(space.course.slug),
-      resources: resourcesByCourse.get(space.course.slug) ?? []
+      progress: progressByCourse.get(space.course.slug)
     }));
 
     return (
       <StudentAccountDashboard
         firstName={firstName}
-        forumNotifications={forumNotifications}
         fullName={user.name}
         isDemoUser={isDemoUser}
-        platformNotifications={platformNotifications}
-        preference={preference}
+        notificationSnapshotPromise={notificationSnapshotPromise}
+        pendingSources={pendingSources}
         studentCourses={studentCourses.filter((course) => Boolean(course.progress)).map((course) => ({
           ...course,
           progress: course.progress!
@@ -165,6 +120,11 @@ export default async function AccountPage() {
       />
     );
   }
+
+  const notificationSnapshot = await notificationSnapshotPromise;
+  const preference = notificationSnapshot.preference;
+  const forumNotifications = notificationSnapshot.forumNotifications;
+  const platformNotifications = notificationSnapshot.platformNotifications;
 
   const progressByCourse = await getCourseProgressSummariesForUser({
     userId: user.id,

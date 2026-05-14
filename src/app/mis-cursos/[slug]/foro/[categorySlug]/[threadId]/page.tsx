@@ -35,11 +35,13 @@ import {
   canModerateCourse,
   getRoleLabel
 } from "@/lib/course-community";
+import { isSafeHttpUrl } from "@/lib/file-security";
 import { canEditForumContent, getForumThreadById } from "@/lib/forum";
 import { formatDateTime, formatRelativeTime } from "@/lib/utils";
 
 type ForumThreadPageProps = {
   params: Promise<{ slug: string; categorySlug: string; threadId: string }>;
+  searchParams: Promise<{ page?: string | string[] }>;
 };
 
 export async function generateMetadata({
@@ -82,11 +84,19 @@ function AttachmentList({
               : attachment.kind === "LINK"
                 ? Paperclip
                 : FileText;
-        const isExternal = /^https?:\/\//i.test(attachment.url);
+        const isExternal =
+          (attachment.kind === "LINK" || attachment.kind === "VIDEO") &&
+          isSafeHttpUrl(attachment.url);
         const href =
           attachment.kind === "FILE" || attachment.kind === "IMAGE"
             ? `/api/forum/attachments/${attachment.id}`
-            : attachment.url;
+            : isExternal
+              ? attachment.url
+              : null;
+
+        if (!href) {
+          return null;
+        }
 
         return (
           <a
@@ -107,8 +117,13 @@ function AttachmentList({
   );
 }
 
-export default async function ForumThreadPage({ params }: ForumThreadPageProps) {
+function firstValue(value?: string | string[]) {
+  return Array.isArray(value) ? value[0] : value;
+}
+
+export default async function ForumThreadPage({ params, searchParams }: ForumThreadPageProps) {
   const { slug, categorySlug, threadId } = await params;
+  const currentPage = Math.max(Number.parseInt(firstValue((await searchParams).page) ?? "1", 10) || 1, 1);
   const course = await getCatalogCourseBySlug(slug);
 
   if (!course) {
@@ -119,7 +134,9 @@ export default async function ForumThreadPage({ params }: ForumThreadPageProps) 
   const access = await canAccessCourseCommunity({
     userId: user.id,
     email: user.email,
-    courseSlug: course.slug
+    courseSlug: course.slug,
+    userGlobalRole: user.globalRole,
+    userIsActive: user.isActive
   });
 
   if (!access.allowed) {
@@ -130,7 +147,8 @@ export default async function ForumThreadPage({ params }: ForumThreadPageProps) 
     courseSlug: course.slug,
     categorySlug,
     threadId,
-    viewerRole: access.role
+    viewerRole: access.role,
+    page: currentPage
   });
 
   if (!forumData) {
@@ -140,6 +158,7 @@ export default async function ForumThreadPage({ params }: ForumThreadPageProps) 
   const nextPath = `/mis-cursos/${course.slug}/foro/${categorySlug}/${threadId}`;
   const canModerate = canModerateCourse(access.role);
   const replies = forumData.thread.posts;
+  const repliesPagination = forumData.postsPagination;
   const canEditThread = canEditForumContent({
     currentUserId: user.id,
     authorId: forumData.thread.author.id,
@@ -219,7 +238,7 @@ export default async function ForumThreadPage({ params }: ForumThreadPageProps) 
                   Respuestas
                 </p>
                 <p className="mt-2 text-3xl font-semibold tracking-[-0.04em] text-[var(--color-ink)]">
-                  {replies.length}
+                  {repliesPagination.totalItems}
                 </p>
               </div>
               <div className="rounded-[24px] border border-[rgba(12,113,195,0.12)] bg-[#faf8f4] px-5 py-4">
@@ -342,13 +361,15 @@ export default async function ForumThreadPage({ params }: ForumThreadPageProps) 
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <h2 className="text-4xl font-semibold tracking-[-0.04em] text-[var(--color-ink)]">
-              Respuestas ({replies.length})
+              Respuestas ({repliesPagination.totalItems})
             </h2>
             <p className="mt-2 text-base text-[var(--color-muted)]">
               Ordenadas cronológicamente para seguir el contexto del hilo.
             </p>
           </div>
-          <p className="text-sm text-[var(--color-muted)]">Ordenado por: más recientes al final</p>
+          <p className="text-sm text-[var(--color-muted)]">
+            Pagina {repliesPagination.page} de {repliesPagination.totalPages} · orden cronologico
+          </p>
         </div>
 
         <div className="space-y-4">
@@ -484,6 +505,25 @@ export default async function ForumThreadPage({ params }: ForumThreadPageProps) 
             </div>
           )}
         </div>
+        {repliesPagination.totalPages > 1 ? (
+          <div className="flex flex-wrap items-center justify-between gap-4 rounded-[24px] border border-[var(--color-border)] bg-white px-5 py-4">
+            <p className="text-sm text-[var(--color-muted)]">
+              Mostrando pagina {repliesPagination.page} de {repliesPagination.totalPages}
+            </p>
+            <div className="flex flex-wrap gap-3">
+              {repliesPagination.hasPreviousPage ? (
+                <ButtonLink href={`${nextPath}?page=${repliesPagination.page - 1}`} variant="secondary">
+                  Pagina anterior
+                </ButtonLink>
+              ) : null}
+              {repliesPagination.hasNextPage ? (
+                <ButtonLink href={`${nextPath}?page=${repliesPagination.page + 1}`} variant="secondary">
+                  Pagina siguiente
+                </ButtonLink>
+              ) : null}
+            </div>
+          </div>
+        ) : null}
       </section>
 
       <section className="rounded-[30px] border border-[rgba(12,113,195,0.14)] bg-white px-6 py-6 shadow-[0_18px_40px_rgba(34,34,33,0.05)]">

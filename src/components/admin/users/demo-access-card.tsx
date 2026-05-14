@@ -20,7 +20,10 @@ export function DemoAccessCard() {
       </div>
 
       <div className="mt-6 space-y-4 rounded-2xl border border-[#d8e0e8] bg-[#f7fafc] px-4 py-4 text-sm leading-7 text-[#4c6074]">
-        <p>Define `DEMO_AUTH_ENABLED=true` y credenciales seguras en variables de entorno.</p>
+        <p>
+          Define `DEMO_AUTH_ENABLED=true`, `ALLOW_DEMO_AUTH=true` y una contrasena segura solo en
+          tu entorno local.
+        </p>
         <p>Este panel conserva solo datos simulados para revisar la interfaz.</p>
       </div>
     </Card>

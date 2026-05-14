@@ -2,10 +2,13 @@ import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { canAccessCourseCommunity, canModerateCourse } from "@/lib/course-community";
 import { readStoredCourseResourceSubmissionContent } from "@/lib/course-resource-submission-storage";
+import { buildPrivateFileHeaders } from "@/lib/download-response";
 import { getDb } from "@/lib/prisma";
+import { buildRequestFingerprint } from "@/lib/request-client";
+import { consumeRateLimit } from "@/lib/rate-limit";
 
 export async function GET(
-  _: Request,
+  request: Request,
   { params }: { params: Promise<{ submissionId: string }> }
 ) {
   const { submissionId } = await params;
@@ -53,16 +56,31 @@ export async function GET(
     return NextResponse.json({ error: "Submission attachment access denied." }, { status: 403 });
   }
 
+  const downloadRateLimit = consumeRateLimit({
+    bucket: "course-submission-download",
+    key: buildRequestFingerprint(request.headers, [user.id, submissionId]),
+    limit: 30,
+    windowMs: 5 * 60 * 1_000
+  });
+
+  if (!downloadRateLimit.allowed) {
+    return NextResponse.json(
+      { error: "Too many download requests." },
+      {
+        status: 429,
+        headers: {
+          "Retry-After": `${downloadRateLimit.retryAfterSeconds}`
+        }
+      }
+    );
+  }
+
   try {
     const fileBuffer = await readStoredCourseResourceSubmissionContent(submission.storageKey);
-    const headers = new Headers();
-
-    headers.set("Content-Type", submission.mimeType || "application/octet-stream");
-    headers.set(
-      "Content-Disposition",
-      `attachment; filename="${submission.attachmentLabel ?? "entrega"}"`
-    );
-    headers.set("Cache-Control", "private, no-store");
+    const headers = buildPrivateFileHeaders({
+      fileName: submission.attachmentLabel ?? "entrega",
+      mimeType: submission.mimeType
+    });
 
     return new NextResponse(fileBuffer, {
       status: 200,

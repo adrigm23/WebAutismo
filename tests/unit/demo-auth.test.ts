@@ -23,6 +23,7 @@ describe("demo auth", () => {
 
   test("requires a configured demo password when demo auth is enabled", async () => {
     process.env.DEMO_AUTH_ENABLED = "true";
+    process.env.ALLOW_DEMO_AUTH = "true";
     delete process.env.DEMO_AUTH_PASSWORD;
 
     const demoAuth = await import("@/lib/demo-auth");
@@ -34,8 +35,8 @@ describe("demo auth", () => {
 
   test("resolves demo users only in explicit local demo mode", async () => {
     process.env.DEMO_AUTH_ENABLED = "true";
+    process.env.ALLOW_DEMO_AUTH = "true";
     process.env.DEMO_AUTH_PASSWORD = "super-secret-demo";
-    process.env.NODE_ENV = "production";
 
     const demoAuth = await import("@/lib/demo-auth");
 
@@ -44,8 +45,22 @@ describe("demo auth", () => {
     expect(demoAuth.isValidDemoPassword("super-secret-demo")).toBe(true);
   });
 
+  test("disables demo auth in production even if explicitly enabled", async () => {
+    process.env.DEMO_AUTH_ENABLED = "true";
+    process.env.ALLOW_DEMO_AUTH = "true";
+    process.env.DEMO_AUTH_PASSWORD = "super-secret-demo";
+    process.env.NODE_ENV = "production";
+
+    const demoAuth = await import("@/lib/demo-auth");
+
+    expect(demoAuth.getDemoUsers()).toEqual([]);
+    expect(demoAuth.getDemoUserByEmail("admin.demo@autismo.local")).toBeNull();
+    expect(demoAuth.isValidDemoPassword("super-secret-demo")).toBe(false);
+  });
+
   test("disables demo auth in hosted deployments even if explicitly enabled", async () => {
     process.env.DEMO_AUTH_ENABLED = "true";
+    process.env.ALLOW_DEMO_AUTH = "true";
     process.env.DEMO_AUTH_PASSWORD = "super-secret-demo";
     process.env.VERCEL = "1";
     process.env.VERCEL_ENV = "production";

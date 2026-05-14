@@ -1,3 +1,4 @@
+import { buildLegacyCourseWhere, getCourseIdentityBySlug } from "@/lib/course-identity";
 import type { CourseRole } from "@/lib/course-roles";
 import { createDefaultForumCategoriesForSpace, ensureActiveForumSpace } from "@/lib/course-community";
 import { removeStoredForumAttachment } from "@/lib/forum-attachment-storage";
@@ -17,9 +18,10 @@ export async function archiveCurrentForumSpace(input: {
   await publishDueAnnouncementsForCourse(input.courseSlug);
   const db = getDb();
   const activeSpace = await ensureActiveForumSpace(input.courseSlug);
+  const courseIdentity = await getCourseIdentityBySlug(input.courseSlug);
   const editionNumberRecord = (await db.forumSpace.findFirst({
     where: {
-      courseSlug: input.courseSlug
+      ...buildLegacyCourseWhere(courseIdentity ?? { slug: input.courseSlug })
     },
     orderBy: {
       editionNumber: "desc"
@@ -45,6 +47,7 @@ export async function archiveCurrentForumSpace(input: {
 
     return tx.forumSpace.create({
       data: {
+        courseId: courseIdentity?.id ?? null,
         courseSlug: input.courseSlug,
         editionNumber: nextEditionNumber,
         editionLabel: `Edicion ${nextEditionNumber}`,
@@ -79,17 +82,18 @@ export async function restoreArchivedForumSpace(input: {
   actorRole: CourseRole;
 }) {
   const db = getDb();
+  const courseIdentity = await getCourseIdentityBySlug(input.courseSlug);
   const [targetSpace, currentActiveSpace] = await Promise.all([
     db.forumSpace.findFirst({
       where: {
         id: input.forumSpaceId,
-        courseSlug: input.courseSlug,
+        ...buildLegacyCourseWhere(courseIdentity ?? { slug: input.courseSlug }),
         status: "ARCHIVED"
       }
     }),
     db.forumSpace.findFirst({
       where: {
-        courseSlug: input.courseSlug,
+        ...buildLegacyCourseWhere(courseIdentity ?? { slug: input.courseSlug }),
         status: "ACTIVE"
       },
       orderBy: {
@@ -159,10 +163,11 @@ export async function deleteArchivedForumSpace(input: {
   actorId: string;
   actorRole: CourseRole;
 }) {
+  const courseIdentity = await getCourseIdentityBySlug(input.courseSlug);
   const archivedSpace = (await getDb().forumSpace.findFirst({
     where: {
       id: input.forumSpaceId,
-      courseSlug: input.courseSlug,
+      ...buildLegacyCourseWhere(courseIdentity ?? { slug: input.courseSlug }),
       status: "ARCHIVED"
     }
   })) as

@@ -11,6 +11,7 @@ model User {
   id                    String                       @id @default(cuid())
   name                  String
   email                 String                       @unique
+  emailVerifiedAt       DateTime?
   passwordHash          String
   globalRole            UserGlobalRole               @default(STUDENT)
   isActive              Boolean                      @default(true)
@@ -36,6 +37,8 @@ model User {
   updatedPromotions     Promotion[]                  @relation("PromotionUpdatedBy")
   promotionRedemptions  PromotionRedemption[]
   auditLogs             AuditLog[]                   @relation("AuditActor")
+  passwordResetTokens   UserPasswordResetToken[]
+  emailVerificationTokens UserEmailVerificationToken[]
   deactivatedBy         User?                        @relation("UserDeactivatedBy", fields: [deactivatedById], references: [id], onDelete: SetNull)
   deactivatedUsers      User[]                       @relation("UserDeactivatedBy")
 }
@@ -71,6 +74,12 @@ model Course {
   enrollments      CourseEnrollment[]
   promotions       Promotion[]
   promotionRedemptions PromotionRedemption[]
+  legacyMemberships CourseMembership[]
+  legacyModuleProgress CourseModuleProgress[]
+  forumSpaces      ForumSpace[]
+  forumCategories  ForumCategory[]
+  forumNotifications ForumNotification[]
+  forumAuditLogs   ForumAuditLog[]
   clonedFrom       Course?                   @relation("CourseClones", fields: [clonedFromId], references: [id], onDelete: SetNull)
   clones           Course[]                  @relation("CourseClones")
 }
@@ -341,22 +350,50 @@ model StoredAsset {
   updatedAt   DateTime @updatedAt
 }
 
+model UserPasswordResetToken {
+  id         String   @id @default(cuid())
+  userId     String
+  tokenHash  String   @unique
+  expiresAt  DateTime
+  usedAt     DateTime?
+  createdAt  DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, expiresAt])
+}
+
+model UserEmailVerificationToken {
+  id         String   @id @default(cuid())
+  userId     String
+  tokenHash  String   @unique
+  expiresAt  DateTime
+  usedAt     DateTime?
+  createdAt  DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, expiresAt])
+}
+
 model CourseMembership {
   id         String     @id @default(cuid())
   userId     String
+  courseId   String?
   courseSlug String
   role       CourseRole @default(STUDENT)
   createdAt  DateTime   @default(now())
   updatedAt  DateTime   @updatedAt
   user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course     Course?    @relation(fields: [courseId], references: [id], onDelete: SetNull)
 
   @@unique([userId, courseSlug])
   @@index([courseSlug, role])
+  @@index([courseId, role])
 }
 
 model CourseModuleProgress {
   id          String   @id @default(cuid())
   userId      String
+  courseId    String?
   courseSlug  String
   moduleId    String   @default("")
   moduleIndex Int?
@@ -364,15 +401,20 @@ model CourseModuleProgress {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course      Course?  @relation(fields: [courseId], references: [id], onDelete: SetNull)
 
   @@unique([userId, courseSlug, moduleId])
   @@index([userId, courseSlug, moduleIndex])
   @@index([userId, courseSlug])
   @@index([courseSlug])
+  @@index([userId, courseId, moduleIndex])
+  @@index([userId, courseId])
+  @@index([courseId])
 }
 
 model ForumSpace {
   id            String            @id @default(cuid())
+  courseId      String?
   courseSlug    String
   editionLabel  String
   editionNumber Int
@@ -385,14 +427,17 @@ model ForumSpace {
   deletedById   String?
   createdAt     DateTime          @default(now())
   updatedAt     DateTime          @updatedAt
+  course        Course?           @relation(fields: [courseId], references: [id], onDelete: SetNull)
   categories    ForumCategory[]
 
   @@index([courseSlug, status])
   @@unique([courseSlug, editionNumber])
+  @@index([courseId, status])
 }
 
 model ForumCategory {
   id           String        @id @default(cuid())
+  courseId     String?
   courseSlug   String
   forumSpaceId String?
   slug         String
@@ -401,12 +446,15 @@ model ForumCategory {
   sortOrder    Int           @default(0)
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
+  course       Course?       @relation(fields: [courseId], references: [id], onDelete: SetNull)
   forumSpace   ForumSpace?   @relation(fields: [forumSpaceId], references: [id], onDelete: Cascade)
   threads      ForumThread[]
 
   @@unique([forumSpaceId, slug])
   @@index([courseSlug, sortOrder])
   @@index([courseSlug, slug])
+  @@index([courseId, sortOrder])
+  @@index([courseId, slug])
   @@index([forumSpaceId, sortOrder])
 }
 
@@ -505,6 +553,7 @@ model ForumReport {
 model ForumNotification {
   id         String                @id @default(cuid())
   userId     String
+  courseId   String?
   courseSlug String
   type       ForumNotificationType
   title      String
@@ -512,13 +561,16 @@ model ForumNotification {
   linkPath   String
   readAt     DateTime?
   createdAt  DateTime              @default(now())
+  course     Course?               @relation(fields: [courseId], references: [id], onDelete: SetNull)
   user       User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, readAt, createdAt])
+  @@index([courseId, createdAt])
 }
 
 model ForumAuditLog {
   id          String          @id @default(cuid())
+  courseId    String?
   courseSlug  String
   forumSpaceId String?
   threadId    String?
@@ -528,8 +580,10 @@ model ForumAuditLog {
   action      ForumAuditAction
   metadataJson String?        @db.LongText
   createdAt   DateTime        @default(now())
+  course      Course?         @relation(fields: [courseId], references: [id], onDelete: SetNull)
 
   @@index([courseSlug, createdAt])
+  @@index([courseId, createdAt])
   @@index([forumSpaceId, createdAt])
   @@index([threadId, createdAt])
 }

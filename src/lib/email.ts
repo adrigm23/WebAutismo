@@ -17,6 +17,10 @@ function getResend() {
   return resendClient;
 }
 
+export function canSendEmailMessage() {
+  return Boolean(getResend() && process.env.EMAIL_FROM?.trim());
+}
+
 type SendEmailInput = {
   to: string;
   subject: string;
@@ -105,5 +109,43 @@ export async function sendPurchaseConfirmationEmail(payload: PurchaseEmailPayloa
     body: `Ya puedes acceder al curso ${payload.courseTitle}.`,
     actionLabel: "Acceder al curso",
     actionUrl: accessUrl
+  });
+}
+
+export async function sendPasswordResetEmail(input: {
+  email: string;
+  name: string;
+  token: string;
+  expiresAt: Date;
+}) {
+  const resetUrl = absoluteUrl(`/restablecer-contrasena?token=${encodeURIComponent(input.token)}`);
+
+  await sendNotificationEmail({
+    email: input.email,
+    name: input.name,
+    subject: "Restablece tu contrasena",
+    title: "Recuperacion de contrasena",
+    body: `Hemos recibido una solicitud para restablecer tu contrasena. El enlace caduca el ${input.expiresAt.toLocaleString("es-ES")}. Si no has sido tu, puedes ignorar este mensaje.`,
+    actionLabel: "Restablecer contrasena",
+    actionUrl: resetUrl
+  });
+}
+
+export async function sendEmailVerificationEmail(input: {
+  email: string;
+  name: string;
+  token: string;
+  expiresAt: Date;
+}) {
+  const verificationUrl = absoluteUrl(`/verificar-email?token=${encodeURIComponent(input.token)}`);
+
+  await sendNotificationEmail({
+    email: input.email,
+    name: input.name,
+    subject: "Verifica tu correo electronico",
+    title: "Verificacion de email",
+    body: `Confirma tu direccion de correo para activar completamente tu acceso al campus. El enlace caduca el ${input.expiresAt.toLocaleString("es-ES")}.`,
+    actionLabel: "Verificar email",
+    actionUrl: verificationUrl
   });
 }

@@ -1,40 +1,26 @@
-import { getDb } from "@/lib/prisma";
+import {
+  deleteStoredObject,
+  readStoredObjectContent,
+  resolveStoredObjectFilePath,
+  writeStoredObject
+} from "@/lib/object-storage";
 
 export async function upsertStoredAsset(input: {
   storageKey: string;
   content: Uint8Array;
+  contentType?: string | null;
 }) {
-  return getDb().storedAsset.upsert({
-    where: {
-      storageKey: input.storageKey
-    },
-    update: {
-      content: Buffer.from(input.content)
-    },
-    create: {
-      storageKey: input.storageKey,
-      content: Buffer.from(input.content)
-    }
-  });
+  return writeStoredObject(input);
 }
 
 export async function getStoredAssetContent(storageKey: string) {
-  const asset = await getDb().storedAsset.findUnique({
-    where: {
-      storageKey
-    },
-    select: {
-      content: true
-    }
-  });
-
-  return asset?.content ?? null;
+  return readStoredObjectContent(storageKey);
 }
 
 export async function deleteStoredAsset(storageKey: string) {
-  await getDb().storedAsset.deleteMany({
-    where: {
-      storageKey
-    }
-  });
+  await deleteStoredObject(storageKey);
+}
+
+export async function resolveStoredAssetPath(storageKey: string) {
+  return resolveStoredObjectFilePath(storageKey);
 }

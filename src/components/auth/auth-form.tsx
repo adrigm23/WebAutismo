@@ -49,7 +49,7 @@ export function AuthForm({
           {mode === "login" && showForgotLink ? (
             <Link
               className="text-sm font-medium text-[var(--color-primary)] underline-offset-4 hover:underline"
-              href="mailto:formacion@autismocordoba.org?subject=Recuperacion%20de%20contrasena"
+              href="/recuperar-contrasena"
             >
               Has olvidado tu contrasena?
             </Link>

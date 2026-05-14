@@ -43,7 +43,9 @@ export async function updateCourseModuleProgressAction(formData: FormData) {
   const access = await canAccessCourseCommunityForCourse({
     userId: user.id,
     email: user.email,
-    course
+    course,
+    userGlobalRole: user.globalRole,
+    userIsActive: user.isActive
   });
 
   if (!access.allowed) {

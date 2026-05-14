@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { getCurrentUser } from "@/lib/auth";
 import { getCatalogCourseBySlug } from "@/lib/course-catalog";
+import { captureServerException } from "@/lib/monitoring";
 import { createPendingPurchase, grantCourseAccess, userOwnsCourse } from "@/lib/purchases";
 import { getDb } from "@/lib/prisma";
 import { absoluteUrl } from "@/lib/site";
@@ -18,6 +19,15 @@ const purchaseSchema = z.object({
   courseEditionId: z.string().optional(),
   promotionCode: z.string().optional()
 });
+
+const SAFE_PURCHASE_ERRORS = new Set([
+  "El curso solicitado no existe.",
+  "El codigo promocional ya ha alcanzado su limite de usos.",
+  "El codigo promocional no es valido para este curso.",
+  "El codigo promocional todavia no esta activo.",
+  "El codigo promocional ya ha caducado.",
+  "El codigo promocional no esta activo."
+]);
 
 export async function startPurchaseAction(
   _: PurchaseFormState,
@@ -115,8 +125,17 @@ export async function startPurchaseAction(
 
     redirect(`/checkout/exito?course=${course.slug}&demo=1`);
   } catch (error) {
+    captureServerException(error, {
+      action: "startPurchaseAction",
+      courseSlug: course.slug,
+      userId: user.id
+    });
+
     return {
-      error: error instanceof Error ? error.message : "No se ha podido iniciar la compra."
+      error:
+        error instanceof Error && SAFE_PURCHASE_ERRORS.has(error.message)
+          ? error.message
+          : "No se ha podido iniciar la compra. Intentalo de nuevo en unos minutos."
     };
   }
 }

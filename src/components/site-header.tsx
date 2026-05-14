@@ -63,11 +63,11 @@ export function SiteHeader() {
 
         <nav
           aria-label="Navegacion principal movil"
-          className="mt-4 flex items-center gap-8 overflow-x-auto border-t border-[rgba(12,113,195,0.12)] pt-3 md:hidden"
+          className="mt-4 grid grid-cols-2 gap-2 border-t border-[rgba(12,113,195,0.12)] pt-3 md:hidden"
         >
           {siteConfig.nav.map((item) => (
             <Link
-              className="whitespace-nowrap border-b-2 border-transparent pb-1 text-base font-medium text-[var(--color-ink)] transition hover:text-[var(--color-primary)]"
+              className="rounded-2xl border border-[rgba(12,113,195,0.12)] bg-white px-4 py-3 text-center text-sm font-medium text-[var(--color-ink)] transition hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]"
               href={item.href}
               key={`mobile-${item.href}`}
             >

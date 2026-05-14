@@ -2,10 +2,13 @@ import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { canAccessCourseCommunity } from "@/lib/course-community";
 import { readStoredCourseResourceContent } from "@/lib/course-resource-storage";
+import { buildPrivateFileHeaders } from "@/lib/download-response";
 import { getDb } from "@/lib/prisma";
+import { buildRequestFingerprint } from "@/lib/request-client";
+import { consumeRateLimit } from "@/lib/rate-limit";
 
 export async function GET(
-  _: Request,
+  request: Request,
   { params }: { params: Promise<{ resourceId: string }> }
 ) {
   const { resourceId } = await params;
@@ -42,13 +45,31 @@ export async function GET(
     return NextResponse.json({ error: "Resource access denied." }, { status: 403 });
   }
 
+  const downloadRateLimit = consumeRateLimit({
+    bucket: "course-resource-download",
+    key: buildRequestFingerprint(request.headers, [user.id, resourceId]),
+    limit: 30,
+    windowMs: 5 * 60 * 1_000
+  });
+
+  if (!downloadRateLimit.allowed) {
+    return NextResponse.json(
+      { error: "Too many download requests." },
+      {
+        status: 429,
+        headers: {
+          "Retry-After": `${downloadRateLimit.retryAfterSeconds}`
+        }
+      }
+    );
+  }
+
   try {
     const fileBuffer = await readStoredCourseResourceContent(resource.storageKey);
-    const headers = new Headers();
-
-    headers.set("Content-Type", resource.mimeType || "application/octet-stream");
-    headers.set("Content-Disposition", `attachment; filename="${resource.title}"`);
-    headers.set("Cache-Control", "private, no-store");
+    const headers = buildPrivateFileHeaders({
+      fileName: resource.title,
+      mimeType: resource.mimeType
+    });
 
     return new NextResponse(fileBuffer, {
       status: 200,

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Suspense } from "react";
 import {
   Bell,
   BookOpenCheck,
@@ -13,267 +14,39 @@ import {
   Settings2,
   Users
 } from "lucide-react";
-import { updateNotificationPreferencesAction } from "@/actions/account";
 import { logoutAction } from "@/actions/session";
+import {
+  getPrimaryTeacherCourse,
+  getReviewedSubmissionsCount,
+  getTeacherCoursePaths,
+  getTeacherDashboardInitials,
+  getTeacherGlobalSummary,
+  getTotalSubmissionsCount,
+  TeacherCommunityCard,
+  TeacherPreferencesCard,
+  TeacherRecentActivitySection,
+  TeacherSectionSkeleton,
+  TeacherUnreadBadge
+} from "@/components/account/teacher-dashboard-shared";
 import { CourseArtwork } from "@/components/course-artwork";
 import { Badge } from "@/components/ui/badge";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import type { UserCourseSpace } from "@/lib/course-community";
-import type { CourseLearnerProgressRow } from "@/lib/course-progress";
-import type { CampusResourceItem } from "@/lib/course-resources";
-import type { ForumNotificationListItem } from "@/lib/forum";
+import type {
+  DashboardNotificationSnapshot,
+  TeacherDashboardCourseSummary
+} from "@/lib/account-dashboard";
 import { siteConfig } from "@/lib/site";
-import { cn, formatCompactNumber, formatDateTime, formatRelativeTime } from "@/lib/utils";
-
-type NotificationPreferenceShape = {
-  emailEnabled: boolean;
-  webEnabled: boolean;
-};
-
-type PlatformNotificationItem = {
-  id: string;
-  title: string;
-  body: string;
-  linkPath: string;
-  readAt: Date | null;
-  createdAt: Date;
-};
-
-type TeacherCourseDashboard = {
-  space: UserCourseSpace;
-  learners: CourseLearnerProgressRow[];
-  resources: CampusResourceItem[];
-};
+import { cn, formatCompactNumber, formatDateTime } from "@/lib/utils";
 
 type TeacherAccountDashboardProps = {
   fullName: string;
   firstName: string;
   isDemoUser: boolean;
   hasTeacherRoleWithoutCourses: boolean;
-  teacherCourses: TeacherCourseDashboard[];
-  preference: NotificationPreferenceShape;
-  platformNotifications: {
-    notifications: PlatformNotificationItem[];
-    unreadCount: number;
-  };
-  forumNotifications: {
-    notifications: ForumNotificationListItem[];
-    unreadCount: number;
-  };
+  teacherCourses: TeacherDashboardCourseSummary[];
+  notificationSnapshotPromise: Promise<DashboardNotificationSnapshot>;
 };
-
-type TeacherPendingItem = {
-  id: string;
-  href: string;
-  courseTitle: string;
-  resourceTitle: string;
-  learnerName: string;
-  submittedAt: Date;
-  statusLabel: string;
-};
-
-function truncateText(value: string, maxLength: number) {
-  if (value.length <= maxLength) {
-    return value;
-  }
-
-  return `${value.slice(0, Math.max(maxLength - 1, 1)).trimEnd()}...`;
-}
-
-function getInitials(name: string) {
-  const parts = name
-    .trim()
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2);
-
-  return parts.map((part) => part[0]?.toUpperCase() ?? "").join("") || "D";
-}
-
-function getManagedResourceCount(resources: CampusResourceItem[]) {
-  return resources.filter((resource) => resource.isManaged).length;
-}
-
-function getExerciseCount(resources: CampusResourceItem[]) {
-  return resources.filter((resource) => resource.isExercise && resource.isManaged).length;
-}
-
-function getPendingReviewItems(course: TeacherCourseDashboard) {
-  const pending: TeacherPendingItem[] = [];
-
-  for (const resource of course.resources) {
-    if (!resource.isExercise) {
-      continue;
-    }
-
-    for (const submission of resource.submissions) {
-      if (submission.status !== "SUBMITTED") {
-        continue;
-      }
-
-      pending.push({
-        id: submission.id,
-        href: `/mis-cursos/${course.space.course.slug}/seguimiento`,
-        courseTitle: course.space.course.title,
-        resourceTitle: resource.title,
-        learnerName: submission.studentName,
-        submittedAt: submission.submittedAt,
-        statusLabel: submission.statusLabel
-      });
-    }
-  }
-
-  return pending.sort((left, right) => right.submittedAt.getTime() - left.submittedAt.getTime());
-}
-
-function getAverageCompletionRate(learners: CourseLearnerProgressRow[]) {
-  if (learners.length === 0) {
-    return 0;
-  }
-
-  return Math.round(
-    learners.reduce((total, learner) => total + learner.completionRate, 0) / learners.length
-  );
-}
-
-function getPrimaryTeacherCourse(courses: TeacherCourseDashboard[]) {
-  return [...courses].sort((left, right) => {
-    const leftPending = getPendingReviewItems(left).length;
-    const rightPending = getPendingReviewItems(right).length;
-
-    if (leftPending !== rightPending) {
-      return rightPending - leftPending;
-    }
-
-    const leftLearners = left.learners.length;
-    const rightLearners = right.learners.length;
-
-    if (leftLearners !== rightLearners) {
-      return rightLearners - leftLearners;
-    }
-
-    const leftManagedResources = getManagedResourceCount(left.resources);
-    const rightManagedResources = getManagedResourceCount(right.resources);
-
-    return rightManagedResources - leftManagedResources;
-  })[0] ?? null;
-}
-
-function buildTeacherActivity(input: {
-  courses: TeacherCourseDashboard[];
-  forumNotifications: TeacherAccountDashboardProps["forumNotifications"]["notifications"];
-  platformNotifications: TeacherAccountDashboardProps["platformNotifications"]["notifications"];
-}) {
-  const submissionItems = input.courses.flatMap((course) =>
-    course.resources.flatMap((resource) =>
-      resource.submissions.map((submission) => ({
-        id: `submission-${submission.id}`,
-        href: `/mis-cursos/${course.space.course.slug}/seguimiento`,
-        title:
-          submission.status === "REVIEWED"
-            ? `Entrega revisada en ${course.space.course.title}`
-            : `Nueva entrega en ${course.space.course.title}`,
-        body:
-          submission.status === "REVIEWED"
-            ? `${submission.studentName} ya tiene revision en "${resource.title}".`
-            : `${submission.studentName} ha enviado "${resource.title}".`,
-        createdAt: submission.reviewedAt ?? submission.submittedAt,
-        tone: submission.status === "REVIEWED" ? ("teacher" as const) : ("student" as const),
-        sourceLabel: submission.status === "REVIEWED" ? "Revision" : "Entrega"
-      }))
-    )
-  );
-
-  const platformItems = input.platformNotifications.map((notification) => ({
-    id: `platform-${notification.id}`,
-    href: notification.linkPath,
-    title: notification.title,
-    body: truncateText(notification.body, 140),
-    createdAt: notification.createdAt,
-    tone: "teacher" as const,
-    sourceLabel: "Plataforma"
-  }));
-
-  const forumItems = input.forumNotifications.map((notification) => ({
-    id: `forum-${notification.id}`,
-    href: notification.linkPath,
-    title: notification.title,
-    body: truncateText(notification.body, 140),
-    createdAt: notification.createdAt,
-    tone: "student" as const,
-    sourceLabel: "Foro"
-  }));
-
-  return [...submissionItems, ...platformItems, ...forumItems]
-    .sort((left, right) => right.createdAt.getTime() - left.createdAt.getTime())
-    .slice(0, 6);
-}
-
-function getUnreadSummary(input: TeacherAccountDashboardProps) {
-  return input.platformNotifications.unreadCount + input.forumNotifications.unreadCount;
-}
-
-function getFirstCoursePaths(course: TeacherCourseDashboard | null) {
-  if (!course) {
-    return {
-      campusHref: "/mi-cuenta",
-      trackingHref: "/mi-cuenta",
-      forumHref: "/mi-cuenta"
-    };
-  }
-
-  return {
-    campusHref: `/mis-cursos/${course.space.course.slug}`,
-    trackingHref: `/mis-cursos/${course.space.course.slug}/seguimiento`,
-    forumHref: `/mis-cursos/${course.space.course.slug}/foro`
-  };
-}
-
-function getGlobalSummary(courses: TeacherCourseDashboard[]) {
-  const allPending = courses.flatMap((course) => getPendingReviewItems(course));
-  const activeLearners = new Set(courses.flatMap((course) => course.learners.map((learner) => learner.userId)))
-    .size;
-  const resources = courses.reduce((total, course) => total + getManagedResourceCount(course.resources), 0);
-  const exercises = courses.reduce((total, course) => total + getExerciseCount(course.resources), 0);
-  const completionRate =
-    courses.length > 0
-      ? Math.round(
-          courses.reduce((total, course) => total + getAverageCompletionRate(course.learners), 0) /
-            courses.length
-        )
-      : 0;
-
-  return {
-    pendingReviews: allPending.length,
-    activeLearners,
-    resources,
-    exercises,
-    averageCompletionRate: completionRate
-  };
-}
-
-function getReviewedSubmissionsCount(courses: TeacherCourseDashboard[]) {
-  return courses.reduce(
-    (total, course) =>
-      total +
-      course.resources.reduce(
-        (resourceTotal, resource) =>
-          resourceTotal + resource.submissions.filter((submission) => submission.status === "REVIEWED").length,
-        0
-      ),
-    0
-  );
-}
-
-function getTotalSubmissionsCount(courses: TeacherCourseDashboard[]) {
-  return courses.reduce(
-    (total, course) =>
-      total +
-      course.resources.reduce((resourceTotal, resource) => resourceTotal + resource.submissions.length, 0),
-    0
-  );
-}
 
 export function TeacherAccountDashboard({
   fullName,
@@ -281,38 +54,21 @@ export function TeacherAccountDashboard({
   isDemoUser,
   hasTeacherRoleWithoutCourses,
   teacherCourses,
-  preference,
-  platformNotifications,
-  forumNotifications
+  notificationSnapshotPromise
 }: TeacherAccountDashboardProps) {
   const primaryCourse = getPrimaryTeacherCourse(teacherCourses);
   const secondaryCourses = primaryCourse
     ? teacherCourses.filter((course) => course.space.course.slug !== primaryCourse.space.course.slug)
     : teacherCourses;
-  const initials = getInitials(fullName);
-  const paths = getFirstCoursePaths(primaryCourse);
-  const globalSummary = getGlobalSummary(teacherCourses);
-  const recentActivity = buildTeacherActivity({
-    courses: teacherCourses,
-    forumNotifications: forumNotifications.notifications,
-    platformNotifications: platformNotifications.notifications
-  });
+  const initials = getTeacherDashboardInitials(fullName);
+  const paths = getTeacherCoursePaths(primaryCourse);
+  const globalSummary = getTeacherGlobalSummary(teacherCourses);
   const pendingReviewItems = teacherCourses
-    .flatMap((course) => getPendingReviewItems(course))
+    .flatMap((course) => course.pendingReviewItems)
     .sort((left, right) => right.submittedAt.getTime() - left.submittedAt.getTime())
     .slice(0, 6);
   const reviewedSubmissions = getReviewedSubmissionsCount(teacherCourses);
   const totalSubmissions = getTotalSubmissionsCount(teacherCourses);
-  const unreadSummary = getUnreadSummary({
-    fullName,
-    firstName,
-    isDemoUser,
-    hasTeacherRoleWithoutCourses,
-    teacherCourses,
-    preference,
-    platformNotifications,
-    forumNotifications
-  });
 
   return (
     <div className="min-h-screen bg-[linear-gradient(180deg,#f8f6f1_0%,#f4f7fb_52%,#fbfaf8_100%)]">
@@ -448,11 +204,9 @@ export function TeacherAccountDashboard({
                 <ButtonLink href="#actividad-docente" variant="ghost">
                   <Bell className="mr-2 h-4 w-4" />
                   Avisos
-                  {unreadSummary ? (
-                    <span className="ml-2 rounded-full bg-[var(--color-primary)] px-2 py-0.5 text-xs text-white">
-                      {unreadSummary}
-                    </span>
-                  ) : null}
+                  <Suspense fallback={null}>
+                    <TeacherUnreadBadge notificationSnapshotPromise={notificationSnapshotPromise} />
+                  </Suspense>
                 </ButtonLink>
                 <ButtonLink href="#preferencias" variant="ghost">
                   <Settings2 className="mr-2 h-4 w-4" />
@@ -519,8 +273,8 @@ export function TeacherAccountDashboard({
                             {primaryCourse.space.course.title}
                           </h2>
                           <p className="mt-4 text-base leading-8 text-[var(--color-muted)]">
-                            {primaryCourse.learners.length
-                              ? `${primaryCourse.learners.length} alumnos con seguimiento activo y ${getPendingReviewItems(primaryCourse).length} entregas pendientes de revision.`
+                            {primaryCourse.learnerCount
+                              ? `${primaryCourse.learnerCount} alumnos con seguimiento activo y ${primaryCourse.pendingReviewItems.length} entregas pendientes de revision.`
                               : "Todavia no hay alumnado con progreso registrado en este curso."}
                           </p>
                         </div>
@@ -528,7 +282,7 @@ export function TeacherAccountDashboard({
                         <div className="mt-8 grid gap-4 sm:grid-cols-3">
                           <div className="rounded-[24px] bg-[var(--color-surface)] p-5">
                             <p className="text-[2rem] font-semibold text-[var(--color-ink)]">
-                              {getPendingReviewItems(primaryCourse).length}
+                              {primaryCourse.pendingReviewItems.length}
                             </p>
                             <p className="mt-1 text-sm leading-7 text-[var(--color-muted)]">
                               Entregas pendientes
@@ -536,7 +290,7 @@ export function TeacherAccountDashboard({
                           </div>
                           <div className="rounded-[24px] bg-[var(--color-surface)] p-5">
                             <p className="text-[2rem] font-semibold text-[var(--color-ink)]">
-                              {getManagedResourceCount(primaryCourse.resources)}
+                              {primaryCourse.managedResourceCount}
                             </p>
                             <p className="mt-1 text-sm leading-7 text-[var(--color-muted)]">
                               Recursos gestionados
@@ -544,7 +298,7 @@ export function TeacherAccountDashboard({
                           </div>
                           <div className="rounded-[24px] bg-[var(--color-surface)] p-5">
                             <p className="text-[2rem] font-semibold text-[var(--color-ink)]">
-                              {getAverageCompletionRate(primaryCourse.learners)}%
+                              {primaryCourse.averageCompletionRate}%
                             </p>
                             <p className="mt-1 text-sm leading-7 text-[var(--color-muted)]">
                               Progreso medio
@@ -614,44 +368,12 @@ export function TeacherAccountDashboard({
                       </div>
                     </Card>
 
-                    <Card className="p-6" id="actividad-docente">
-                      <div className="flex items-center gap-3">
-                        <Bell className="h-5 w-5 text-[var(--color-primary)]" />
-                        <h2 className="text-[2rem] font-semibold tracking-[-0.04em] text-[var(--color-ink)]">
-                          Actividad reciente
-                        </h2>
-                      </div>
-
-                      <div className="mt-6 space-y-4">
-                        {recentActivity.length ? (
-                          recentActivity.slice(0, 3).map((item) => (
-                            <Link
-                              className="block rounded-[22px] border border-[var(--color-border)] bg-white p-4 transition hover:border-[var(--color-primary)]"
-                              href={item.href}
-                              key={item.id}
-                            >
-                              <div className="flex items-center gap-3">
-                                <Badge tone={item.tone}>{item.sourceLabel}</Badge>
-                                <p className="text-xs uppercase tracking-[0.16em] text-[var(--color-muted)]">
-                                  {formatRelativeTime(item.createdAt)}
-                                </p>
-                              </div>
-                              <p className="mt-3 text-lg font-semibold leading-tight text-[var(--color-ink)]">
-                                {item.title}
-                              </p>
-                              <p className="mt-2 text-sm leading-7 text-[var(--color-muted)]">
-                                {item.body}
-                              </p>
-                            </Link>
-                          ))
-                        ) : (
-                          <div className="rounded-[22px] border border-dashed border-[rgba(12,113,195,0.18)] bg-white p-5 text-sm leading-7 text-[var(--color-muted)]">
-                            Sin actividad reciente. Las actualizaciones del alumnado apareceran aqui
-                            cuando haya entregas, avisos o movimiento en el foro.
-                          </div>
-                        )}
-                      </div>
-                    </Card>
+                    <Suspense fallback={<TeacherSectionSkeleton lines={3} title="Actividad reciente" />}>
+                      <TeacherRecentActivitySection
+                        courses={teacherCourses}
+                        notificationSnapshotPromise={notificationSnapshotPromise}
+                      />
+                    </Suspense>
                   </div>
                 </div>
               ) : (
@@ -739,49 +461,13 @@ export function TeacherAccountDashboard({
                   </div>
                 </Card>
 
-                <Card className="p-8">
-                  <div className="flex items-center gap-3">
-                    <MessageSquareText className="h-5 w-5 text-[var(--color-primary)]" />
-                    <h2 className="text-[2rem] font-semibold tracking-[-0.04em] text-[var(--color-ink)]">
-                      Foro y comunidad
-                    </h2>
-                  </div>
-
-                  <div className="mt-6 space-y-4">
-                    <div className="rounded-[22px] bg-[var(--color-surface)] p-5">
-                      <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[var(--color-muted)]">
-                        Avisos del foro
-                      </p>
-                      <p className="mt-3 text-[2rem] font-semibold text-[var(--color-ink)]">
-                        {forumNotifications.unreadCount}
-                      </p>
-                      <p className="mt-2 text-sm leading-7 text-[var(--color-muted)]">
-                        Notificaciones no leidas asociadas a tus cursos.
-                      </p>
-                    </div>
-
-                    <div className="rounded-[22px] bg-[var(--color-surface)] p-5">
-                      <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[var(--color-muted)]">
-                        Recursos
-                      </p>
-                      <p className="mt-3 text-[2rem] font-semibold text-[var(--color-ink)]">
-                        {globalSummary.resources}
-                      </p>
-                      <p className="mt-2 text-sm leading-7 text-[var(--color-muted)]">
-                        Materiales o ejercicios gestionados desde el campus.
-                      </p>
-                    </div>
-
-                    <div className="flex flex-wrap gap-3">
-                      <ButtonLink href={paths.forumHref} variant="secondary">
-                        Abrir foro
-                      </ButtonLink>
-                      <ButtonLink href={paths.campusHref} variant="ghost">
-                        Ir a recursos
-                      </ButtonLink>
-                    </div>
-                  </div>
-                </Card>
+                <Suspense fallback={<TeacherSectionSkeleton lines={2} title="Foro y comunidad" />}>
+                  <TeacherCommunityCard
+                    notificationSnapshotPromise={notificationSnapshotPromise}
+                    paths={paths}
+                    resources={globalSummary.resources}
+                  />
+                </Suspense>
               </div>
 
               <section id="mis-cursos">
@@ -811,15 +497,15 @@ export function TeacherAccountDashboard({
                             {course.space.course.title}
                           </h3>
                           <p className="mt-3 text-sm leading-7 text-[var(--color-muted)]">
-                            {course.learners.length
-                              ? `${course.learners.length} alumnos, ${getPendingReviewItems(course).length} entregas pendientes y ${getManagedResourceCount(course.resources)} recursos gestionados.`
+                            {course.learnerCount
+                              ? `${course.learnerCount} alumnos, ${course.pendingReviewItems.length} entregas pendientes y ${course.managedResourceCount} recursos gestionados.`
                               : "Todavia no hay seguimiento registrado para este curso."}
                           </p>
 
                           <div className="mt-6 grid gap-4 sm:grid-cols-3">
                             <div className="rounded-[20px] bg-[var(--color-surface)] p-4">
                               <p className="text-lg font-semibold text-[var(--color-ink)]">
-                                {course.learners.length}
+                                {course.learnerCount}
                               </p>
                               <p className="text-xs uppercase tracking-[0.16em] text-[var(--color-muted)]">
                                 Alumnos
@@ -827,7 +513,7 @@ export function TeacherAccountDashboard({
                             </div>
                             <div className="rounded-[20px] bg-[var(--color-surface)] p-4">
                               <p className="text-lg font-semibold text-[var(--color-ink)]">
-                                {getPendingReviewItems(course).length}
+                                {course.pendingReviewItems.length}
                               </p>
                               <p className="text-xs uppercase tracking-[0.16em] text-[var(--color-muted)]">
                                 Pendientes
@@ -835,7 +521,7 @@ export function TeacherAccountDashboard({
                             </div>
                             <div className="rounded-[20px] bg-[var(--color-surface)] p-4">
                               <p className="text-lg font-semibold text-[var(--color-ink)]">
-                                {getExerciseCount(course.resources)}
+                                {course.exerciseCount}
                               </p>
                               <p className="text-xs uppercase tracking-[0.16em] text-[var(--color-muted)]">
                                 Ejercicios
@@ -918,75 +604,11 @@ export function TeacherAccountDashboard({
                   </a>
                 </Card>
 
-                <Card className="p-8">
-                  <div className="flex items-center gap-3">
-                    <Settings2 className="h-5 w-5 text-[var(--color-primary)]" />
-                    <h2 className="text-[2rem] font-semibold tracking-[-0.04em] text-[var(--color-ink)]">
-                      Preferencias
-                    </h2>
-                  </div>
-
-                  <div className="mt-6 space-y-3">
-                    {[
-                      {
-                        title: "Solo email",
-                        description: "Recibe avisos por correo y reduce ruido dentro del panel.",
-                        emailEnabled: true,
-                        webEnabled: false
-                      },
-                      {
-                        title: "Solo web",
-                        description: "Centraliza las alertas dentro de la cuenta docente.",
-                        emailEnabled: false,
-                        webEnabled: true
-                      },
-                      {
-                        title: "Email y web",
-                        description: "Mantiene sincronizados correo y panel privado.",
-                        emailEnabled: true,
-                        webEnabled: true
-                      }
-                    ].map((option) => {
-                      const isSelected =
-                        preference.emailEnabled === option.emailEnabled &&
-                        preference.webEnabled === option.webEnabled;
-
-                      return (
-                        <form action={updateNotificationPreferencesAction} key={option.title}>
-                          <input
-                            name="emailEnabled"
-                            type="hidden"
-                            value={option.emailEnabled ? "true" : "false"}
-                          />
-                          <input
-                            name="webEnabled"
-                            type="hidden"
-                            value={option.webEnabled ? "true" : "false"}
-                          />
-                          <button
-                            className={cn(
-                              "w-full rounded-[22px] border px-5 py-4 text-left transition",
-                              isSelected
-                                ? "border-[var(--color-primary)] bg-[var(--color-primary-soft)]"
-                                : "border-[var(--color-border)] bg-[var(--color-surface)] hover:border-[var(--color-primary)]"
-                            )}
-                            type="submit"
-                          >
-                            <div className="flex items-center justify-between gap-4">
-                              <p className="text-lg font-semibold text-[var(--color-ink)]">{option.title}</p>
-                              <Badge tone={isSelected ? "teacher" : "muted"}>
-                                {isSelected ? "Activa" : "Disponible"}
-                              </Badge>
-                            </div>
-                            <p className="mt-2 text-sm leading-7 text-[var(--color-muted)]">
-                              {option.description}
-                            </p>
-                          </button>
-                        </form>
-                      );
-                    })}
-                  </div>
-                </Card>
+                <Suspense fallback={<TeacherSectionSkeleton lines={3} title="Preferencias" />}>
+                  <TeacherPreferencesCard
+                    notificationSnapshotPromise={notificationSnapshotPromise}
+                  />
+                </Suspense>
               </section>
             </section>
           </main>

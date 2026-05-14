@@ -1,3 +1,4 @@
+import { buildLegacyCourseInWhere, getCourseIdentitiesBySlugs } from "@/lib/course-identity";
 import { isDemoUserId } from "@/lib/demo-auth";
 import { publishDueAnnouncementsForCourse } from "@/lib/forum-notifications";
 import { getDb } from "@/lib/prisma";
@@ -17,6 +18,7 @@ export async function getUserForumNotifications(input: {
   userId: string;
   courseSlugs: string[];
   limit?: number;
+  skipPublishDueAnnouncements?: boolean;
 }) {
   if (isDemoUserId(input.userId)) {
     return {
@@ -26,8 +28,11 @@ export async function getUserForumNotifications(input: {
   }
 
   const courseSlugs = Array.from(new Set(input.courseSlugs.filter(Boolean)));
+  const courseIdentities = await getCourseIdentitiesBySlugs(courseSlugs);
 
-  await Promise.all(courseSlugs.map((courseSlug) => publishDueAnnouncementsForCourse(courseSlug)));
+  if (!input.skipPublishDueAnnouncements) {
+    await Promise.all(courseSlugs.map((courseSlug) => publishDueAnnouncementsForCourse(courseSlug)));
+  }
 
   const [notifications, unreadCount] = await Promise.all([
     getDb().forumNotification.findMany({
@@ -35,9 +40,13 @@ export async function getUserForumNotifications(input: {
         userId: input.userId,
         ...(courseSlugs.length
           ? {
-              courseSlug: {
-                in: courseSlugs
-              }
+              ...buildLegacyCourseInWhere(
+                courseIdentities.length
+                  ? courseIdentities
+                  : courseSlugs.map((courseSlug) => ({
+                      slug: courseSlug
+                    }))
+              )
             }
           : {})
       },
@@ -51,9 +60,13 @@ export async function getUserForumNotifications(input: {
         userId: input.userId,
         ...(courseSlugs.length
           ? {
-              courseSlug: {
-                in: courseSlugs
-              }
+              ...buildLegacyCourseInWhere(
+                courseIdentities.length
+                  ? courseIdentities
+                  : courseSlugs.map((courseSlug) => ({
+                      slug: courseSlug
+                    }))
+              )
             }
           : {}),
         readAt: null

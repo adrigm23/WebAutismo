@@ -51,7 +51,9 @@ export default async function MyCoursePage({ params, searchParams }: MyCoursePag
   const access = await canAccessCourseCommunityForCourse({
     userId: user.id,
     email: user.email,
-    course
+    course,
+    userGlobalRole: user.globalRole,
+    userIsActive: user.isActive
   });
 
   if (!access.allowed) {

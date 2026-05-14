@@ -21,6 +21,13 @@ import {
   upsertCourseResourceSubmission
 } from "@/lib/course-resources";
 import { isDatabaseConnectionError } from "@/lib/db-errors";
+import {
+  assertSafeHttpUrl,
+  COURSE_RESOURCE_UPLOAD_POLICY,
+  COURSE_SUBMISSION_UPLOAD_POLICY,
+  validateFileUpload
+} from "@/lib/file-security";
+import { captureOperationalWarning } from "@/lib/monitoring";
 import { sendPlatformNotification } from "@/lib/notifications";
 import { getDb } from "@/lib/prisma";
 
@@ -101,7 +108,9 @@ async function writeAuditLogSafely(...args: Parameters<typeof writeAuditLog>) {
   try {
     await writeAuditLog(...args);
   } catch (error) {
-    console.error("Audit log write failed during course resource action:", error);
+    captureOperationalWarning("Course resource audit write failed.", {
+      error: error instanceof Error ? error : new Error(String(error))
+    });
   }
 }
 
@@ -156,7 +165,9 @@ export async function createCourseResourceAction(
   const access = await canAccessCourseCommunityForCourse({
     userId: user.id,
     email: user.email,
-    course
+    course,
+    userGlobalRole: user.globalRole,
+    userIsActive: user.isActive
   });
 
   if (!access.allowed || !canModerateCourse(access.role)) {
@@ -175,6 +186,15 @@ export async function createCourseResourceAction(
     if (!(file instanceof File) || file.size <= 0) {
       return { error: "Selecciona un archivo para publicar el recurso." };
     }
+
+    try {
+      validateFileUpload(file, COURSE_RESOURCE_UPLOAD_POLICY);
+    } catch (error) {
+      return {
+        error:
+          error instanceof Error ? error.message : "El archivo del recurso no cumple la politica de seguridad."
+      };
+    }
   } else {
     const linkUrl = parsed.data.linkUrl?.trim();
 
@@ -183,13 +203,11 @@ export async function createCourseResourceAction(
     }
 
     try {
-      const url = new URL(linkUrl);
-
-      if (!["http:", "https:"].includes(url.protocol)) {
-        return { error: "La URL debe empezar por http o https." };
-      }
-    } catch {
-      return { error: "La URL del recurso no es valida." };
+      assertSafeHttpUrl(linkUrl, "La URL del recurso");
+    } catch (error) {
+      return {
+        error: error instanceof Error ? error.message : "La URL del recurso no es valida."
+      };
     }
   }
 
@@ -284,7 +302,9 @@ export async function deleteCourseResourceAction(formData: FormData) {
   const access = await canAccessCourseCommunity({
     userId: user.id,
     email: user.email,
-    courseSlug: parsed.data.courseSlug
+    courseSlug: parsed.data.courseSlug,
+    userGlobalRole: user.globalRole,
+    userIsActive: user.isActive
   });
 
   if (!access.allowed || !canModerateCourse(access.role)) {
@@ -369,7 +389,9 @@ export async function updateCourseResourceAction(
   const access = await canAccessCourseCommunityForCourse({
     userId: user.id,
     email: user.email,
-    course
+    course,
+    userGlobalRole: user.globalRole,
+    userIsActive: user.isActive
   });
 
   if (!access.allowed || !canModerateCourse(access.role)) {
@@ -412,13 +434,11 @@ export async function updateCourseResourceAction(
     }
 
     try {
-      const url = new URL(linkUrl);
-
-      if (!["http:", "https:"].includes(url.protocol)) {
-        return { error: "La URL debe empezar por http o https." };
-      }
-    } catch {
-      return { error: "La URL del recurso no es valida." };
+      assertSafeHttpUrl(linkUrl, "La URL del recurso");
+    } catch (error) {
+      return {
+        error: error instanceof Error ? error.message : "La URL del recurso no es valida."
+      };
     }
   }
 
@@ -444,6 +464,17 @@ export async function updateCourseResourceAction(
   }
 
   const file = formData.get("file");
+
+  if (file instanceof File && file.size > 0) {
+    try {
+      validateFileUpload(file, COURSE_RESOURCE_UPLOAD_POLICY);
+    } catch (error) {
+      return {
+        error:
+          error instanceof Error ? error.message : "El archivo del recurso no cumple la politica de seguridad."
+      };
+    }
+  }
 
   try {
     const updatedResource = await updateCourseResource({
@@ -512,7 +543,9 @@ export async function toggleCourseResourcePublicationAction(formData: FormData) 
   const access = await canAccessCourseCommunity({
     userId: user.id,
     email: user.email,
-    courseSlug: parsed.data.courseSlug
+    courseSlug: parsed.data.courseSlug,
+    userGlobalRole: user.globalRole,
+    userIsActive: user.isActive
   });
 
   if (!access.allowed || !canModerateCourse(access.role)) {
@@ -587,7 +620,9 @@ export async function moveCourseResourceAction(formData: FormData) {
   const access = await canAccessCourseCommunity({
     userId: user.id,
     email: user.email,
-    courseSlug: parsed.data.courseSlug
+    courseSlug: parsed.data.courseSlug,
+    userGlobalRole: user.globalRole,
+    userIsActive: user.isActive
   });
 
   if (!access.allowed || !canModerateCourse(access.role)) {
@@ -668,7 +703,9 @@ export async function submitCourseResourceSubmissionAction(
   const access = await canAccessCourseCommunityForCourse({
     userId: user.id,
     email: user.email,
-    course
+    course,
+    userGlobalRole: user.globalRole,
+    userIsActive: user.isActive
   });
 
   if (!access.allowed) {
@@ -716,13 +753,22 @@ export async function submitCourseResourceSubmissionAction(
 
   if (hasLink) {
     try {
-      const url = new URL(parsed.data.linkUrl!.trim());
+      assertSafeHttpUrl(parsed.data.linkUrl!, "La URL de la entrega");
+    } catch (error) {
+      return {
+        error: error instanceof Error ? error.message : "La URL de la entrega no es valida."
+      };
+    }
+  }
 
-      if (!["http:", "https:"].includes(url.protocol)) {
-        return { error: "La URL de la entrega debe empezar por http o https." };
-      }
-    } catch {
-      return { error: "La URL de la entrega no es valida." };
+  if (hasFile && file instanceof File) {
+    try {
+      validateFileUpload(file, COURSE_SUBMISSION_UPLOAD_POLICY);
+    } catch (error) {
+      return {
+        error:
+          error instanceof Error ? error.message : "El archivo de la entrega no cumple la politica de seguridad."
+      };
     }
   }
 
@@ -806,7 +852,9 @@ export async function reviewCourseResourceSubmissionAction(
   const access = await canAccessCourseCommunity({
     userId: user.id,
     email: user.email,
-    courseSlug: parsed.data.courseSlug
+    courseSlug: parsed.data.courseSlug,
+    userGlobalRole: user.globalRole,
+    userIsActive: user.isActive
   });
 
   if (!access.allowed || !canModerateCourse(access.role)) {

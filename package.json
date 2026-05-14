@@ -14,6 +14,7 @@
     "test:integration": "vitest run --configLoader runner tests/integration",
     "test:e2e": "tsx scripts/run-e2e.ts",
     "attachments:migrate": "node scripts/migrate-forum-attachments.mjs",
+    "storage:migrate": "tsx scripts/migrate-stored-assets.ts",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
     "db:bootstrap-real": "node --experimental-strip-types scripts/bootstrap-real-data.mjs",
@@ -21,6 +22,7 @@
   },
   "dependencies": {
     "@prisma/client": "^6.7.0",
+    "@vercel/blob": "^2.3.3",
     "bcryptjs": "^3.0.2",
     "clsx": "^2.1.1",
     "jose": "^5.9.6",
@@ -35,11 +37,11 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.1",
+    "@playwright/test": "^1.54.1",
     "@tailwindcss/postcss": "^4.1.7",
     "@types/node": "^22.15.17",
     "@types/react": "^19.1.4",
     "@types/react-dom": "^19.1.5",
-    "@playwright/test": "^1.54.1",
     "eslint": "^9.26.0",
     "eslint-config-next": "^16.0.0",
     "prettier": "^3.6.2",

@@ -1,11 +1,15 @@
 import { randomUUID } from "crypto";
 import path from "path";
 import { buildProtectedForumAttachmentUrl } from "@/lib/forum-attachment-storage";
+import {
+  assertSafeHttpUrl,
+  FORUM_ATTACHMENT_UPLOAD_POLICY,
+  validateFileUpload
+} from "@/lib/file-security";
 import { getDb } from "@/lib/prisma";
 import { upsertStoredAsset } from "@/lib/stored-assets";
 
 const MAX_ATTACHMENT_COUNT = 6;
-const MAX_FILE_SIZE_BYTES = 8 * 1024 * 1024;
 
 type UploadAttachmentDraft = {
   source: "upload";
@@ -67,31 +71,28 @@ export function prepareForumAttachmentDrafts(input: {
   }
 
   const fileDrafts = files.map((file) => {
-    if (file.size > MAX_FILE_SIZE_BYTES) {
-      throw new Error(`El archivo "${file.name}" supera el limite de 8 MB.`);
-    }
-
-    const mimeType = file.type || null;
+    const validatedFile = validateFileUpload(file, FORUM_ATTACHMENT_UPLOAD_POLICY);
+    const mimeType = validatedFile.mimeType || null;
 
     return {
       source: "upload" as const,
       kind: mimeType?.startsWith("image/") ? ("IMAGE" as const) : ("FILE" as const),
-      label: sanitizeFileName(file.name),
+      label: sanitizeFileName(validatedFile.fileName),
       file,
       mimeType,
-      sizeInBytes: file.size
+      sizeInBytes: validatedFile.sizeInBytes
     };
   });
 
   const linkDrafts = resourceLinks.map((link) => {
     try {
-      const url = new URL(link);
+      const safeUrl = assertSafeHttpUrl(link, "El enlace");
 
       return {
         source: "link" as const,
-        kind: guessLinkKind(url.toString()),
-        label: buildLinkLabel(url.toString()),
-        url: url.toString()
+        kind: guessLinkKind(safeUrl),
+        label: buildLinkLabel(safeUrl),
+        url: safeUrl
       };
     } catch {
       throw new Error(`El enlace "${link}" no es valido.`);
@@ -139,7 +140,8 @@ export async function persistForumAttachments(input: {
 
     await upsertStoredAsset({
       storageKey,
-      content: new Uint8Array(await attachment.file.arrayBuffer())
+      content: new Uint8Array(await attachment.file.arrayBuffer()),
+      contentType: attachment.mimeType
     });
 
     const attachmentRecord = await getDb().forumAttachment.create({

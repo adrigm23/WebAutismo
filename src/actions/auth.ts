@@ -1,13 +1,19 @@
 "use server";
 
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { z } from "zod";
+import { issueEmailVerificationToken } from "@/lib/account-security";
 import { writeAuditLog } from "@/lib/audit";
 import { createSession, ensureBootstrapAdmin, hashPassword, verifyPassword } from "@/lib/auth";
 import { getDemoUserByEmail, isValidDemoPassword } from "@/lib/demo-auth";
 import { isDatabaseConnectionError } from "@/lib/db-errors";
+import { canSendEmailMessage, sendEmailVerificationEmail } from "@/lib/email";
+import { isEmailVerificationRequired } from "@/lib/env";
 import { getDb } from "@/lib/prisma";
+import { buildRequestFingerprint } from "@/lib/request-client";
 import { getSafeRedirect } from "@/lib/redirect";
+import { consumeRateLimit } from "@/lib/rate-limit";
 
 export type AuthFormState = {
   error?: string;
@@ -32,9 +38,16 @@ const loginSchema = z.object({
   next: z.string().optional()
 });
 
+const INVALID_LOGIN_MESSAGE = "Credenciales no validas.";
+const DUMMY_PASSWORD_HASH = "$2b$10$UVxjH7726JLyAsVadN8HVe3Kt0jMDfhJESSea8meSy76yz/Tm3sKy";
+
 function getOptionalString(formData: FormData, key: string) {
   const value = formData.get(key);
   return typeof value === "string" && value.length > 0 ? value : undefined;
+}
+
+function getDefaultPrivateRedirect(globalRole: "STUDENT" | "TEACHER" | "ADMIN") {
+  return globalRole === "ADMIN" ? "/admin" : "/mi-cuenta";
 }
 
 export async function registerAction(
@@ -42,6 +55,13 @@ export async function registerAction(
   formData: FormData
 ): Promise<AuthFormState> {
   try {
+    if (isEmailVerificationRequired() && !canSendEmailMessage()) {
+      return {
+        error:
+          "La verificacion obligatoria por email esta activada, pero el envio de correo no esta configurado."
+      };
+    }
+
     const parsed = registerSchema.safeParse({
       name: formData.get("name"),
       email: formData.get("email"),
@@ -72,6 +92,7 @@ export async function registerAction(
         name: parsed.data.name.trim(),
         email: normalizedEmail,
         passwordHash,
+        emailVerifiedAt: isEmailVerificationRequired() ? null : new Date(),
         notificationPreference: {
           create: {}
         }
@@ -96,8 +117,21 @@ export async function registerAction(
       }
     });
 
+    if (isEmailVerificationRequired()) {
+      const verificationToken = await issueEmailVerificationToken(user.id);
+
+      await sendEmailVerificationEmail({
+        email: user.email,
+        name: user.name,
+        token: verificationToken.token,
+        expiresAt: verificationToken.expiresAt
+      });
+
+      redirect("/acceder?verify=1");
+    }
+
     await createSession(user.id);
-    redirect(getSafeRedirect(parsed.data.next, "/mi-cuenta"));
+    redirect(getSafeRedirect(parsed.data.next, getDefaultPrivateRedirect(globalRole)));
   } catch (error) {
     if (isDatabaseConnectionError(error)) {
       return {
@@ -126,15 +160,31 @@ export async function loginAction(
       };
     }
 
+    const requestHeaders = await headers();
+    const loginRateLimit = consumeRateLimit({
+      bucket: "login",
+      key: buildRequestFingerprint(requestHeaders, [parsed.data.email]),
+      limit: 5,
+      windowMs: 10 * 60 * 1_000
+    });
+
+    if (!loginRateLimit.allowed) {
+      return {
+        error: `Demasiados intentos de acceso. Espera ${loginRateLimit.retryAfterSeconds} segundos antes de volver a intentarlo.`
+      };
+    }
+
     const demoUser = getDemoUserByEmail(parsed.data.email);
 
     if (demoUser) {
       if (!isValidDemoPassword(parsed.data.password)) {
-        return { error: "La contrasena no es correcta." };
+        return { error: INVALID_LOGIN_MESSAGE };
       }
 
       await createSession(demoUser.id);
-      redirect(getSafeRedirect(parsed.data.next, "/mi-cuenta"));
+      redirect(
+        getSafeRedirect(parsed.data.next, getDefaultPrivateRedirect(demoUser.globalRole))
+      );
     }
 
     const user = await getDb().user.findUnique({
@@ -143,28 +193,36 @@ export async function loginAction(
       }
     });
 
+    const passwordHash = user?.passwordHash ?? DUMMY_PASSWORD_HASH;
+    const isValidPassword = await verifyPassword(parsed.data.password, passwordHash);
+
     if (!user) {
-      return { error: "No existe una cuenta con ese correo." };
+      return { error: INVALID_LOGIN_MESSAGE };
+    }
+
+    if (!isValidPassword) {
+      return { error: INVALID_LOGIN_MESSAGE };
     }
 
     if (!user.isActive) {
       return { error: "Tu cuenta esta desactivada. Contacta con administracion." };
     }
 
-    const isValidPassword = await verifyPassword(parsed.data.password, user.passwordHash);
-
-    if (!isValidPassword) {
-      return { error: "La contrasena no es correcta." };
+    if (isEmailVerificationRequired() && !user.emailVerifiedAt) {
+      return {
+        error: "Debes verificar tu correo electronico antes de acceder al campus."
+      };
     }
 
-    await ensureBootstrapAdmin({
-      userId: user.id,
-      email: user.email,
-      currentRole: user.globalRole
-    });
+    const globalRole =
+      (await ensureBootstrapAdmin({
+        userId: user.id,
+        email: user.email,
+        currentRole: user.globalRole
+      })) ?? user.globalRole;
 
     await createSession(user.id);
-    redirect(getSafeRedirect(parsed.data.next, "/mi-cuenta"));
+    redirect(getSafeRedirect(parsed.data.next, getDefaultPrivateRedirect(globalRole)));
   } catch (error) {
     if (isDatabaseConnectionError(error)) {
       return {

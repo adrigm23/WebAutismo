@@ -1,4 +1,5 @@
 import type { ForumNotificationType, NotificationCategory } from "@prisma/client";
+import { getCourseIdentityBySlug } from "@/lib/course-identity";
 import { isDemoUserId } from "@/lib/demo-auth";
 import { sendNotificationEmail } from "@/lib/email";
 import { getDb } from "@/lib/prisma";
@@ -15,12 +16,18 @@ export async function ensureNotificationPreference(userId: string) {
     };
   }
 
-  return getDb().notificationPreference.upsert({
+  const existingPreference = await getDb().notificationPreference.findUnique({
     where: {
       userId
-    },
-    update: {},
-    create: {
+    }
+  });
+
+  if (existingPreference) {
+    return existingPreference;
+  }
+
+  return getDb().notificationPreference.create({
+    data: {
       userId
     }
   });
@@ -110,10 +117,13 @@ export async function sendForumNotification(input: {
     return;
   }
 
+  const courseIdentity = await getCourseIdentityBySlug(input.courseSlug);
+
   if (preference.webEnabled) {
     await getDb().forumNotification.create({
       data: {
         userId: input.userId,
+        courseId: courseIdentity?.id ?? null,
         courseSlug: input.courseSlug,
         type: input.type,
         title: input.title,

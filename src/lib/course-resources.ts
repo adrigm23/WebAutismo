@@ -15,6 +15,12 @@ import {
   buildProtectedCourseResourceUrl,
   removeStoredCourseResource
 } from "@/lib/course-resource-storage";
+import {
+  assertSafeHttpUrl,
+  COURSE_RESOURCE_UPLOAD_POLICY,
+  COURSE_SUBMISSION_UPLOAD_POLICY,
+  validateFileUpload
+} from "@/lib/file-security";
 import { getDb } from "@/lib/prisma";
 import { upsertStoredAsset } from "@/lib/stored-assets";
 
@@ -386,14 +392,16 @@ export async function createCourseResource(input: {
       throw new Error("Selecciona un archivo valido.");
     }
 
-    const safeName = sanitizeFileSegment(input.file.name);
+    const validatedFile = validateFileUpload(input.file, COURSE_RESOURCE_UPLOAD_POLICY);
+    const safeName = sanitizeFileSegment(validatedFile.fileName);
     const storedFileName = `${randomUUID()}-${safeName}`;
     storageKey = path.posix.join("course-resources", input.courseId, storedFileName);
-    mimeType = input.file.type || null;
-    sizeInBytes = input.file.size;
+    mimeType = validatedFile.mimeType;
+    sizeInBytes = validatedFile.sizeInBytes;
     await upsertStoredAsset({
       storageKey,
-      content: new Uint8Array(await input.file.arrayBuffer())
+      content: new Uint8Array(await input.file.arrayBuffer()),
+      contentType: mimeType
     });
   }
 
@@ -406,7 +414,10 @@ export async function createCourseResource(input: {
       source: input.source,
       title: input.title.trim(),
       description: input.description?.trim() || null,
-      linkUrl: input.source === "LINK" ? input.linkUrl?.trim() || null : null,
+      linkUrl:
+        input.source === "LINK" && input.linkUrl
+          ? assertSafeHttpUrl(input.linkUrl, "La URL del recurso")
+          : null,
       dueAt: input.type === "EXERCISE" ? input.dueAt ?? null : null,
       passingScore: input.type === "EXERCISE" ? input.passingScore ?? null : null,
       storageKey,
@@ -470,14 +481,16 @@ export async function updateCourseResource(input: {
   let sizeInBytes = existing.sizeInBytes;
 
   if (existing.source === "FILE" && input.file && input.file.size > 0) {
-    const safeName = sanitizeFileSegment(input.file.name);
+    const validatedFile = validateFileUpload(input.file, COURSE_RESOURCE_UPLOAD_POLICY);
+    const safeName = sanitizeFileSegment(validatedFile.fileName);
     const storedFileName = `${randomUUID()}-${safeName}`;
     storageKey = path.posix.join("course-resources", existing.courseId, storedFileName);
-    mimeType = input.file.type || null;
-    sizeInBytes = input.file.size;
+    mimeType = validatedFile.mimeType;
+    sizeInBytes = validatedFile.sizeInBytes;
     await upsertStoredAsset({
       storageKey,
-      content: new Uint8Array(await input.file.arrayBuffer())
+      content: new Uint8Array(await input.file.arrayBuffer()),
+      contentType: mimeType
     });
   }
 
@@ -489,7 +502,10 @@ export async function updateCourseResource(input: {
       moduleId: input.moduleId ?? null,
       title: input.title.trim(),
       description: input.description?.trim() || null,
-      linkUrl: existing.source === "LINK" ? input.linkUrl?.trim() || null : null,
+      linkUrl:
+        existing.source === "LINK" && input.linkUrl
+          ? assertSafeHttpUrl(input.linkUrl, "La URL del recurso")
+          : null,
       dueAt: input.dueAt ?? null,
       passingScore: input.passingScore ?? null,
       storageKey,
@@ -614,15 +630,17 @@ export async function upsertCourseResourceSubmission(input: {
   let sizeInBytes: number | null = existing?.sizeInBytes ?? null;
 
   if (input.file && input.file.size > 0) {
-    const safeName = sanitizeFileSegment(input.file.name);
+    const validatedFile = validateFileUpload(input.file, COURSE_SUBMISSION_UPLOAD_POLICY);
+    const safeName = sanitizeFileSegment(validatedFile.fileName);
     const storedFileName = `${randomUUID()}-${safeName}`;
     storageKey = path.posix.join("course-resource-submissions", input.resourceId, storedFileName);
-    attachmentLabel = input.file.name;
-    mimeType = input.file.type || null;
-    sizeInBytes = input.file.size;
+    attachmentLabel = validatedFile.fileName;
+    mimeType = validatedFile.mimeType;
+    sizeInBytes = validatedFile.sizeInBytes;
     await upsertStoredAsset({
       storageKey,
-      content: new Uint8Array(await input.file.arrayBuffer())
+      content: new Uint8Array(await input.file.arrayBuffer()),
+      contentType: mimeType
     });
   }
 
@@ -635,7 +653,7 @@ export async function upsertCourseResourceSubmission(input: {
     },
     update: {
       body: input.body?.trim() || null,
-      linkUrl: input.linkUrl?.trim() || null,
+      linkUrl: input.linkUrl ? assertSafeHttpUrl(input.linkUrl, "La URL de la entrega") : null,
       storageKey,
       attachmentLabel,
       mimeType,
@@ -651,7 +669,7 @@ export async function upsertCourseResourceSubmission(input: {
       resourceId: input.resourceId,
       studentId: input.studentId,
       body: input.body?.trim() || null,
-      linkUrl: input.linkUrl?.trim() || null,
+      linkUrl: input.linkUrl ? assertSafeHttpUrl(input.linkUrl, "La URL de la entrega") : null,
       storageKey,
       attachmentLabel,
       mimeType,

@@ -22,6 +22,7 @@ type ForumCategoryPageProps = {
     status?: string | string[];
     type?: string | string[];
     filter?: string | string[];
+    page?: string | string[];
   }>;
 };
 
@@ -62,7 +63,7 @@ export default async function ForumCategoryPage({
   searchParams
 }: ForumCategoryPageProps) {
   const { slug, categorySlug } = await params;
-  const { q, sort, status, type, filter } = await searchParams;
+  const { q, sort, status, type, filter, page } = await searchParams;
   const course = await getCatalogCourseBySlug(slug);
 
   if (!course) {
@@ -73,7 +74,9 @@ export default async function ForumCategoryPage({
   const access = await canAccessCourseCommunity({
     userId: user.id,
     email: user.email,
-    courseSlug: course.slug
+    courseSlug: course.slug,
+    userGlobalRole: user.globalRole,
+    userIsActive: user.isActive
   });
 
   if (!access.allowed) {
@@ -85,6 +88,7 @@ export default async function ForumCategoryPage({
   const selectedType = firstValue(type);
   const selectedFilter = firstValue(filter);
   const selectedQuery = firstValue(q)?.trim() ?? "";
+  const currentPage = Math.max(Number.parseInt(firstValue(page) ?? "1", 10) || 1, 1);
 
   const forumData = await getForumThreads(
     course.slug,
@@ -105,7 +109,8 @@ export default async function ForumCategoryPage({
         selectedType === "announcement" || selectedType === "discussion"
           ? selectedType
           : undefined,
-      filter: selectedFilter === "unanswered" ? "unanswered" : undefined
+      filter: selectedFilter === "unanswered" ? "unanswered" : undefined,
+      page: currentPage
     },
     access.role
   );
@@ -116,6 +121,7 @@ export default async function ForumCategoryPage({
 
   const canModerate = canModerateCourse(access.role);
   const filteredThreads = forumData.threads;
+  const pagination = forumData.pagination;
 
   const totalThreads = forumData.threads.length;
   const openCount = forumData.threads.filter((thread) => !thread.isClosed).length;
@@ -345,6 +351,46 @@ export default async function ForumCategoryPage({
           </div>
         )}
       </div>
+
+      {pagination.totalPages > 1 ? (
+        <div className="flex flex-wrap items-center justify-between gap-4 rounded-[24px] border border-[var(--color-border)] bg-white px-5 py-4">
+          <p className="text-sm text-[var(--color-muted)]">
+            Pagina {pagination.page} de {pagination.totalPages} · {pagination.totalItems} hilos
+          </p>
+          <div className="flex flex-wrap gap-3">
+            {pagination.hasPreviousPage ? (
+              <ButtonLink
+                href={buildFilterHref(course.slug, categorySlug, {
+                  q: selectedQuery || undefined,
+                  sort: selectedSort || undefined,
+                  status: selectedStatus || undefined,
+                  type: selectedType || undefined,
+                  filter: selectedFilter || undefined,
+                  page: String(pagination.page - 1)
+                })}
+                variant="secondary"
+              >
+                Pagina anterior
+              </ButtonLink>
+            ) : null}
+            {pagination.hasNextPage ? (
+              <ButtonLink
+                href={buildFilterHref(course.slug, categorySlug, {
+                  q: selectedQuery || undefined,
+                  sort: selectedSort || undefined,
+                  status: selectedStatus || undefined,
+                  type: selectedType || undefined,
+                  filter: selectedFilter || undefined,
+                  page: String(pagination.page + 1)
+                })}
+                variant="secondary"
+              >
+                Pagina siguiente
+              </ButtonLink>
+            ) : null}
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

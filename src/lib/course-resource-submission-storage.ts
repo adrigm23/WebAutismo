@@ -1,6 +1,6 @@
-import { access, readFile, unlink } from "fs/promises";
+import { access, readFile } from "fs/promises";
 import path from "path";
-import { deleteStoredAsset, getStoredAssetContent } from "@/lib/stored-assets";
+import { deleteStoredAsset, getStoredAssetContent, resolveStoredAssetPath } from "@/lib/stored-assets";
 
 function assertPathWithinRoot(resolvedPath: string, rootDirectory: string) {
   const relativePath = path.relative(rootDirectory, resolvedPath);
@@ -32,7 +32,13 @@ export async function readStoredCourseResourceSubmissionContent(storageKey: stri
 }
 
 export async function resolveCourseResourceSubmissionFilePath(storageKey: string) {
-  const storageRoot = path.resolve(process.cwd(), "storage");
+  const providerPath = await resolveStoredAssetPath(storageKey);
+
+  if (providerPath) {
+    return providerPath;
+  }
+
+  const storageRoot = path.resolve(/* turbopackIgnore: true */ process.cwd(), "storage");
   const resolvedPath = resolveStorageKeyPath(storageRoot, storageKey);
   await access(resolvedPath);
   return resolvedPath;
@@ -40,11 +46,4 @@ export async function resolveCourseResourceSubmissionFilePath(storageKey: string
 
 export async function removeStoredCourseResourceSubmission(storageKey: string) {
   await deleteStoredAsset(storageKey);
-
-  try {
-    const filePath = await resolveCourseResourceSubmissionFilePath(storageKey);
-    await unlink(filePath);
-  } catch {
-    // Ignore legacy filesystem cleanup failures when the asset already lives in the database.
-  }
 }

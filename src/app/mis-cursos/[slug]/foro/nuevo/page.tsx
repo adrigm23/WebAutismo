@@ -39,7 +39,9 @@ export default async function ForumNewThreadPage({ params }: ForumNewThreadPageP
   const access = await canAccessCourseCommunity({
     userId: user.id,
     email: user.email,
-    courseSlug: course.slug
+    courseSlug: course.slug,
+    userGlobalRole: user.globalRole,
+    userIsActive: user.isActive
   });
 
   if (!access.allowed) {

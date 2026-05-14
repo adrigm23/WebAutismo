@@ -2,8 +2,9 @@ import { cache } from "react";
 import { Prisma } from "@prisma/client";
 import type { Course as LegacyCourse, CourseFaq, CourseModule, CourseTeacher } from "../data/courses.ts";
 import { courses as legacyCourses } from "../data/courses.ts";
-import { isLegacyCatalogFallbackEnabled } from "./env.ts";
+import { isLegacyCatalogFallbackEnabled, isProductionEnv } from "./env.ts";
 import { resolveEditionAccessUntil, isEditionVisible } from "./course-editions.ts";
+import { captureOperationalWarning } from "./monitoring.ts";
 import { getDb } from "./prisma.ts";
 
 export type CatalogCourseModule = CourseModule & {
@@ -264,7 +265,14 @@ function isDatabaseConnectionError(error: unknown) {
 }
 
 function shouldUseLegacyCatalogFallback(error: unknown) {
-  return isLegacyCatalogFallbackEnabled() || isDatabaseConnectionError(error);
+  return !isProductionEnv() && (isLegacyCatalogFallbackEnabled() || isDatabaseConnectionError(error));
+}
+
+function logCatalogFallback(operation: string, error: unknown) {
+  captureOperationalWarning("Catalog fallback activated.", {
+    operation,
+    error: error instanceof Error ? error : new Error(String(error))
+  });
 }
 
 export async function bootstrapCatalogFromLegacyIfNeeded() {
@@ -305,9 +313,9 @@ export async function bootstrapCatalogFromLegacyIfNeeded() {
   );
 }
 
-async function fetchCatalogCoursesFromDb(includeInactive = false) {
+async function fetchCatalogCoursesFromDb(where: Prisma.CourseWhereInput) {
   const records = await getDb().course.findMany({
-    where: includeInactive ? {} : { status: "ACTIVE" },
+    where,
     include: {
       modules: true,
       editions: true,
@@ -333,13 +341,38 @@ async function fetchCatalogCoursesFromDb(includeInactive = false) {
 
 export const getCatalogCourses = cache(async (includeInactive = false) => {
   try {
-    return await fetchCatalogCoursesFromDb(includeInactive);
+    return await fetchCatalogCoursesFromDb(includeInactive ? {} : { status: "ACTIVE" });
   } catch (error) {
     if (!shouldUseLegacyCatalogFallback(error)) {
       throw error;
     }
 
+    logCatalogFallback("getCatalogCourses", error);
     return legacyCourses.map((course) => toLegacyCatalogCourse(course));
+  }
+});
+
+export const getCatalogCoursesByIds = cache(async (courseIds: string[], includeInactive = true) => {
+  const uniqueCourseIds = Array.from(new Set(courseIds)).filter(Boolean);
+
+  if (uniqueCourseIds.length === 0) {
+    return [] as CatalogCourse[];
+  }
+
+  try {
+    return await fetchCatalogCoursesFromDb({
+      id: {
+        in: uniqueCourseIds
+      },
+      ...(includeInactive ? {} : { status: "ACTIVE" })
+    });
+  } catch (error) {
+    if (!shouldUseLegacyCatalogFallback(error)) {
+      throw error;
+    }
+
+    logCatalogFallback("getCatalogCoursesByIds", error);
+    return [];
   }
 });
 
@@ -370,6 +403,7 @@ export const getCatalogCourseBySlug = cache(async (slug: string) => {
       throw error;
     }
 
+    logCatalogFallback("getCatalogCourseBySlug", error);
     const legacyCourse = legacyCourses.find((course) => course.slug === slug);
     return legacyCourse ? toLegacyCatalogCourse(legacyCourse) : null;
   }

@@ -1,12 +1,14 @@
 const getDbMock = vi.fn();
 const isLegacyCatalogFallbackEnabledMock = vi.fn(() => false);
+const isProductionEnvMock = vi.fn(() => false);
 
 vi.mock("@/lib/prisma", () => ({
   getDb: getDbMock
 }));
 
 vi.mock("@/lib/env", () => ({
-  isLegacyCatalogFallbackEnabled: isLegacyCatalogFallbackEnabledMock
+  isLegacyCatalogFallbackEnabled: isLegacyCatalogFallbackEnabledMock,
+  isProductionEnv: isProductionEnvMock
 }));
 
 describe("course catalog fallback", () => {
@@ -14,6 +16,7 @@ describe("course catalog fallback", () => {
     vi.resetModules();
     vi.clearAllMocks();
     isLegacyCatalogFallbackEnabledMock.mockReturnValue(false);
+    isProductionEnvMock.mockReturnValue(false);
   });
 
   test("falls back to legacy catalog when the database connection is unavailable", async () => {

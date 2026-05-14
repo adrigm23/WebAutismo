@@ -1,4 +1,5 @@
 import { type AuditAction, type AuditEntityType } from "@prisma/client";
+import { captureOperationalWarning } from "@/lib/monitoring";
 import { getDb } from "@/lib/prisma";
 
 type WriteAuditLogInput = {
@@ -28,7 +29,9 @@ export async function writeAuditLog(input: WriteAuditLogInput) {
       (error.message.includes("Data truncated for column 'action'") ||
         error.message.includes("Data truncated for column 'entityType'"))
     ) {
-      console.error("Audit schema drift detected while writing audit log:", error.message);
+      captureOperationalWarning("Audit schema drift detected while writing audit log.", {
+        error: error.message
+      });
       return;
     }
 

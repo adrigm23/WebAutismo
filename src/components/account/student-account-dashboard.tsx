@@ -1,8 +1,8 @@
 import Link from "next/link";
+import { Suspense } from "react";
 import {
   Bell,
   CircleHelp,
-  Clock3,
   Compass,
   FileCheck2,
   GraduationCap,
@@ -10,268 +10,49 @@ import {
   MessageSquareText,
   Settings2
 } from "lucide-react";
-import { updateNotificationPreferencesAction } from "@/actions/account";
 import { logoutAction } from "@/actions/session";
+import {
+  buildStudentPendingItems,
+  getNextStudentModuleLabel,
+  getPrimaryStudentCourse,
+  getStudentDashboardInitials,
+  type StudentDashboardCourse,
+  StudentPreferencesCard,
+  StudentRecentActivitySection,
+  StudentSectionSkeleton,
+  StudentUnreadBadge
+} from "@/components/account/student-dashboard-shared";
 import { CourseArtwork } from "@/components/course-artwork";
 import { Badge } from "@/components/ui/badge";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import type { UserCourseSpace } from "@/lib/course-community";
-import type { CourseProgressDetails } from "@/lib/course-progress";
-import type { CampusResourceItem } from "@/lib/course-resources";
-import type { ForumNotificationListItem } from "@/lib/forum";
+import type { DashboardNotificationSnapshot, StudentDashboardPendingSource } from "@/lib/account-dashboard";
 import { siteConfig } from "@/lib/site";
-import { cn, formatDateTime, formatRelativeTime } from "@/lib/utils";
-
-type NotificationPreferenceShape = {
-  emailEnabled: boolean;
-  webEnabled: boolean;
-};
-
-type PlatformNotificationItem = {
-  id: string;
-  title: string;
-  body: string;
-  linkPath: string;
-  readAt: Date | null;
-  createdAt: Date;
-};
-
-type StudentDashboardCourse = {
-  space: UserCourseSpace;
-  progress: CourseProgressDetails;
-  resources: CampusResourceItem[];
-};
+import { cn, formatRelativeTime } from "@/lib/utils";
 
 type StudentAccountDashboardProps = {
   firstName: string;
   fullName: string;
   isDemoUser: boolean;
   studentCourses: StudentDashboardCourse[];
-  preference: NotificationPreferenceShape;
-  platformNotifications: {
-    notifications: PlatformNotificationItem[];
-    unreadCount: number;
-  };
-  forumNotifications: {
-    notifications: ForumNotificationListItem[];
-    unreadCount: number;
-  };
+  pendingSources: StudentDashboardPendingSource[];
+  notificationSnapshotPromise: Promise<DashboardNotificationSnapshot>;
 };
-
-type PendingDashboardItem = {
-  id: string;
-  href: string;
-  title: string;
-  description: string;
-  meta: string;
-  badgeLabel: string;
-  badgeTone: "accent" | "muted" | "teacher" | "student";
-  priority: number;
-  dueAt: Date | null;
-};
-
-type ActivityDashboardItem = {
-  id: string;
-  href: string;
-  title: string;
-  body: string;
-  sourceLabel: string;
-  sourceTone: "teacher" | "student" | "muted";
-  createdAt: Date;
-};
-
-function getInitials(name: string) {
-  const parts = name
-    .trim()
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2);
-
-  return parts.map((part) => part[0]?.toUpperCase() ?? "").join("") || "A";
-}
-
-function truncateText(value: string, maxLength: number) {
-  if (value.length <= maxLength) {
-    return value;
-  }
-
-  return `${value.slice(0, Math.max(maxLength - 1, 1)).trimEnd()}...`;
-}
-
-function getPrimaryStudentCourse(courses: StudentDashboardCourse[]) {
-  return [...courses].sort((left, right) => {
-    const leftInProgress =
-      left.progress.hasStarted && !left.progress.isCompleted ? 3 : left.progress.hasStarted ? 2 : 1;
-    const rightInProgress =
-      right.progress.hasStarted && !right.progress.isCompleted ? 3 : right.progress.hasStarted ? 2 : 1;
-
-    if (leftInProgress !== rightInProgress) {
-      return rightInProgress - leftInProgress;
-    }
-
-    const leftLastActivity =
-      left.progress.lastCompletedAt?.getTime() ??
-      left.space.enrollment?.accessStartsAt.getTime() ??
-      left.space.purchase?.createdAt.getTime() ??
-      0;
-    const rightLastActivity =
-      right.progress.lastCompletedAt?.getTime() ??
-      right.space.enrollment?.accessStartsAt.getTime() ??
-      right.space.purchase?.createdAt.getTime() ??
-      0;
-
-    return rightLastActivity - leftLastActivity;
-  })[0] ?? null;
-}
-
-function getNextModuleLabel(course: StudentDashboardCourse) {
-  const nextModule = course.progress.modules.find((module) => !module.isCompleted);
-
-  if (nextModule) {
-    return `Siguiente paso: modulo ${nextModule.index + 1} - ${nextModule.title}`;
-  }
-
-  return "Has completado todos los modulos disponibles en este curso.";
-}
-
-function buildPendingItems(courses: StudentDashboardCourse[]) {
-  const items: PendingDashboardItem[] = [];
-
-  for (const course of courses) {
-    for (const resource of course.resources) {
-      if (!resource.isExercise) {
-        continue;
-      }
-
-      const href = `/mis-cursos/${course.space.course.slug}`;
-      const courseLabel = `Curso: ${course.space.course.title}`;
-
-      if (resource.viewerSubmission?.status === "CHANGES_REQUESTED") {
-        items.push({
-          id: `changes-${resource.id}`,
-          href,
-          title: resource.title,
-          description: resource.viewerSubmission.feedback
-            ? truncateText(resource.viewerSubmission.feedback, 120)
-            : "Tu docente ha solicitado ajustes antes de dar la entrega por cerrada.",
-          meta: courseLabel,
-          badgeLabel: "Cambios solicitados",
-          badgeTone: "accent",
-          priority: 0,
-          dueAt: resource.dueAt
-        });
-        continue;
-      }
-
-      if (!resource.viewerSubmission && !resource.isSubmissionClosed) {
-        items.push({
-          id: `pending-${resource.id}`,
-          href,
-          title: resource.title,
-          description: resource.dueAt
-            ? `Entrega abierta hasta ${formatDateTime(resource.dueAt)}.`
-            : "Ejercicio disponible para entregar desde el campus.",
-          meta: courseLabel,
-          badgeLabel: "Pendiente",
-          badgeTone: "student",
-          priority: 1,
-          dueAt: resource.dueAt
-        });
-        continue;
-      }
-
-      if (resource.viewerSubmission?.status === "SUBMITTED") {
-        items.push({
-          id: `review-${resource.id}`,
-          href,
-          title: resource.title,
-          description: "Tu entrega ya esta enviada y pendiente de revision docente.",
-          meta: courseLabel,
-          badgeLabel: "En revision",
-          badgeTone: "muted",
-          priority: 2,
-          dueAt: resource.dueAt
-        });
-      }
-    }
-  }
-
-  return items
-    .sort((left, right) => {
-      if (left.priority !== right.priority) {
-        return left.priority - right.priority;
-      }
-
-      const leftDueAt = left.dueAt?.getTime() ?? Number.MAX_SAFE_INTEGER;
-      const rightDueAt = right.dueAt?.getTime() ?? Number.MAX_SAFE_INTEGER;
-
-      return leftDueAt - rightDueAt;
-    })
-    .slice(0, 4);
-}
-
-function buildRecentActivity(input: {
-  platformNotifications: StudentAccountDashboardProps["platformNotifications"]["notifications"];
-  forumNotifications: StudentAccountDashboardProps["forumNotifications"]["notifications"];
-}) {
-  const platformItems: ActivityDashboardItem[] = input.platformNotifications.map((notification) => ({
-    id: `platform-${notification.id}`,
-    href: notification.linkPath,
-    title: notification.title,
-    body: truncateText(notification.body, 150),
-    sourceLabel: "Plataforma",
-    sourceTone: "teacher",
-    createdAt: notification.createdAt
-  }));
-
-  const forumItems: ActivityDashboardItem[] = input.forumNotifications.map((notification) => ({
-    id: `forum-${notification.id}`,
-    href: notification.linkPath,
-    title: notification.title,
-    body: truncateText(notification.body, 150),
-    sourceLabel: "Foro",
-    sourceTone: "student",
-    createdAt: notification.createdAt
-  }));
-
-  return [...platformItems, ...forumItems]
-    .sort((left, right) => right.createdAt.getTime() - left.createdAt.getTime())
-    .slice(0, 5);
-}
-
-function getUnreadSummary(input: StudentAccountDashboardProps) {
-  return input.platformNotifications.unreadCount + input.forumNotifications.unreadCount;
-}
 
 export function StudentAccountDashboard({
   firstName,
   fullName,
   isDemoUser,
   studentCourses,
-  preference,
-  platformNotifications,
-  forumNotifications
+  pendingSources,
+  notificationSnapshotPromise
 }: StudentAccountDashboardProps) {
   const primaryCourse = getPrimaryStudentCourse(studentCourses);
   const secondaryCourses = primaryCourse
     ? studentCourses.filter((course) => course.space.course.slug !== primaryCourse.space.course.slug)
     : studentCourses;
-  const pendingItems = buildPendingItems(studentCourses);
-  const recentActivity = buildRecentActivity({
-    platformNotifications: platformNotifications.notifications,
-    forumNotifications: forumNotifications.notifications
-  });
-  const unreadSummary = getUnreadSummary({
-    firstName,
-    fullName,
-    isDemoUser,
-    studentCourses,
-    preference,
-    platformNotifications,
-    forumNotifications
-  });
-  const initials = getInitials(fullName);
+  const pendingItems = buildStudentPendingItems(pendingSources);
+  const initials = getStudentDashboardInitials(fullName);
   const forumHref = primaryCourse ? `/mis-cursos/${primaryCourse.space.course.slug}/foro` : "/cursos";
 
   return (
@@ -321,11 +102,9 @@ export function StudentAccountDashboard({
                 >
                   <Bell className="mr-2 h-4 w-4" />
                   Avisos
-                  {unreadSummary ? (
-                    <span className="ml-2 rounded-full bg-[var(--color-primary)] px-2 py-0.5 text-xs text-white">
-                      {unreadSummary}
-                    </span>
-                  ) : null}
+                  <Suspense fallback={null}>
+                    <StudentUnreadBadge notificationSnapshotPromise={notificationSnapshotPromise} />
+                  </Suspense>
                 </Link>
                 <Link
                   className="inline-flex items-center justify-center rounded-full px-3 py-2 text-sm font-semibold text-[var(--color-ink)] transition hover:bg-[var(--color-primary-soft)] hover:text-[var(--color-primary)]"
@@ -407,7 +186,7 @@ export function StudentAccountDashboard({
                         {primaryCourse.space.course.title}
                       </h2>
                       <p className="mt-4 text-base leading-8 text-[var(--color-muted)]">
-                        {getNextModuleLabel(primaryCourse)}
+                        {getNextStudentModuleLabel(primaryCourse)}
                       </p>
 
                       <div className="mt-8">
@@ -526,49 +305,11 @@ export function StudentAccountDashboard({
               </div>
             </Card>
 
-            <Card className="p-6" id="actividad-reciente">
-              <div className="flex items-center gap-3">
-                <div className="grid h-12 w-12 place-items-center rounded-2xl bg-[var(--color-primary-soft)] text-[var(--color-primary)]">
-                  <Clock3 className="h-5 w-5" />
-                </div>
-                <div>
-                  <h2 className="text-[2rem] font-semibold tracking-[-0.04em] text-[var(--color-ink)]">
-                    Actividad reciente
-                  </h2>
-                  <p className="text-sm text-[var(--color-muted)]">
-                    Avisos del campus y movimientos del foro.
-                  </p>
-                </div>
-              </div>
-
-              <div className="mt-6 space-y-3">
-                {recentActivity.length ? (
-                  recentActivity.map((item) => (
-                    <Link
-                      className="block rounded-[22px] border border-[var(--color-border)] bg-white p-4 transition hover:border-[var(--color-primary)]"
-                      href={item.href}
-                      key={item.id}
-                    >
-                      <div className="flex items-center gap-3">
-                        <Badge tone={item.sourceTone}>{item.sourceLabel}</Badge>
-                        <p className="text-xs uppercase tracking-[0.16em] text-[var(--color-muted)]">
-                          {formatRelativeTime(item.createdAt)}
-                        </p>
-                      </div>
-                      <p className="mt-3 text-lg font-semibold leading-tight text-[var(--color-ink)]">
-                        {item.title}
-                      </p>
-                      <p className="mt-2 text-sm leading-7 text-[var(--color-muted)]">{item.body}</p>
-                    </Link>
-                  ))
-                ) : (
-                  <div className="rounded-[22px] border border-dashed border-[rgba(12,113,195,0.18)] bg-white p-5 text-sm leading-7 text-[var(--color-muted)]">
-                    Todavia no hay actividad reciente. Cuando el equipo docente publique avisos o
-                    haya movimiento en tus foros privados, lo veras aqui.
-                  </div>
-                )}
-              </div>
-            </Card>
+            <Suspense fallback={<StudentSectionSkeleton lines={3} title="Actividad reciente" />}>
+              <StudentRecentActivitySection
+                notificationSnapshotPromise={notificationSnapshotPromise}
+              />
+            </Suspense>
           </div>
         </section>
 
@@ -719,82 +460,9 @@ export function StudentAccountDashboard({
             </div>
           </Card>
 
-          <Card className="p-8" id="preferencias">
-            <div className="flex items-center gap-3">
-              <div className="grid h-12 w-12 place-items-center rounded-2xl bg-[var(--color-primary-soft)] text-[var(--color-primary)]">
-                <Settings2 className="h-5 w-5" />
-              </div>
-              <div>
-                <h2 className="text-[2rem] font-semibold tracking-[-0.04em] text-[var(--color-ink)]">
-                  Preferencias
-                </h2>
-                <p className="text-sm text-[var(--color-muted)]">
-                  Elige como recibir avisos del campus y del foro.
-                </p>
-              </div>
-            </div>
-
-            <div className="mt-6 space-y-3">
-              {[
-                {
-                  title: "Solo email",
-                  description: "Recibe avisos por correo y reduce ruido dentro de la cuenta.",
-                  emailEnabled: true,
-                  webEnabled: false
-                },
-                {
-                  title: "Solo web",
-                  description: "Centraliza los avisos dentro del dashboard y del foro privado.",
-                  emailEnabled: false,
-                  webEnabled: true
-                },
-                {
-                  title: "Email y web",
-                  description: "Mantiene sincronizados correo y panel privado para no perder nada.",
-                  emailEnabled: true,
-                  webEnabled: true
-                }
-              ].map((option) => {
-                const isSelected =
-                  preference.emailEnabled === option.emailEnabled &&
-                  preference.webEnabled === option.webEnabled;
-
-                return (
-                  <form action={updateNotificationPreferencesAction} key={option.title}>
-                    <input
-                      name="emailEnabled"
-                      type="hidden"
-                      value={option.emailEnabled ? "true" : "false"}
-                    />
-                    <input
-                      name="webEnabled"
-                      type="hidden"
-                      value={option.webEnabled ? "true" : "false"}
-                    />
-                    <button
-                      className={cn(
-                        "w-full rounded-[22px] border px-5 py-4 text-left transition",
-                        isSelected
-                          ? "border-[var(--color-primary)] bg-[var(--color-primary-soft)]"
-                          : "border-[var(--color-border)] bg-[var(--color-surface)] hover:border-[var(--color-primary)]"
-                      )}
-                      type="submit"
-                    >
-                      <div className="flex items-center justify-between gap-4">
-                        <p className="text-lg font-semibold text-[var(--color-ink)]">{option.title}</p>
-                        <Badge tone={isSelected ? "teacher" : "muted"}>
-                          {isSelected ? "Activa" : "Disponible"}
-                        </Badge>
-                      </div>
-                      <p className="mt-2 text-sm leading-7 text-[var(--color-muted)]">
-                        {option.description}
-                      </p>
-                    </button>
-                  </form>
-                );
-              })}
-            </div>
-          </Card>
+          <Suspense fallback={<StudentSectionSkeleton lines={3} title="Preferencias" />}>
+            <StudentPreferencesCard notificationSnapshotPromise={notificationSnapshotPromise} />
+          </Suspense>
         </section>
 
         <section className="mt-14">

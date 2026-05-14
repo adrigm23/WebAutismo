@@ -5,6 +5,7 @@ export type DemoUser = {
   id: string;
   name: string;
   email: string;
+  emailVerifiedAt: Date;
   globalRole: UserGlobalRole;
   isActive: true;
   createdAt: Date;
@@ -17,6 +18,7 @@ const demoUsers: DemoUser[] = [
     id: "demo-admin",
     name: "Admin Demo",
     email: "admin.demo@autismo.local",
+    emailVerifiedAt: DEMO_CREATED_AT,
     globalRole: "ADMIN",
     isActive: true,
     createdAt: DEMO_CREATED_AT
@@ -25,6 +27,7 @@ const demoUsers: DemoUser[] = [
     id: "demo-teacher",
     name: "Docente Demo",
     email: "docente.demo@autismo.local",
+    emailVerifiedAt: DEMO_CREATED_AT,
     globalRole: "TEACHER",
     isActive: true,
     createdAt: DEMO_CREATED_AT
@@ -33,6 +36,7 @@ const demoUsers: DemoUser[] = [
     id: "demo-student",
     name: "Alumno Demo",
     email: "alumno.demo@autismo.local",
+    emailVerifiedAt: DEMO_CREATED_AT,
     globalRole: "STUDENT",
     isActive: true,
     createdAt: DEMO_CREATED_AT

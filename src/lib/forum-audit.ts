@@ -1,4 +1,5 @@
 import type { ForumAuditAction } from "@prisma/client";
+import { getCourseIdentityBySlug } from "@/lib/course-identity";
 import type { CourseRole } from "@/lib/course-roles";
 import { getDb } from "@/lib/prisma";
 
@@ -85,8 +86,11 @@ export async function writeForumAuditLog(input: {
   action: ForumAuditAction;
   metadata?: Record<string, unknown>;
 }) {
+  const courseIdentity = await getCourseIdentityBySlug(input.courseSlug);
+
   await getDb().forumAuditLog.create({
     data: {
+      courseId: courseIdentity?.id ?? null,
       courseSlug: input.courseSlug,
       forumSpaceId: input.forumSpaceId ?? null,
       threadId: input.threadId ?? null,

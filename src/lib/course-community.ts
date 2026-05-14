@@ -1,7 +1,15 @@
 import { cache } from "react";
 import type { CourseRole, UserGlobalRole } from "@prisma/client";
 import type { CatalogCourse } from "@/lib/course-catalog";
-import { getCatalogCourseBySlug, getCatalogCourses } from "@/lib/course-catalog";
+import {
+  getCourseIdentityBySlug,
+  buildLegacyCourseWhere
+} from "@/lib/course-identity";
+import {
+  getCatalogCourseBySlug,
+  getCatalogCourses,
+  getCatalogCoursesByIds
+} from "@/lib/course-catalog";
 import { getDemoUserById, isDemoUserId } from "@/lib/demo-auth";
 import {
   canViewCourseProgress,
@@ -58,7 +66,6 @@ export type CourseCommunityAccess =
     };
 
 type AccessCourseInput = Pick<CatalogCourse, "id" | "slug">;
-
 export const defaultCourseCategories: CommunityCategoryDefinition[] = [
   {
     slug: "anuncios",
@@ -138,9 +145,10 @@ async function buildDemoUserCourseSpaces(userId: string) {
 }
 
 async function getNextForumEditionNumber(courseSlug: string) {
+  const courseIdentity = await getCourseIdentityBySlug(courseSlug);
   const latestSpace = await getDb().forumSpace.findFirst({
     where: {
-      courseSlug
+      ...buildLegacyCourseWhere(courseIdentity ?? { slug: courseSlug })
     },
     orderBy: {
       editionNumber: "desc"
@@ -155,11 +163,13 @@ export async function createDefaultForumCategoriesForSpace(input: {
   forumSpaceId: string;
 }) {
   const db = getDb();
+  const courseIdentity = await getCourseIdentityBySlug(input.courseSlug);
 
   await Promise.all(
     defaultCourseCategories.map((category) =>
       db.forumCategory.create({
         data: {
+          courseId: courseIdentity?.id ?? null,
           courseSlug: input.courseSlug,
           forumSpaceId: input.forumSpaceId,
           slug: category.slug,
@@ -174,9 +184,10 @@ export async function createDefaultForumCategoriesForSpace(input: {
 
 export async function ensureActiveForumSpace(courseSlug: string) {
   const db = getDb();
+  const courseIdentity = await getCourseIdentityBySlug(courseSlug);
   const current = await db.forumSpace.findFirst({
     where: {
-      courseSlug,
+      ...buildLegacyCourseWhere(courseIdentity ?? { slug: courseSlug }),
       status: "ACTIVE"
     },
     orderBy: {
@@ -192,6 +203,7 @@ export async function ensureActiveForumSpace(courseSlug: string) {
 
   return db.forumSpace.create({
     data: {
+      courseId: courseIdentity?.id ?? null,
       courseSlug,
       editionNumber,
       editionLabel: `Edicion ${editionNumber}`,
@@ -201,9 +213,10 @@ export async function ensureActiveForumSpace(courseSlug: string) {
 }
 
 export async function getArchivedForumSpaces(courseSlug: string) {
+  const courseIdentity = await getCourseIdentityBySlug(courseSlug);
   return getDb().forumSpace.findMany({
     where: {
-      courseSlug,
+      ...buildLegacyCourseWhere(courseIdentity ?? { slug: courseSlug }),
       status: "ARCHIVED"
     },
     orderBy: {
@@ -213,9 +226,10 @@ export async function getArchivedForumSpaces(courseSlug: string) {
 }
 
 export async function getDeletedForumSpaces(courseSlug: string) {
+  const courseIdentity = await getCourseIdentityBySlug(courseSlug);
   return getDb().forumSpace.findMany({
     where: {
-      courseSlug,
+      ...buildLegacyCourseWhere(courseIdentity ?? { slug: courseSlug }),
       status: "DELETED"
     },
     orderBy: {
@@ -224,111 +238,140 @@ export async function getDeletedForumSpaces(courseSlug: string) {
   });
 }
 
-const getAccessSnapshotForCourse = cache(async (userId: string, courseId: string, courseSlug: string) => {
-  const user = await getDb().user.findUnique({
-    where: {
-      id: userId
-    },
-    select: {
-      id: true,
-      globalRole: true,
-      isActive: true
+const getAccessSnapshotForCourse = cache(
+  async (
+    userId: string,
+    courseId: string,
+    courseSlug: string,
+    userGlobalRole?: UserGlobalRole,
+    userIsActive?: boolean
+  ) => {
+    const user =
+      userGlobalRole && typeof userIsActive === "boolean"
+        ? {
+            id: userId,
+            globalRole: userGlobalRole,
+            isActive: userIsActive
+          }
+        : await getDb().user.findUnique({
+            where: {
+              id: userId
+            },
+            select: {
+              id: true,
+              globalRole: true,
+              isActive: true
+            }
+          });
+
+    if (!user) {
+      return null;
     }
-  });
 
-  if (!user) {
-    return null;
-  }
-
-  const [courseAssignment, editionAssignment, enrollments] = await Promise.all([
-    getDb().courseTeacherAssignment.findUnique({
-      where: {
-        courseId_userId: {
-          courseId,
-          userId
+    const [courseAssignment, editionAssignment, enrollments] = await Promise.all([
+      getDb().courseTeacherAssignment.findUnique({
+        where: {
+          courseId_userId: {
+            courseId,
+            userId
+          }
+        },
+        select: {
+          id: true
         }
-      },
-      select: {
-        id: true
-      }
-    }),
-    getDb().courseEditionTeacherAssignment.findFirst({
-      where: {
-        userId,
-        courseEdition: {
+      }),
+      getDb().courseEditionTeacherAssignment.findFirst({
+        where: {
+          userId,
+          courseEdition: {
+            courseId
+          }
+        },
+        select: {
+          id: true
+        }
+      }),
+      getDb().courseEnrollment.findMany({
+        where: {
+          userId,
           courseId
+        },
+        orderBy: {
+          createdAt: "desc"
+        },
+        select: {
+          id: true,
+          status: true,
+          accessStartsAt: true,
+          accessUntil: true
         }
-      },
-      select: {
-        id: true
-      }
-    }),
-    getDb().courseEnrollment.findMany({
-      where: {
-        userId,
-        courseId
-      },
-      orderBy: {
-        createdAt: "desc"
-      },
-      select: {
-        id: true,
-        status: true,
-        accessStartsAt: true,
-        accessUntil: true
-      }
-    })
-  ]);
-
-  const activeEnrollment =
-    enrollments.find((enrollment) =>
-      isEnrollmentActiveNow({
-        status: enrollment.status,
-        accessStartsAt: enrollment.accessStartsAt,
-        accessUntil: enrollment.accessUntil
       })
-    ) ?? null;
-  const latestEnrollment = enrollments[0] ?? null;
-  const viewerRole = resolveCourseViewerRole({
-    globalRole: user.globalRole,
-    isActive: user.isActive,
-    hasCourseAssignment: Boolean(courseAssignment),
-    hasEditionAssignment: Boolean(editionAssignment),
-    hasActiveEnrollment: Boolean(activeEnrollment)
-  });
+    ]);
 
-  return {
-    user,
-    course: {
-      id: courseId,
-      slug: courseSlug
-    },
-    viewerRole,
-    latestEnrollment,
-    activeEnrollment
-  };
-});
+    const activeEnrollment =
+      enrollments.find((enrollment) =>
+        isEnrollmentActiveNow({
+          status: enrollment.status,
+          accessStartsAt: enrollment.accessStartsAt,
+          accessUntil: enrollment.accessUntil
+        })
+      ) ?? null;
+    const latestEnrollment = enrollments[0] ?? null;
+    const viewerRole = resolveCourseViewerRole({
+      globalRole: user.globalRole,
+      isActive: user.isActive,
+      hasCourseAssignment: Boolean(courseAssignment),
+      hasEditionAssignment: Boolean(editionAssignment),
+      hasActiveEnrollment: Boolean(activeEnrollment)
+    });
 
-const getAccessSnapshot = cache(async (userId: string, courseSlug: string) => {
+    return {
+      user,
+      course: {
+        id: courseId,
+        slug: courseSlug
+      },
+      viewerRole,
+      latestEnrollment,
+      activeEnrollment
+    };
+  }
+);
+
+const getAccessSnapshot = cache(
+  async (
+    userId: string,
+    courseSlug: string,
+    userGlobalRole?: UserGlobalRole,
+    userIsActive?: boolean
+  ) => {
   const course = await getCatalogCourseBySlug(courseSlug);
 
   if (!course) {
     return null;
   }
 
-  return getAccessSnapshotForCourse(userId, course.id, course.slug);
-});
+    return getAccessSnapshotForCourse(userId, course.id, course.slug, userGlobalRole, userIsActive);
+  }
+);
 
 export async function ensureCourseMembershipForUser(input: {
   userId: string;
   email?: string;
   courseSlug: string;
+  userGlobalRole?: UserGlobalRole;
+  userIsActive?: boolean;
 }) {
   if (isDemoUserId(input.userId)) {
     return null;
   }
 
-  const snapshot = await getAccessSnapshot(input.userId, input.courseSlug);
+  const snapshot = await getAccessSnapshot(
+    input.userId,
+    input.courseSlug,
+    input.userGlobalRole,
+    input.userIsActive
+  );
 
   if (!snapshot?.viewerRole) {
     await getDb().courseMembership.deleteMany({
@@ -349,10 +392,12 @@ export async function ensureCourseMembershipForUser(input: {
       }
     },
     update: {
+      courseId: snapshot.course.id,
       role: snapshot.viewerRole
     },
     create: {
       userId: input.userId,
+      courseId: snapshot.course.id,
       courseSlug: input.courseSlug,
       role: snapshot.viewerRole
     }
@@ -362,6 +407,7 @@ export async function ensureCourseMembershipForUser(input: {
 export async function ensureCourseCommunity(courseSlug: string) {
   const db = getDb();
   const activeSpace = await ensureActiveForumSpace(courseSlug);
+  const courseIdentity = await getCourseIdentityBySlug(courseSlug);
 
   const existingCategory = await db.forumCategory.findFirst({
     where: {
@@ -378,10 +424,11 @@ export async function ensureCourseCommunity(courseSlug: string) {
 
   const orphanCategories = await db.forumCategory.updateMany({
     where: {
-      courseSlug,
+      ...buildLegacyCourseWhere(courseIdentity ?? { slug: courseSlug }),
       forumSpaceId: null
     },
     data: {
+      courseId: courseIdentity?.id ?? null,
       forumSpaceId: activeSpace.id
     }
   });
@@ -400,12 +447,19 @@ export async function getCourseRoleForUser(input: {
   userId: string;
   email?: string;
   courseSlug: string;
+  userGlobalRole?: UserGlobalRole;
+  userIsActive?: boolean;
 }) {
   if (isDemoUserId(input.userId)) {
     return getDemoCourseRole(input.userId);
   }
 
-  const snapshot = await getAccessSnapshot(input.userId, input.courseSlug);
+  const snapshot = await getAccessSnapshot(
+    input.userId,
+    input.courseSlug,
+    input.userGlobalRole,
+    input.userIsActive
+  );
 
   if (!snapshot?.viewerRole) {
     return null;
@@ -418,6 +472,8 @@ export async function canAccessCourseCommunity(input: {
   userId: string;
   email?: string;
   courseSlug: string;
+  userGlobalRole?: UserGlobalRole;
+  userIsActive?: boolean;
 }): Promise<CourseCommunityAccess> {
   if (isDemoUserId(input.userId)) {
     const role = getDemoCourseRole(input.userId);
@@ -446,7 +502,12 @@ export async function canAccessCourseCommunity(input: {
     };
   }
 
-  const snapshot = await getAccessSnapshot(input.userId, input.courseSlug);
+  const snapshot = await getAccessSnapshot(
+    input.userId,
+    input.courseSlug,
+    input.userGlobalRole,
+    input.userIsActive
+  );
 
   if (!snapshot?.viewerRole) {
     return { allowed: false, role: null, enrollment: null };
@@ -472,6 +533,8 @@ export async function canAccessCourseCommunityForCourse(input: {
   userId: string;
   email?: string;
   course: AccessCourseInput;
+  userGlobalRole?: UserGlobalRole;
+  userIsActive?: boolean;
 }): Promise<CourseCommunityAccess> {
   if (isDemoUserId(input.userId)) {
     const role = getDemoCourseRole(input.userId);
@@ -500,7 +563,13 @@ export async function canAccessCourseCommunityForCourse(input: {
     };
   }
 
-  const snapshot = await getAccessSnapshotForCourse(input.userId, input.course.id, input.course.slug);
+  const snapshot = await getAccessSnapshotForCourse(
+    input.userId,
+    input.course.id,
+    input.course.slug,
+    input.userGlobalRole,
+    input.userIsActive
+  );
 
   if (!snapshot?.viewerRole) {
     return { allowed: false, role: null, enrollment: null };
@@ -522,29 +591,37 @@ export async function canAccessCourseCommunityForCourse(input: {
   };
 }
 
-export async function getUserCourseSpaces(input: { userId: string; email?: string }) {
+export async function getUserCourseSpaces(input: {
+  userId: string;
+  email?: string;
+  userGlobalRole?: UserGlobalRole;
+  userIsActive?: boolean;
+}) {
   if (isDemoUserId(input.userId)) {
     return buildDemoUserCourseSpaces(input.userId);
   }
 
-  const [user, courses] = await Promise.all([
-    getDb().user.findUnique({
-      where: {
-        id: input.userId
-      },
-      select: {
-        globalRole: true,
-        isActive: true
-      }
-    }),
-    getCatalogCourses(true)
-  ]);
+  const db = getDb();
+  const user =
+    input.userGlobalRole && typeof input.userIsActive === "boolean"
+      ? {
+          globalRole: input.userGlobalRole,
+          isActive: input.userIsActive
+        }
+      : await db.user.findUnique({
+          where: {
+            id: input.userId
+          },
+          select: {
+            globalRole: true,
+            isActive: true
+          }
+        });
 
   if (!user) {
     return [] as UserCourseSpace[];
   }
 
-  const db = getDb();
   const [courseAssignments, editionAssignments, enrollments, purchases] = await Promise.all([
     db.courseTeacherAssignment.findMany({
       where: {
@@ -598,6 +675,20 @@ export async function getUserCourseSpaces(input: { userId: string; email?: strin
       }
     })
   ]);
+
+  const relevantCourseIds = Array.from(
+    new Set([
+      ...courseAssignments.map((assignment) => assignment.courseId),
+      ...editionAssignments.map((assignment) => assignment.courseEdition.courseId),
+      ...enrollments.map((enrollment) => enrollment.courseId),
+      ...purchases.map((purchase) => purchase.courseId)
+    ])
+  );
+
+  const courses =
+    user.globalRole === "ADMIN"
+      ? await getCatalogCourses(true)
+      : await getCatalogCoursesByIds(relevantCourseIds, true);
 
   const courseAssignmentIds = new Set(courseAssignments.map((assignment) => assignment.courseId));
   const editionCourseIds = new Set(

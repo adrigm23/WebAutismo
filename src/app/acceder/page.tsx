@@ -15,17 +15,36 @@ export const metadata: Metadata = {
 };
 
 type LoginPageProps = {
-  searchParams: Promise<{ next?: string | string[] }>;
+  searchParams: Promise<{
+    next?: string | string[];
+    verify?: string | string[];
+    reset?: string | string[];
+  }>;
 };
 
 export default async function LoginPage({ searchParams }: LoginPageProps) {
   const user = await getCurrentUser();
-  const { next } = await searchParams;
+  const { next, verify, reset } = await searchParams;
   const safeNext = getSafeRedirect(firstValue(next), "/mi-cuenta");
+  const showVerificationMessage = firstValue(verify) === "1";
+  const showResetMessage = firstValue(reset) === "1";
 
   if (user) {
     redirect(safeNext);
   }
 
-  return <SplitAuthPanel emphasis="login" next={safeNext} showDemoNotice={isDemoAuthEnabled()} />;
+  return (
+    <SplitAuthPanel
+      emphasis="login"
+      next={safeNext}
+      showDemoNotice={isDemoAuthEnabled()}
+      statusMessage={
+        showVerificationMessage
+          ? "Tu cuenta se ha creado. Revisa tu correo y verifica tu direccion antes de acceder."
+          : showResetMessage
+            ? "Tu contrasena se ha actualizado. Ya puedes iniciar sesion con la nueva clave."
+            : null
+      }
+    />
+  );
 }

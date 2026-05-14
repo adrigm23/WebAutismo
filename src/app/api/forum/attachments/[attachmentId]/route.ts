@@ -1,8 +1,11 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { canAccessCourseCommunity } from "@/lib/course-community";
+import { buildPrivateFileHeaders } from "@/lib/download-response";
 import { readStoredForumAttachmentContent } from "@/lib/forum-attachment-storage";
 import { getDb } from "@/lib/prisma";
+import { buildRequestFingerprint } from "@/lib/request-client";
+import { consumeRateLimit } from "@/lib/rate-limit";
 
 type AttachmentContext = {
   id: string;
@@ -33,7 +36,7 @@ function getAttachmentCourseSlug(attachment: AttachmentContext) {
 }
 
 export async function GET(
-  _: Request,
+  request: Request,
   { params }: { params: Promise<{ attachmentId: string }> }
 ) {
   const { attachmentId } = await params;
@@ -93,17 +96,33 @@ export async function GET(
     return NextResponse.json({ error: "Attachment access denied." }, { status: 403 });
   }
 
+  const downloadRateLimit = consumeRateLimit({
+    bucket: "forum-attachment-download",
+    key: buildRequestFingerprint(request.headers, [user.id, attachmentId]),
+    limit: 30,
+    windowMs: 5 * 60 * 1_000
+  });
+
+  if (!downloadRateLimit.allowed) {
+    return NextResponse.json(
+      { error: "Too many download requests." },
+      {
+        status: 429,
+        headers: {
+          "Retry-After": `${downloadRateLimit.retryAfterSeconds}`
+        }
+      }
+    );
+  }
+
   try {
     const fileBuffer = await readStoredForumAttachmentContent(attachment.storageKey);
     const isInlineImage = attachment.kind === "IMAGE";
-    const headers = new Headers();
-
-    headers.set("Content-Type", attachment.mimeType || "application/octet-stream");
-    headers.set(
-      "Content-Disposition",
-      `${isInlineImage ? "inline" : "attachment"}; filename="${attachment.label}"`
-    );
-    headers.set("Cache-Control", "private, no-store");
+    const headers = buildPrivateFileHeaders({
+      fileName: attachment.label,
+      inline: isInlineImage,
+      mimeType: attachment.mimeType
+    });
 
     return new NextResponse(fileBuffer, {
       status: 200,

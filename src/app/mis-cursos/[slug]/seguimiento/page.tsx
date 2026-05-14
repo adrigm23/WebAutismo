@@ -17,7 +17,7 @@ import { getEnrollmentAccessState } from "@/lib/course-editions";
 import { isDatabaseConnectionError } from "@/lib/db-errors";
 import { isDemoUserId } from "@/lib/demo-auth";
 import { canViewCourseProgress } from "@/lib/course-permissions";
-import { getLearnerProgressRowsForCourse } from "@/lib/course-progress";
+import { getLearnerProgressRowsForCatalogCourse } from "@/lib/course-progress";
 import { getCampusResources } from "@/lib/course-resources";
 import { getDb } from "@/lib/prisma";
 import { formatDate, formatDateTime } from "@/lib/utils";
@@ -53,7 +53,9 @@ export default async function CourseTrackingPage({ params }: TrackingPageProps) 
   const access = await canAccessCourseCommunityForCourse({
     userId: user.id,
     email: user.email,
-    course
+    course,
+    userGlobalRole: user.globalRole,
+    userIsActive: user.isActive
   });
 
   if (!access.allowed) {
@@ -70,7 +72,7 @@ export default async function CourseTrackingPage({ params }: TrackingPageProps) 
   }
 
   const canModerate = canModerateCourse(access.role);
-  let progressRows = [] as Awaited<ReturnType<typeof getLearnerProgressRowsForCourse>>;
+  let progressRows = [] as Awaited<ReturnType<typeof getLearnerProgressRowsForCatalogCourse>>;
   let exerciseResources = [] as Awaited<ReturnType<typeof getCampusResources>>;
   let enrollments: Array<{
     userId: string;
@@ -87,7 +89,7 @@ export default async function CourseTrackingPage({ params }: TrackingPageProps) 
 
   try {
     [progressRows, enrollments, exerciseResources] = await Promise.all([
-      getLearnerProgressRowsForCourse(slug),
+      getLearnerProgressRowsForCatalogCourse(course),
       getDb().courseEnrollment.findMany({
         where: {
           course: {
@@ -113,7 +115,7 @@ export default async function CourseTrackingPage({ params }: TrackingPageProps) 
     }
 
     [progressRows, exerciseResources] = await Promise.all([
-      getLearnerProgressRowsForCourse(slug),
+      getLearnerProgressRowsForCatalogCourse(course),
       exerciseResourcesPromise
     ]);
   }

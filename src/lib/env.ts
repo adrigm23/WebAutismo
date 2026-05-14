@@ -33,11 +33,53 @@ export function isHostedDeploymentEnv() {
 }
 
 export function isDemoAuthEnabled() {
-  return !isHostedDeploymentEnv() && getBooleanEnv("DEMO_AUTH_ENABLED", false);
+  return (
+    !isProductionEnv() &&
+    !isHostedDeploymentEnv() &&
+    getBooleanEnv("DEMO_AUTH_ENABLED", false) &&
+    getBooleanEnv("ALLOW_DEMO_AUTH", false)
+  );
 }
 
 export function isLegacyCatalogFallbackEnabled() {
-  return getBooleanEnv("LEGACY_CATALOG_FALLBACK_ENABLED", false);
+  return !isProductionEnv() && getBooleanEnv("LEGACY_CATALOG_FALLBACK_ENABLED", false);
+}
+
+export function getObjectStorageProviderEnv() {
+  const provider = process.env.OBJECT_STORAGE_PROVIDER?.trim().toLowerCase();
+
+  if (provider === "vercel-blob" || provider === "filesystem" || provider === "database") {
+    return provider;
+  }
+
+  return null;
+}
+
+export function isDatabaseStorageFallbackAllowed() {
+  return getBooleanEnv("ALLOW_DATABASE_STORAGE_FALLBACK", false);
+}
+
+function getPositiveIntegerEnv(name: string, fallback: number) {
+  const rawValue = process.env[name]?.trim();
+
+  if (!rawValue) {
+    return fallback;
+  }
+
+  const parsedValue = Number.parseInt(rawValue, 10);
+  return Number.isFinite(parsedValue) && parsedValue > 0 ? parsedValue : fallback;
+}
+
+export function isEmailVerificationRequired() {
+  return getBooleanEnv("EMAIL_VERIFICATION_REQUIRED", false);
+}
+
+export function getPasswordResetTokenTtlMinutes() {
+  return getPositiveIntegerEnv("PASSWORD_RESET_TOKEN_TTL_MINUTES", 60);
+}
+
+export function getEmailVerificationTokenTtlHours() {
+  return getPositiveIntegerEnv("EMAIL_VERIFICATION_TOKEN_TTL_HOURS", 48);
 }
 
 export function getSiteUrl() {

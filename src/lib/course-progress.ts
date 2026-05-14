@@ -1,16 +1,19 @@
 import type { CatalogCourseModule } from "./course-catalog.ts";
+import { buildLegacyCourseInWhere, buildLegacyCourseWhere } from "./course-identity.ts";
 import { isDatabaseConnectionError } from "./db-errors.ts";
 import { getDemoUserById, isDemoUserId } from "./demo-auth.ts";
 import { getCatalogCourseBySlug } from "./course-catalog.ts";
 import { getDb } from "./prisma.ts";
 
 type CourseProgressCourseShape = {
+  id?: string;
   slug: string;
   modules: CatalogCourseModule[];
 };
 
 type PersistedModuleProgressRecord = {
   id?: string;
+  courseId?: string | null;
   courseSlug?: string;
   moduleId: string;
   moduleIndex: number | null;
@@ -52,6 +55,25 @@ export type CourseLearnerProgressRow = {
   completionRate: number;
   lastCompletedAt: Date | null;
 };
+
+export type CourseLearnerProgressSummary = {
+  learnerIds: string[];
+  learnerCount: number;
+  averageCompletionRate: number;
+};
+
+function buildProgressCourseWhere(course: CourseProgressCourseShape) {
+  return buildLegacyCourseWhere(
+    course.id
+      ? {
+          id: course.id,
+          slug: course.slug
+        }
+      : {
+          slug: course.slug
+        }
+  );
+}
 
 function getDemoProgressRecords(input: {
   userId: string;
@@ -199,13 +221,23 @@ async function upgradeLegacyCourseProgressRecords(input: {
   const legacyRecords = await db.courseModuleProgress.findMany({
     where: {
       userId: input.userId,
-      courseSlug: {
-        in: Array.from(uniqueCourses.keys())
-      },
+      ...buildLegacyCourseInWhere(
+        Array.from(uniqueCourses.values()).map((course) =>
+          course.id
+            ? {
+                id: course.id,
+                slug: course.slug
+              }
+            : {
+                slug: course.slug
+              }
+        )
+      ),
       moduleId: ""
     },
     select: {
       id: true,
+      courseId: true,
       courseSlug: true,
       moduleIndex: true,
       completedAt: true
@@ -228,7 +260,20 @@ async function upgradeLegacyCourseProgressRecords(input: {
     const existing = await db.courseModuleProgress.findFirst({
       where: {
         userId: input.userId,
-        courseSlug: record.courseSlug,
+        ...(course.id
+          ? {
+              OR: [
+                {
+                  courseId: course.id
+                },
+                {
+                  courseSlug: record.courseSlug
+                }
+              ]
+            }
+          : {
+              courseSlug: record.courseSlug
+            }),
         moduleId: courseModule.id
       },
       select: {
@@ -250,6 +295,7 @@ async function upgradeLegacyCourseProgressRecords(input: {
         id: record.id
       },
       data: {
+        courseId: course.id ?? null,
         moduleId: courseModule.id
       }
     });
@@ -260,21 +306,59 @@ export async function getCourseProgressDetailsForUser(input: {
   userId: string;
   course: CourseProgressCourseShape;
 }) {
+  const detailsByCourse = await getCourseProgressDetailsMapForUser({
+    userId: input.userId,
+    courses: [input.course]
+  });
+
+  return detailsByCourse.get(input.course.slug) ?? normalizeCourseProgress(input.course, []);
+}
+
+export async function getCourseProgressDetailsMapForUser(input: {
+  userId: string;
+  courses: CourseProgressCourseShape[];
+}) {
+  const uniqueCourses = Array.from(
+    new Map(input.courses.map((course) => [course.slug, course] as const)).values()
+  );
+
+  if (uniqueCourses.length === 0) {
+    return new Map<string, CourseProgressDetails>();
+  }
+
   if (isDemoUserId(input.userId)) {
-    return normalizeCourseProgress(input.course, getDemoProgressRecords(input));
+    return new Map(
+      uniqueCourses.map((course) => [
+        course.slug,
+        normalizeCourseProgress(course, getDemoProgressRecords({ userId: input.userId, course }))
+      ])
+    );
   }
 
   await upgradeLegacyCourseProgressRecords({
     userId: input.userId,
-    courses: [input.course]
+    courses: uniqueCourses
   });
 
   const progress = await getDb().courseModuleProgress.findMany({
     where: {
       userId: input.userId,
-      courseSlug: input.course.slug
+      ...buildLegacyCourseInWhere(
+        uniqueCourses.map((course) =>
+          course.id
+            ? {
+                id: course.id,
+                slug: course.slug
+              }
+            : {
+                slug: course.slug
+              }
+        )
+      )
     },
     select: {
+      courseId: true,
+      courseSlug: true,
       moduleId: true,
       moduleIndex: true,
       completedAt: true
@@ -289,27 +373,26 @@ export async function getCourseProgressDetailsForUser(input: {
     ]
   });
 
-  return normalizeCourseProgress(input.course, progress);
+  const progressByCourseSlug = new Map<string, PersistedModuleProgressRecord[]>();
+
+  for (const record of progress) {
+    const bucket = progressByCourseSlug.get(record.courseSlug) ?? [];
+    bucket.push(record);
+    progressByCourseSlug.set(record.courseSlug, bucket);
+  }
+
+  return new Map(
+    uniqueCourses.map((course) => [
+      course.slug,
+      normalizeCourseProgress(course, progressByCourseSlug.get(course.slug) ?? [])
+    ])
+  );
 }
 
 export async function getCourseProgressSummariesForUser(input: {
   userId: string;
   courseSlugs: string[];
 }) {
-  if (isDemoUserId(input.userId)) {
-    const uniqueCourseSlugs = Array.from(new Set(input.courseSlugs)).filter(Boolean);
-    const courseList = (
-      await Promise.all(uniqueCourseSlugs.map((courseSlug) => getCatalogCourseBySlug(courseSlug)))
-    ).filter((course): course is NonNullable<typeof course> => Boolean(course));
-
-    return new Map(
-      courseList.map((course) => [
-        course.slug,
-        normalizeCourseProgress(course, getDemoProgressRecords({ userId: input.userId, course }))
-      ])
-    );
-  }
-
   const uniqueCourseSlugs = Array.from(new Set(input.courseSlugs)).filter(Boolean);
 
   if (uniqueCourseSlugs.length === 0) {
@@ -320,38 +403,15 @@ export async function getCourseProgressSummariesForUser(input: {
     await Promise.all(uniqueCourseSlugs.map((courseSlug) => getCatalogCourseBySlug(courseSlug)))
   ).filter((course): course is NonNullable<typeof course> => Boolean(course));
 
-  await upgradeLegacyCourseProgressRecords({
+  const detailsByCourse = await getCourseProgressDetailsMapForUser({
     userId: input.userId,
     courses: courseList
   });
 
-  const records = await getDb().courseModuleProgress.findMany({
-    where: {
-      userId: input.userId,
-      courseSlug: {
-        in: uniqueCourseSlugs
-      }
-    },
-    select: {
-      courseSlug: true,
-      moduleId: true,
-      moduleIndex: true,
-      completedAt: true
-    }
-  });
-
-  const grouped = new Map<string, PersistedModuleProgressRecord[]>();
-
-  for (const record of records) {
-    const bucket = grouped.get(record.courseSlug) ?? [];
-    bucket.push(record);
-    grouped.set(record.courseSlug, bucket);
-  }
-
   const entries: Array<readonly [string, CourseProgressSummary]> = [];
 
   for (const course of courseList) {
-    const summary = normalizeCourseProgress(course, grouped.get(course.slug) ?? []);
+    const summary = detailsByCourse.get(course.slug) ?? normalizeCourseProgress(course, []);
     entries.push([course.slug, summary] as const);
   }
 
@@ -375,7 +435,7 @@ export async function setCourseModuleProgress(input: {
   const existing = await db.courseModuleProgress.findFirst({
     where: {
       userId: input.userId,
-      courseSlug: input.course.slug,
+      ...buildProgressCourseWhere(input.course),
       OR: [
         {
           moduleId: courseModule.id
@@ -395,7 +455,7 @@ export async function setCourseModuleProgress(input: {
     await db.courseModuleProgress.deleteMany({
       where: {
         userId: input.userId,
-        courseSlug: input.course.slug,
+        ...buildProgressCourseWhere(input.course),
         OR: [
           {
             moduleId: courseModule.id
@@ -417,6 +477,7 @@ export async function setCourseModuleProgress(input: {
         id: existing.id
       },
       data: {
+        courseId: input.course.id ?? null,
         moduleId: courseModule.id,
         moduleIndex,
         completedAt: new Date()
@@ -429,6 +490,7 @@ export async function setCourseModuleProgress(input: {
   await db.courseModuleProgress.create({
     data: {
       userId: input.userId,
+      courseId: input.course.id ?? null,
       courseSlug: input.course.slug,
       moduleId: courseModule.id,
       moduleIndex,
@@ -443,6 +505,14 @@ export async function getLearnerProgressRowsForCourse(courseSlug: string): Promi
   if (!course) {
     return [];
   }
+
+  return getLearnerProgressRowsForCatalogCourse(course);
+}
+
+export async function getLearnerProgressRowsForCatalogCourse(
+  course: CourseProgressCourseShape
+): Promise<CourseLearnerProgressRow[]> {
+  const courseSlug = course.slug;
 
   try {
     const [enrollments, progressRecords] = await Promise.all([
@@ -467,9 +537,10 @@ export async function getLearnerProgressRowsForCourse(courseSlug: string): Promi
       }),
       getDb().courseModuleProgress.findMany({
         where: {
-          courseSlug
+          ...buildProgressCourseWhere(course)
         },
         select: {
+          courseId: true,
           userId: true,
           moduleId: true,
           moduleIndex: true,
@@ -510,6 +581,142 @@ export async function getLearnerProgressRowsForCourse(courseSlug: string): Promi
   } catch (error) {
     if (isDatabaseConnectionError(error)) {
       return buildDemoLearnerProgressRowsForCourse(course);
+    }
+
+    throw error;
+  }
+}
+
+export async function getLearnerProgressSummaryForCatalogCourse(
+  course: CourseProgressCourseShape
+): Promise<CourseLearnerProgressSummary> {
+  const summaries = await getLearnerProgressSummariesForCatalogCourses([course]);
+
+  return (
+    summaries.get(course.slug) ?? {
+      learnerIds: [],
+      learnerCount: 0,
+      averageCompletionRate: 0
+    }
+  );
+}
+
+export async function getLearnerProgressSummariesForCatalogCourses(
+  courses: CourseProgressCourseShape[]
+): Promise<Map<string, CourseLearnerProgressSummary>> {
+  const uniqueCourses = Array.from(
+    new Map(courses.map((course) => [course.slug, course] as const)).values()
+  );
+
+  if (uniqueCourses.length === 0) {
+    return new Map<string, CourseLearnerProgressSummary>();
+  }
+
+  try {
+    const [enrollments, progressRecords] = await Promise.all([
+      getDb().courseEnrollment.findMany({
+        where: {
+          course: {
+            slug: {
+              in: uniqueCourses.map((currentCourse) => currentCourse.slug)
+            }
+          }
+        },
+        select: {
+          course: {
+            select: {
+              slug: true
+            }
+          },
+          userId: true
+        },
+        orderBy: {
+          createdAt: "desc"
+        }
+      }),
+      getDb().courseModuleProgress.findMany({
+        where: {
+          ...buildLegacyCourseInWhere(
+            uniqueCourses.map((currentCourse) =>
+              currentCourse.id
+                ? {
+                    id: currentCourse.id,
+                    slug: currentCourse.slug
+                  }
+                : {
+                    slug: currentCourse.slug
+                  }
+            )
+          )
+        },
+        select: {
+          courseId: true,
+          courseSlug: true,
+          userId: true,
+          moduleId: true,
+          moduleIndex: true,
+          completedAt: true
+        }
+      })
+    ]);
+
+    const learnerIdsByCourseSlug = new Map<string, Set<string>>();
+    const progressByCourseSlug = new Map<string, Map<string, PersistedModuleProgressRecord[]>>();
+
+    for (const enrollment of enrollments) {
+      const bucket = learnerIdsByCourseSlug.get(enrollment.course.slug) ?? new Set<string>();
+      bucket.add(enrollment.userId);
+      learnerIdsByCourseSlug.set(enrollment.course.slug, bucket);
+    }
+
+    for (const record of progressRecords) {
+      const courseBucket = progressByCourseSlug.get(record.courseSlug) ?? new Map();
+      const userBucket = courseBucket.get(record.userId) ?? [];
+      userBucket.push(record);
+      courseBucket.set(record.userId, userBucket);
+      progressByCourseSlug.set(record.courseSlug, courseBucket);
+    }
+
+    return new Map(
+      uniqueCourses.map((course) => {
+        const learnerIds = Array.from(learnerIdsByCourseSlug.get(course.slug) ?? []);
+        const progressByUser = progressByCourseSlug.get(course.slug) ?? new Map();
+        const averageCompletionRate =
+          learnerIds.length > 0
+            ? Math.round(
+                learnerIds.reduce((total, userId) => {
+                  const summary = normalizeCourseProgress(course, progressByUser.get(userId) ?? []);
+                  return total + summary.completionRate;
+                }, 0) / learnerIds.length
+              )
+            : 0;
+
+        return [
+          course.slug,
+          {
+            learnerIds,
+            learnerCount: learnerIds.length,
+            averageCompletionRate
+          } satisfies CourseLearnerProgressSummary
+        ];
+      })
+    );
+  } catch (error) {
+    if (isDatabaseConnectionError(error)) {
+      return new Map(
+        uniqueCourses.map((course) => {
+          const demoRows = buildDemoLearnerProgressRowsForCourse(course);
+
+          return [
+            course.slug,
+            {
+              learnerIds: demoRows.map((row) => row.userId),
+              learnerCount: demoRows.length,
+              averageCompletionRate: demoRows.length ? demoRows[0].completionRate : 0
+            } satisfies CourseLearnerProgressSummary
+          ];
+        })
+      );
     }
 
     throw error;
