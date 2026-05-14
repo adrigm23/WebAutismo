@@ -1,4 +1,5 @@
 import { buildLegacyCourseInWhere, getCourseIdentitiesBySlugs } from "@/lib/course-identity";
+import { isDatabaseSchemaDriftError } from "@/lib/db-errors";
 import { isDemoUserId } from "@/lib/demo-auth";
 import { publishDueAnnouncementsForCourse } from "@/lib/forum-notifications";
 import { getDb } from "@/lib/prisma";
@@ -34,73 +35,132 @@ export async function getUserForumNotifications(input: {
     await Promise.all(courseSlugs.map((courseSlug) => publishDueAnnouncementsForCourse(courseSlug)));
   }
 
-  const [notifications, unreadCount] = await Promise.all([
-    getDb().forumNotification.findMany({
-      where: {
-        userId: input.userId,
-        ...(courseSlugs.length
-          ? {
-              ...buildLegacyCourseInWhere(
-                courseIdentities.length
-                  ? courseIdentities
-                  : courseSlugs.map((courseSlug) => ({
-                      slug: courseSlug
-                    }))
-              )
-            }
-          : {})
-      },
-      orderBy: {
-        createdAt: "desc"
-      },
-      take: input.limit ?? 8
-    }) as Promise<ForumNotificationListItem[]>,
-    getDb().forumNotification.count({
-      where: {
-        userId: input.userId,
-        ...(courseSlugs.length
-          ? {
-              ...buildLegacyCourseInWhere(
-                courseIdentities.length
-                  ? courseIdentities
-                  : courseSlugs.map((courseSlug) => ({
-                      slug: courseSlug
-                    }))
-              )
-            }
-          : {}),
-        readAt: null
-      }
-    })
-  ]);
+  try {
+    const [notifications, unreadCount] = await Promise.all([
+      getDb().forumNotification.findMany({
+        where: {
+          userId: input.userId,
+          ...(courseSlugs.length
+            ? {
+                ...buildLegacyCourseInWhere(
+                  courseIdentities.length
+                    ? courseIdentities
+                    : courseSlugs.map((courseSlug) => ({
+                        slug: courseSlug
+                      }))
+                )
+              }
+            : {})
+        },
+        orderBy: {
+          createdAt: "desc"
+        },
+        take: input.limit ?? 8
+      }) as Promise<ForumNotificationListItem[]>,
+      getDb().forumNotification.count({
+        where: {
+          userId: input.userId,
+          ...(courseSlugs.length
+            ? {
+                ...buildLegacyCourseInWhere(
+                  courseIdentities.length
+                    ? courseIdentities
+                    : courseSlugs.map((courseSlug) => ({
+                        slug: courseSlug
+                      }))
+                )
+              }
+            : {}),
+          readAt: null
+        }
+      })
+    ]);
 
-  return {
-    notifications,
-    unreadCount
-  };
+    return {
+      notifications,
+      unreadCount
+    };
+  } catch (error) {
+    if (isDatabaseSchemaDriftError(error)) {
+      const [notifications, unreadCount] = await Promise.all([
+        getDb().forumNotification.findMany({
+          where: {
+            userId: input.userId,
+            ...(courseSlugs.length
+              ? {
+                  courseSlug: {
+                    in: courseSlugs
+                  }
+                }
+              : {})
+          },
+          orderBy: {
+            createdAt: "desc"
+          },
+          take: input.limit ?? 8
+        }) as Promise<ForumNotificationListItem[]>,
+        getDb().forumNotification.count({
+          where: {
+            userId: input.userId,
+            ...(courseSlugs.length
+              ? {
+                  courseSlug: {
+                    in: courseSlugs
+                  }
+                }
+              : {}),
+            readAt: null
+          }
+        })
+      ]);
+
+      return {
+        notifications,
+        unreadCount
+      };
+    }
+
+    throw error;
+  }
 }
 
 export async function markForumNotificationRead(input: { notificationId: string; userId: string }) {
-  return getDb().forumNotification.updateMany({
-    where: {
-      id: input.notificationId,
-      userId: input.userId,
-      readAt: null
-    },
-    data: {
-      readAt: new Date()
+  try {
+    return await getDb().forumNotification.updateMany({
+      where: {
+        id: input.notificationId,
+        userId: input.userId,
+        readAt: null
+      },
+      data: {
+        readAt: new Date()
+      }
+    });
+  } catch (error) {
+    if (isDatabaseSchemaDriftError(error)) {
+      return { count: 0 };
     }
-  });
+
+    throw error;
+  }
 }
 
 export async function markAllForumNotificationsRead(userId: string) {
-  return getDb().forumNotification.updateMany({
-    where: {
-      userId,
-      readAt: null
-    },
-    data: {
-      readAt: new Date()
+  try {
+    return await getDb().forumNotification.updateMany({
+      where: {
+        userId,
+        readAt: null
+      },
+      data: {
+        readAt: new Date()
+      }
+    });
+  } catch (error) {
+    if (isDatabaseSchemaDriftError(error)) {
+      return { count: 0 };
     }
-  });
+
+    throw error;
+  }
 }

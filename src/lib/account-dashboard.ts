@@ -2,6 +2,7 @@ import type { CourseResourceSubmissionStatus } from "@prisma/client";
 import type { ForumNotificationListItem } from "@/lib/forum";
 import type { UserCourseSpace } from "@/lib/course-community";
 import type { CourseLearnerProgressSummary } from "@/lib/course-progress";
+import { isDatabaseSchemaDriftError } from "@/lib/db-errors";
 import { getUserForumNotifications } from "@/lib/forum";
 import { ensureNotificationPreference, getUserPlatformNotifications } from "@/lib/notifications";
 import { getDb } from "@/lib/prisma";
@@ -300,27 +301,49 @@ export async function getDashboardNotificationSnapshot(input: {
   platformLimit?: number;
   forumLimit?: number;
 }) {
-  const [preference, platformNotifications, forumNotifications] = await Promise.all([
-    ensureNotificationPreference(input.userId),
-    getUserPlatformNotifications({
-      userId: input.userId,
-      limit: input.platformLimit ?? 4
-    }),
-    getUserForumNotifications({
-      userId: input.userId,
-      courseSlugs: input.courseSlugs,
-      limit: input.forumLimit ?? 4,
-      skipPublishDueAnnouncements: true
-    })
-  ]);
+  try {
+    const [preference, platformNotifications, forumNotifications] = await Promise.all([
+      ensureNotificationPreference(input.userId),
+      getUserPlatformNotifications({
+        userId: input.userId,
+        limit: input.platformLimit ?? 4
+      }),
+      getUserForumNotifications({
+        userId: input.userId,
+        courseSlugs: input.courseSlugs,
+        limit: input.forumLimit ?? 4,
+        skipPublishDueAnnouncements: true
+      })
+    ]);
 
-  return {
-    preference: {
-      emailEnabled: preference.emailEnabled,
-      webEnabled: preference.webEnabled
-    },
-    platformNotifications,
-    forumNotifications,
-    unreadCount: platformNotifications.unreadCount + forumNotifications.unreadCount
-  } satisfies DashboardNotificationSnapshot;
+    return {
+      preference: {
+        emailEnabled: preference.emailEnabled,
+        webEnabled: preference.webEnabled
+      },
+      platformNotifications,
+      forumNotifications,
+      unreadCount: platformNotifications.unreadCount + forumNotifications.unreadCount
+    } satisfies DashboardNotificationSnapshot;
+  } catch (error) {
+    if (isDatabaseSchemaDriftError(error)) {
+      return {
+        preference: {
+          emailEnabled: true,
+          webEnabled: true
+        },
+        platformNotifications: {
+          notifications: [],
+          unreadCount: 0
+        },
+        forumNotifications: {
+          notifications: [],
+          unreadCount: 0
+        },
+        unreadCount: 0
+      } satisfies DashboardNotificationSnapshot;
+    }
+
+    throw error;
+  }
 }

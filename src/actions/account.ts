@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { writeAuditLog } from "@/lib/audit";
 import { requireUser } from "@/lib/auth";
+import { isDatabaseSchemaDriftError } from "@/lib/db-errors";
 import {
   markAllUserNotificationsRead,
   markUserNotificationRead
@@ -28,20 +29,30 @@ export async function updateNotificationPreferencesAction(formData: FormData) {
     redirect("/mi-cuenta?error=preferences");
   }
 
-  const preference = await getDb().notificationPreference.upsert({
-    where: {
-      userId: user.id
-    },
-    update: {
-      emailEnabled: parsed.data.emailEnabled === "true",
-      webEnabled: parsed.data.webEnabled === "true"
-    },
-    create: {
-      userId: user.id,
-      emailEnabled: parsed.data.emailEnabled === "true",
-      webEnabled: parsed.data.webEnabled === "true"
+  let preference;
+
+  try {
+    preference = await getDb().notificationPreference.upsert({
+      where: {
+        userId: user.id
+      },
+      update: {
+        emailEnabled: parsed.data.emailEnabled === "true",
+        webEnabled: parsed.data.webEnabled === "true"
+      },
+      create: {
+        userId: user.id,
+        emailEnabled: parsed.data.emailEnabled === "true",
+        webEnabled: parsed.data.webEnabled === "true"
+      }
+    });
+  } catch (error) {
+    if (isDatabaseSchemaDriftError(error)) {
+      redirect("/mi-cuenta");
     }
-  });
+
+    throw error;
+  }
 
   await writeAuditLog({
     actorId: user.id,

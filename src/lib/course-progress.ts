@@ -1,6 +1,6 @@
 import type { CatalogCourseModule } from "./course-catalog.ts";
 import { buildLegacyCourseInWhere, buildLegacyCourseWhere } from "./course-identity.ts";
-import { isDatabaseConnectionError } from "./db-errors.ts";
+import { isDatabaseConnectionError, isDatabaseSchemaDriftError } from "./db-errors.ts";
 import { getDemoUserById, isDemoUserId } from "./demo-auth.ts";
 import { getCatalogCourseBySlug } from "./course-catalog.ts";
 import { getDb } from "./prisma.ts";
@@ -73,6 +73,14 @@ function buildProgressCourseWhere(course: CourseProgressCourseShape) {
           slug: course.slug
         }
   );
+}
+
+function buildCourseSlugInWhere(courses: CourseProgressCourseShape[]) {
+  return {
+    courseSlug: {
+      in: Array.from(new Set(courses.map((course) => course.slug).filter(Boolean)))
+    }
+  };
 }
 
 function getDemoProgressRecords(input: {
@@ -215,90 +223,98 @@ async function upgradeLegacyCourseProgressRecords(input: {
     return;
   }
 
-  const db = getDb();
-  const uniqueCourses = new Map(input.courses.map((course) => [course.slug, course]));
+  try {
+    const db = getDb();
+    const uniqueCourses = new Map(input.courses.map((course) => [course.slug, course]));
 
-  const legacyRecords = await db.courseModuleProgress.findMany({
-    where: {
-      userId: input.userId,
-      ...buildLegacyCourseInWhere(
-        Array.from(uniqueCourses.values()).map((course) =>
-          course.id
-            ? {
-                id: course.id,
-                slug: course.slug
-              }
-            : {
-                slug: course.slug
-              }
-        )
-      ),
-      moduleId: ""
-    },
-    select: {
-      id: true,
-      courseId: true,
-      courseSlug: true,
-      moduleIndex: true,
-      completedAt: true
-    }
-  });
-
-  for (const record of legacyRecords) {
-    const course = uniqueCourses.get(record.courseSlug);
-
-    if (!course) {
-      continue;
-    }
-
-    const courseModule = getModuleFromLegacyIndex(course, record.moduleIndex);
-
-    if (!courseModule) {
-      continue;
-    }
-
-    const existing = await db.courseModuleProgress.findFirst({
+    const legacyRecords = await db.courseModuleProgress.findMany({
       where: {
         userId: input.userId,
-        ...(course.id
-          ? {
-              OR: [
-                {
-                  courseId: course.id
-                },
-                {
-                  courseSlug: record.courseSlug
+        ...buildLegacyCourseInWhere(
+          Array.from(uniqueCourses.values()).map((course) =>
+            course.id
+              ? {
+                  id: course.id,
+                  slug: course.slug
                 }
-              ]
-            }
-          : {
-              courseSlug: record.courseSlug
-            }),
-        moduleId: courseModule.id
+              : {
+                  slug: course.slug
+                }
+          )
+        ),
+        moduleId: ""
       },
       select: {
-        id: true
+        id: true,
+        courseId: true,
+        courseSlug: true,
+        moduleIndex: true,
+        completedAt: true
       }
     });
 
-    if (existing) {
-      await db.courseModuleProgress.delete({
+    for (const record of legacyRecords) {
+      const course = uniqueCourses.get(record.courseSlug);
+
+      if (!course) {
+        continue;
+      }
+
+      const courseModule = getModuleFromLegacyIndex(course, record.moduleIndex);
+
+      if (!courseModule) {
+        continue;
+      }
+
+      const existing = await db.courseModuleProgress.findFirst({
         where: {
-          id: record.id
+          userId: input.userId,
+          ...(course.id
+            ? {
+                OR: [
+                  {
+                    courseId: course.id
+                  },
+                  {
+                    courseSlug: record.courseSlug
+                  }
+                ]
+              }
+            : {
+                courseSlug: record.courseSlug
+              }),
+          moduleId: courseModule.id
+        },
+        select: {
+          id: true
         }
       });
-      continue;
+
+      if (existing) {
+        await db.courseModuleProgress.delete({
+          where: {
+            id: record.id
+          }
+        });
+        continue;
+      }
+
+      await db.courseModuleProgress.update({
+        where: {
+          id: record.id
+        },
+        data: {
+          courseId: course.id ?? null,
+          moduleId: courseModule.id
+        }
+      });
+    }
+  } catch (error) {
+    if (isDatabaseSchemaDriftError(error)) {
+      return;
     }
 
-    await db.courseModuleProgress.update({
-      where: {
-        id: record.id
-      },
-      data: {
-        courseId: course.id ?? null,
-        moduleId: courseModule.id
-      }
-    });
+    throw error;
   }
 }
 
@@ -340,38 +356,67 @@ export async function getCourseProgressDetailsMapForUser(input: {
     courses: uniqueCourses
   });
 
-  const progress = await getDb().courseModuleProgress.findMany({
-    where: {
-      userId: input.userId,
-      ...buildLegacyCourseInWhere(
-        uniqueCourses.map((course) =>
-          course.id
-            ? {
-                id: course.id,
-                slug: course.slug
-              }
-            : {
-                slug: course.slug
-              }
-        )
-      )
-    },
-    select: {
-      courseId: true,
-      courseSlug: true,
-      moduleId: true,
-      moduleIndex: true,
-      completedAt: true
-    },
-    orderBy: [
-      {
-        moduleIndex: "asc"
-      },
-      {
-        completedAt: "desc"
+  const progress = await (async () => {
+    try {
+      return await getDb().courseModuleProgress.findMany({
+        where: {
+          userId: input.userId,
+          ...buildLegacyCourseInWhere(
+            uniqueCourses.map((course) =>
+              course.id
+                ? {
+                    id: course.id,
+                    slug: course.slug
+                  }
+                : {
+                    slug: course.slug
+                  }
+            )
+          )
+        },
+        select: {
+          courseId: true,
+          courseSlug: true,
+          moduleId: true,
+          moduleIndex: true,
+          completedAt: true
+        },
+        orderBy: [
+          {
+            moduleIndex: "asc"
+          },
+          {
+            completedAt: "desc"
+          }
+        ]
+      });
+    } catch (error) {
+      if (!isDatabaseSchemaDriftError(error)) {
+        throw error;
       }
-    ]
-  });
+
+      return getDb().courseModuleProgress.findMany({
+        where: {
+          userId: input.userId,
+          ...buildCourseSlugInWhere(uniqueCourses)
+        },
+        select: {
+          courseSlug: true,
+          moduleId: true,
+          moduleIndex: true,
+          completedAt: true
+        },
+        orderBy: [
+          {
+            moduleIndex: "asc"
+          },
+          {
+            completedAt: "desc"
+          }
+        ]
+      });
+    }
+  })();
 
   const progressByCourseSlug = new Map<string, PersistedModuleProgressRecord[]>();
 
@@ -432,27 +477,9 @@ export async function setCourseModuleProgress(input: {
 
   const db = getDb();
   const courseModule = input.course.modules[moduleIndex];
-  const existing = await db.courseModuleProgress.findFirst({
-    where: {
-      userId: input.userId,
-      ...buildProgressCourseWhere(input.course),
-      OR: [
-        {
-          moduleId: courseModule.id
-        },
-        {
-          moduleId: "",
-          moduleIndex
-        }
-      ]
-    },
-    select: {
-      id: true
-    }
-  });
 
-  if (!input.isCompleted) {
-    await db.courseModuleProgress.deleteMany({
+  try {
+    const existing = await db.courseModuleProgress.findFirst({
       where: {
         userId: input.userId,
         ...buildProgressCourseWhere(input.course),
@@ -465,38 +492,127 @@ export async function setCourseModuleProgress(input: {
             moduleIndex
           }
         ]
+      },
+      select: {
+        id: true
       }
     });
 
-    return;
-  }
+    if (!input.isCompleted) {
+      await db.courseModuleProgress.deleteMany({
+        where: {
+          userId: input.userId,
+          ...buildProgressCourseWhere(input.course),
+          OR: [
+            {
+              moduleId: courseModule.id
+            },
+            {
+              moduleId: "",
+              moduleIndex
+            }
+          ]
+        }
+      });
 
-  if (existing) {
-    await db.courseModuleProgress.update({
-      where: {
-        id: existing.id
-      },
+      return;
+    }
+
+    if (existing) {
+      await db.courseModuleProgress.update({
+        where: {
+          id: existing.id
+        },
+        data: {
+          courseId: input.course.id ?? null,
+          moduleId: courseModule.id,
+          moduleIndex,
+          completedAt: new Date()
+        }
+      });
+
+      return;
+    }
+
+    await db.courseModuleProgress.create({
       data: {
+        userId: input.userId,
         courseId: input.course.id ?? null,
+        courseSlug: input.course.slug,
         moduleId: courseModule.id,
         moduleIndex,
         completedAt: new Date()
       }
     });
-
-    return;
-  }
-
-  await db.courseModuleProgress.create({
-    data: {
-      userId: input.userId,
-      courseId: input.course.id ?? null,
-      courseSlug: input.course.slug,
-      moduleId: courseModule.id,
-      moduleIndex,
-      completedAt: new Date()
+  } catch (error) {
+    if (!isDatabaseSchemaDriftError(error)) {
+      throw error;
     }
-  });
+
+    const existing = await db.courseModuleProgress.findFirst({
+      where: {
+        userId: input.userId,
+        courseSlug: input.course.slug,
+        OR: [
+          {
+            moduleId: courseModule.id
+          },
+          {
+            moduleId: "",
+            moduleIndex
+          }
+        ]
+      },
+      select: {
+        id: true
+      }
+    });
+
+    if (!input.isCompleted) {
+      await db.courseModuleProgress.deleteMany({
+        where: {
+          userId: input.userId,
+          courseSlug: input.course.slug,
+          OR: [
+            {
+              moduleId: courseModule.id
+            },
+            {
+              moduleId: "",
+              moduleIndex
+            }
+          ]
+        }
+      });
+
+      return;
+    }
+
+    if (existing) {
+      await db.courseModuleProgress.update({
+        where: {
+          id: existing.id
+        },
+        data: {
+          moduleId: courseModule.id,
+          moduleIndex,
+          completedAt: new Date()
+        }
+      });
+
+      return;
+    }
+
+    await db.courseModuleProgress.create({
+      data: {
+        userId: input.userId,
+        courseSlug: input.course.slug,
+        moduleId: courseModule.id,
+        moduleIndex,
+        completedAt: new Date()
+      }
+    });
+  }
 }
 
 export async function getLearnerProgressRowsForCourse(courseSlug: string): Promise<CourseLearnerProgressRow[]> {
@@ -515,38 +631,62 @@ export async function getLearnerProgressRowsForCatalogCourse(
   const courseSlug = course.slug;
 
   try {
+    const enrollmentsPromise = getDb().courseEnrollment.findMany({
+      where: {
+        course: {
+          slug: courseSlug
+        }
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true
+          }
+        }
+      },
+      orderBy: {
+        createdAt: "desc"
+      }
+    });
+
+    const progressRecordsPromise = (async () => {
+      try {
+        return await getDb().courseModuleProgress.findMany({
+          where: {
+            ...buildProgressCourseWhere(course)
+          },
+          select: {
+            courseId: true,
+            userId: true,
+            moduleId: true,
+            moduleIndex: true,
+            completedAt: true
+          }
+        });
+      } catch (error) {
+        if (!isDatabaseSchemaDriftError(error)) {
+          throw error;
+        }
+
+        return getDb().courseModuleProgress.findMany({
+          where: {
+            courseSlug
+          },
+          select: {
+            userId: true,
+            moduleId: true,
+            moduleIndex: true,
+            completedAt: true
+          }
+        });
+      }
+    })();
+
     const [enrollments, progressRecords] = await Promise.all([
-      getDb().courseEnrollment.findMany({
-        where: {
-          course: {
-            slug: courseSlug
-          }
-        },
-        include: {
-          user: {
-            select: {
-              id: true,
-              name: true,
-              email: true
-            }
-          }
-        },
-        orderBy: {
-          createdAt: "desc"
-        }
-      }),
-      getDb().courseModuleProgress.findMany({
-        where: {
-          ...buildProgressCourseWhere(course)
-        },
-        select: {
-          courseId: true,
-          userId: true,
-          moduleId: true,
-          moduleIndex: true,
-          completedAt: true
-        }
-      })
+      enrollmentsPromise,
+      progressRecordsPromise
     ]);
 
     const latestEnrollmentByUser = new Map<string, (typeof enrollments)[number]>();
@@ -613,51 +753,76 @@ export async function getLearnerProgressSummariesForCatalogCourses(
   }
 
   try {
-    const [enrollments, progressRecords] = await Promise.all([
-      getDb().courseEnrollment.findMany({
-        where: {
-          course: {
-            slug: {
-              in: uniqueCourses.map((currentCourse) => currentCourse.slug)
-            }
+    const enrollmentsPromise = getDb().courseEnrollment.findMany({
+      where: {
+        course: {
+          slug: {
+            in: uniqueCourses.map((currentCourse) => currentCourse.slug)
+          }
+        }
+      },
+      select: {
+        course: {
+          select: {
+            slug: true
           }
         },
-        select: {
-          course: {
-            select: {
-              slug: true
-            }
-          },
-          userId: true
-        },
-        orderBy: {
-          createdAt: "desc"
-        }
-      }),
-      getDb().courseModuleProgress.findMany({
-        where: {
-          ...buildLegacyCourseInWhere(
-            uniqueCourses.map((currentCourse) =>
-              currentCourse.id
-                ? {
-                    id: currentCourse.id,
-                    slug: currentCourse.slug
-                  }
-                : {
-                    slug: currentCourse.slug
-                  }
+        userId: true
+      },
+      orderBy: {
+        createdAt: "desc"
+      }
+    });
+
+    const progressRecordsPromise = (async () => {
+      try {
+        return await getDb().courseModuleProgress.findMany({
+          where: {
+            ...buildLegacyCourseInWhere(
+              uniqueCourses.map((currentCourse) =>
+                currentCourse.id
+                  ? {
+                      id: currentCourse.id,
+                      slug: currentCourse.slug
+                    }
+                  : {
+                      slug: currentCourse.slug
+                    }
+              )
             )
-          )
-        },
-        select: {
-          courseId: true,
-          courseSlug: true,
-          userId: true,
-          moduleId: true,
-          moduleIndex: true,
-          completedAt: true
+          },
+          select: {
+            courseId: true,
+            courseSlug: true,
+            userId: true,
+            moduleId: true,
+            moduleIndex: true,
+            completedAt: true
+          }
+        });
+      } catch (error) {
+        if (!isDatabaseSchemaDriftError(error)) {
+          throw error;
         }
-      })
+
+        return getDb().courseModuleProgress.findMany({
+          where: {
+            ...buildCourseSlugInWhere(uniqueCourses)
+          },
+          select: {
+            courseSlug: true,
+            userId: true,
+            moduleId: true,
+            moduleIndex: true,
+            completedAt: true
+          }
+        });
+      }
+    })();
+
+    const [enrollments, progressRecords] = await Promise.all([
+      enrollmentsPromise,
+      progressRecordsPromise
     ]);
 
     const learnerIdsByCourseSlug = new Map<string, Set<string>>();

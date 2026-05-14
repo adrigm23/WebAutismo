@@ -1,36 +1,49 @@
 import type { ForumNotificationType, NotificationCategory } from "@prisma/client";
 import { getCourseIdentityBySlug } from "@/lib/course-identity";
+import { isDatabaseSchemaDriftError } from "@/lib/db-errors";
 import { isDemoUserId } from "@/lib/demo-auth";
 import { sendNotificationEmail } from "@/lib/email";
 import { getDb } from "@/lib/prisma";
 import { absoluteUrl } from "@/lib/site";
 
+function buildDefaultNotificationPreference(userId: string) {
+  return {
+    userId,
+    emailEnabled: true,
+    webEnabled: true,
+    createdAt: new Date("2026-05-07T09:00:00.000Z"),
+    updatedAt: new Date("2026-05-07T09:00:00.000Z")
+  };
+}
+
 export async function ensureNotificationPreference(userId: string) {
   if (isDemoUserId(userId)) {
-    return {
-      userId,
-      emailEnabled: true,
-      webEnabled: true,
-      createdAt: new Date("2026-05-07T09:00:00.000Z"),
-      updatedAt: new Date("2026-05-07T09:00:00.000Z")
-    };
+    return buildDefaultNotificationPreference(userId);
   }
 
-  const existingPreference = await getDb().notificationPreference.findUnique({
-    where: {
-      userId
-    }
-  });
+  try {
+    const existingPreference = await getDb().notificationPreference.findUnique({
+      where: {
+        userId
+      }
+    });
 
-  if (existingPreference) {
-    return existingPreference;
+    if (existingPreference) {
+      return existingPreference;
+    }
+
+    return getDb().notificationPreference.create({
+      data: {
+        userId
+      }
+    });
+  } catch (error) {
+    if (isDatabaseSchemaDriftError(error)) {
+      return buildDefaultNotificationPreference(userId);
+    }
+
+    throw error;
   }
-
-  return getDb().notificationPreference.create({
-    data: {
-      userId
-    }
-  });
 }
 
 export async function getNotificationPreference(userId: string) {
@@ -65,16 +78,22 @@ export async function sendPlatformNotification(input: {
   }
 
   if (preference.webEnabled) {
-    await getDb().userNotification.create({
-      data: {
-        userId: input.userId,
-        category: input.category,
-        title: input.title,
-        body: input.body,
-        linkPath: input.linkPath,
-        metadataJson: input.metadata ? JSON.stringify(input.metadata) : null
+    try {
+      await getDb().userNotification.create({
+        data: {
+          userId: input.userId,
+          category: input.category,
+          title: input.title,
+          body: input.body,
+          linkPath: input.linkPath,
+          metadataJson: input.metadata ? JSON.stringify(input.metadata) : null
+        }
+      });
+    } catch (error) {
+      if (!isDatabaseSchemaDriftError(error)) {
+        throw error;
       }
-    });
+    }
   }
 
   if (preference.emailEnabled) {
@@ -120,17 +139,23 @@ export async function sendForumNotification(input: {
   const courseIdentity = await getCourseIdentityBySlug(input.courseSlug);
 
   if (preference.webEnabled) {
-    await getDb().forumNotification.create({
-      data: {
-        userId: input.userId,
-        courseId: courseIdentity?.id ?? null,
-        courseSlug: input.courseSlug,
-        type: input.type,
-        title: input.title,
-        body: input.body,
-        linkPath: input.linkPath
+    try {
+      await getDb().forumNotification.create({
+        data: {
+          userId: input.userId,
+          courseId: courseIdentity?.id ?? null,
+          courseSlug: input.courseSlug,
+          type: input.type,
+          title: input.title,
+          body: input.body,
+          linkPath: input.linkPath
+        }
+      });
+    } catch (error) {
+      if (!isDatabaseSchemaDriftError(error)) {
+        throw error;
       }
-    });
+    }
   }
 
   if (preference.emailEnabled) {
@@ -157,54 +182,81 @@ export async function getUserPlatformNotifications(input: {
     };
   }
 
-  const [notifications, unreadCount] = await Promise.all([
-    getDb().userNotification.findMany({
-      where: {
-        userId: input.userId
-      },
-      orderBy: {
-        createdAt: "desc"
-      },
-      take: input.limit ?? 8
-    }),
-    getDb().userNotification.count({
-      where: {
-        userId: input.userId,
-        readAt: null
-      }
-    })
-  ]);
+  try {
+    const [notifications, unreadCount] = await Promise.all([
+      getDb().userNotification.findMany({
+        where: {
+          userId: input.userId
+        },
+        orderBy: {
+          createdAt: "desc"
+        },
+        take: input.limit ?? 8
+      }),
+      getDb().userNotification.count({
+        where: {
+          userId: input.userId,
+          readAt: null
+        }
+      })
+    ]);
 
-  return {
-    notifications,
-    unreadCount
-  };
+    return {
+      notifications,
+      unreadCount
+    };
+  } catch (error) {
+    if (isDatabaseSchemaDriftError(error)) {
+      return {
+        notifications: [],
+        unreadCount: 0
+      };
+    }
+
+    throw error;
+  }
 }
 
 export async function markUserNotificationRead(input: {
   notificationId: string;
   userId: string;
 }) {
-  return getDb().userNotification.updateMany({
-    where: {
-      id: input.notificationId,
-      userId: input.userId,
-      readAt: null
-    },
-    data: {
-      readAt: new Date()
+  try {
+    return await getDb().userNotification.updateMany({
+      where: {
+        id: input.notificationId,
+        userId: input.userId,
+        readAt: null
+      },
+      data: {
+        readAt: new Date()
+      }
+    });
+  } catch (error) {
+    if (isDatabaseSchemaDriftError(error)) {
+      return { count: 0 };
     }
-  });
+
+    throw error;
+  }
 }
 
 export async function markAllUserNotificationsRead(userId: string) {
-  return getDb().userNotification.updateMany({
-    where: {
-      userId,
-      readAt: null
-    },
-    data: {
-      readAt: new Date()
+  try {
+    return await getDb().userNotification.updateMany({
+      where: {
+        userId,
+        readAt: null
+      },
+      data: {
+        readAt: new Date()
+      }
+    });
+  } catch (error) {
+    if (isDatabaseSchemaDriftError(error)) {
+      return { count: 0 };
     }
-  });
+
+    throw error;
+  }
 }
