@@ -7,7 +7,11 @@ import { issueEmailVerificationToken } from "@/lib/account-security";
 import { writeAuditLog } from "@/lib/audit";
 import { createSession, ensureBootstrapAdmin, hashPassword, verifyPassword } from "@/lib/auth";
 import { getDemoUserByEmail, isValidDemoPassword } from "@/lib/demo-auth";
-import { isDatabaseConnectionError } from "@/lib/db-errors";
+import {
+  isDatabaseConnectionError,
+  isDatabaseSchemaDriftError,
+  isMissingDatabaseFieldError
+} from "@/lib/db-errors";
 import { canSendEmailMessage, sendEmailVerificationEmail } from "@/lib/email";
 import { isEmailVerificationRequired } from "@/lib/env";
 import { getDb } from "@/lib/prisma";
@@ -50,6 +54,90 @@ function getDefaultPrivateRedirect(globalRole: "STUDENT" | "TEACHER" | "ADMIN") 
   return globalRole === "ADMIN" ? "/admin" : "/mi-cuenta";
 }
 
+async function createUserWithOptionalEmailVerification(input: {
+  name: string;
+  email: string;
+  passwordHash: string;
+}) {
+  const db = getDb();
+  const verificationRequired = isEmailVerificationRequired();
+  const baseData = {
+    name: input.name.trim(),
+    email: input.email,
+    passwordHash: input.passwordHash,
+    notificationPreference: {
+      create: {}
+    }
+  };
+
+  try {
+    return await db.user.create({
+      data: verificationRequired
+        ? baseData
+        : {
+            ...baseData,
+            emailVerifiedAt: new Date()
+          }
+    });
+  } catch (error) {
+    if (!isMissingDatabaseFieldError(error, "emailVerifiedAt")) {
+      throw error;
+    }
+
+    if (verificationRequired) {
+      throw new Error(
+        "La verificacion por correo requiere aplicar la migracion pendiente de la base de datos."
+      );
+    }
+
+    return db.user.create({
+      data: baseData
+    });
+  }
+}
+
+async function getUserForLogin(email: string) {
+  return getDb().user.findUnique({
+    where: {
+      email
+    },
+    select: {
+      id: true,
+      email: true,
+      passwordHash: true,
+      isActive: true,
+      globalRole: true
+    }
+  });
+}
+
+async function getEmailVerificationStateForLogin(userId: string) {
+  try {
+    const user = await getDb().user.findUnique({
+      where: {
+        id: userId
+      },
+      select: {
+        emailVerifiedAt: true
+      }
+    });
+
+    return {
+      emailVerifiedAt: user?.emailVerifiedAt ?? null,
+      schemaReady: true
+    };
+  } catch (error) {
+    if (isMissingDatabaseFieldError(error, "emailVerifiedAt")) {
+      return {
+        emailVerifiedAt: null,
+        schemaReady: false
+      };
+    }
+
+    throw error;
+  }
+}
+
 export async function registerAction(
   _: AuthFormState,
   formData: FormData
@@ -87,16 +175,10 @@ export async function registerAction(
     }
 
     const passwordHash = await hashPassword(parsed.data.password);
-    const user = await db.user.create({
-      data: {
-        name: parsed.data.name.trim(),
-        email: normalizedEmail,
-        passwordHash,
-        emailVerifiedAt: isEmailVerificationRequired() ? null : new Date(),
-        notificationPreference: {
-          create: {}
-        }
-      }
+    const user = await createUserWithOptionalEmailVerification({
+      name: parsed.data.name,
+      email: normalizedEmail,
+      passwordHash
     });
 
     const globalRole =
@@ -136,6 +218,13 @@ export async function registerAction(
     if (isDatabaseConnectionError(error)) {
       return {
         error: "No se puede conectar con la base de datos en este momento. Revisa DATABASE_URL en Vercel."
+      };
+    }
+
+    if (isDatabaseSchemaDriftError(error)) {
+      return {
+        error:
+          "La aplicacion necesita aplicar la migracion pendiente de la base de datos antes de completar esta operacion."
       };
     }
 
@@ -187,11 +276,7 @@ export async function loginAction(
       );
     }
 
-    const user = await getDb().user.findUnique({
-      where: {
-        email: parsed.data.email.toLowerCase()
-      }
-    });
+    const user = await getUserForLogin(parsed.data.email.toLowerCase());
 
     const passwordHash = user?.passwordHash ?? DUMMY_PASSWORD_HASH;
     const isValidPassword = await verifyPassword(parsed.data.password, passwordHash);
@@ -208,10 +293,21 @@ export async function loginAction(
       return { error: "Tu cuenta esta desactivada. Contacta con administracion." };
     }
 
-    if (isEmailVerificationRequired() && !user.emailVerifiedAt) {
-      return {
-        error: "Debes verificar tu correo electronico antes de acceder al campus."
-      };
+    if (isEmailVerificationRequired()) {
+      const verificationState = await getEmailVerificationStateForLogin(user.id);
+
+      if (!verificationState.schemaReady) {
+        return {
+          error:
+            "El acceso con verificacion de correo todavia no esta disponible en este entorno. Aplica la migracion pendiente de la base de datos."
+        };
+      }
+
+      if (!verificationState.emailVerifiedAt) {
+        return {
+          error: "Debes verificar tu correo electronico antes de acceder al campus."
+        };
+      }
     }
 
     const globalRole =
@@ -227,6 +323,13 @@ export async function loginAction(
     if (isDatabaseConnectionError(error)) {
       return {
         error: "No se puede conectar con la base de datos en este momento. Revisa DATABASE_URL en Vercel."
+      };
+    }
+
+    if (isDatabaseSchemaDriftError(error)) {
+      return {
+        error:
+          "La aplicacion necesita aplicar la migracion pendiente de la base de datos antes de completar esta operacion."
       };
     }
 

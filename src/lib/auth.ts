@@ -5,7 +5,10 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { cache } from "react";
 import { getDemoUserById, isDemoUserId } from "@/lib/demo-auth";
-import { isDatabaseConnectionError } from "@/lib/db-errors";
+import {
+  isDatabaseConnectionError,
+  isMissingDatabaseFieldError
+} from "@/lib/db-errors";
 import {
   getRequiredEnv,
   isDemoAuthEnabled,
@@ -66,6 +69,27 @@ export async function createSession(userId: string) {
 export async function clearSession() {
   const cookieStore = await cookies();
   cookieStore.delete(SESSION_COOKIE);
+}
+
+async function getUserEmailVerificationDate(userId: string) {
+  try {
+    const user = await getDb().user.findUnique({
+      where: {
+        id: userId
+      },
+      select: {
+        emailVerifiedAt: true
+      }
+    });
+
+    return user?.emailVerifiedAt ?? null;
+  } catch (error) {
+    if (isMissingDatabaseFieldError(error, "emailVerifiedAt")) {
+      return null;
+    }
+
+    throw error;
+  }
 }
 
 export async function getSessionUserId() {
@@ -145,7 +169,6 @@ export const getCurrentUser = cache(async () => {
         id: true,
         name: true,
         email: true,
-        emailVerifiedAt: true,
         globalRole: true,
         isActive: true,
         createdAt: true
@@ -161,9 +184,13 @@ export const getCurrentUser = cache(async () => {
       email: user.email,
       currentRole: user.globalRole
     });
+    const emailVerifiedAt = isEmailVerificationRequired()
+      ? await getUserEmailVerificationDate(user.id)
+      : null;
 
     return {
       ...user,
+      emailVerifiedAt,
       globalRole: bootstrappedRole ?? user.globalRole
     };
   } catch (error) {
