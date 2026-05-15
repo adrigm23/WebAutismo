@@ -107,7 +107,7 @@ export function CourseExerciseReviewForm({
         <label className="block max-w-[12rem] space-y-2">
           <span className="text-sm font-medium text-[var(--color-ink)]">Nota final</span>
           <Input
-            defaultValue={submission.scoreLabel ?? ""}
+            defaultValue={typeof submission.score === "number" ? String(submission.score) : ""}
             max="10"
             min="0"
             name="score"

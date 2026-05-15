@@ -106,7 +106,7 @@ export function TeacherAccountDashboard({
             </div>
             <div className="min-w-0">
               <p className="text-sm text-[var(--color-muted)]">Docencia activa</p>
-              <p className="truncate text-lg font-semibold text-[var(--color-ink)]">{fullName}</p>
+              <p className="text-base font-semibold leading-5 text-[var(--color-ink)]">{fullName}</p>
             </div>
           </div>
 
