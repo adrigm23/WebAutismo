@@ -27,6 +27,13 @@ export type TeacherDashboardSubmissionActivityItem = {
   sourceLabel: "Revision" | "Entrega";
 };
 
+function buildTeacherTrackingDeepLink(input: {
+  courseSlug: string;
+  submissionId: string;
+}) {
+  return `/mis-cursos/${input.courseSlug}/seguimiento#submission-${input.submissionId}`;
+}
+
 export type TeacherDashboardCourseSummary = {
   space: UserCourseSpace;
   learnerIds: string[];
@@ -177,7 +184,10 @@ export async function getTeacherDashboardCourseSummaries(input: {
         if (submission.status === "SUBMITTED") {
           pendingReviewItems.push({
             id: submission.id,
-            href: `/mis-cursos/${space.course.slug}/seguimiento`,
+            href: buildTeacherTrackingDeepLink({
+              courseSlug: space.course.slug,
+              submissionId: submission.id
+            }),
             courseTitle: space.course.title,
             resourceTitle: resource.title,
             learnerName: submission.student.name,
@@ -188,7 +198,10 @@ export async function getTeacherDashboardCourseSummaries(input: {
 
         recentSubmissionActivity.push({
           id: `submission-${submission.id}`,
-          href: `/mis-cursos/${space.course.slug}/seguimiento`,
+          href: buildTeacherTrackingDeepLink({
+            courseSlug: space.course.slug,
+            submissionId: submission.id
+          }),
           title:
             submission.status === "REVIEWED"
               ? `Entrega revisada en ${space.course.title}`

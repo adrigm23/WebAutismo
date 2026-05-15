@@ -23,7 +23,10 @@ export function CourseExerciseReviewForm({
   const [state, formAction] = useActionState(reviewCourseResourceSubmissionAction, initialState);
 
   return (
-    <div className="rounded-2xl border border-[var(--color-border)] bg-white p-4">
+    <div
+      className="scroll-mt-36 rounded-2xl border border-[var(--color-border)] bg-white p-4"
+      id={`submission-${submission.id}`}
+    >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="text-base font-semibold text-[var(--color-ink)]">{submission.studentName}</p>
