@@ -44,6 +44,28 @@ function TrackingStat(input: {
   );
 }
 
+function TrackingCompactStat(input: {
+  label: string;
+  value: string;
+  detail: string;
+}) {
+  return (
+    <div className="rounded-[1.6rem] border border-[rgba(12,113,195,0.1)] bg-white/88 px-4 py-4 shadow-[0_18px_45px_-38px_rgba(12,113,195,0.4)]">
+      <p className="text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-[var(--color-muted)]">
+        {input.label}
+      </p>
+      <div className="mt-3 flex items-end justify-between gap-3">
+        <p className="text-[1.7rem] font-semibold leading-none tracking-[-0.05em] text-[var(--color-ink)]">
+          {input.value}
+        </p>
+        <p className="max-w-[11rem] text-right text-xs leading-5 text-[var(--color-muted)]">
+          {input.detail}
+        </p>
+      </div>
+    </div>
+  );
+}
+
 export async function generateMetadata({
   params
 }: TrackingPageProps): Promise<Metadata> {
@@ -266,6 +288,34 @@ export default async function CourseTrackingPage({ params }: TrackingPageProps) 
   const learnerExerciseByUserId = new Map(
     learnerExerciseRows.map((learnerExerciseRow) => [learnerExerciseRow.userId, learnerExerciseRow] as const)
   );
+  const reviewQueue = exerciseResources
+    .flatMap((resource) =>
+      resource.submissions
+        .filter(
+          (submission) =>
+            submission.status === "SUBMITTED" || submission.status === "CHANGES_REQUESTED"
+        )
+        .map((submission) => ({
+          submission,
+          resourceTitle: resource.title,
+          moduleTitle: resource.moduleTitle
+        }))
+    )
+    .sort(
+      (left, right) =>
+        right.submission.submittedAt.getTime() - left.submission.submittedAt.getTime()
+    );
+  const progressCoverage = progressRows.length
+    ? Math.round(
+        progressRows.reduce((total, row) => total + row.completionRate, 0) / progressRows.length
+      )
+    : 0;
+  const activeLearnerCount = progressRows.filter(
+    (row) => row.completedModules > 0 || row.lastCompletedAt
+  ).length;
+  const highAttentionLearners = learnerExerciseRows.filter(
+    (row) => row.pendingCount > 0 || row.changesRequestedCount > 0
+  ).length;
 
   return (
     <div className="bg-[linear-gradient(180deg,#f8f6f1_0%,#f4f7fb_52%,#fbfaf8_100%)] pb-20 pt-14 lg:pt-16">
@@ -278,31 +328,44 @@ export default async function CourseTrackingPage({ params }: TrackingPageProps) 
           Volver al curso
         </Link>
 
-        <Card className="overflow-hidden border-[rgba(12,113,195,0.16)] bg-[linear-gradient(135deg,rgba(255,255,255,0.98),rgba(229,238,248,0.82))] p-8 lg:p-9">
-          <div className="grid gap-7 xl:grid-cols-[minmax(0,1fr)_24rem] xl:items-end">
-            <div className="max-w-4xl">
+        <Card className="overflow-hidden border-[rgba(12,113,195,0.16)] bg-[linear-gradient(135deg,rgba(255,255,255,0.99),rgba(232,240,249,0.88))] p-6 lg:p-7">
+          <div className="grid gap-6 xl:grid-cols-[minmax(0,1.2fr)_25rem] xl:items-start">
+            <div className="space-y-5">
               <div className="flex flex-wrap items-center gap-2">
                 <Badge tone="teacher">{getRoleLabel(access.role)}</Badge>
                 <Badge tone="muted">Seguimiento academico</Badge>
               </div>
-              <h1 className="mt-4 text-[3.35rem] font-semibold leading-[0.98] tracking-[-0.08em] text-[var(--color-ink)]">
-                {course.title}
-              </h1>
-              <p className="mt-4 max-w-3xl text-[1.02rem] leading-8 text-[var(--color-ink)]/84">
-                Aqui puedes revisar tanto el progreso manual por modulo como las entregas reales de
-                ejercicios publicadas dentro del campus.
-              </p>
-            </div>
+              <div className="space-y-3">
+                <h1 className="max-w-4xl text-[2.65rem] font-semibold leading-[0.96] tracking-[-0.08em] text-[var(--color-ink)] lg:text-[2.9rem]">
+                  {course.title}
+                </h1>
+                <p className="max-w-3xl text-[0.98rem] leading-7 text-[var(--color-ink)]/80">
+                  Consola docente para revisar progreso manual, entregas reales y alumnado que
+                  requiere atencion sin cambiar entre varias vistas del curso.
+                </p>
+              </div>
 
-            <div className="space-y-4">
-              <TrackingStat
-                detail={exerciseSummary.pending > 0 ? "Entregas que necesitan revision docente." : "Sin bloqueos inmediatos en revision."}
-                label="Pendientes"
-                value={`${exerciseSummary.pending}`}
-              />
+              <div className="grid gap-3 sm:grid-cols-3">
+                <TrackingCompactStat
+                  detail="Media de avance manual registrada."
+                  label="Cobertura"
+                  value={`${progressCoverage}%`}
+                />
+                <TrackingCompactStat
+                  detail="Con progreso o actividad reciente."
+                  label="Alumnado activo"
+                  value={`${activeLearnerCount}`}
+                />
+                <TrackingCompactStat
+                  detail="Pendientes o cambios por revisar."
+                  label="Casos a vigilar"
+                  value={`${highAttentionLearners}`}
+                />
+              </div>
+
               <div className="flex flex-wrap gap-3">
                 <Link
-                  className="inline-flex items-center rounded-2xl border border-[var(--color-primary)] px-4 py-3 text-sm font-semibold text-[var(--color-primary)] transition hover:bg-[var(--color-primary-soft)]"
+                  className="inline-flex items-center rounded-2xl bg-[var(--color-primary)] px-4 py-3 text-sm font-semibold text-white transition hover:translate-y-[-1px] hover:shadow-[0_18px_32px_-20px_rgba(12,113,195,0.55)]"
                   href={`/mis-cursos/${slug}`}
                 >
                   Ir al campus
@@ -314,6 +377,86 @@ export default async function CourseTrackingPage({ params }: TrackingPageProps) 
                   Abrir foro
                 </Link>
               </div>
+            </div>
+
+            <div className="grid gap-4">
+              <Card className="border-[rgba(12,113,195,0.12)] bg-white/92 p-5">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--color-muted)]">
+                      Estado del curso
+                    </p>
+                    <p className="mt-3 text-[2.2rem] font-semibold leading-none tracking-[-0.06em] text-[var(--color-ink)]">
+                      {exerciseSummary.pending}
+                    </p>
+                    <p className="mt-2 text-sm leading-6 text-[var(--color-muted)]">
+                      {exerciseSummary.pending > 0
+                        ? "Entregas esperando revision docente."
+                        : "Sin bloqueos inmediatos en la cola de revision."}
+                    </p>
+                  </div>
+                  <div className="rounded-2xl bg-[var(--color-primary-soft)] px-3 py-2 text-right">
+                    <p className="text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-[var(--color-primary)]">
+                      Revision
+                    </p>
+                    <p className="mt-2 text-lg font-semibold text-[var(--color-ink)]">
+                      {exerciseSummary.reviewed}
+                    </p>
+                  </div>
+                </div>
+                <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                  <div className="rounded-2xl bg-[var(--color-surface)] px-4 py-3">
+                    <p className="text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-[var(--color-muted)]">
+                      Entregas
+                    </p>
+                    <p className="mt-2 text-xl font-semibold text-[var(--color-ink)]">
+                      {exerciseSummary.submissions}
+                    </p>
+                  </div>
+                  <div className="rounded-2xl bg-[var(--color-surface)] px-4 py-3">
+                    <p className="text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-[var(--color-muted)]">
+                      Alumnado con entregas
+                    </p>
+                    <p className="mt-2 text-xl font-semibold text-[var(--color-ink)]">
+                      {submissionStudentIds.size}
+                    </p>
+                  </div>
+                </div>
+              </Card>
+
+              <Card className="border-[rgba(12,113,195,0.12)] bg-white/92 p-5">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--color-muted)]">
+                      Foco inmediato
+                    </p>
+                    <p className="mt-3 text-[1.1rem] font-semibold text-[var(--color-ink)]">
+                      {reviewQueue.length
+                        ? reviewQueue[0]?.submission.studentName
+                        : "Seguimiento estable"}
+                    </p>
+                  </div>
+                  {reviewQueue.length ? (
+                    <Badge tone="accent">
+                      {reviewQueue[0]?.submission.status === "CHANGES_REQUESTED"
+                        ? "Cambios solicitados"
+                        : "Pendiente"}
+                    </Badge>
+                  ) : (
+                    <Badge tone="teacher">Sin alertas</Badge>
+                  )}
+                </div>
+                <p className="mt-3 text-sm leading-6 text-[var(--color-muted)]">
+                  {reviewQueue.length
+                    ? `${reviewQueue[0]?.resourceTitle}${reviewQueue[0]?.moduleTitle ? ` | ${reviewQueue[0]?.moduleTitle}` : ""}`
+                    : "No hay alumnos esperando respuesta o nueva revision ahora mismo."}
+                </p>
+                <p className="mt-3 text-xs uppercase tracking-[0.14em] text-[var(--color-muted)]">
+                  {reviewQueue.length
+                    ? `Ultimo movimiento | ${formatDateTime(reviewQueue[0]!.submission.submittedAt)}`
+                    : "Curso sin cola activa"}
+                </p>
+              </Card>
             </div>
           </div>
         </Card>
@@ -336,124 +479,211 @@ export default async function CourseTrackingPage({ params }: TrackingPageProps) 
           />
           <TrackingStat
             detail={`${exerciseSummary.reviewed} revisadas y ${exerciseSummary.changesRequested} con cambios solicitados.`}
-            label="Revisiones"
+            label="Pendientes de revision"
             value={`${exerciseSummary.pending}`}
           />
         </div>
 
-        <section className="space-y-4">
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[var(--color-primary)]">
-              Rendimiento por alumno
-            </p>
-            <h2 className="mt-2 text-[2rem] font-semibold tracking-[-0.05em] text-[var(--color-ink)]">
-              Vision consolidada
-            </h2>
-            <p className="mt-2 max-w-3xl text-sm leading-7 text-[var(--color-muted)]">
-              Resume entregas, revisiones y nota media por estudiante para que el seguimiento no
-              dependa solo de revisar ejercicio a ejercicio.
-            </p>
-          </div>
+        <section className="grid gap-5 xl:grid-cols-[minmax(0,1.28fr)_22rem]">
+          <Card className="overflow-hidden p-0">
+            <div className="border-b border-[rgba(12,113,195,0.08)] px-6 py-5">
+              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[var(--color-primary)]">
+                Rendimiento por alumno
+              </p>
+              <div className="mt-2 flex flex-col gap-2 lg:flex-row lg:items-end lg:justify-between">
+                <div>
+                  <h2 className="text-[1.85rem] font-semibold tracking-[-0.05em] text-[var(--color-ink)]">
+                    Vision consolidada
+                  </h2>
+                  <p className="mt-2 max-w-3xl text-sm leading-7 text-[var(--color-muted)]">
+                    Lo esencial del curso en una sola vista: entregas, nivel de avance y alumnado
+                    que requiere seguimiento cercano.
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-muted)]">
+                  <span>{learnerExerciseRows.length} alumnos con entregas</span>
+                  <span>{exerciseSummary.pending} pendientes</span>
+                  <span>{exerciseSummary.reviewed} revisadas</span>
+                </div>
+              </div>
+            </div>
 
-          {learnerExerciseRows.length ? (
-            <div className="grid gap-4 xl:grid-cols-2">
-              {learnerExerciseRows.map((row) => (
-                <Card className="p-6" key={row.userId}>
-                  <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                    <div>
-                      <p className="text-[1.15rem] font-semibold text-[var(--color-ink)]">
-                        {row.learnerName}
+            {learnerExerciseRows.length ? (
+              <div className="divide-y divide-[rgba(12,113,195,0.08)]">
+                {learnerExerciseRows.map((row) => (
+                  <div className="grid gap-4 px-6 py-5 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.9fr)_220px] lg:items-center" key={row.userId}>
+                    <div className="space-y-2">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="text-[1.02rem] font-semibold text-[var(--color-ink)]">
+                          {row.learnerName}
+                        </p>
+                        {row.pendingCount ? (
+                          <Badge tone="accent">{row.pendingCount} pendientes</Badge>
+                        ) : null}
+                        {row.changesRequestedCount ? (
+                          <Badge tone="accent">
+                            {row.changesRequestedCount} con cambios
+                          </Badge>
+                        ) : null}
+                      </div>
+                      <p className="text-sm text-[var(--color-muted)]">{row.learnerEmail}</p>
+                      <p className="text-sm leading-6 text-[var(--color-muted)]">
+                        {row.latestResourceTitle ? (
+                          <>
+                            Ultima entrega en{" "}
+                            <strong className="text-[var(--color-ink)]">
+                              {row.latestResourceTitle}
+                            </strong>
+                            {row.latestModuleTitle ? ` | ${row.latestModuleTitle}` : ""}
+                            {row.latestSubmittedAt
+                              ? ` | ${formatDateTime(row.latestSubmittedAt)}`
+                              : ""}
+                          </>
+                        ) : (
+                          "Sin ejercicio reciente registrado."
+                        )}
                       </p>
-                      <p className="mt-1 text-sm text-[var(--color-muted)]">{row.learnerEmail}</p>
                     </div>
-                    <div className="flex flex-wrap items-center gap-2">
-                      {row.pendingCount ? <Badge tone="accent">{row.pendingCount} pendientes</Badge> : null}
-                      {row.passedCount ? <Badge tone="teacher">{row.passedCount} aprobadas</Badge> : null}
-                      {row.failedCount ? <Badge tone="accent">{row.failedCount} no aprobadas</Badge> : null}
-                      {row.averageScore !== null ? (
-                        <Badge tone="teacher">Media {row.averageScore.toFixed(1)}/10</Badge>
-                      ) : (
-                        <Badge tone="muted">Sin nota media</Badge>
-                      )}
-                    </div>
-                  </div>
 
-                  <div className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                    <div className="rounded-2xl bg-[var(--color-surface)] px-4 py-3">
-                      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-muted)]">
-                        Entregas
-                      </p>
-                      <p className="mt-2 text-2xl font-semibold text-[var(--color-ink)]">
-                        {row.submissionCount}
-                      </p>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <div className="rounded-2xl bg-[var(--color-surface)] px-4 py-3">
+                        <p className="text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-[var(--color-muted)]">
+                          Entregas
+                        </p>
+                        <p className="mt-2 text-xl font-semibold text-[var(--color-ink)]">
+                          {row.submissionCount}
+                        </p>
+                        <p className="mt-1 text-xs text-[var(--color-muted)]">
+                          {row.reviewedCount} revisadas
+                        </p>
+                      </div>
+                      <div className="rounded-2xl bg-[var(--color-surface)] px-4 py-3">
+                        <p className="text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-[var(--color-muted)]">
+                          Progreso
+                        </p>
+                        <p className="mt-2 text-xl font-semibold text-[var(--color-ink)]">
+                          {row.progressRow ? `${row.progressRow.completionRate}%` : "N/D"}
+                        </p>
+                        <p className="mt-1 text-xs text-[var(--color-muted)]">
+                          {row.progressRow
+                            ? `${row.progressRow.completedModules}/${row.progressRow.totalModules} modulos`
+                            : "Sin avance manual"}
+                        </p>
+                      </div>
                     </div>
-                    <div className="rounded-2xl bg-[var(--color-surface)] px-4 py-3">
-                      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-muted)]">
-                        Revisadas
-                      </p>
-                      <p className="mt-2 text-2xl font-semibold text-[var(--color-ink)]">
-                        {row.reviewedCount}
-                      </p>
-                    </div>
-                    <div className="rounded-2xl bg-[var(--color-surface)] px-4 py-3">
-                      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-muted)]">
-                        Cambios
-                      </p>
-                      <p className="mt-2 text-2xl font-semibold text-[var(--color-ink)]">
-                        {row.changesRequestedCount}
-                      </p>
-                    </div>
-                    <div className="rounded-2xl bg-[var(--color-surface)] px-4 py-3">
-                      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-muted)]">
-                        Progreso
-                      </p>
-                      <p className="mt-2 text-2xl font-semibold text-[var(--color-ink)]">
-                        {row.progressRow ? `${row.progressRow.completionRate}%` : "N/D"}
-                      </p>
-                    </div>
-                  </div>
 
-                  <div className="mt-5 rounded-2xl bg-[var(--color-surface)] px-4 py-4 text-sm leading-7 text-[var(--color-muted)]">
-                    <p>
-                      Ultima entrega:{" "}
-                      <strong className="text-[var(--color-ink)]">
-                        {row.latestSubmittedAt ? formatDateTime(row.latestSubmittedAt) : "Sin actividad"}
-                      </strong>
-                    </p>
-                    {row.latestResourceTitle ? (
-                      <p className="mt-1">
-                        Ejercicio reciente:{" "}
-                        <strong className="text-[var(--color-ink)]">{row.latestResourceTitle}</strong>
-                        {row.latestModuleTitle ? ` | ${row.latestModuleTitle}` : ""}
-                      </p>
-                    ) : null}
-                    {row.progressRow?.lastCompletedAt ? (
-                      <p className="mt-1">
-                        Ultimo modulo marcado:{" "}
+                    <div className="rounded-2xl border border-[rgba(12,113,195,0.08)] bg-white/86 px-4 py-4 text-sm leading-6 text-[var(--color-muted)]">
+                      <p>
+                        Media:{" "}
                         <strong className="text-[var(--color-ink)]">
-                          {formatDateTime(row.progressRow.lastCompletedAt)}
+                          {row.averageScore !== null
+                            ? `${row.averageScore.toFixed(1)}/10`
+                            : "Sin nota"}
                         </strong>
                       </p>
-                    ) : null}
-                    {row.passedCount || row.failedCount ? (
                       <p className="mt-1">
-                        Resultado evaluado:{" "}
+                        Resultado:{" "}
                         <strong className="text-[var(--color-ink)]">
                           {row.passedCount} aprobadas
                         </strong>
-                        {` y ${row.failedCount} no aprobadas`}
+                        {` | ${row.failedCount} no aprobadas`}
                       </p>
-                    ) : null}
+                      {row.progressRow?.lastCompletedAt ? (
+                        <p className="mt-1">
+                          Ultimo modulo:{" "}
+                          <strong className="text-[var(--color-ink)]">
+                            {formatDateTime(row.progressRow.lastCompletedAt)}
+                          </strong>
+                        </p>
+                      ) : null}
+                    </div>
                   </div>
-                </Card>
-              ))}
-            </div>
-          ) : (
-            <Card className="p-8 text-[1.02rem] leading-8 text-[var(--color-muted)]">
-              Todavia no hay entregas suficientes para construir un seguimiento consolidado por
-              alumno.
+                ))}
+              </div>
+            ) : (
+              <div className="px-6 py-8 text-[1.02rem] leading-8 text-[var(--color-muted)]">
+                Todavia no hay entregas suficientes para construir un seguimiento consolidado por
+                alumno.
+              </div>
+            )}
+          </Card>
+
+          <div className="space-y-4">
+            <Card className="p-5">
+              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[var(--color-primary)]">
+                Cola de revision
+              </p>
+              <h3 className="mt-2 text-[1.45rem] font-semibold tracking-[-0.04em] text-[var(--color-ink)]">
+                Requiere respuesta docente
+              </h3>
+              <div className="mt-4 space-y-3">
+                {reviewQueue.length ? (
+                  reviewQueue.slice(0, 4).map((entry) => (
+                    <div
+                      className="rounded-2xl border border-[rgba(12,113,195,0.08)] bg-[var(--color-surface)] px-4 py-4"
+                      key={entry.submission.id}
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <p className="text-sm font-semibold text-[var(--color-ink)]">
+                            {entry.submission.studentName}
+                          </p>
+                          <p className="mt-1 text-xs uppercase tracking-[0.14em] text-[var(--color-muted)]">
+                            {entry.submission.status === "CHANGES_REQUESTED"
+                              ? "Cambios solicitados"
+                              : "Pendiente de revision"}
+                          </p>
+                        </div>
+                        <Badge tone={entry.submission.status === "CHANGES_REQUESTED" ? "accent" : "teacher"}>
+                          {entry.submission.status === "CHANGES_REQUESTED" ? "Reabrir" : "Revisar"}
+                        </Badge>
+                      </div>
+                      <p className="mt-3 text-sm leading-6 text-[var(--color-muted)]">
+                        <strong className="text-[var(--color-ink)]">{entry.resourceTitle}</strong>
+                        {entry.moduleTitle ? ` | ${entry.moduleTitle}` : ""}
+                      </p>
+                      <p className="mt-2 text-xs uppercase tracking-[0.14em] text-[var(--color-muted)]">
+                        {formatDateTime(entry.submission.submittedAt)}
+                      </p>
+                    </div>
+                  ))
+                ) : (
+                  <div className="rounded-2xl border border-dashed border-[rgba(12,113,195,0.18)] bg-[var(--color-surface)] px-4 py-5 text-sm leading-7 text-[var(--color-muted)]">
+                    No hay entregas esperando respuesta. El seguimiento esta estable.
+                  </div>
+                )}
+              </div>
             </Card>
-          )}
+
+            <Card className="p-5">
+              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[var(--color-primary)]">
+                Lectura rapida
+              </p>
+              <div className="mt-4 space-y-4 text-sm leading-7 text-[var(--color-muted)]">
+                <div className="rounded-2xl bg-[var(--color-surface)] px-4 py-4">
+                  <p>
+                    <strong className="text-[var(--color-ink)]">{exerciseSummary.exercises}</strong>{" "}
+                    ejercicios activos y{" "}
+                    <strong className="text-[var(--color-ink)]">{exerciseSummary.submissions}</strong>{" "}
+                    entregas registradas.
+                  </p>
+                </div>
+                <div className="rounded-2xl bg-[var(--color-surface)] px-4 py-4">
+                  <p>
+                    <strong className="text-[var(--color-ink)]">{activeLearnerCount}</strong> alumnos
+                    con actividad y <strong className="text-[var(--color-ink)]">{highAttentionLearners}</strong>{" "}
+                    casos que conviene seguir de cerca.
+                  </p>
+                </div>
+                <div className="rounded-2xl bg-[var(--color-surface)] px-4 py-4">
+                  <p>
+                    El progreso medio manual del grupo se situa en{" "}
+                    <strong className="text-[var(--color-ink)]">{progressCoverage}%</strong>.
+                  </p>
+                </div>
+              </div>
+            </Card>
+          </div>
         </section>
 
         <section className="space-y-4">
