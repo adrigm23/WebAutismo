@@ -27,6 +27,11 @@ import { Badge } from "@/components/ui/badge";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import type { DashboardNotificationSnapshot, StudentDashboardPendingSource } from "@/lib/account-dashboard";
+import {
+  buildCourseContentHref,
+  buildCourseForumHref,
+  buildCourseResourcesHref
+} from "@/lib/course-navigation";
 import { siteConfig } from "@/lib/site";
 import { cn, formatRelativeTime } from "@/lib/utils";
 
@@ -71,10 +76,10 @@ export function StudentAccountDashboard({
     : studentCourses;
   const pendingItems = buildStudentPendingItems(pendingSources);
   const initials = getStudentDashboardInitials(fullName);
-  const forumHref = primaryCourse ? `/mis-cursos/${primaryCourse.space.course.slug}/foro` : "/cursos";
+  const forumHref = primaryCourse ? buildCourseForumHref(primaryCourse.space.course.slug) : "/cursos";
   const resourcesHref =
     pendingItems[0]?.href ??
-    (primaryCourse ? `/mis-cursos/${primaryCourse.space.course.slug}?tab=resources#resources-panel` : "/cursos");
+    (primaryCourse ? buildCourseResourcesHref(primaryCourse.space.course.slug) : "/cursos");
   const completionRate = primaryCourse?.progress.completionRate ?? 0;
   const completedModules = primaryCourse?.progress.completedModules ?? 0;
   const totalModules = primaryCourse?.progress.totalModules ?? 0;
@@ -270,14 +275,14 @@ export function StudentAccountDashboard({
                     </div>
 
                     <div className="mt-8 flex flex-wrap gap-3">
-                      <ButtonLink href={`/mis-cursos/${primaryCourse.space.course.slug}`}>
+                      <ButtonLink href={buildCourseContentHref(primaryCourse.space.course.slug)}>
                         Continuar curso
                       </ButtonLink>
                       <ButtonLink href={resourcesHref} variant="secondary">
                         Ver tareas
                       </ButtonLink>
                       <ButtonLink
-                        href={`/mis-cursos/${primaryCourse.space.course.slug}/foro`}
+                        href={buildCourseForumHref(primaryCourse.space.course.slug)}
                         variant="ghost"
                       >
                         Ir al foro
@@ -416,11 +421,14 @@ export function StudentAccountDashboard({
                       </div>
 
                       <div className="mt-6 flex flex-wrap gap-3">
-                        <ButtonLink href={`/mis-cursos/${course.space.course.slug}`}>
+                        <ButtonLink href={buildCourseContentHref(course.space.course.slug)}>
                           Abrir curso
                         </ButtonLink>
-                        <ButtonLink href={`/mis-cursos/${course.space.course.slug}/foro`} variant="secondary">
-                          Foro
+                        <ButtonLink
+                          href={buildCourseResourcesHref(course.space.course.slug)}
+                          variant="secondary"
+                        >
+                          Ver tareas
                         </ButtonLink>
                       </div>
                     </div>
@@ -438,7 +446,10 @@ export function StudentAccountDashboard({
                         acceso directo al campus.
                       </p>
                     </div>
-                    <ButtonLink href={`/mis-cursos/${primaryCourse.space.course.slug}`} variant="secondary">
+                    <ButtonLink
+                      href={buildCourseContentHref(primaryCourse.space.course.slug)}
+                      variant="secondary"
+                    >
                       Abrir campus
                     </ButtonLink>
                   </div>

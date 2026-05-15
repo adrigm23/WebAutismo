@@ -13,6 +13,11 @@ import {
   canModerateCourse,
   getRoleLabel
 } from "@/lib/course-community";
+import {
+  buildCourseContentHref,
+  buildCourseForumHref,
+  buildCourseResourcesHref
+} from "@/lib/course-navigation";
 import { getEnrollmentAccessState } from "@/lib/course-editions";
 import { isDatabaseConnectionError } from "@/lib/db-errors";
 import { isDemoUserId } from "@/lib/demo-auth";
@@ -316,13 +321,16 @@ export default async function CourseTrackingPage({ params }: TrackingPageProps) 
   const highAttentionLearners = learnerExerciseRows.filter(
     (row) => row.pendingCount > 0 || row.changesRequestedCount > 0
   ).length;
+  const campusContentHref = buildCourseContentHref(slug);
+  const campusResourcesHref = buildCourseResourcesHref(slug, "resource-manager-top");
+  const forumHref = buildCourseForumHref(slug);
 
   return (
     <div className="bg-[linear-gradient(180deg,#f8f6f1_0%,#f4f7fb_52%,#fbfaf8_100%)] pb-20 pt-14 lg:pt-16">
       <div className="site-container space-y-8">
         <Link
           className="inline-flex items-center gap-2 rounded-full bg-[var(--color-primary-soft)] px-4 py-2 text-sm font-semibold text-[var(--color-primary)]"
-          href={`/mis-cursos/${slug}`}
+          href={campusContentHref}
         >
           <ChevronLeft className="h-4 w-4" />
           Volver al curso
@@ -366,13 +374,13 @@ export default async function CourseTrackingPage({ params }: TrackingPageProps) 
               <div className="flex flex-wrap gap-3">
                 <Link
                   className="inline-flex items-center rounded-2xl bg-[var(--color-primary)] px-4 py-3 text-sm font-semibold text-white transition hover:translate-y-[-1px] hover:shadow-[0_18px_32px_-20px_rgba(12,113,195,0.55)]"
-                  href={`/mis-cursos/${slug}`}
+                  href={campusResourcesHref}
                 >
-                  Ir al campus
+                  Abrir recursos del campus
                 </Link>
                 <Link
                   className="inline-flex items-center rounded-2xl border border-[var(--color-primary)] px-4 py-3 text-sm font-semibold text-[var(--color-primary)] transition hover:bg-[var(--color-primary-soft)]"
-                  href={`/mis-cursos/${slug}/foro`}
+                  href={forumHref}
                 >
                   Abrir foro
                 </Link>
@@ -703,7 +711,7 @@ export default async function CourseTrackingPage({ params }: TrackingPageProps) 
             </div>
             <Link
               className="inline-flex items-center rounded-xl border border-[var(--color-primary)] px-4 py-3 text-sm font-semibold text-[var(--color-primary)] transition hover:bg-[var(--color-primary-soft)]"
-              href={`/mis-cursos/${slug}`}
+              href={campusResourcesHref}
             >
               Ir a recursos del campus
             </Link>
@@ -767,17 +775,25 @@ export default async function CourseTrackingPage({ params }: TrackingPageProps) 
                       </p>
                     </div>
                     <div className="rounded-2xl bg-[var(--color-surface)] px-4 py-3 text-sm leading-7 text-[var(--color-muted)]">
-                      {resource.href ? (
+                      <div className="space-y-2">
                         <Link
-                          className="font-semibold text-[var(--color-primary)]"
-                          href={resource.href}
-                          target={resource.isExternal ? "_blank" : undefined}
+                          className="block font-semibold text-[var(--color-primary)]"
+                          href={buildCourseResourcesHref(slug, `resource-${resource.id}`)}
                         >
-                          {resource.isExternal ? "Abrir enunciado externo" : "Descargar enunciado"}
+                          Abrir en campus
                         </Link>
-                      ) : (
-                        "Ejercicio interno del campus."
-                      )}
+                        {resource.href ? (
+                          <Link
+                            className="block font-semibold text-[var(--color-primary)]"
+                            href={resource.href}
+                            target={resource.isExternal ? "_blank" : undefined}
+                          >
+                            {resource.isExternal ? "Abrir enunciado externo" : "Descargar enunciado"}
+                          </Link>
+                        ) : (
+                          <span>Ejercicio interno del campus.</span>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>

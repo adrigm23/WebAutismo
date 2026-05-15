@@ -8,6 +8,12 @@ import type {
   DashboardNotificationSnapshot,
   TeacherDashboardCourseSummary
 } from "@/lib/account-dashboard";
+import {
+  buildCourseContentHref,
+  buildCourseForumHref,
+  buildCourseResourcesHref,
+  buildCourseTrackingHref
+} from "@/lib/course-navigation";
 import { cn, formatRelativeTime } from "@/lib/utils";
 
 export function getTeacherDashboardInitials(name: string) {
@@ -56,10 +62,13 @@ export function getTeacherCoursePaths(course: TeacherDashboardCourseSummary | nu
   }
 
   return {
-    campusHref: `/mis-cursos/${course.space.course.slug}`,
-    resourcesHref: `/mis-cursos/${course.space.course.slug}?tab=resources#resource-manager-top`,
-    trackingHref: `/mis-cursos/${course.space.course.slug}/seguimiento`,
-    forumHref: `/mis-cursos/${course.space.course.slug}/foro`
+    campusHref: buildCourseContentHref(course.space.course.slug),
+    resourcesHref: buildCourseResourcesHref(course.space.course.slug, "resource-manager-top"),
+    trackingHref: buildCourseTrackingHref({
+      courseSlug: course.space.course.slug,
+      submissionId: course.pendingReviewItems[0]?.id ?? null
+    }),
+    forumHref: buildCourseForumHref(course.space.course.slug)
   };
 }
 

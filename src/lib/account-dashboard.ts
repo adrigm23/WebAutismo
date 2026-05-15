@@ -1,6 +1,7 @@
 import type { CourseResourceSubmissionStatus } from "@prisma/client";
 import type { ForumNotificationListItem } from "@/lib/forum";
 import type { UserCourseSpace } from "@/lib/course-community";
+import { buildCourseTrackingHref } from "@/lib/course-navigation";
 import type { CourseLearnerProgressSummary } from "@/lib/course-progress";
 import { isDatabaseSchemaDriftError } from "@/lib/db-errors";
 import { getUserForumNotifications } from "@/lib/forum";
@@ -31,7 +32,7 @@ function buildTeacherTrackingDeepLink(input: {
   courseSlug: string;
   submissionId: string;
 }) {
-  return `/mis-cursos/${input.courseSlug}/seguimiento#submission-${input.submissionId}`;
+  return buildCourseTrackingHref(input);
 }
 
 export type TeacherDashboardCourseSummary = {

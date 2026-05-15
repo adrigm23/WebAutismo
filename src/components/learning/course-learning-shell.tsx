@@ -15,6 +15,7 @@ import { CourseResourceManager } from "@/components/learning/course-resource-man
 import { Badge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button";
 import type { CatalogCourse } from "@/lib/course-catalog";
+import { buildCourseTrackingHref } from "@/lib/course-navigation";
 import type { CourseProgressDetails } from "@/lib/course-progress";
 import type { CampusResourceItem } from "@/lib/course-resources";
 import { siteConfig } from "@/lib/site";
@@ -256,6 +257,24 @@ export function CourseLearningShell({
       managedExercises.reduce((total, resource) => total + (resource.submissionStats?.total ?? 0), 0),
     [managedExercises]
   );
+  const nextReviewSubmissionId = useMemo(() => {
+    if (!canModerate) {
+      return null;
+    }
+
+    for (const resource of managedExercises) {
+      const nextSubmission = resource.submissions.find(
+        (submission) =>
+          submission.status === "SUBMITTED" || submission.status === "CHANGES_REQUESTED"
+      );
+
+      if (nextSubmission) {
+        return nextSubmission.id;
+      }
+    }
+
+    return null;
+  }, [canModerate, managedExercises]);
 
   const primaryResourceTargetId = useMemo(() => {
     if (canModerate) {
@@ -575,8 +594,11 @@ export function CourseLearningShell({
                       Abrir foro privado
                     </ButtonLink>
                     {canModerate ? (
-                      <ButtonLink
-                        href={`/mis-cursos/${course.slug}/seguimiento`}
+                    <ButtonLink
+                        href={buildCourseTrackingHref({
+                          courseSlug: course.slug,
+                          submissionId: nextReviewSubmissionId
+                        })}
                         prefetch
                         variant="ghost"
                       >

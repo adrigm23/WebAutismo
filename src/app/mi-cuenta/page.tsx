@@ -31,6 +31,12 @@ import {
   getTeacherDashboardCourseSummaries
 } from "@/lib/account-dashboard";
 import {
+  buildCourseContentHref,
+  buildCourseForumHref,
+  buildCourseResourcesHref,
+  buildCourseTrackingHref
+} from "@/lib/course-navigation";
+import {
   getCourseProgressDetailsMapForUser,
   getLearnerProgressSummariesForCatalogCourses,
   getCourseProgressSummariesForUser
@@ -217,16 +223,22 @@ export default async function AccountPage() {
                     </p>
 
                     <div className="mt-6 flex flex-wrap gap-3">
-                      <ButtonLink href={`/mis-cursos/${space.course.slug}`}>
+                      <ButtonLink href={buildCourseContentHref(space.course.slug)}>
                         {isStaff ? "Entrar al campus" : "Abrir curso"}
                       </ButtonLink>
                       {isStaff ? (
-                        <ButtonLink href={`/mis-cursos/${space.course.slug}/seguimiento`} variant="secondary">
+                        <ButtonLink
+                          href={buildCourseTrackingHref({ courseSlug: space.course.slug })}
+                          variant="secondary"
+                        >
                           Ver seguimiento
                         </ButtonLink>
                       ) : (
-                        <ButtonLink href={`/mis-cursos/${space.course.slug}/foro`} variant="secondary">
-                          Ir al foro
+                        <ButtonLink
+                          href={buildCourseResourcesHref(space.course.slug)}
+                          variant="secondary"
+                        >
+                          Ver tareas
                         </ButtonLink>
                       )}
                     </div>
@@ -473,11 +485,14 @@ export default async function AccountPage() {
                         </p>
                         <div className="flex flex-wrap gap-3">
                           {!isStaff ? (
-                            <ButtonLink href={`/mis-cursos/${space.course.slug}/foro`} variant="secondary">
+                            <ButtonLink
+                              href={buildCourseForumHref(space.course.slug)}
+                              variant="secondary"
+                            >
                               Ir al foro
                             </ButtonLink>
                           ) : null}
-                          <ButtonLink href={`/mis-cursos/${space.course.slug}`}>
+                          <ButtonLink href={buildCourseContentHref(space.course.slug)}>
                             {isStaff ? "Entrar al campus" : "Abrir curso"}
                           </ButtonLink>
                         </div>
@@ -539,10 +554,10 @@ export default async function AccountPage() {
                   </div>
 
                   <div className="flex flex-wrap gap-3">
-                    <ButtonLink href={`/mis-cursos/${space.course.slug}`} variant="secondary">
+                    <ButtonLink href={buildCourseContentHref(space.course.slug)} variant="secondary">
                       Abrir espacio
                     </ButtonLink>
-                    <ButtonLink href={`/mis-cursos/${space.course.slug}/seguimiento`}>
+                    <ButtonLink href={buildCourseTrackingHref({ courseSlug: space.course.slug })}>
                       Ver progreso
                     </ButtonLink>
                   </div>

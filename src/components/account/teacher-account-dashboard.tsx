@@ -36,6 +36,12 @@ import type {
   DashboardNotificationSnapshot,
   TeacherDashboardCourseSummary
 } from "@/lib/account-dashboard";
+import {
+  buildCourseContentHref,
+  buildCourseForumHref,
+  buildCourseResourcesHref,
+  buildCourseTrackingHref
+} from "@/lib/course-navigation";
 import { siteConfig } from "@/lib/site";
 import { cn, formatCompactNumber, formatDateTime } from "@/lib/utils";
 
@@ -568,22 +574,29 @@ export function TeacherAccountDashboard({
                           </div>
 
                           <div className="mt-6 flex flex-wrap gap-3">
-                            <ButtonLink href={`/mis-cursos/${course.space.course.slug}`} prefetch>
+                            <ButtonLink href={buildCourseContentHref(course.space.course.slug)} prefetch>
                               Entrar al campus
                             </ButtonLink>
                             <ButtonLink
-                              href={`/mis-cursos/${course.space.course.slug}/seguimiento`}
+                              href={buildCourseTrackingHref({
+                                courseSlug: course.space.course.slug,
+                                submissionId: course.pendingReviewItems[0]?.id ?? null
+                              })}
                               prefetch
                               variant="secondary"
                             >
-                              Ver seguimiento
+                              {course.pendingReviewItems.length ? "Revisar entregas" : "Ver seguimiento"}
                             </ButtonLink>
                             <ButtonLink
-                              href={`/mis-cursos/${course.space.course.slug}/foro`}
+                              href={
+                                course.pendingReviewItems.length
+                                  ? buildCourseResourcesHref(course.space.course.slug, "resource-manager-top")
+                                  : buildCourseForumHref(course.space.course.slug)
+                              }
                               prefetch
                               variant="ghost"
                             >
-                              Foro
+                              {course.pendingReviewItems.length ? "Gestionar recursos" : "Foro"}
                             </ButtonLink>
                           </div>
                         </div>

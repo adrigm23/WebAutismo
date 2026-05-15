@@ -7,6 +7,7 @@ import type {
   DashboardNotificationSnapshot,
   StudentDashboardPendingSource
 } from "@/lib/account-dashboard";
+import { buildCourseResourcesHref } from "@/lib/course-navigation";
 import type { UserCourseSpace } from "@/lib/course-community";
 import type { CourseProgressDetails } from "@/lib/course-progress";
 import { cn, formatDateTime, formatRelativeTime } from "@/lib/utils";
@@ -96,7 +97,7 @@ export function buildStudentPendingItems(pendingSources: StudentDashboardPending
   const items: PendingDashboardItem[] = [];
 
   for (const resource of pendingSources) {
-    const href = `/mis-cursos/${resource.courseSlug}?tab=resources#resource-${resource.resourceId}`;
+    const href = buildCourseResourcesHref(resource.courseSlug, `resource-${resource.resourceId}`);
     const courseLabel = `Curso: ${resource.courseTitle}`;
 
     if (resource.viewerSubmission?.status === "CHANGES_REQUESTED") {

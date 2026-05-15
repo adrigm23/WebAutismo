@@ -8,6 +8,7 @@ import {
   ensureCourseMembershipForUser,
   getCourseRoleForUser
 } from "@/lib/course-community";
+import { buildCourseContentHref } from "@/lib/course-navigation";
 import { sendPlatformNotification } from "@/lib/notifications";
 import { getDb } from "@/lib/prisma";
 import {
@@ -452,7 +453,7 @@ export async function grantCourseAccess(input: GrantCourseAccessInput) {
       purchase.discountInCents > 0
         ? `Tu acceso ya esta activo. Se ha aplicado el codigo ${purchase.promotionCode}.`
         : "Tu acceso ya esta activo y el curso aparece en tu campus.",
-    linkPath: `/mis-cursos/${course.slug}`,
+    linkPath: buildCourseContentHref(course.slug),
     metadata: {
       purchaseId: purchase.id,
       enrollmentId: enrollment.id
