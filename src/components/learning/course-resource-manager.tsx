@@ -33,9 +33,152 @@ export function CourseResourceManager({
   const [source, setSource] = useState<"FILE" | "LINK">("FILE");
   const [type, setType] = useState<"MATERIAL" | "EXERCISE">("MATERIAL");
   const managedResources = resources.filter((resource) => resource.isManaged);
+  const exerciseResources = managedResources.filter((resource) => resource.isExercise);
+  const materialResources = managedResources.filter((resource) => !resource.isExercise);
+  const referenceResources = resources.filter((resource) => !resource.isManaged);
   const managedPositionById = new Map(
     managedResources.map((resource, index) => [resource.id, index] as const)
   );
+
+  function getStudentSubmissionBadge(resource: CampusResourceItem) {
+    if (!resource.isExercise) {
+      return null;
+    }
+
+    if (!resource.viewerSubmission && !resource.isSubmissionClosed) {
+      return <Badge tone="student">Pendiente</Badge>;
+    }
+
+    if (!resource.viewerSubmission) {
+      return <Badge tone="muted">Sin entrega</Badge>;
+    }
+
+    if (resource.viewerSubmission.status === "CHANGES_REQUESTED") {
+      return <Badge tone="accent">Cambios solicitados</Badge>;
+    }
+
+    if (resource.viewerSubmission.status === "SUBMITTED") {
+      return <Badge tone="muted">En revision</Badge>;
+    }
+
+    return <Badge tone="teacher">Revisada</Badge>;
+  }
+
+  function renderResourceCard(resource: CampusResourceItem) {
+    return (
+      <div
+        className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5"
+        key={resource.id}
+      >
+        <div className="flex items-start justify-between gap-4">
+          <div className="space-y-3">
+            <div className="flex flex-wrap items-center gap-2">
+              <Badge tone={resource.isManaged ? "teacher" : "muted"}>{resource.resourceTypeLabel}</Badge>
+              <Badge tone="muted">{resource.accessLabel}</Badge>
+              {resource.moduleTitle ? <Badge tone="student">{resource.moduleTitle}</Badge> : null}
+              {!canModerate ? getStudentSubmissionBadge(resource) : null}
+              {canModerate && resource.isManaged ? (
+                <Badge tone={resource.isPublished ? "teacher" : "accent"}>
+                  {resource.isPublished ? "Visible" : "Oculto"}
+                </Badge>
+              ) : null}
+              {resource.isExercise && resource.dueAt ? (
+                <Badge tone="accent">Entrega hasta {formatDateTime(resource.dueAt)}</Badge>
+              ) : null}
+              {resource.isExercise && resource.passingScoreLabel ? (
+                <Badge tone="teacher">Aprueba con {resource.passingScoreLabel}/10</Badge>
+              ) : null}
+            </div>
+
+            <div>
+              <p className="text-lg font-semibold text-[var(--color-ink)]">{resource.title}</p>
+              <p className="mt-3 text-sm leading-7 text-[var(--color-muted)]">{resource.description}</p>
+            </div>
+
+            {!canModerate && resource.isExercise ? (
+              <p className="text-sm leading-7 text-[var(--color-muted)]">
+                {!resource.viewerSubmission
+                  ? "Accion recomendada: abre el formulario de esta tarjeta y registra tu entrega."
+                  : resource.viewerSubmission.status === "CHANGES_REQUESTED"
+                    ? "Tu docente ha pedido cambios. Revisa el feedback y vuelve a enviar la actividad desde aqui."
+                    : resource.viewerSubmission.status === "SUBMITTED"
+                      ? "Tu entrega ya esta enviada y pendiente de revision docente."
+                      : "La actividad ya tiene una revision registrada. Consulta aqui mismo la nota y el feedback."}
+              </p>
+            ) : null}
+
+            {resource.createdByName || resource.createdAt ? (
+              <p className="text-xs uppercase tracking-[0.14em] text-[var(--color-muted)]">
+                {resource.createdByName ? `Publicado por ${resource.createdByName}` : "Publicado"}
+                {resource.createdAt ? ` | ${formatDateTime(resource.createdAt)}` : ""}
+              </p>
+            ) : null}
+          </div>
+
+          <div className="flex shrink-0 flex-col items-end gap-3">
+            {resource.href ? (
+              <Link
+                className="inline-flex items-center rounded-xl border border-[var(--color-primary)] px-4 py-3 text-sm font-semibold text-[var(--color-primary)] transition hover:bg-[var(--color-primary-soft)]"
+                href={resource.href}
+                target={resource.isExternal ? "_blank" : undefined}
+              >
+                {resource.isExternal ? "Abrir enlace" : "Descargar"}
+              </Link>
+            ) : null}
+          </div>
+        </div>
+
+        {canModerate && resource.isManaged ? (
+          <CourseManagedResourceControls
+            courseSlug={course.slug}
+            isFirst={(managedPositionById.get(resource.id) ?? 0) === 0}
+            isLast={(managedPositionById.get(resource.id) ?? 0) === managedResources.length - 1}
+            modules={course.modules}
+            resource={resource}
+          />
+        ) : null}
+
+        {resource.isExercise && resource.isManaged ? (
+          canModerate ? (
+            <div className="mt-5 space-y-4">
+              <div className="rounded-2xl bg-white p-4 text-sm leading-7 text-[var(--color-muted)]">
+                <p>
+                  Entregas registradas:{" "}
+                  <strong className="text-[var(--color-ink)]">{resource.submissionStats?.total ?? 0}</strong>
+                </p>
+                <p>
+                  Pendientes de revision:{" "}
+                  <strong className="text-[var(--color-ink)]">{resource.submissionStats?.pending ?? 0}</strong>
+                </p>
+              </div>
+
+              {resource.submissions.length ? (
+                resource.submissions.map((submission) => (
+                  <CourseExerciseReviewForm
+                    courseSlug={course.slug}
+                    key={submission.id}
+                    submission={submission}
+                  />
+                ))
+              ) : (
+                <div className="rounded-2xl border border-dashed border-[rgba(12,113,195,0.18)] bg-white p-5 text-sm leading-7 text-[var(--color-muted)]">
+                  Todavia no hay entregas registradas para este ejercicio.
+                </div>
+              )}
+            </div>
+          ) : (
+            <CourseExerciseSubmissionForm
+              courseSlug={course.slug}
+              dueAt={resource.dueAt}
+              existingSubmission={resource.viewerSubmission}
+              isSubmissionClosed={resource.isSubmissionClosed}
+              resourceId={resource.id}
+            />
+          )
+        ) : null}
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
@@ -168,110 +311,59 @@ export function CourseResourceManager({
         </div>
       ) : null}
 
-      {resources.map((resource) => (
-        <div
-          className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5"
-          key={resource.id}
-        >
-          <div className="flex items-start justify-between gap-4">
-            <div className="space-y-3">
-              <div className="flex flex-wrap items-center gap-2">
-                <Badge tone={resource.isManaged ? "teacher" : "muted"}>{resource.resourceTypeLabel}</Badge>
-                <Badge tone="muted">{resource.accessLabel}</Badge>
-                {resource.moduleTitle ? <Badge tone="student">{resource.moduleTitle}</Badge> : null}
-                {canModerate && resource.isManaged ? (
-                  <Badge tone={resource.isPublished ? "teacher" : "accent"}>
-                    {resource.isPublished ? "Visible" : "Oculto"}
-                  </Badge>
-                ) : null}
-                {resource.isExercise && resource.dueAt ? (
-                  <Badge tone="accent">Entrega hasta {formatDateTime(resource.dueAt)}</Badge>
-                ) : null}
-                {resource.isExercise && resource.passingScoreLabel ? (
-                  <Badge tone="teacher">Aprueba con {resource.passingScoreLabel}/10</Badge>
-                ) : null}
-              </div>
-
-              <div>
-                <p className="text-lg font-semibold text-[var(--color-ink)]">{resource.title}</p>
-                <p className="mt-3 text-sm leading-7 text-[var(--color-muted)]">{resource.description}</p>
-              </div>
-
-              {resource.createdByName || resource.createdAt ? (
-                <p className="text-xs uppercase tracking-[0.14em] text-[var(--color-muted)]">
-                  {resource.createdByName ? `Publicado por ${resource.createdByName}` : "Publicado"}
-                  {resource.createdAt ? ` | ${formatDateTime(resource.createdAt)}` : ""}
-                </p>
-              ) : null}
-            </div>
-
-            <div className="flex shrink-0 flex-col items-end gap-3">
-              {resource.href ? (
-                <Link
-                  className="inline-flex items-center rounded-xl border border-[var(--color-primary)] px-4 py-3 text-sm font-semibold text-[var(--color-primary)] transition hover:bg-[var(--color-primary-soft)]"
-                  href={resource.href}
-                  target={resource.isExternal ? "_blank" : undefined}
-                >
-                  {resource.isExternal ? "Abrir enlace" : "Descargar"}
-                </Link>
-              ) : null}
-            </div>
+      {exerciseResources.length ? (
+        <section className="space-y-4">
+          <div className="rounded-2xl border border-[rgba(12,113,195,0.14)] bg-white p-5">
+            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[var(--color-primary)]">
+              Ejercicios y entregas
+            </p>
+            <p className="mt-2 text-sm leading-7 text-[var(--color-muted)]">
+              {canModerate
+                ? "Las actividades del alumnado se gestionan aqui, con revision y feedback dentro del propio campus."
+                : "Aqui veras primero las tareas del curso y podras entregar, actualizar o revisar tu estado desde cada tarjeta."}
+            </p>
           </div>
+          {exerciseResources.map(renderResourceCard)}
+        </section>
+      ) : null}
 
-          {canModerate && resource.isManaged ? (
-            <CourseManagedResourceControls
-              courseSlug={course.slug}
-              isFirst={(managedPositionById.get(resource.id) ?? 0) === 0}
-              isLast={(managedPositionById.get(resource.id) ?? 0) === managedResources.length - 1}
-              modules={course.modules}
-              resource={resource}
-            />
-          ) : null}
+      {materialResources.length ? (
+        <section className="space-y-4">
+          <div className="rounded-2xl border border-[rgba(12,113,195,0.14)] bg-white p-5">
+            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[var(--color-primary)]">
+              Materiales del curso
+            </p>
+            <p className="mt-2 text-sm leading-7 text-[var(--color-muted)]">
+              Guias, documentos y referencias de apoyo para seguir el curso con contexto.
+            </p>
+          </div>
+          {materialResources.map(renderResourceCard)}
+        </section>
+      ) : null}
 
-          {resource.isExercise && resource.isManaged ? (
-            canModerate ? (
-              <div className="mt-5 space-y-4">
-                <div className="rounded-2xl bg-white p-4 text-sm leading-7 text-[var(--color-muted)]">
-                  <p>
-                    Entregas registradas:{" "}
-                    <strong className="text-[var(--color-ink)]">{resource.submissionStats?.total ?? 0}</strong>
-                  </p>
-                  <p>
-                    Pendientes de revision:{" "}
-                    <strong className="text-[var(--color-ink)]">{resource.submissionStats?.pending ?? 0}</strong>
-                  </p>
-                </div>
-
-                {resource.submissions.length ? (
-                  resource.submissions.map((submission) => (
-                    <CourseExerciseReviewForm
-                      courseSlug={course.slug}
-                      key={submission.id}
-                      submission={submission}
-                    />
-                  ))
-                ) : (
-                  <div className="rounded-2xl border border-dashed border-[rgba(12,113,195,0.18)] bg-white p-5 text-sm leading-7 text-[var(--color-muted)]">
-                    Todavia no hay entregas registradas para este ejercicio.
-                  </div>
-                )}
-              </div>
-            ) : (
-              <CourseExerciseSubmissionForm
-                courseSlug={course.slug}
-                dueAt={resource.dueAt}
-                existingSubmission={resource.viewerSubmission}
-                isSubmissionClosed={resource.isSubmissionClosed}
-                resourceId={resource.id}
-              />
-            )
-          ) : null}
-        </div>
-      ))}
+      {referenceResources.length ? (
+        <section className="space-y-4">
+          <div className="rounded-2xl border border-[rgba(12,113,195,0.14)] bg-white p-5">
+            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[var(--color-primary)]">
+              Referencias del campus
+            </p>
+            <p className="mt-2 text-sm leading-7 text-[var(--color-muted)]">
+              Informacion general del curso y del equipo docente.
+            </p>
+          </div>
+          {referenceResources.map(renderResourceCard)}
+        </section>
+      ) : null}
 
       {canModerate && managedResources.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-[rgba(12,113,195,0.18)] bg-white p-5 text-sm leading-7 text-[var(--color-muted)]">
           Todavia no hay materiales ni ejercicios creados para este curso.
+        </div>
+      ) : null}
+
+      {!canModerate && managedResources.length === 0 ? (
+        <div className="rounded-2xl border border-dashed border-[rgba(12,113,195,0.18)] bg-white p-5 text-sm leading-7 text-[var(--color-muted)]">
+          Todavia no hay tareas ni materiales publicados para este curso.
         </div>
       ) : null}
     </div>

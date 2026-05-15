@@ -54,6 +54,7 @@ export function StudentAccountDashboard({
   const pendingItems = buildStudentPendingItems(pendingSources);
   const initials = getStudentDashboardInitials(fullName);
   const forumHref = primaryCourse ? `/mis-cursos/${primaryCourse.space.course.slug}/foro` : "/cursos";
+  const resourcesHref = primaryCourse ? `/mis-cursos/${primaryCourse.space.course.slug}?tab=resources` : "/cursos";
 
   return (
     <div className="min-h-screen bg-[linear-gradient(180deg,#f9f6f1_0%,#f6f8fb_52%,#fbfaf7_100%)] pb-24">
@@ -223,9 +224,12 @@ export function StudentAccountDashboard({
                       <ButtonLink href={`/mis-cursos/${primaryCourse.space.course.slug}`}>
                         Continuar curso
                       </ButtonLink>
+                      <ButtonLink href={resourcesHref} variant="secondary">
+                        Ver tareas
+                      </ButtonLink>
                       <ButtonLink
                         href={`/mis-cursos/${primaryCourse.space.course.slug}/foro`}
-                        variant="secondary"
+                        variant="ghost"
                       >
                         Ir al foro
                       </ButtonLink>
@@ -430,8 +434,8 @@ export function StudentAccountDashboard({
                   Participa en el curso desde tu comunidad privada
                 </p>
                 <p className="mt-2 text-sm leading-7 text-[var(--color-muted)]">
-                  Consulta anuncios, dudas, tareas y respuestas del equipo docente asociadas a tu
-                  matricula.
+                  Consulta anuncios, dudas y respuestas del equipo docente asociadas a tu
+                  matricula. Las tareas viven dentro del campus.
                 </p>
                 <ButtonLink className="mt-5" href={forumHref} variant="secondary">
                   Abrir foro

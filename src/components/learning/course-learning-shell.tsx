@@ -3,12 +3,15 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import {
+  ArrowRight,
   BookOpen,
   CheckCircle2,
   CircleHelp,
   Compass,
   FileText,
+  FolderKanban,
   FolderOpen,
+  GraduationCap,
   LineChart,
   MessageSquareText
 } from "lucide-react";
@@ -19,6 +22,7 @@ import { Badge } from "@/components/ui/badge";
 import type { CatalogCourse } from "@/lib/course-catalog";
 import type { CourseProgressDetails } from "@/lib/course-progress";
 import type { CampusResourceItem } from "@/lib/course-resources";
+import { siteConfig } from "@/lib/site";
 import { cn, formatDate } from "@/lib/utils";
 
 type LearningShellProps = {
@@ -43,6 +47,50 @@ type LearningShellProps = {
 
 export type SidebarTab = "content" | "resources" | "support";
 
+function CampusMetricCard(input: {
+  label: string;
+  value: string;
+  detail: string;
+}) {
+  return (
+    <div className="rounded-[22px] border border-[rgba(12,113,195,0.12)] bg-white p-4 shadow-[0_12px_24px_rgba(34,34,33,0.04)]">
+      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-muted)]">
+        {input.label}
+      </p>
+      <p className="mt-3 text-[1.7rem] font-semibold leading-tight tracking-[-0.04em] text-[var(--color-ink)]">
+        {input.value}
+      </p>
+      <p className="mt-2 text-sm leading-7 text-[var(--color-muted)]">{input.detail}</p>
+    </div>
+  );
+}
+
+function CampusFlowAction(input: {
+  step: string;
+  title: string;
+  description: string;
+  cta: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      className="w-full rounded-[22px] border border-[rgba(12,113,195,0.14)] bg-white p-4 text-left shadow-[0_12px_24px_rgba(34,34,33,0.04)] transition hover:border-[var(--color-primary)] hover:bg-[var(--color-primary-soft)]"
+      onClick={input.onClick}
+      type="button"
+    >
+      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-primary)]">
+        {input.step}
+      </p>
+      <p className="mt-2 text-lg font-semibold text-[var(--color-ink)]">{input.title}</p>
+      <p className="mt-2 text-sm leading-7 text-[var(--color-muted)]">{input.description}</p>
+      <span className="mt-4 inline-flex items-center text-sm font-semibold text-[var(--color-primary)]">
+        {input.cta}
+        <ArrowRight className="ml-2 h-4 w-4" />
+      </span>
+    </button>
+  );
+}
+
 export function CourseLearningShell({
   course,
   forumCategories,
@@ -57,23 +105,53 @@ export function CourseLearningShell({
   const [selectedModuleIndex, setSelectedModuleIndex] = useState(0);
   const [activeTab, setActiveTab] = useState<SidebarTab>(initialActiveTab);
   const currentModule = progress.modules[selectedModuleIndex] ?? progress.modules[0] ?? null;
-  const managedExercises = useMemo(
-    () => resources.filter((resource) => resource.isManaged && resource.isExercise),
+  const nextPendingModule = useMemo(
+    () => progress.modules.find((module) => !module.isCompleted) ?? progress.modules[0] ?? null,
+    [progress.modules]
+  );
+  const managedResources = useMemo(
+    () => resources.filter((resource) => resource.isManaged),
     [resources]
   );
-  const pendingExercises = useMemo(
+  const managedMaterials = useMemo(
+    () => managedResources.filter((resource) => !resource.isExercise),
+    [managedResources]
+  );
+  const managedExercises = useMemo(
+    () => managedResources.filter((resource) => resource.isExercise),
+    [managedResources]
+  );
+  const studentOpenExercises = useMemo(
     () =>
       managedExercises.filter(
         (resource) =>
-          !resource.viewerSubmission ||
-          resource.viewerSubmission.status === "CHANGES_REQUESTED" ||
-          resource.viewerSubmission.status === "SUBMITTED"
+          !resource.viewerSubmission || resource.viewerSubmission.status === "CHANGES_REQUESTED"
       ),
     [managedExercises]
   );
+  const studentUnderReviewExercises = useMemo(
+    () =>
+      managedExercises.filter((resource) => resource.viewerSubmission?.status === "SUBMITTED"),
+    [managedExercises]
+  );
+  const studentReviewedExercises = useMemo(
+    () =>
+      managedExercises.filter((resource) => resource.viewerSubmission?.status === "REVIEWED"),
+    [managedExercises]
+  );
+  const teacherPendingReviews = useMemo(
+    () =>
+      managedExercises.reduce((total, resource) => total + (resource.submissionStats?.pending ?? 0), 0),
+    [managedExercises]
+  );
+  const teacherSubmissionCount = useMemo(
+    () =>
+      managedExercises.reduce((total, resource) => total + (resource.submissionStats?.total ?? 0), 0),
+    [managedExercises]
+  );
   const introCopy = canModerate
-    ? "Este espacio organiza el programa, los recursos, los ejercicios y el acceso al foro privado del curso. Desde aqui puedes coordinar materiales y revisar el seguimiento del alumnado."
-    : "Este espacio organiza el programa, los recursos disponibles y el acceso al foro privado del curso. El seguimiento es manual y verificable: puedes marcar cada modulo cuando realmente lo hayas revisado.";
+    ? "Este espacio organiza el programa, los recursos, los ejercicios y el acceso al foro privado del curso. Las tareas del alumnado se gestionan desde recursos y tareas; el foro queda para anuncios, dudas y coordinacion."
+    : "Este espacio organiza el programa, los recursos disponibles y el acceso al foro privado del curso. Las tareas se entregan desde recursos y tareas, y el progreso de modulos sigue siendo manual y verificable.";
 
   function buildTabHref(tab: SidebarTab) {
     return tab === "content" ? `/mis-cursos/${course.slug}` : `/mis-cursos/${course.slug}?tab=${tab}`;
@@ -170,6 +248,62 @@ export function CourseLearningShell({
                   </p>
                 ) : null}
 
+                <div className="mt-8 grid gap-4 md:grid-cols-3">
+                  {canModerate ? (
+                    <>
+                      <CampusMetricCard
+                        detail="Ejercicios visibles para el alumnado dentro del campus."
+                        label="Ejercicios activos"
+                        value={`${managedExercises.length}`}
+                      />
+                      <CampusMetricCard
+                        detail={`${teacherSubmissionCount} entregas registradas en total.`}
+                        label="Pendientes de revision"
+                        value={`${teacherPendingReviews}`}
+                      />
+                      <CampusMetricCard
+                        detail="Materiales y referencias gestionadas por el equipo docente."
+                        label="Recursos publicados"
+                        value={`${managedResources.length}`}
+                      />
+                    </>
+                  ) : (
+                    <>
+                      <CampusMetricCard
+                        detail={
+                          nextPendingModule
+                            ? `Continua por ${nextPendingModule.title}.`
+                            : "No hay modulos configurados todavia."
+                        }
+                        label="Siguiente modulo"
+                        value={
+                          nextPendingModule
+                            ? `Modulo ${nextPendingModule.index + 1}`
+                            : "Sin contenido"
+                        }
+                      />
+                      <CampusMetricCard
+                        detail={
+                          studentOpenExercises.length
+                            ? "Tareas que debes abrir o actualizar desde recursos y tareas."
+                            : "No tienes tareas abiertas en este momento."
+                        }
+                        label="Tareas por hacer"
+                        value={`${studentOpenExercises.length}`}
+                      />
+                      <CampusMetricCard
+                        detail={
+                          studentUnderReviewExercises.length
+                            ? "Entregas ya enviadas y pendientes de respuesta docente."
+                            : "No hay entregas esperando revision."
+                        }
+                        label="En revision"
+                        value={`${studentUnderReviewExercises.length}`}
+                      />
+                    </>
+                  )}
+                </div>
+
                 <div className="mt-8 rounded-[24px] border border-[rgba(12,113,195,0.12)] bg-[var(--color-surface)] p-5">
                   <div className="flex flex-wrap items-center justify-between gap-4">
                     <div>
@@ -223,21 +357,22 @@ export function CourseLearningShell({
                 </div>
                 <div className="rounded-[20px] bg-white p-4">
                   <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[var(--color-muted)]">
-                    Continuidad
+                    Accesos rapidos
                   </p>
                   <div className="mt-3 flex flex-wrap gap-3">
                     <Link
                       className="inline-flex items-center rounded-xl bg-[var(--color-primary)] px-4 py-3 text-sm font-semibold text-white"
+                      href={buildTabHref("resources")}
+                      prefetch
+                    >
+                      {canModerate ? "Gestionar recursos y tareas" : "Abrir recursos y tareas"}
+                    </Link>
+                    <Link
+                      className="inline-flex items-center rounded-xl border border-[var(--color-primary)] px-4 py-3 text-sm font-semibold text-[var(--color-primary)]"
                       href={`/mis-cursos/${course.slug}/foro`}
                       prefetch
                     >
                       Abrir foro privado
-                    </Link>
-                    <Link
-                      className="inline-flex items-center rounded-xl border border-[var(--color-primary)] px-4 py-3 text-sm font-semibold text-[var(--color-primary)]"
-                      href="/mi-cuenta"
-                    >
-                      Volver al dashboard
                     </Link>
                     {canModerate ? (
                       <Link
@@ -248,7 +383,15 @@ export function CourseLearningShell({
                         <LineChart className="mr-2 h-4 w-4" />
                         Ver seguimiento
                       </Link>
-                    ) : null}
+                    ) : (
+                      <Link
+                        className="inline-flex items-center rounded-xl border border-[var(--color-primary)] px-4 py-3 text-sm font-semibold text-[var(--color-primary)]"
+                        href="/mi-cuenta"
+                        prefetch
+                      >
+                        Volver al dashboard
+                      </Link>
+                    )}
                   </div>
                 </div>
               </div>
@@ -310,6 +453,64 @@ export function CourseLearningShell({
                 <p className="text-lg text-[var(--color-ink)]">{course.modules.length} modulos</p>
               </div>
 
+              <div className="border-b border-[rgba(12,113,195,0.14)] bg-[var(--color-surface)] px-6 py-5">
+                <div className="rounded-[24px] border border-[rgba(12,113,195,0.14)] bg-white p-5 shadow-[0_12px_24px_rgba(34,34,33,0.04)]">
+                  <div className="flex items-center gap-3">
+                    <div className="grid h-11 w-11 place-items-center rounded-2xl bg-[var(--color-primary-soft)] text-[var(--color-primary)]">
+                      {canModerate ? (
+                        <FolderKanban className="h-5 w-5" />
+                      ) : (
+                        <GraduationCap className="h-5 w-5" />
+                      )}
+                    </div>
+                    <div>
+                      <p className="text-lg font-semibold text-[var(--color-ink)]">Ruta recomendada</p>
+                      <p className="text-sm leading-7 text-[var(--color-muted)]">
+                        {canModerate
+                          ? "Publica, revisa y acompana sin mezclar tareas con conversaciones del foro."
+                          : "El flujo correcto es contenido, tareas y despues foro o soporte cuando lo necesites."}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="mt-5 space-y-3">
+                    <CampusFlowAction
+                      cta="Abrir modulo actual"
+                      description={
+                        nextPendingModule
+                          ? `Continua por ${nextPendingModule.title} y marca el avance cuando termines.`
+                          : "Revisa la estructura del curso y el estado de tus modulos."
+                      }
+                      onClick={() => handleTabChange("content")}
+                      step="Paso 1"
+                      title={canModerate ? "Valida el recorrido del campus" : "Revisa el contenido del curso"}
+                    />
+                    <CampusFlowAction
+                      cta={canModerate ? "Ir a recursos y tareas" : "Ver tareas y entregas"}
+                      description={
+                        canModerate
+                          ? `${managedExercises.length} ejercicios activos y ${teacherPendingReviews} entregas pendientes de revision.`
+                          : `${studentOpenExercises.length} tareas por hacer, ${studentUnderReviewExercises.length} en revision y ${studentReviewedExercises.length} revisadas.`
+                      }
+                      onClick={() => handleTabChange("resources")}
+                      step="Paso 2"
+                      title={canModerate ? "Gestiona materiales y ejercicios" : "Entrega tareas desde el campus"}
+                    />
+                    <CampusFlowAction
+                      cta="Abrir soporte del curso"
+                      description={
+                        canModerate
+                          ? "Usa el foro para anuncios, dudas y acompanamiento del grupo."
+                          : "Usa el foro para anuncios o dudas; las tareas no se entregan ahi."
+                      }
+                      onClick={() => handleTabChange("support")}
+                      step="Paso 3"
+                      title={canModerate ? "Coordina la comunidad del curso" : "Consulta dudas y anuncios"}
+                    />
+                  </div>
+                </div>
+              </div>
+
               {!canModerate && managedExercises.length ? (
                 <div className="border-b border-[rgba(12,113,195,0.14)] bg-[var(--color-surface)] px-6 py-5">
                   <div className="flex flex-col gap-4 rounded-[24px] border border-[rgba(12,113,195,0.14)] bg-white p-5 shadow-[0_12px_24px_rgba(34,34,33,0.04)]">
@@ -319,8 +520,8 @@ export function CourseLearningShell({
                           Tareas y entregas
                         </p>
                         <p className="mt-2 text-xl font-semibold text-[var(--color-ink)]">
-                          {pendingExercises.length
-                            ? `${pendingExercises.length} tareas requieren tu atencion`
+                          {studentOpenExercises.length
+                            ? `${studentOpenExercises.length} tareas requieren tu atencion`
                             : "Tus tareas del curso estan al dia"}
                         </p>
                       </div>
@@ -333,8 +534,9 @@ export function CourseLearningShell({
                       </button>
                     </div>
                     <p className="text-sm leading-7 text-[var(--color-muted)]">
-                      Los ejercicios publicados por el docente aparecen en la pestaña de recursos y tareas.
-                      Desde ahi puedes abrir la actividad, leer instrucciones y subir tu entrega o actualizarla.
+                      Los ejercicios publicados por el docente aparecen en la pestana de recursos y
+                      tareas. Desde ahi puedes abrir la actividad, leer instrucciones y subir tu
+                      entrega o actualizarla.
                     </p>
                   </div>
                 </div>
@@ -436,6 +638,67 @@ export function CourseLearningShell({
                 </div>
               </div>
 
+              <div className="grid gap-3 sm:grid-cols-2">
+                {canModerate ? (
+                  <>
+                    <CampusMetricCard
+                      detail="Ejercicios visibles y abiertos para el alumnado."
+                      label="Ejercicios"
+                      value={`${managedExercises.length}`}
+                    />
+                    <CampusMetricCard
+                      detail="Entregas que esperan revision o decision docente."
+                      label="Pendientes"
+                      value={`${teacherPendingReviews}`}
+                    />
+                    <CampusMetricCard
+                      detail="Archivos, enlaces y guias publicadas en el campus."
+                      label="Materiales"
+                      value={`${managedMaterials.length}`}
+                    />
+                    <CampusMetricCard
+                      detail="Total acumulado de entregas registradas en este curso."
+                      label="Entregas"
+                      value={`${teacherSubmissionCount}`}
+                    />
+                  </>
+                ) : (
+                  <>
+                    <CampusMetricCard
+                      detail="Ejercicios que debes abrir o reenviar desde esta misma pestana."
+                      label="Por entregar"
+                      value={`${studentOpenExercises.length}`}
+                    />
+                    <CampusMetricCard
+                      detail="Entregas ya enviadas y pendientes de feedback."
+                      label="En revision"
+                      value={`${studentUnderReviewExercises.length}`}
+                    />
+                    <CampusMetricCard
+                      detail="Material de apoyo publicado para el curso."
+                      label="Materiales"
+                      value={`${managedMaterials.length}`}
+                    />
+                    <CampusMetricCard
+                      detail="Ejercicios cerrados con nota o respuesta docente."
+                      label="Revisadas"
+                      value={`${studentReviewedExercises.length}`}
+                    />
+                  </>
+                )}
+              </div>
+
+              <div className="rounded-2xl border border-[rgba(12,113,195,0.14)] bg-white p-5 text-sm leading-7 text-[var(--color-muted)] shadow-[0_12px_24px_rgba(34,34,33,0.04)]">
+                <p className="font-semibold text-[var(--color-ink)]">
+                  {canModerate ? "Flujo docente recomendado" : "Flujo del alumno recomendado"}
+                </p>
+                <p className="mt-2">
+                  {canModerate
+                    ? "1. Publica el material o ejercicio aqui. 2. El alumno lo ve en esta misma zona y registra su entrega en la tarjeta correspondiente. 3. Tu revisas, calificas o pides cambios sin enviarle al foro."
+                    : "1. Abre la tarea desde esta pestana. 2. Lee la descripcion y la fecha limite. 3. Sube tu entrega o actualizala en el formulario del propio ejercicio. 4. Consulta aqui mismo el estado, la nota y el feedback."}
+                </p>
+              </div>
+
               <CourseResourceManager
                 canModerate={canModerate}
                 course={course}
@@ -485,6 +748,17 @@ export function CourseLearningShell({
               )}
 
               <div className="rounded-2xl border border-[var(--color-border)] bg-white p-5">
+                <p className="text-base font-semibold text-[var(--color-ink)]">
+                  Tareas, foro y soporte cumplen funciones distintas
+                </p>
+                <p className="mt-3 text-sm leading-7 text-[var(--color-muted)]">
+                  Las tareas y entregas viven en recursos y tareas. El foro queda reservado para
+                  anuncios, dudas y conversacion del curso. Si el problema es de acceso o de cuenta,
+                  usa el soporte de plataforma.
+                </p>
+              </div>
+
+              <div className="rounded-2xl border border-[var(--color-border)] bg-white p-5">
                 <p className="text-base font-semibold text-[var(--color-ink)]">Tu rol en el campus</p>
                 <p className="mt-3 text-sm leading-7 text-[var(--color-muted)]">
                   {canModerate
@@ -492,6 +766,17 @@ export function CourseLearningShell({
                     : "Como alumno puedes consultar el programa, usar recursos y participar en el foro privado del curso."}
                 </p>
               </div>
+
+              <a
+                className="block rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5 transition hover:border-[var(--color-primary)]"
+                href={`mailto:${siteConfig.supportEmail}`}
+              >
+                <p className="text-base font-semibold text-[var(--color-ink)]">Soporte de plataforma</p>
+                <p className="mt-3 text-sm leading-7 text-[var(--color-muted)]">
+                  Escribe a {siteConfig.supportEmail} si necesitas ayuda con acceso, cuenta o
+                  incidencias tecnicas del campus.
+                </p>
+              </a>
             </div>
           ) : null}
 
