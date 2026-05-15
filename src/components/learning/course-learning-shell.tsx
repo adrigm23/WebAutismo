@@ -172,11 +172,22 @@ function InfoPanel(input: {
   body: string;
   ctaHref?: string;
   ctaLabel?: string;
+  onAction?: () => void;
 }) {
   return (
     <div className="rounded-[24px] border border-[rgba(12,113,195,0.12)] bg-[var(--color-surface)] p-5">
       <p className="text-lg font-semibold text-[var(--color-ink)]">{input.title}</p>
       <p className="mt-3 text-sm leading-7 text-[var(--color-muted)]">{input.body}</p>
+      {input.onAction && input.ctaLabel ? (
+        <button
+          className="mt-4 inline-flex items-center text-sm font-semibold text-[var(--color-primary)]"
+          onClick={input.onAction}
+          type="button"
+        >
+          {input.ctaLabel}
+          <ArrowRight className="ml-2 h-4 w-4" />
+        </button>
+      ) : null}
       {input.ctaHref && input.ctaLabel ? (
         <Link
           className="mt-4 inline-flex items-center text-sm font-semibold text-[var(--color-primary)]"
@@ -306,6 +317,34 @@ export function CourseLearningShell({
     }
 
     scrollToCampusTarget(nextTargetId);
+  }
+
+  function openWorkspaceTarget(nextTab: SidebarTab, targetId: string) {
+    if (nextTab === "resources") {
+      handleResourceWorkspaceOpen(targetId);
+      return;
+    }
+
+    if (activeTab !== nextTab) {
+      handleTabChange(nextTab);
+
+      if (typeof window !== "undefined") {
+        const nextUrl = `${buildTabHref(nextTab)}#${targetId}`;
+        window.history.replaceState(window.history.state, "", nextUrl);
+      }
+
+      window.setTimeout(() => {
+        scrollToCampusTarget(targetId);
+      }, 60);
+      return;
+    }
+
+    if (typeof window !== "undefined") {
+      const nextUrl = `${buildTabHref(nextTab)}#${targetId}`;
+      window.history.replaceState(window.history.state, "", nextUrl);
+    }
+
+    scrollToCampusTarget(targetId);
   }
 
   useEffect(() => {
@@ -580,6 +619,7 @@ export function CourseLearningShell({
               <>
                 <div className="grid gap-6 lg:grid-cols-[minmax(0,0.86fr)_minmax(0,1.14fr)]">
                   <SurfaceCard
+                    id="content-workflow"
                     description={
                       canModerate
                         ? "Este recorrido resume donde debe ocurrir cada accion del campus para que la experiencia sea clara."
@@ -595,7 +635,7 @@ export function CourseLearningShell({
                             : "No hay modulos disponibles para revisar en este momento."
                         }
                         cta="Ver contenido actual"
-                        onClick={() => handleTabChange("content")}
+                        onClick={() => openWorkspaceTarget("content", "content-current-module")}
                         title={canModerate ? "Valida el recorrido del campus" : "Empieza por el contenido"}
                       />
                       <ActionCard
@@ -615,7 +655,7 @@ export function CourseLearningShell({
                             : "El foro sirve para dudas y avisos; la entrega vive dentro del campus."
                         }
                         cta="Abrir soporte del curso"
-                        onClick={() => handleTabChange("support")}
+                        onClick={() => openWorkspaceTarget("support", "support-forum-categories")}
                         title={canModerate ? "Coordina la comunidad" : "Consulta dudas o avisos"}
                       />
                     </div>
@@ -623,6 +663,7 @@ export function CourseLearningShell({
 
                   <SurfaceCard
                     description="Vista activa del contenido seleccionado dentro del recorrido del curso."
+                    id="content-current-module"
                     title={currentModule ? currentModule.title : "Selecciona un modulo"}
                   >
                     {currentModule ? (
@@ -670,6 +711,7 @@ export function CourseLearningShell({
 
                 <SurfaceCard
                   description="Selecciona cualquier modulo para abrir su detalle sin perder el contexto del campus."
+                  id="content-module-map"
                   title="Mapa de modulos"
                 >
                   {progress.modules.length ? (
@@ -770,6 +812,7 @@ export function CourseLearningShell({
               <>
                 <SurfaceCard
                   description="El foro sirve para conversacion academica y avisos. Las incidencias de plataforma van por soporte."
+                  id="support-forum-categories"
                   title="Soporte y comunidad"
                 >
                   <div className="grid gap-4 lg:grid-cols-2">
@@ -855,6 +898,8 @@ export function CourseLearningShell({
                         ? `${managedExercises.length} ejercicios activos y ${teacherPendingReviews} entregas pendientes de revision.`
                         : `${studentOpenExercises.length} tareas abiertas y ${studentUnderReviewExercises.length} entregas en revision.`
                     }
+                    ctaLabel={canModerate ? "Ir a gestion" : "Abrir tareas"}
+                    onAction={() => openWorkspaceTarget("resources", primaryResourceTargetId)}
                     title={canModerate ? "Actividad docente" : "Actividad del alumno"}
                   />
                   <InfoPanel
@@ -863,6 +908,8 @@ export function CourseLearningShell({
                         ? `${currentModule.title}${currentModule.isCompleted ? " ya esta revisado." : " sigue pendiente de revision."}`
                         : "Todavia no hay un modulo seleccionado."
                     }
+                    ctaLabel="Ir al modulo"
+                    onAction={() => openWorkspaceTarget("content", "content-current-module")}
                     title="Modulo en foco"
                   />
                   <InfoPanel
@@ -871,6 +918,15 @@ export function CourseLearningShell({
                         ? "El seguimiento docente se completa desde recursos, entregas y supervision."
                         : "Tu avance se consolida cuando marcas modulos como revisados y entregas actividades en el campus."
                     }
+                    ctaLabel={canModerate ? "Abrir seguimiento" : "Ver recorrido"}
+                    onAction={() => {
+                      if (canModerate) {
+                        window.location.assign(`/mis-cursos/${course.slug}/seguimiento`);
+                        return;
+                      }
+
+                      openWorkspaceTarget("content", "content-workflow");
+                    }}
                     title="Como se registra el progreso"
                   />
                 </div>
