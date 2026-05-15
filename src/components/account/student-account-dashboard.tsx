@@ -39,6 +39,24 @@ type StudentAccountDashboardProps = {
   notificationSnapshotPromise: Promise<DashboardNotificationSnapshot>;
 };
 
+function StudentDashboardStat(input: {
+  label: string;
+  value: string;
+  detail: string;
+}) {
+  return (
+    <div className="rounded-[24px] border border-[rgba(12,113,195,0.12)] bg-[rgba(255,255,255,0.82)] px-5 py-5 shadow-[0_18px_34px_rgba(34,34,33,0.05)] backdrop-blur-sm">
+      <p className="text-[0.72rem] font-semibold uppercase tracking-[0.2em] text-[var(--color-muted)]">
+        {input.label}
+      </p>
+      <p className="mt-3 text-[2rem] font-semibold leading-none tracking-[-0.05em] text-[var(--color-ink)]">
+        {input.value}
+      </p>
+      <p className="mt-2 text-sm leading-6 text-[var(--color-muted)]">{input.detail}</p>
+    </div>
+  );
+}
+
 export function StudentAccountDashboard({
   firstName,
   fullName,
@@ -55,6 +73,10 @@ export function StudentAccountDashboard({
   const initials = getStudentDashboardInitials(fullName);
   const forumHref = primaryCourse ? `/mis-cursos/${primaryCourse.space.course.slug}/foro` : "/cursos";
   const resourcesHref = primaryCourse ? `/mis-cursos/${primaryCourse.space.course.slug}?tab=resources` : "/cursos";
+  const completionRate = primaryCourse?.progress.completionRate ?? 0;
+  const completedModules = primaryCourse?.progress.completedModules ?? 0;
+  const totalModules = primaryCourse?.progress.totalModules ?? 0;
+  const pendingCount = pendingItems.length;
 
   return (
     <div className="min-h-screen bg-[linear-gradient(180deg,#f9f6f1_0%,#f6f8fb_52%,#fbfaf7_100%)] pb-24">
@@ -135,7 +157,7 @@ export function StudentAccountDashboard({
         </div>
       </header>
 
-      <main className="site-container pt-10">
+      <main className="site-container pt-8">
         {isDemoUser ? (
           <Card className="mb-8 border-[#f0d098] bg-[#fff1cf] p-6">
             <p className="text-lg font-semibold text-[#7c5300]">Modo demo activo</p>
@@ -146,20 +168,41 @@ export function StudentAccountDashboard({
           </Card>
         ) : null}
 
-        <section className="grid gap-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(19rem,0.8fr)]">
+        <section className="grid gap-6 lg:grid-cols-[minmax(0,1.35fr)_minmax(20rem,0.85fr)]">
           <div className="space-y-6">
-            <div className="max-w-4xl">
-              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--color-primary)]">
-                Dashboard del alumno
-              </p>
-              <h1 className="mt-4 text-[4rem] font-semibold tracking-[-0.08em] text-[var(--color-ink)]">
-                Hola, {firstName}
-              </h1>
-              <p className="mt-4 max-w-3xl text-[1.12rem] leading-9 text-[var(--color-ink)]/82">
-                Aqui tienes tus cursos activos, el siguiente paso recomendado y la actividad mas
-                reciente de tu campus.
-              </p>
-            </div>
+            <Card className="overflow-hidden border-[rgba(12,113,195,0.18)] bg-[linear-gradient(135deg,rgba(255,255,255,0.98),rgba(234,241,249,0.82))] p-7 lg:p-8">
+              <div className="grid gap-7 xl:grid-cols-[minmax(0,1fr)_24rem] xl:items-end">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--color-primary)]">
+                    Espacio de aprendizaje
+                  </p>
+                  <h1 className="mt-4 text-[3.55rem] font-semibold leading-[0.98] tracking-[-0.08em] text-[var(--color-ink)]">
+                    Hola, {firstName}
+                  </h1>
+                  <p className="mt-4 max-w-3xl text-[1.03rem] leading-8 text-[var(--color-ink)]/82">
+                    Tu campus debe decirte que sigue, que esta pendiente y donde actuar sin obligarte a buscar. Desde aqui controlas curso, tareas y acompanamiento.
+                  </p>
+                </div>
+
+                <div className="grid gap-4 sm:grid-cols-3 xl:grid-cols-1">
+                  <StudentDashboardStat
+                    detail={primaryCourse ? "Curso principal listo para continuar." : "Sin cursos activos ahora mismo."}
+                    label="Curso activo"
+                    value={primaryCourse ? "1" : "0"}
+                  />
+                  <StudentDashboardStat
+                    detail={primaryCourse ? `${completedModules} de ${totalModules} modulos revisados.` : "Aun no has empezado el recorrido."}
+                    label="Progreso"
+                    value={`${completionRate}%`}
+                  />
+                  <StudentDashboardStat
+                    detail={pendingCount ? "Acciones que requieren tu atencion." : "Sin bloqueos inmediatos."}
+                    label="Pendientes"
+                    value={`${pendingCount}`}
+                  />
+                </div>
+              </div>
+            </Card>
 
             {primaryCourse ? (
               <Card className="overflow-hidden border-[rgba(12,113,195,0.18)]">
@@ -190,7 +233,7 @@ export function StudentAccountDashboard({
                         {getNextStudentModuleLabel(primaryCourse)}
                       </p>
 
-                      <div className="mt-8">
+                      <div className="mt-8 rounded-[24px] border border-[rgba(12,113,195,0.12)] bg-[var(--color-surface)]/72 p-5">
                         <div className="flex items-center justify-between gap-4">
                           <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--color-muted)]">
                             Progreso general
@@ -199,7 +242,7 @@ export function StudentAccountDashboard({
                             {primaryCourse.progress.completionRate}%
                           </p>
                         </div>
-                        <div className="mt-3 h-3 overflow-hidden rounded-full bg-[var(--color-surface)]">
+                        <div className="mt-3 h-3 overflow-hidden rounded-full bg-white">
                           <div
                             aria-hidden="true"
                             className="h-full rounded-full bg-[var(--color-primary)] transition-[width]"

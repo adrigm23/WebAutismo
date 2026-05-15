@@ -93,19 +93,19 @@ export function ForumShell({
     .join("");
 
   return (
-    <div className="min-h-screen bg-[#f7f4ef] text-[var(--color-ink)]">
+    <div className="min-h-screen bg-[linear-gradient(180deg,#f7f4ef_0%,#f4f7fb_52%,#fbfaf8_100%)] text-[var(--color-ink)]">
       <header className="sticky top-0 z-40 border-b border-[rgba(12,113,195,0.12)] bg-[rgba(255,255,255,0.92)] backdrop-blur-xl">
-        <div className="flex min-h-20 items-center justify-between gap-6 px-4 sm:px-6 lg:px-10">
+        <div className="flex min-h-[4.6rem] items-center justify-between gap-5 px-4 sm:px-6 lg:px-10">
           <div className="flex min-w-0 items-center gap-6">
             <Link
-              className="flex items-center gap-3 text-[1.7rem] font-semibold tracking-[-0.04em] text-[var(--color-primary)]"
+              className="flex items-center gap-3 text-[1.55rem] font-semibold tracking-[-0.04em] text-[var(--color-primary)]"
               href="/mi-cuenta"
             >
-              <GraduationCap className="h-7 w-7" />
+              <GraduationCap className="h-6 w-6" />
               <span className="truncate">{siteConfig.name}</span>
             </Link>
 
-            <nav className="hidden items-center gap-6 lg:flex">
+            <nav className="hidden items-center gap-5 lg:flex">
               {[
                 {
                   href: "/mi-cuenta",
@@ -131,7 +131,7 @@ export function ForumShell({
               ].map((item) => (
                 <Link
                   className={cn(
-                    "border-b-2 border-transparent pb-1 text-base font-medium text-[var(--color-ink)] transition hover:text-[var(--color-primary)]",
+                    "border-b-2 border-transparent pb-1 text-[0.95rem] font-medium text-[var(--color-ink)] transition hover:text-[var(--color-primary)]",
                     item.active && "border-[var(--color-primary)] text-[var(--color-primary)]"
                   )}
                   href={item.href}
@@ -145,7 +145,7 @@ export function ForumShell({
 
           <div className="flex items-center gap-3">
             <form action={pathname} className="hidden xl:block">
-              <label className="flex h-12 w-[20rem] items-center gap-3 rounded-full border border-[rgba(12,113,195,0.14)] bg-[#f3f1ee] px-4 text-[var(--color-muted)] shadow-[inset_0_1px_0_rgba(255,255,255,0.85)]">
+              <label className="flex h-11 w-[18.5rem] items-center gap-3 rounded-full border border-[rgba(12,113,195,0.14)] bg-[#f3f1ee] px-4 text-[var(--color-muted)] shadow-[inset_0_1px_0_rgba(255,255,255,0.85)]">
                 <Search className="h-5 w-5 shrink-0" />
                 <input
                   className="w-full bg-transparent text-sm text-[var(--color-ink)] outline-none placeholder:text-[var(--color-muted)]"
@@ -157,12 +157,12 @@ export function ForumShell({
               </label>
             </form>
 
-            <ButtonLink className="hidden sm:inline-flex" href={`/mis-cursos/${course.slug}`} variant="secondary">
+            <ButtonLink className="hidden sm:inline-flex px-4 py-2.5 text-sm" href={`/mis-cursos/${course.slug}`} variant="secondary">
               Ver curso
             </ButtonLink>
 
             <details className="relative">
-              <summary className="flex h-12 w-12 cursor-pointer list-none items-center justify-center rounded-full border border-[rgba(12,113,195,0.18)] bg-white text-[var(--color-ink)] shadow-[0_8px_20px_rgba(34,34,33,0.06)] transition hover:border-[var(--color-primary)]">
+              <summary className="flex h-11 w-11 cursor-pointer list-none items-center justify-center rounded-full border border-[rgba(12,113,195,0.18)] bg-white text-[var(--color-ink)] shadow-[0_8px_20px_rgba(34,34,33,0.06)] transition hover:border-[var(--color-primary)]">
                 <Bell className="h-5 w-5" />
                 {forumNotifications.unreadCount ? (
                   <span className="absolute right-0 top-0 grid h-5 min-w-5 place-items-center rounded-full bg-[var(--color-primary)] px-1 text-[10px] font-semibold text-white">
@@ -248,17 +248,17 @@ export function ForumShell({
               </div>
             </details>
 
-            <div className="grid h-12 w-12 place-items-center rounded-full border border-[rgba(12,113,195,0.18)] bg-white text-sm font-semibold text-[var(--color-primary)] shadow-[0_8px_20px_rgba(34,34,33,0.06)]">
+            <div className="grid h-11 w-11 place-items-center rounded-full border border-[rgba(12,113,195,0.18)] bg-white text-sm font-semibold text-[var(--color-primary)] shadow-[0_8px_20px_rgba(34,34,33,0.06)]">
               {initials}
             </div>
           </div>
         </div>
       </header>
 
-      <div className="grid min-h-[calc(100vh-80px)] lg:grid-cols-[19rem_minmax(0,1fr)]">
-        <aside className="border-b border-[rgba(12,113,195,0.12)] bg-[#f4f1ec] lg:border-b-0 lg:border-r">
-          <div className="flex h-full flex-col px-5 py-6">
-            <div className="rounded-[28px] border border-[rgba(12,113,195,0.1)] bg-white px-4 py-4 shadow-[0_14px_30px_rgba(34,34,33,0.05)]">
+      <div className="grid min-h-[calc(100vh-74px)] lg:grid-cols-[18rem_minmax(0,1fr)]">
+        <aside className="border-b border-[rgba(12,113,195,0.12)] bg-[#f4f1ec] lg:sticky lg:top-[74px] lg:h-[calc(100vh-74px)] lg:border-b-0 lg:border-r">
+          <div className="flex h-full flex-col px-5 py-5">
+            <div className="rounded-[26px] border border-[rgba(12,113,195,0.1)] bg-white px-4 py-4 shadow-[0_14px_30px_rgba(34,34,33,0.05)]">
               <div className="flex items-start gap-4">
                 <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-[var(--color-primary)] text-white">
                   <MessageSquareText className="h-5 w-5" />
@@ -274,8 +274,28 @@ export function ForumShell({
               </div>
             </div>
 
+            <div className="mt-4 rounded-[22px] border border-[rgba(12,113,195,0.12)] bg-white px-4 py-4 shadow-[0_12px_24px_rgba(34,34,33,0.04)]">
+              <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--color-muted)]">
+                Actividad del foro
+              </p>
+              <div className="mt-3 flex items-end justify-between gap-4">
+                <div>
+                  <p className="text-[1.8rem] font-semibold tracking-[-0.04em] text-[var(--color-ink)]">
+                    {categories.reduce((sum, category) => sum + category._count.threads, 0)}
+                  </p>
+                  <p className="text-sm text-[var(--color-muted)]">temas visibles</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-[1.8rem] font-semibold tracking-[-0.04em] text-[var(--color-ink)]">
+                    {forumNotifications.unreadCount}
+                  </p>
+                  <p className="text-sm text-[var(--color-muted)]">sin leer</p>
+                </div>
+              </div>
+            </div>
+
             <ButtonLink
-              className="mt-5 w-full justify-center rounded-2xl py-4 text-lg"
+              className="mt-4 w-full justify-center rounded-2xl py-3.5 text-base"
               href={newThreadHref}
               prefetch
             >

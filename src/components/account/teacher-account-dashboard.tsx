@@ -48,6 +48,24 @@ type TeacherAccountDashboardProps = {
   notificationSnapshotPromise: Promise<DashboardNotificationSnapshot>;
 };
 
+function TeacherDashboardStat(input: {
+  label: string;
+  value: string;
+  detail: string;
+}) {
+  return (
+    <div className="rounded-[24px] border border-[rgba(12,113,195,0.12)] bg-[rgba(255,255,255,0.84)] px-5 py-5 shadow-[0_18px_34px_rgba(34,34,33,0.05)] backdrop-blur-sm">
+      <p className="text-[0.72rem] font-semibold uppercase tracking-[0.2em] text-[var(--color-muted)]">
+        {input.label}
+      </p>
+      <p className="mt-3 text-[2rem] font-semibold leading-none tracking-[-0.05em] text-[var(--color-ink)]">
+        {input.value}
+      </p>
+      <p className="mt-2 text-sm leading-6 text-[var(--color-muted)]">{input.detail}</p>
+    </div>
+  );
+}
+
 export function TeacherAccountDashboard({
   fullName,
   firstName,
@@ -225,7 +243,7 @@ export function TeacherAccountDashboard({
             </div>
           </header>
 
-          <main className="px-6 py-10 lg:px-10">
+          <main className="px-6 py-8 lg:px-10">
             {isDemoUser ? (
               <Card className="mb-8 border-[#f0d098] bg-[#fff1cf] p-6">
                 <p className="text-lg font-semibold text-[#7c5300]">Modo demo activo</p>
@@ -237,19 +255,37 @@ export function TeacherAccountDashboard({
             ) : null}
 
             <section className="grid gap-8">
-              <Card className="overflow-hidden border-[rgba(12,113,195,0.16)] bg-[linear-gradient(135deg,rgba(255,255,255,0.98),rgba(229,238,248,0.82))] p-8 lg:p-10">
-                <div className="max-w-4xl">
-                  <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--color-primary)]">
-                    Dashboard docente
-                  </p>
-                  <h1 className="mt-4 text-[3.8rem] font-semibold leading-[1.02] tracking-[-0.07em] text-[var(--color-ink)]">
-                    Hola, {firstName}. Aqui tienes tus cursos activos, entregas pendientes y
-                    actividad reciente del campus.
-                  </h1>
-                  <p className="mt-5 max-w-3xl text-[1.12rem] leading-9 text-[var(--color-ink)]/84">
-                    Revisa tu panel para mantener al dia el seguimiento del alumnado, los recursos
-                    publicados y las participaciones en el foro.
-                  </p>
+              <Card className="overflow-hidden border-[rgba(12,113,195,0.16)] bg-[linear-gradient(135deg,rgba(255,255,255,0.98),rgba(229,238,248,0.82))] p-8 lg:p-9">
+                <div className="grid gap-7 xl:grid-cols-[minmax(0,1fr)_26rem] xl:items-end">
+                  <div className="max-w-4xl">
+                    <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--color-primary)]">
+                      Centro docente
+                    </p>
+                    <h1 className="mt-4 text-[3.45rem] font-semibold leading-[0.98] tracking-[-0.07em] text-[var(--color-ink)]">
+                      Hola, {firstName}. Controla cursos, entregas y acompanamiento desde un panel mas operativo.
+                    </h1>
+                    <p className="mt-5 max-w-3xl text-[1.03rem] leading-8 text-[var(--color-ink)]/84">
+                      Tu espacio docente debe permitir priorizar, revisar y publicar sin navegar a ciegas. Aqui concentramos seguimiento, actividad y acceso directo al campus.
+                    </p>
+                  </div>
+
+                  <div className="grid gap-4 sm:grid-cols-3 xl:grid-cols-1">
+                    <TeacherDashboardStat
+                      detail={`${formatCompactNumber(globalSummary.activeLearners)} alumnos con actividad en seguimiento.`}
+                      label="Alumnado activo"
+                      value={formatCompactNumber(globalSummary.activeLearners)}
+                    />
+                    <TeacherDashboardStat
+                      detail={`${primaryCourse?.pendingReviewItems.length ?? 0} entregas del curso prioritario esperan revision.`}
+                      label="Pendiente"
+                      value={`${primaryCourse?.pendingReviewItems.length ?? 0}`}
+                    />
+                    <TeacherDashboardStat
+                      detail={totalSubmissions ? `${reviewedSubmissions} de ${totalSubmissions} entregas ya gestionadas.` : "Todavia no hay entregas registradas."}
+                      label="Revision"
+                      value={totalSubmissions > 0 ? `${Math.round((reviewedSubmissions / totalSubmissions) * 100)}%` : "0%"}
+                    />
+                  </div>
                 </div>
               </Card>
 
