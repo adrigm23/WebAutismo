@@ -6,8 +6,11 @@ import { startTransition, useEffect, useMemo, useState } from "react";
 import {
   ArrowRight,
   CircleHelp,
+  ExternalLink,
+  FileText,
   FolderOpen,
   LayoutPanelTop,
+  PlayCircle,
 } from "lucide-react";
 import { CourseArtwork } from "@/components/course-artwork";
 import { CourseProgressToggleForm } from "@/components/learning/course-progress-toggle-form";
@@ -208,6 +211,227 @@ function InfoPanel(input: {
   );
 }
 
+function buildInlineFileHref(href: string) {
+  return `${href}${href.includes("?") ? "&" : "?"}inline=1`;
+}
+
+function getYoutubeEmbedUrl(rawUrl: string) {
+  try {
+    const url = new URL(rawUrl);
+
+    if (url.hostname.includes("youtu.be")) {
+      const videoId = url.pathname.replace(/\//g, "");
+      return videoId ? `https://www.youtube.com/embed/${videoId}` : null;
+    }
+
+    if (url.hostname.includes("youtube.com")) {
+      const videoId = url.searchParams.get("v");
+      return videoId ? `https://www.youtube.com/embed/${videoId}` : null;
+    }
+  } catch {
+    return null;
+  }
+
+  return null;
+}
+
+function getVimeoEmbedUrl(rawUrl: string) {
+  try {
+    const url = new URL(rawUrl);
+
+    if (!url.hostname.includes("vimeo.com")) {
+      return null;
+    }
+
+    const match = url.pathname.match(/\/(\d+)/);
+    return match ? `https://player.vimeo.com/video/${match[1]}` : null;
+  } catch {
+    return null;
+  }
+}
+
+function getResourcePreview(input: { resource: CampusResourceItem }) {
+  const { resource } = input;
+  const fileHref = resource.href && resource.source === "FILE" ? buildInlineFileHref(resource.href) : null;
+
+  if (resource.source === "FILE" && fileHref && resource.mimeType) {
+    if (resource.mimeType === "application/pdf") {
+      return {
+        kind: "pdf" as const,
+        src: fileHref
+      };
+    }
+
+    if (resource.mimeType.startsWith("image/")) {
+      return {
+        kind: "image" as const,
+        src: fileHref
+      };
+    }
+
+    if (resource.mimeType.startsWith("video/")) {
+      return {
+        kind: "video" as const,
+        src: fileHref
+      };
+    }
+  }
+
+  if (!resource.linkUrl) {
+    return null;
+  }
+
+  const youtubeEmbedUrl = getYoutubeEmbedUrl(resource.linkUrl);
+  if (youtubeEmbedUrl) {
+    return {
+      kind: "embed" as const,
+      src: youtubeEmbedUrl
+    };
+  }
+
+  const vimeoEmbedUrl = getVimeoEmbedUrl(resource.linkUrl);
+  if (vimeoEmbedUrl) {
+    return {
+      kind: "embed" as const,
+      src: vimeoEmbedUrl
+    };
+  }
+
+  if (/\.pdf($|\?)/i.test(resource.linkUrl)) {
+    return {
+      kind: "pdf" as const,
+      src: resource.linkUrl
+    };
+  }
+
+  if (/\.(png|jpe?g|gif|webp|svg)($|\?)/i.test(resource.linkUrl)) {
+    return {
+      kind: "image" as const,
+      src: resource.linkUrl
+    };
+  }
+
+  if (/\.(mp4|webm|ogg)($|\?)/i.test(resource.linkUrl)) {
+    return {
+      kind: "video" as const,
+      src: resource.linkUrl
+    };
+  }
+
+  return null;
+}
+
+function ModuleResourceCard(input: {
+  title: string;
+  body: string;
+  badge: string;
+  ctaLabel: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      className="w-full rounded-[22px] border border-[rgba(12,113,195,0.12)] bg-white p-5 text-left transition hover:border-[var(--color-primary)] hover:bg-[var(--color-primary-soft)]"
+      onClick={input.onClick}
+      type="button"
+    >
+      <Badge tone="muted">{input.badge}</Badge>
+      <p className="mt-4 text-lg font-semibold text-[var(--color-ink)]">{input.title}</p>
+      <p className="mt-3 text-sm leading-7 text-[var(--color-muted)]">{input.body}</p>
+      <span className="mt-4 inline-flex items-center text-sm font-semibold text-[var(--color-primary)]">
+        {input.ctaLabel}
+        <ArrowRight className="ml-2 h-4 w-4" />
+      </span>
+    </button>
+  );
+}
+
+function ModuleLessonPreview(input: {
+  resource: CampusResourceItem | null;
+}) {
+  const preview = input.resource ? getResourcePreview({ resource: input.resource }) : null;
+
+  if (!input.resource) {
+    return (
+      <div className="rounded-[24px] border border-dashed border-[rgba(12,113,195,0.18)] bg-[var(--color-surface)] p-6 text-sm leading-7 text-[var(--color-muted)]">
+        Este modulo todavia no tiene un material principal publicado. Puedes seguir el resumen del modulo y revisar la tarea asociada cuando se publique.
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[var(--color-primary)]">
+            Material principal
+          </p>
+          <p className="mt-2 text-xl font-semibold text-[var(--color-ink)]">{input.resource.title}</p>
+        </div>
+        {input.resource.href ? (
+          <Link
+            className="inline-flex items-center rounded-xl border border-[var(--color-primary)] px-4 py-3 text-sm font-semibold text-[var(--color-primary)] transition hover:bg-[var(--color-primary-soft)]"
+            href={input.resource.href}
+            prefetch={false}
+            target={input.resource.isExternal ? "_blank" : undefined}
+          >
+            {input.resource.isExternal ? "Abrir material" : "Descargar material"}
+            <ExternalLink className="ml-2 h-4 w-4" />
+          </Link>
+        ) : null}
+      </div>
+
+      <p className="text-sm leading-7 text-[var(--color-muted)]">{input.resource.description}</p>
+
+      {preview ? (
+        <div className="overflow-hidden rounded-[24px] border border-[rgba(12,113,195,0.12)] bg-[#f7f9fb]">
+          {preview.kind === "pdf" || preview.kind === "embed" ? (
+            <iframe
+              allow={preview.kind === "embed" ? "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" : undefined}
+              className="h-[32rem] w-full bg-white"
+              src={preview.src}
+              title={input.resource.title}
+            />
+          ) : null}
+          {preview.kind === "image" ? (
+            <>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                alt={input.resource.title}
+                className="h-[32rem] w-full object-contain bg-white"
+                src={preview.src}
+              />
+            </>
+          ) : null}
+          {preview.kind === "video" ? (
+            <video
+              className="h-[32rem] w-full bg-[#101722]"
+              controls
+              preload="metadata"
+              src={preview.src}
+            />
+          ) : null}
+        </div>
+      ) : (
+        <div className="rounded-[24px] border border-[rgba(12,113,195,0.12)] bg-[var(--color-surface)] p-5">
+          <div className="flex items-start gap-3">
+            {input.resource.resourceType === "MATERIAL" ? (
+              <FileText className="mt-1 h-5 w-5 text-[var(--color-primary)]" />
+            ) : (
+              <PlayCircle className="mt-1 h-5 w-5 text-[var(--color-primary)]" />
+            )}
+            <div>
+              <p className="text-base font-semibold text-[var(--color-ink)]">Vista previa no integrada</p>
+              <p className="mt-2 text-sm leading-7 text-[var(--color-muted)]">
+                Este material no se puede previsualizar dentro del campus con el formato actual, pero sigue accesible desde el boton superior.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function CourseLearningShell({
   course,
   forumCategories,
@@ -245,6 +469,21 @@ export function CourseLearningShell({
     () => resources.filter((resource) => resource.isManaged),
     [resources]
   );
+  const managedResourcesByModuleId = useMemo(() => {
+    const groups = new Map<string, CampusResourceItem[]>();
+
+    for (const resource of managedResources) {
+      if (!resource.moduleId) {
+        continue;
+      }
+
+      const currentGroup = groups.get(resource.moduleId) ?? [];
+      currentGroup.push(resource);
+      groups.set(resource.moduleId, currentGroup);
+    }
+
+    return groups;
+  }, [managedResources]);
   const managedMaterials = useMemo(
     () => managedResources.filter((resource) => !resource.isExercise),
     [managedResources]
@@ -306,6 +545,22 @@ export function CourseLearningShell({
     );
   }, [activeTab, canModerate, focusedResourceId, managedExercises]);
   const isFocusedTaskWorkspace = Boolean(focusedStudentExercise);
+  const currentModuleResources = useMemo(() => {
+    if (!currentModule) {
+      return [];
+    }
+
+    return managedResourcesByModuleId.get(currentModule.id) ?? [];
+  }, [currentModule, managedResourcesByModuleId]);
+  const currentModuleMaterials = useMemo(
+    () => currentModuleResources.filter((resource) => !resource.isExercise),
+    [currentModuleResources]
+  );
+  const currentModuleExercises = useMemo(
+    () => currentModuleResources.filter((resource) => resource.isExercise),
+    [currentModuleResources]
+  );
+  const currentModulePrimaryMaterial = currentModuleMaterials[0] ?? null;
 
   const primaryResourceTargetId = useMemo(() => {
     if (canModerate) {
@@ -821,7 +1076,7 @@ export function CourseLearningShell({
                   </SurfaceCard>
 
                   <SurfaceCard
-                    description="Vista activa del contenido seleccionado dentro del recorrido del curso."
+                    description="Cada modulo agrupa su explicacion, material principal y tarea asociada dentro de una misma leccion."
                     id="content-current-module"
                     title={currentModule ? currentModule.title : "Selecciona un modulo"}
                   >
@@ -833,18 +1088,76 @@ export function CourseLearningShell({
                           </Badge>
                           <Badge tone="muted">Modulo {currentModule.index + 1}</Badge>
                         </div>
-                        <p className="text-[1.05rem] leading-8 text-[var(--color-ink)]">
-                          {currentModule.description}
-                        </p>
-                        <div className="grid gap-4 md:grid-cols-2">
-                          <InfoPanel
-                            body={currentModule.estimatedTime}
-                            title="Tiempo estimado"
-                          />
-                          <InfoPanel
-                            body={currentModule.resourcesSummary}
-                            title="Recursos previstos"
-                          />
+                        <div className="grid gap-4 xl:grid-cols-[minmax(0,1.2fr)_minmax(18rem,0.8fr)]">
+                          <div className="space-y-5">
+                            <p className="text-[1.05rem] leading-8 text-[var(--color-ink)]">
+                              {currentModule.description}
+                            </p>
+                            <div className="grid gap-4 md:grid-cols-2">
+                              <InfoPanel
+                                body={currentModule.estimatedTime}
+                                title="Tiempo estimado"
+                              />
+                              <InfoPanel
+                                body={currentModule.resourcesSummary}
+                                title="Recursos previstos"
+                              />
+                            </div>
+                            <ModuleLessonPreview resource={currentModulePrimaryMaterial} />
+                          </div>
+
+                          <div className="space-y-4">
+                            <div className="rounded-[24px] border border-[rgba(12,113,195,0.12)] bg-[var(--color-surface)] p-5">
+                              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[var(--color-primary)]">
+                                Leccion del modulo
+                              </p>
+                              <p className="mt-3 text-sm leading-7 text-[var(--color-muted)]">
+                                Aqui tienes el contenido principal del modulo y, debajo, las tareas asociadas para que el recorrido sea lineal y facil de seguir.
+                              </p>
+                            </div>
+
+                            {currentModuleMaterials.slice(1).map((resource) => (
+                              <ModuleResourceCard
+                                badge="Material complementario"
+                                body={resource.description}
+                                ctaLabel={resource.isExternal ? "Abrir material" : "Descargar material"}
+                                key={resource.id}
+                                onClick={() => {
+                                  if (resource.href) {
+                                    window.open(resource.href, resource.isExternal ? "_blank" : "_self");
+                                  }
+                                }}
+                                title={resource.title}
+                              />
+                            ))}
+
+                            {currentModuleExercises.map((resource) => (
+                              <ModuleResourceCard
+                                badge={canModerate ? "Tarea del modulo" : "Actividad del modulo"}
+                                body={
+                                  canModerate
+                                    ? `${resource.submissionStats?.pending ?? 0} entregas pendientes de revision.`
+                                    : !resource.viewerSubmission
+                                      ? "Todavia no has registrado tu entrega en esta actividad."
+                                      : resource.viewerSubmission.status === "CHANGES_REQUESTED"
+                                        ? "Hay cambios solicitados. Abre la tarea para revisar el feedback y enviar una nueva version."
+                                        : resource.viewerSubmission.status === "SUBMITTED"
+                                          ? "La entrega ya esta enviada y espera revision docente."
+                                          : "La actividad ya tiene revision registrada dentro del campus."
+                                }
+                                ctaLabel={canModerate ? "Abrir tarea del modulo" : "Abrir entrega"}
+                                key={resource.id}
+                                onClick={() => handleResourceWorkspaceOpen(`resource-${resource.id}`)}
+                                title={resource.title}
+                              />
+                            ))}
+
+                            {!currentModuleMaterials.length && !currentModuleExercises.length ? (
+                              <div className="rounded-[24px] border border-dashed border-[rgba(12,113,195,0.18)] bg-white p-5 text-sm leading-7 text-[var(--color-muted)]">
+                                Este modulo todavia no tiene materiales ni tareas ligados de forma explicita.
+                              </div>
+                            ) : null}
+                          </div>
                         </div>
                         <div className="flex flex-wrap items-center justify-between gap-4 rounded-[24px] border border-[rgba(12,113,195,0.12)] bg-[var(--color-surface)] p-5">
                           <p className="text-sm leading-7 text-[var(--color-muted)]">
@@ -879,7 +1192,11 @@ export function CourseLearningShell({
                         <ModuleRow
                           isSelected={module.index === selectedModuleIndex}
                           key={module.id}
-                          meta={`${module.estimatedTime} · ${module.resourcesSummary}`}
+                          meta={`${module.estimatedTime} · ${module.resourcesSummary}${
+                            (managedResourcesByModuleId.get(module.id)?.length ?? 0) > 0
+                              ? ` · ${managedResourcesByModuleId.get(module.id)?.filter((resource) => !resource.isExercise).length ?? 0} materiales · ${managedResourcesByModuleId.get(module.id)?.filter((resource) => resource.isExercise).length ?? 0} tareas`
+                              : ""
+                          }`}
                           onClick={() => setSelectedModuleIndex(module.index)}
                           stateLabel={
                             module.isCompleted

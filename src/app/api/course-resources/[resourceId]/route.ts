@@ -11,6 +11,7 @@ export async function GET(
   request: Request,
   { params }: { params: Promise<{ resourceId: string }> }
 ) {
+  const inline = new URL(request.url).searchParams.get("inline") === "1";
   const { resourceId } = await params;
   const user = await getCurrentUser();
 
@@ -68,6 +69,7 @@ export async function GET(
     const fileBuffer = await readStoredCourseResourceContent(resource.storageKey);
     const headers = buildPrivateFileHeaders({
       fileName: resource.title,
+      inline,
       mimeType: resource.mimeType
     });
 
