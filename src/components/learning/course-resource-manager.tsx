@@ -21,13 +21,17 @@ type CourseResourceManagerProps = {
   resources: CampusResourceItem[];
   canModerate: boolean;
   roleLabel: string;
+  focusedResourceId?: string | null;
+  onExitFocus?: () => void;
 };
 
 export function CourseResourceManager({
   course,
   resources,
   canModerate,
-  roleLabel
+  roleLabel,
+  focusedResourceId = null,
+  onExitFocus
 }: CourseResourceManagerProps) {
   const [state, formAction] = useActionState(createCourseResourceAction, initialState);
   const [source, setSource] = useState<"FILE" | "LINK">("FILE");
@@ -39,6 +43,10 @@ export function CourseResourceManager({
   const managedPositionById = new Map(
     managedResources.map((resource, index) => [resource.id, index] as const)
   );
+  const focusedResource = focusedResourceId
+    ? managedResources.find((resource) => resource.id === focusedResourceId) ?? null
+    : null;
+  const isFocusedTaskView = !canModerate && Boolean(focusedResource?.isExercise);
 
   function getExternalHostLabel(url: string | null) {
     if (!url) {
@@ -209,6 +217,30 @@ export function CourseResourceManager({
 
   return (
     <div className="space-y-4">
+      {isFocusedTaskView && focusedResource ? (
+        <div className="rounded-2xl border border-[rgba(12,113,195,0.14)] bg-[var(--color-primary-soft)] p-5">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[var(--color-primary)]">
+                Modo de entrega
+              </p>
+              <p className="mt-2 text-sm leading-7 text-[var(--color-muted)]">
+                Esta vista elimina el resto de tareas para que puedas centrarte en una sola entrega.
+              </p>
+            </div>
+            {onExitFocus ? (
+              <button
+                className="inline-flex items-center rounded-xl border border-[var(--color-border)] bg-white px-4 py-3 text-sm font-semibold text-[var(--color-ink)] transition hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]"
+                onClick={onExitFocus}
+                type="button"
+              >
+                Ver todas las tareas
+              </button>
+            ) : null}
+          </div>
+        </div>
+      ) : null}
+
       {canModerate ? (
         <div
           className="scroll-mt-36 rounded-2xl border border-[rgba(12,113,195,0.16)] bg-white p-5 shadow-[0_16px_32px_rgba(12,113,195,0.06)]"
@@ -341,7 +373,9 @@ export function CourseResourceManager({
         </div>
       ) : null}
 
-      {exerciseResources.length ? (
+      {isFocusedTaskView && focusedResource ? (
+        <section className="space-y-4">{renderResourceCard(focusedResource)}</section>
+      ) : exerciseResources.length ? (
         <section className="space-y-4">
           <div className="rounded-2xl border border-[rgba(12,113,195,0.14)] bg-white p-5">
             <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[var(--color-primary)]">
@@ -357,7 +391,7 @@ export function CourseResourceManager({
         </section>
       ) : null}
 
-      {materialResources.length ? (
+      {!isFocusedTaskView && materialResources.length ? (
         <section className="space-y-4">
           <div className="rounded-2xl border border-[rgba(12,113,195,0.14)] bg-white p-5">
             <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[var(--color-primary)]">
@@ -371,7 +405,7 @@ export function CourseResourceManager({
         </section>
       ) : null}
 
-      {referenceResources.length ? (
+      {!isFocusedTaskView && referenceResources.length ? (
         <section className="space-y-4">
           <div className="rounded-2xl border border-[rgba(12,113,195,0.14)] bg-white p-5">
             <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[var(--color-primary)]">
@@ -385,13 +419,13 @@ export function CourseResourceManager({
         </section>
       ) : null}
 
-      {canModerate && managedResources.length === 0 ? (
+      {!isFocusedTaskView && canModerate && managedResources.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-[rgba(12,113,195,0.18)] bg-white p-5 text-sm leading-7 text-[var(--color-muted)]">
           Todavia no hay materiales ni ejercicios creados para este curso.
         </div>
       ) : null}
 
-      {!canModerate && managedResources.length === 0 ? (
+      {!isFocusedTaskView && !canModerate && managedResources.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-[rgba(12,113,195,0.18)] bg-white p-5 text-sm leading-7 text-[var(--color-muted)]">
           Todavia no hay tareas ni materiales publicados para este curso.
         </div>

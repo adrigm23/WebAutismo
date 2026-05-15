@@ -15,7 +15,11 @@ import { CourseResourceManager } from "@/components/learning/course-resource-man
 import { Badge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button";
 import type { CatalogCourse } from "@/lib/course-catalog";
-import { buildCourseTrackingHref } from "@/lib/course-navigation";
+import {
+  buildCourseContentHref,
+  buildCourseResourcesHref,
+  buildCourseTrackingHref
+} from "@/lib/course-navigation";
 import type { CourseProgressDetails } from "@/lib/course-progress";
 import type { CampusResourceItem } from "@/lib/course-resources";
 import { siteConfig } from "@/lib/site";
@@ -39,6 +43,7 @@ type LearningShellProps = {
   editionLabel?: string | null;
   accessUntil?: Date | null;
   initialActiveTab: SidebarTab;
+  initialFocusedResourceId?: string | null;
 };
 
 export type SidebarTab = "content" | "resources" | "support";
@@ -212,10 +217,24 @@ export function CourseLearningShell({
   canModerate,
   editionLabel,
   accessUntil,
-  initialActiveTab
+  initialActiveTab,
+  initialFocusedResourceId = null
 }: LearningShellProps) {
   const [selectedModuleIndex, setSelectedModuleIndex] = useState(0);
   const [pendingActiveTab, setPendingActiveTab] = useState<SidebarTab | null>(null);
+  const [focusedResourceId, setFocusedResourceId] = useState<string | null>(() => {
+    if (initialFocusedResourceId) {
+      return initialFocusedResourceId;
+    }
+
+    if (typeof window === "undefined") {
+      return null;
+    }
+
+    return window.location.hash.startsWith("#resource-")
+      ? window.location.hash.slice("#resource-".length)
+      : null;
+  });
   const activeTab = pendingActiveTab ?? initialActiveTab;
   const currentModule = progress.modules[selectedModuleIndex] ?? progress.modules[0] ?? null;
   const nextPendingModule = useMemo(
@@ -275,6 +294,18 @@ export function CourseLearningShell({
 
     return null;
   }, [canModerate, managedExercises]);
+  const focusedStudentExercise = useMemo(() => {
+    if (canModerate || activeTab !== "resources" || !focusedResourceId) {
+      return null;
+    }
+
+    return (
+      managedExercises.find(
+        (resource) => resource.id === focusedResourceId && resource.isExercise
+      ) ?? null
+    );
+  }, [activeTab, canModerate, focusedResourceId, managedExercises]);
+  const isFocusedTaskWorkspace = Boolean(focusedStudentExercise);
 
   const primaryResourceTargetId = useMemo(() => {
     if (canModerate) {
@@ -288,8 +319,26 @@ export function CourseLearningShell({
         : "resources-panel";
   }, [canModerate, managedExercises, studentOpenExercises]);
 
+  function buildWorkspaceHref(input: {
+    tab: SidebarTab;
+    targetId?: string | null;
+    resourceId?: string | null;
+  }) {
+    if (input.tab === "resources") {
+      return buildCourseResourcesHref(
+        course.slug,
+        input.resourceId ? `resource-${input.resourceId}` : input.targetId ?? "resources-panel"
+      );
+    }
+
+    const hash = input.targetId ? `#${input.targetId}` : "";
+    return input.tab === "content"
+      ? `/mis-cursos/${course.slug}${hash}`
+      : `/mis-cursos/${course.slug}?tab=${input.tab}${hash}`;
+  }
+
   function buildTabHref(tab: SidebarTab) {
-    return tab === "content" ? `/mis-cursos/${course.slug}` : `/mis-cursos/${course.slug}?tab=${tab}`;
+    return buildWorkspaceHref({ tab });
   }
 
   function scrollToCampusTarget(targetId: string) {
@@ -304,6 +353,10 @@ export function CourseLearningShell({
   }
 
   function handleTabChange(nextTab: SidebarTab) {
+    if (nextTab !== "resources") {
+      setFocusedResourceId(null);
+    }
+
     startTransition(() => {
       setPendingActiveTab(nextTab);
     });
@@ -315,12 +368,21 @@ export function CourseLearningShell({
 
   function handleResourceWorkspaceOpen(targetId?: string) {
     const nextTargetId = targetId ?? primaryResourceTargetId;
+    const nextFocusedResourceId = nextTargetId.startsWith("resource-")
+      ? nextTargetId.slice("resource-".length)
+      : null;
+
+    setFocusedResourceId(nextFocusedResourceId);
 
     if (activeTab !== "resources") {
       handleTabChange("resources");
 
       if (typeof window !== "undefined") {
-        const nextUrl = `${buildTabHref("resources")}#${nextTargetId}`;
+        const nextUrl = buildWorkspaceHref({
+          tab: "resources",
+          targetId: nextTargetId,
+          resourceId: nextFocusedResourceId
+        });
         window.history.replaceState(window.history.state, "", nextUrl);
       }
 
@@ -331,7 +393,11 @@ export function CourseLearningShell({
     }
 
     if (typeof window !== "undefined") {
-      const nextUrl = `${buildTabHref("resources")}#${nextTargetId}`;
+      const nextUrl = buildWorkspaceHref({
+        tab: "resources",
+        targetId: nextTargetId,
+        resourceId: nextFocusedResourceId
+      });
       window.history.replaceState(window.history.state, "", nextUrl);
     }
 
@@ -348,7 +414,7 @@ export function CourseLearningShell({
       handleTabChange(nextTab);
 
       if (typeof window !== "undefined") {
-        const nextUrl = `${buildTabHref(nextTab)}#${targetId}`;
+        const nextUrl = buildWorkspaceHref({ tab: nextTab, targetId });
         window.history.replaceState(window.history.state, "", nextUrl);
       }
 
@@ -359,12 +425,37 @@ export function CourseLearningShell({
     }
 
     if (typeof window !== "undefined") {
-      const nextUrl = `${buildTabHref(nextTab)}#${targetId}`;
+      const nextUrl = buildWorkspaceHref({ tab: nextTab, targetId });
       window.history.replaceState(window.history.state, "", nextUrl);
     }
 
     scrollToCampusTarget(targetId);
   }
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    function syncFocusFromLocation() {
+      const hash = window.location.hash.replace(/^#/, "");
+      if (hash.startsWith("resource-")) {
+        setFocusedResourceId(hash.slice("resource-".length));
+        return;
+      }
+
+      const params = new URLSearchParams(window.location.search);
+      const resourceId = params.get("resource");
+      setFocusedResourceId(resourceId);
+    }
+
+    syncFocusFromLocation();
+    window.addEventListener("hashchange", syncFocusFromLocation);
+
+    return () => {
+      window.removeEventListener("hashchange", syncFocusFromLocation);
+    };
+  }, []);
 
   useEffect(() => {
     if (typeof window === "undefined" || activeTab !== "resources") {
@@ -378,6 +469,20 @@ export function CourseLearningShell({
 
     scrollToCampusTarget(hash);
   }, [activeTab]);
+
+  function clearFocusedTaskWorkspace() {
+    setFocusedResourceId(null);
+
+    if (typeof window !== "undefined") {
+      const nextUrl = buildWorkspaceHref({
+        tab: "resources",
+        targetId: "resources-panel"
+      });
+      window.history.replaceState(window.history.state, "", nextUrl);
+    }
+
+    scrollToCampusTarget("resources-panel");
+  }
 
   const primarySummary = canModerate
     ? {
@@ -498,7 +603,9 @@ export function CourseLearningShell({
                   active={activeTab === "resources"}
                   icon={FolderOpen}
                   label="Recursos y tareas"
-                  onClick={() => handleTabChange("resources")}
+                  onClick={() =>
+                    isFocusedTaskWorkspace ? clearFocusedTaskWorkspace() : handleTabChange("resources")
+                  }
                 />
                 <WorkspaceTabButton
                   active={activeTab === "support"}
@@ -513,8 +620,37 @@ export function CourseLearningShell({
       </header>
 
       <div className="px-6 py-8 lg:px-12 xl:py-10">
-        <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_22rem] 2xl:grid-cols-[minmax(0,1fr)_24rem]">
+        <div
+          className={cn(
+            "grid gap-6",
+            isFocusedTaskWorkspace
+              ? "xl:grid-cols-1"
+              : "xl:grid-cols-[minmax(0,1fr)_22rem] 2xl:grid-cols-[minmax(0,1fr)_24rem]"
+          )}
+        >
           <div className="space-y-6">
+            {isFocusedTaskWorkspace ? (
+              <SurfaceCard
+                description="Has abierto una tarea concreta. El campus entra en modo de foco para que entregues o revises sin distracciones."
+                title="Entrega del ejercicio"
+              >
+                <div className="flex flex-wrap items-center gap-3">
+                  <button
+                    className="inline-flex items-center justify-center rounded-xl border border-[var(--color-border)] px-4 py-3 text-sm font-semibold text-[var(--color-ink)] transition hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]"
+                    onClick={clearFocusedTaskWorkspace}
+                    type="button"
+                  >
+                    Ver todas las tareas
+                  </button>
+                  <ButtonLink href={buildCourseContentHref(course.slug)} prefetch variant="ghost">
+                    Volver al contenido
+                  </ButtonLink>
+                  <ButtonLink href={`/mis-cursos/${course.slug}/foro`} prefetch variant="ghost">
+                    Abrir foro privado
+                  </ButtonLink>
+                </div>
+              </SurfaceCard>
+            ) : (
             <SurfaceCard className="overflow-hidden p-0">
               <div className="grid gap-0 lg:grid-cols-[minmax(0,1.15fr)_minmax(20rem,0.85fr)]">
                 <div className="space-y-6 p-6 lg:p-8">
@@ -636,6 +772,7 @@ export function CourseLearningShell({
                 </div>
               </div>
             </SurfaceCard>
+            )}
 
             {activeTab === "content" ? (
               <>
@@ -788,42 +925,48 @@ export function CourseLearningShell({
               <SurfaceCard
                 className="scroll-mt-36"
                 description={
-                  canModerate
+                  isFocusedTaskWorkspace
+                    ? "Vista centrada en una tarea concreta. La entrega, el feedback y el estado viven en esta misma pagina."
+                    : canModerate
                     ? "Publica materiales, abre ejercicios y revisa entregas sin sacar al usuario del flujo academico."
                     : "Aqui se concentran materiales, tareas, entregas y feedback del curso."
                 }
                 id="resources-panel"
-                title="Recursos y tareas"
+                title={isFocusedTaskWorkspace ? "Tarea abierta" : "Recursos y tareas"}
               >
-                <div className="mb-6 grid gap-4 md:grid-cols-3">
-                  <SummaryMetric
-                    detail={
-                      canModerate
-                        ? "Ejercicios visibles para el alumnado."
-                        : "Actividades pendientes o con cambios solicitados."
-                    }
-                    label="Ejercicios"
-                    value={`${managedExercises.length}`}
-                  />
-                  <SummaryMetric
-                    detail={
-                      canModerate
-                        ? "Entregas pendientes de revision."
-                        : "Entregas actualmente en revision docente."
-                    }
-                    label={canModerate ? "Pendientes" : "En revision"}
-                    value={`${canModerate ? teacherPendingReviews : studentUnderReviewExercises.length}`}
-                  />
-                  <SummaryMetric
-                    detail="Guias, documentos y referencias del curso."
-                    label="Materiales"
-                    value={`${managedMaterials.length}`}
-                  />
-                </div>
+                {!isFocusedTaskWorkspace ? (
+                  <div className="mb-6 grid gap-4 md:grid-cols-3">
+                    <SummaryMetric
+                      detail={
+                        canModerate
+                          ? "Ejercicios visibles para el alumnado."
+                          : "Actividades pendientes o con cambios solicitados."
+                      }
+                      label="Ejercicios"
+                      value={`${managedExercises.length}`}
+                    />
+                    <SummaryMetric
+                      detail={
+                        canModerate
+                          ? "Entregas pendientes de revision."
+                          : "Entregas actualmente en revision docente."
+                      }
+                      label={canModerate ? "Pendientes" : "En revision"}
+                      value={`${canModerate ? teacherPendingReviews : studentUnderReviewExercises.length}`}
+                    />
+                    <SummaryMetric
+                      detail="Guias, documentos y referencias del curso."
+                      label="Materiales"
+                      value={`${managedMaterials.length}`}
+                    />
+                  </div>
+                ) : null}
 
                 <CourseResourceManager
                   canModerate={canModerate}
                   course={course}
+                  focusedResourceId={focusedStudentExercise?.id ?? null}
+                  onExitFocus={clearFocusedTaskWorkspace}
                   resources={resources}
                   roleLabel={roleLabel}
                 />
@@ -906,7 +1049,8 @@ export function CourseLearningShell({
             ) : null}
           </div>
 
-          <aside className="xl:sticky xl:top-[9.5rem] xl:self-start">
+          {!isFocusedTaskWorkspace ? (
+          <aside className="xl:sticky xl:top-[9.5rem] xl:max-h-[calc(100vh-10rem)] xl:self-start xl:overflow-y-auto xl:pr-1">
             <div className="space-y-4">
               <SurfaceCard
                 className="p-5"
@@ -955,6 +1099,7 @@ export function CourseLearningShell({
               </SurfaceCard>
             </div>
           </aside>
+          ) : null}
         </div>
       </div>
     </div>

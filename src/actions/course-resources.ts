@@ -27,6 +27,7 @@ import {
   COURSE_SUBMISSION_UPLOAD_POLICY,
   validateFileUpload
 } from "@/lib/file-security";
+import { buildCourseResourcesHref } from "@/lib/course-navigation";
 import { captureOperationalWarning } from "@/lib/monitoring";
 import { sendPlatformNotification } from "@/lib/notifications";
 import { getDb } from "@/lib/prisma";
@@ -945,7 +946,10 @@ export async function reviewCourseResourceSubmissionAction(
         parsed.data.status === "REVIEWED"
           ? `Ya puedes consultar el feedback docente${score !== null ? ` y tu nota (${score}/10)` : ""} de ${submission.resource.title}.`
           : `Revisa el feedback docente y actualiza tu entrega de ${submission.resource.title}.`,
-      linkPath: `/mis-cursos/${parsed.data.courseSlug}?tab=resources#resource-${submission.resource.id}`,
+      linkPath: buildCourseResourcesHref(
+        parsed.data.courseSlug,
+        `resource-${submission.resource.id}`
+      ),
       metadata: {
         courseSlug: parsed.data.courseSlug,
         resourceId: submission.resource.id,

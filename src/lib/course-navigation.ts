@@ -6,11 +6,22 @@ function buildWorkspaceHref(input: {
   courseSlug: string;
   tab: CourseWorkspaceTab;
   targetId?: string | null;
+  resourceId?: string | null;
 }) {
-  const query = input.tab === "content" ? "" : `?tab=${input.tab}`;
+  const params = new URLSearchParams();
+
+  if (input.tab !== "content") {
+    params.set("tab", input.tab);
+  }
+
+  if (input.tab === "resources" && input.resourceId) {
+    params.set("resource", input.resourceId);
+  }
+
+  const query = params.toString();
   const hash = input.targetId ? `#${input.targetId}` : "";
 
-  return `/mis-cursos/${input.courseSlug}${query}${hash}`;
+  return `/mis-cursos/${input.courseSlug}${query ? `?${query}` : ""}${hash}`;
 }
 
 export function buildCourseContentHref(courseSlug: string, targetId = "content-current-module") {
@@ -22,10 +33,15 @@ export function buildCourseContentHref(courseSlug: string, targetId = "content-c
 }
 
 export function buildCourseResourcesHref(courseSlug: string, targetId = "resources-panel") {
+  const resourceId = targetId.startsWith("resource-")
+    ? targetId.slice("resource-".length)
+    : null;
+
   return buildWorkspaceHref({
     courseSlug,
     tab: "resources",
-    targetId
+    targetId,
+    resourceId
   });
 }
 

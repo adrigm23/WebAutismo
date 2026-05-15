@@ -15,7 +15,7 @@ import { firstValue } from "@/lib/utils";
 
 type MyCoursePageProps = {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ tab?: string | string[] }>;
+  searchParams: Promise<{ tab?: string | string[]; resource?: string | string[] }>;
 };
 
 function getSidebarTab(value: string | string[] | undefined) {
@@ -40,7 +40,7 @@ export async function generateMetadata({
 
 export default async function MyCoursePage({ params, searchParams }: MyCoursePageProps) {
   const { slug } = await params;
-  const { tab } = await searchParams;
+  const { tab, resource } = await searchParams;
   const course = await getCatalogCourseBySlug(slug);
 
   if (!course) {
@@ -62,6 +62,7 @@ export default async function MyCoursePage({ params, searchParams }: MyCoursePag
 
   const canModerate = canModerateCourse(access.role);
   const activeTab = getSidebarTab(tab);
+  const focusedResourceId = activeTab === "resources" ? firstValue(resource) ?? null : null;
   const progress = await getCourseProgressDetailsForUser({
     userId: user.id,
     course
@@ -85,6 +86,7 @@ export default async function MyCoursePage({ params, searchParams }: MyCoursePag
       progress={progress}
       resources={resources}
       roleLabel={getRoleLabel(access.role)}
+      initialFocusedResourceId={focusedResourceId}
       editionLabel={course.activeEdition?.label ?? null}
       accessUntil={access.enrollment?.accessUntil ?? course.activeEdition?.accessUntil ?? null}
     />
