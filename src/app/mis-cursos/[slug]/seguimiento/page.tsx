@@ -321,6 +321,7 @@ export default async function CourseTrackingPage({ params }: TrackingPageProps) 
   const highAttentionLearners = learnerExerciseRows.filter(
     (row) => row.pendingCount > 0 || row.changesRequestedCount > 0
   ).length;
+  const openReviewCases = exerciseSummary.pending + exerciseSummary.changesRequested;
   const campusContentHref = buildCourseContentHref(slug);
   const campusResourcesHref = buildCourseResourcesHref(slug, "resource-manager-top");
   const forumHref = buildCourseForumHref(slug);
@@ -395,11 +396,13 @@ export default async function CourseTrackingPage({ params }: TrackingPageProps) 
                       Estado del curso
                     </p>
                     <p className="mt-3 text-[2.2rem] font-semibold leading-none tracking-[-0.06em] text-[var(--color-ink)]">
-                      {exerciseSummary.pending}
+                      {openReviewCases}
                     </p>
                     <p className="mt-2 text-sm leading-6 text-[var(--color-muted)]">
                       {exerciseSummary.pending > 0
                         ? "Entregas esperando revision docente."
+                        : exerciseSummary.changesRequested > 0
+                          ? "Alumnos pendientes de responder a cambios solicitados."
                         : "Sin bloqueos inmediatos en la cola de revision."}
                     </p>
                   </div>
@@ -486,9 +489,9 @@ export default async function CourseTrackingPage({ params }: TrackingPageProps) 
             value={`${exerciseSummary.submissions}`}
           />
           <TrackingStat
-            detail={`${exerciseSummary.reviewed} revisadas y ${exerciseSummary.changesRequested} con cambios solicitados.`}
-            label="Pendientes de revision"
-            value={`${exerciseSummary.pending}`}
+            detail={`${exerciseSummary.pending} pendientes de revision y ${exerciseSummary.changesRequested} con cambios solicitados.`}
+            label="Casos abiertos"
+            value={`${openReviewCases}`}
           />
         </div>
 
@@ -510,7 +513,7 @@ export default async function CourseTrackingPage({ params }: TrackingPageProps) 
                 </div>
                 <div className="flex flex-wrap gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-muted)]">
                   <span>{learnerExerciseRows.length} alumnos con entregas</span>
-                  <span>{exerciseSummary.pending} pendientes</span>
+                  <span>{openReviewCases} abiertos</span>
                   <span>{exerciseSummary.reviewed} revisadas</span>
                 </div>
               </div>
