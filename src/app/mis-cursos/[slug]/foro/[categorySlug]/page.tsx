@@ -136,7 +136,11 @@ export default async function ForumCategoryPage({
   return (
     <div className="space-y-8">
       <div className="flex flex-wrap items-center gap-2 text-sm text-[var(--color-muted)]">
-        <Link className="hover:text-[var(--color-primary)]" href={`/mis-cursos/${course.slug}/foro`}>
+        <Link
+          className="hover:text-[var(--color-primary)]"
+          href={`/mis-cursos/${course.slug}/foro`}
+          prefetch
+        >
           Foro
         </Link>
         <ChevronRight className="h-4 w-4" />
@@ -154,11 +158,11 @@ export default async function ForumCategoryPage({
         </div>
 
         <div className="flex flex-wrap gap-3">
-          <ButtonLink href={`/mis-cursos/${course.slug}/foro/${categorySlug}/nuevo`}>
+          <ButtonLink href={`/mis-cursos/${course.slug}/foro/${categorySlug}/nuevo`} prefetch>
             Nuevo hilo
           </ButtonLink>
           {canModerate ? (
-            <ButtonLink href={`/mis-cursos/${course.slug}/foro/moderacion`} variant="secondary">
+            <ButtonLink href={`/mis-cursos/${course.slug}/foro/moderacion`} prefetch variant="secondary">
               Moderación
             </ButtonLink>
           ) : null}
@@ -226,6 +230,7 @@ export default async function ForumCategoryPage({
             }`}
             href={tab.href}
             key={tab.label}
+            prefetch
           >
             {tab.label}
           </Link>

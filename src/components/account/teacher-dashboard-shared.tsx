@@ -49,6 +49,7 @@ export function getTeacherCoursePaths(course: TeacherDashboardCourseSummary | nu
   if (!course) {
     return {
       campusHref: "/mi-cuenta",
+      resourcesHref: "/mi-cuenta",
       trackingHref: "/mi-cuenta",
       forumHref: "/mi-cuenta"
     };
@@ -56,6 +57,7 @@ export function getTeacherCoursePaths(course: TeacherDashboardCourseSummary | nu
 
   return {
     campusHref: `/mis-cursos/${course.space.course.slug}`,
+    resourcesHref: `/mis-cursos/${course.space.course.slug}?tab=resources`,
     trackingHref: `/mis-cursos/${course.space.course.slug}/seguimiento`,
     forumHref: `/mis-cursos/${course.space.course.slug}/foro`
   };
@@ -249,7 +251,7 @@ export async function TeacherCommunityCard(input: {
           <ButtonLink href={input.paths.forumHref} variant="secondary">
             Abrir foro
           </ButtonLink>
-          <ButtonLink href={input.paths.campusHref} variant="ghost">
+          <ButtonLink href={input.paths.resourcesHref} prefetch variant="ghost">
             Ir a recursos
           </ButtonLink>
         </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   BookOpen,
   CheckCircle2,
@@ -38,7 +38,7 @@ type LearningShellProps = {
   canModerate: boolean;
   editionLabel?: string | null;
   accessUntil?: Date | null;
-  activeTab: SidebarTab;
+  initialActiveTab: SidebarTab;
 };
 
 export type SidebarTab = "content" | "resources" | "support";
@@ -52,13 +52,42 @@ export function CourseLearningShell({
   canModerate,
   editionLabel,
   accessUntil,
-  activeTab
+  initialActiveTab
 }: LearningShellProps) {
   const [selectedModuleIndex, setSelectedModuleIndex] = useState(0);
+  const [activeTab, setActiveTab] = useState<SidebarTab>(initialActiveTab);
   const currentModule = progress.modules[selectedModuleIndex] ?? progress.modules[0] ?? null;
+  const managedExercises = useMemo(
+    () => resources.filter((resource) => resource.isManaged && resource.isExercise),
+    [resources]
+  );
+  const pendingExercises = useMemo(
+    () =>
+      managedExercises.filter(
+        (resource) =>
+          !resource.viewerSubmission ||
+          resource.viewerSubmission.status === "CHANGES_REQUESTED" ||
+          resource.viewerSubmission.status === "SUBMITTED"
+      ),
+    [managedExercises]
+  );
   const introCopy = canModerate
     ? "Este espacio organiza el programa, los recursos, los ejercicios y el acceso al foro privado del curso. Desde aqui puedes coordinar materiales y revisar el seguimiento del alumnado."
     : "Este espacio organiza el programa, los recursos disponibles y el acceso al foro privado del curso. El seguimiento es manual y verificable: puedes marcar cada modulo cuando realmente lo hayas revisado.";
+
+  function buildTabHref(tab: SidebarTab) {
+    return tab === "content" ? `/mis-cursos/${course.slug}` : `/mis-cursos/${course.slug}?tab=${tab}`;
+  }
+
+  function handleTabChange(nextTab: SidebarTab) {
+    setActiveTab(nextTab);
+
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    window.history.replaceState(window.history.state, "", buildTabHref(nextTab));
+  }
 
   return (
     <div className="min-h-screen bg-[linear-gradient(180deg,#f8f6f1_0%,#f4f7fb_52%,#fbfaf8_100%)]">
@@ -88,12 +117,14 @@ export function CourseLearningShell({
             <Link
               className="rounded-full bg-[var(--color-primary-soft)] px-4 py-2 text-sm font-semibold text-[var(--color-primary)]"
               href={`/mis-cursos/${course.slug}`}
+              prefetch
             >
               Campus
             </Link>
             <Link
               className="rounded-full border border-[var(--color-border)] px-4 py-2 text-sm font-semibold text-[var(--color-ink)] transition hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]"
               href={`/mis-cursos/${course.slug}/foro`}
+              prefetch
             >
               Foro
             </Link>
@@ -101,6 +132,7 @@ export function CourseLearningShell({
               <Link
                 className="rounded-full border border-[var(--color-border)] px-4 py-2 text-sm font-semibold text-[var(--color-ink)] transition hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]"
                 href={`/mis-cursos/${course.slug}/seguimiento`}
+                prefetch
               >
                 Seguimiento
               </Link>
@@ -108,6 +140,7 @@ export function CourseLearningShell({
             <Link
               className="rounded-full border border-[var(--color-border)] px-4 py-2 text-sm font-semibold text-[var(--color-ink)] transition hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]"
               href="/mi-cuenta"
+              prefetch
             >
               Mi cuenta
             </Link>
@@ -196,6 +229,7 @@ export function CourseLearningShell({
                     <Link
                       className="inline-flex items-center rounded-xl bg-[var(--color-primary)] px-4 py-3 text-sm font-semibold text-white"
                       href={`/mis-cursos/${course.slug}/foro`}
+                      prefetch
                     >
                       Abrir foro privado
                     </Link>
@@ -209,6 +243,7 @@ export function CourseLearningShell({
                       <Link
                         className="inline-flex items-center rounded-xl border border-[var(--color-primary)] px-4 py-3 text-sm font-semibold text-[var(--color-primary)]"
                         href={`/mis-cursos/${course.slug}/seguimiento`}
+                        prefetch
                       >
                         <LineChart className="mr-2 h-4 w-4" />
                         Ver seguimiento
@@ -242,22 +277,24 @@ export function CourseLearningShell({
           <div className="flex border-b border-[rgba(12,113,195,0.14)]">
             {[
               { id: "content" as const, label: "Contenido", icon: BookOpen },
-              { id: "resources" as const, label: "Recursos", icon: FolderOpen },
+              { id: "resources" as const, label: "Recursos y tareas", icon: FolderOpen },
               { id: "support" as const, label: "Soporte", icon: CircleHelp }
             ].map(({ id, label, icon: Icon }) => (
-              <Link
+              <button
+                aria-pressed={activeTab === id}
                 className={cn(
                   "flex flex-1 items-center justify-center gap-2 border-b-2 px-4 py-6 text-lg font-medium transition",
                   activeTab === id
                     ? "border-[var(--color-primary)] text-[var(--color-primary)]"
                     : "border-transparent text-[var(--color-ink)]"
                 )}
-                href={id === "content" ? `/mis-cursos/${course.slug}` : `/mis-cursos/${course.slug}?tab=${id}`}
                 key={id}
+                onClick={() => handleTabChange(id)}
+                type="button"
               >
                 <Icon className="h-5 w-5" />
                 {label}
-              </Link>
+              </button>
             ))}
           </div>
 
@@ -272,6 +309,64 @@ export function CourseLearningShell({
                 </div>
                 <p className="text-lg text-[var(--color-ink)]">{course.modules.length} modulos</p>
               </div>
+
+              {!canModerate && managedExercises.length ? (
+                <div className="border-b border-[rgba(12,113,195,0.14)] bg-[var(--color-surface)] px-6 py-5">
+                  <div className="flex flex-col gap-4 rounded-[24px] border border-[rgba(12,113,195,0.14)] bg-white p-5 shadow-[0_12px_24px_rgba(34,34,33,0.04)]">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-muted)]">
+                          Tareas y entregas
+                        </p>
+                        <p className="mt-2 text-xl font-semibold text-[var(--color-ink)]">
+                          {pendingExercises.length
+                            ? `${pendingExercises.length} tareas requieren tu atencion`
+                            : "Tus tareas del curso estan al dia"}
+                        </p>
+                      </div>
+                      <button
+                        className="inline-flex items-center rounded-xl border border-[var(--color-primary)] px-4 py-3 text-sm font-semibold text-[var(--color-primary)] transition hover:bg-[var(--color-primary-soft)]"
+                        onClick={() => handleTabChange("resources")}
+                        type="button"
+                      >
+                        Abrir recursos y tareas
+                      </button>
+                    </div>
+                    <p className="text-sm leading-7 text-[var(--color-muted)]">
+                      Los ejercicios publicados por el docente aparecen en la pestaña de recursos y tareas.
+                      Desde ahi puedes abrir la actividad, leer instrucciones y subir tu entrega o actualizarla.
+                    </p>
+                  </div>
+                </div>
+              ) : null}
+
+              {canModerate && managedExercises.length ? (
+                <div className="border-b border-[rgba(12,113,195,0.14)] bg-[var(--color-surface)] px-6 py-5">
+                  <div className="flex flex-col gap-4 rounded-[24px] border border-[rgba(12,113,195,0.14)] bg-white p-5 shadow-[0_12px_24px_rgba(34,34,33,0.04)]">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-muted)]">
+                          Tareas del alumnado
+                        </p>
+                        <p className="mt-2 text-xl font-semibold text-[var(--color-ink)]">
+                          {managedExercises.length} ejercicios publicados en este curso
+                        </p>
+                      </div>
+                      <button
+                        className="inline-flex items-center rounded-xl border border-[var(--color-primary)] px-4 py-3 text-sm font-semibold text-[var(--color-primary)] transition hover:bg-[var(--color-primary-soft)]"
+                        onClick={() => handleTabChange("resources")}
+                        type="button"
+                      >
+                        Gestionar recursos y tareas
+                      </button>
+                    </div>
+                    <p className="text-sm leading-7 text-[var(--color-muted)]">
+                      Las tareas viven en recursos y tareas. Desde ahi el alumno ve la actividad,
+                      adjunta su entrega y tu puedes revisar el resultado sin salir del campus.
+                    </p>
+                  </div>
+                </div>
+              ) : null}
 
               <div className="campus-scrollbar flex-1 overflow-y-auto">
                 {progress.modules.map((module) => {
@@ -334,9 +429,9 @@ export function CourseLearningShell({
                   <FileText className="h-5 w-5" />
                 </div>
                 <div>
-                  <p className="text-lg font-semibold text-[var(--color-ink)]">Biblioteca del curso</p>
+                  <p className="text-lg font-semibold text-[var(--color-ink)]">Recursos y tareas del curso</p>
                   <p className="text-sm text-[var(--color-muted)]">
-                    Materiales, ejercicios y referencias disponibles en esta edicion.
+                    Materiales, ejercicios y entregas disponibles en esta edicion.
                   </p>
                 </div>
               </div>
@@ -355,6 +450,7 @@ export function CourseLearningShell({
               <Link
                 className="block rounded-2xl border border-[var(--color-primary)] bg-white p-5 text-[var(--color-primary)] shadow-[0_16px_28px_rgba(12,113,195,0.08)] transition hover:bg-[var(--color-primary-soft)]"
                 href={`/mis-cursos/${course.slug}/foro`}
+                prefetch
               >
                 <p className="flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.18em]">
                   <MessageSquareText className="h-4 w-4" />
@@ -369,6 +465,7 @@ export function CourseLearningShell({
                     className="block rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5 transition hover:border-[var(--color-primary)]"
                     href={`/mis-cursos/${course.slug}/foro/${category.slug}`}
                     key={category.id}
+                    prefetch
                   >
                     <div className="flex items-start justify-between gap-4">
                       <div>

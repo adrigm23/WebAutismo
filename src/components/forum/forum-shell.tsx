@@ -274,7 +274,11 @@ export function ForumShell({
               </div>
             </div>
 
-            <ButtonLink className="mt-5 w-full justify-center rounded-2xl py-4 text-lg" href={newThreadHref}>
+            <ButtonLink
+              className="mt-5 w-full justify-center rounded-2xl py-4 text-lg"
+              href={newThreadHref}
+              prefetch
+            >
               + Nuevo hilo
             </ButtonLink>
 
@@ -294,6 +298,7 @@ export function ForumShell({
                       )}
                       href={href}
                       key={category.id}
+                      prefetch
                     >
                       <div
                         className={cn(

@@ -133,7 +133,7 @@ export function TeacherAccountDashboard({
               },
               {
                 label: "Recursos",
-                href: paths.campusHref,
+                href: paths.resourcesHref,
                 icon: FolderKanban,
                 active: false
               }
@@ -307,11 +307,13 @@ export function TeacherAccountDashboard({
                         </div>
 
                         <div className="mt-8 flex flex-wrap gap-3">
-                          <ButtonLink href={paths.campusHref}>Entrar al campus</ButtonLink>
-                          <ButtonLink href={paths.trackingHref} variant="secondary">
+                          <ButtonLink href={paths.campusHref} prefetch>
+                            Entrar al campus
+                          </ButtonLink>
+                          <ButtonLink href={paths.trackingHref} prefetch variant="secondary">
                             Ver seguimiento
                           </ButtonLink>
-                          <ButtonLink href={paths.forumHref} variant="ghost">
+                          <ButtonLink href={paths.forumHref} prefetch variant="ghost">
                             Abrir foro
                           </ButtonLink>
                         </div>
@@ -530,16 +532,21 @@ export function TeacherAccountDashboard({
                           </div>
 
                           <div className="mt-6 flex flex-wrap gap-3">
-                            <ButtonLink href={`/mis-cursos/${course.space.course.slug}`}>
+                            <ButtonLink href={`/mis-cursos/${course.space.course.slug}`} prefetch>
                               Entrar al campus
                             </ButtonLink>
                             <ButtonLink
                               href={`/mis-cursos/${course.space.course.slug}/seguimiento`}
+                              prefetch
                               variant="secondary"
                             >
                               Ver seguimiento
                             </ButtonLink>
-                            <ButtonLink href={`/mis-cursos/${course.space.course.slug}/foro`} variant="ghost">
+                            <ButtonLink
+                              href={`/mis-cursos/${course.space.course.slug}/foro`}
+                              prefetch
+                              variant="ghost"
+                            >
                               Foro
                             </ButtonLink>
                           </div>

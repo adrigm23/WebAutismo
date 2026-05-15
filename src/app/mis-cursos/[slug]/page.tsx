@@ -68,19 +68,17 @@ export default async function MyCoursePage({ params, searchParams }: MyCoursePag
   });
 
   const [forumCategories, resources] = await Promise.all([
-    activeTab === "support" ? getForumCategories(course.slug, access.role) : Promise.resolve([]),
-    activeTab === "resources"
-      ? getCampusResources({
-          course,
-          viewerUserId: user.id,
-          canModerate
-        })
-      : Promise.resolve([])
+    getForumCategories(course.slug, access.role),
+    getCampusResources({
+      course,
+      viewerUserId: user.id,
+      canModerate
+    })
   ]);
 
   return (
     <CourseLearningShell
-      activeTab={activeTab}
+      initialActiveTab={activeTab}
       course={course}
       forumCategories={forumCategories}
       canModerate={canModerate}
