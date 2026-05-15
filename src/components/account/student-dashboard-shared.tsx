@@ -7,7 +7,10 @@ import type {
   DashboardNotificationSnapshot,
   StudentDashboardPendingSource
 } from "@/lib/account-dashboard";
-import { buildCourseResourcesHref } from "@/lib/course-navigation";
+import {
+  buildCourseResourcesHref,
+  resolvePlatformNotificationHref
+} from "@/lib/course-navigation";
 import type { UserCourseSpace } from "@/lib/course-community";
 import type { CourseProgressDetails } from "@/lib/course-progress";
 import { cn, formatDateTime, formatRelativeTime } from "@/lib/utils";
@@ -169,7 +172,11 @@ function buildRecentActivity(input: {
 }) {
   const platformItems: ActivityDashboardItem[] = input.platformNotifications.map((notification) => ({
     id: `platform-${notification.id}`,
-    href: notification.linkPath,
+    href: resolvePlatformNotificationHref({
+      category: notification.category,
+      linkPath: notification.linkPath,
+      metadataJson: notification.metadataJson
+    }),
     title: notification.title,
     body: truncateText(notification.body, 150),
     sourceLabel: "Plataforma",

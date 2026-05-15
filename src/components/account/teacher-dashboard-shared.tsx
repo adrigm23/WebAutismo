@@ -12,7 +12,8 @@ import {
   buildCourseContentHref,
   buildCourseForumHref,
   buildCourseResourcesHref,
-  buildCourseTrackingHref
+  buildCourseTrackingHref,
+  resolvePlatformNotificationHref
 } from "@/lib/course-navigation";
 import { cn, formatRelativeTime } from "@/lib/utils";
 
@@ -111,7 +112,11 @@ function buildTeacherActivity(input: {
 
   const platformItems = input.platformNotifications.map((notification) => ({
     id: `platform-${notification.id}`,
-    href: notification.linkPath,
+    href: resolvePlatformNotificationHref({
+      category: notification.category,
+      linkPath: notification.linkPath,
+      metadataJson: notification.metadataJson
+    }),
     title: notification.title,
     body: truncateText(notification.body, 140),
     createdAt: notification.createdAt,

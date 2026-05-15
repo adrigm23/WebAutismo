@@ -945,7 +945,12 @@ export async function reviewCourseResourceSubmissionAction(
         parsed.data.status === "REVIEWED"
           ? `Ya puedes consultar el feedback docente${score !== null ? ` y tu nota (${score}/10)` : ""} de ${submission.resource.title}.`
           : `Revisa el feedback docente y actualiza tu entrega de ${submission.resource.title}.`,
-      linkPath: `/mis-cursos/${parsed.data.courseSlug}?tab=resources#resource-${submission.resource.id}`
+      linkPath: `/mis-cursos/${parsed.data.courseSlug}?tab=resources#resource-${submission.resource.id}`,
+      metadata: {
+        courseSlug: parsed.data.courseSlug,
+        resourceId: submission.resource.id,
+        submissionId: reviewedSubmission.id
+      }
     });
 
     revalidateCourseCampusView(parsed.data.courseSlug);

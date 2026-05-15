@@ -34,7 +34,8 @@ import {
   buildCourseContentHref,
   buildCourseForumHref,
   buildCourseResourcesHref,
-  buildCourseTrackingHref
+  buildCourseTrackingHref,
+  resolvePlatformNotificationHref
 } from "@/lib/course-navigation";
 import {
   getCourseProgressDetailsMapForUser,
@@ -312,7 +313,14 @@ export default async function AccountPage() {
                   </div>
 
                   <div className="flex flex-wrap items-center gap-3">
-                    <ButtonLink href={notification.linkPath} variant="secondary">
+                    <ButtonLink
+                      href={resolvePlatformNotificationHref({
+                        category: notification.category,
+                        linkPath: notification.linkPath,
+                        metadataJson: notification.metadataJson
+                      })}
+                      variant="secondary"
+                    >
                       Abrir
                     </ButtonLink>
                     {!notification.readAt ? (

@@ -456,7 +456,8 @@ export async function grantCourseAccess(input: GrantCourseAccessInput) {
     linkPath: buildCourseContentHref(course.slug),
     metadata: {
       purchaseId: purchase.id,
-      enrollmentId: enrollment.id
+      enrollmentId: enrollment.id,
+      courseSlug: course.slug
     }
   });
 

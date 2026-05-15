@@ -1,4 +1,4 @@
-import type { CourseResourceSubmissionStatus } from "@prisma/client";
+import type { CourseResourceSubmissionStatus, NotificationCategory } from "@prisma/client";
 import type { ForumNotificationListItem } from "@/lib/forum";
 import type { UserCourseSpace } from "@/lib/course-community";
 import { buildCourseTrackingHref } from "@/lib/course-navigation";
@@ -69,9 +69,11 @@ export type DashboardNotificationSnapshot = {
   platformNotifications: {
     notifications: Array<{
       id: string;
+      category: NotificationCategory;
       title: string;
       body: string;
       linkPath: string;
+      metadataJson: string | null;
       readAt: Date | null;
       createdAt: Date;
     }>;
