@@ -3,13 +3,13 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 
 const baseStyles =
-  "inline-flex items-center justify-center rounded-xl px-5 py-3 text-sm font-semibold transition duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50";
+  "inline-flex items-center justify-center rounded-2xl px-5 py-3 text-sm font-semibold tracking-[-0.01em] transition duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50";
 
 const variants = {
   primary:
-    "bg-[var(--color-primary)] text-white shadow-[0_16px_30px_rgba(12,113,195,0.18)] hover:bg-[var(--color-primary-strong)] focus-visible:ring-[var(--color-primary)]",
+    "bg-[var(--color-primary)] text-white shadow-[0_16px_30px_rgba(12,113,195,0.18)] hover:bg-[var(--color-primary-strong)] hover:shadow-[0_20px_34px_rgba(12,113,195,0.22)] focus-visible:ring-[var(--color-primary)]",
   secondary:
-    "border border-[var(--color-primary)] bg-white text-[var(--color-primary)] hover:bg-[var(--color-primary-soft)] focus-visible:ring-[var(--color-primary)]",
+    "border border-[rgba(12,113,195,0.22)] bg-white text-[var(--color-primary)] hover:border-[var(--color-primary)] hover:bg-[var(--color-primary-soft)] focus-visible:ring-[var(--color-primary)]",
   ghost:
     "text-[var(--color-primary)] hover:bg-[var(--color-primary-soft)] focus-visible:ring-[var(--color-primary)]",
   accent:

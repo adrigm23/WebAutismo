@@ -1,16 +1,16 @@
 @import "tailwindcss";
 
 :root {
-  --font-sans: "Segoe UI", -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
-  --color-background: #f8f6f3;
-  --color-surface: #f1eeea;
+  --font-sans: var(--font-manrope), "Segoe UI", -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
+  --color-background: #f6f3ee;
+  --color-surface: #f2efe9;
   --color-surface-strong: #ffffff;
   --color-ink: #222221;
   --color-muted: #5d6875;
-  --color-border: #c9d4df;
+  --color-border: #ccd7e2;
   --color-primary: #0c71c3;
   --color-primary-strong: #085ea5;
-  --color-primary-soft: #d3e4ff;
+  --color-primary-soft: #d9e8fb;
   --color-secondary: #2ea3f2;
   --color-accent: #ffb606;
   --color-accent-soft: #fff1cc;
@@ -18,6 +18,8 @@
   --color-teal: var(--color-primary);
   --color-coral: var(--color-accent);
   --color-gold: var(--color-accent);
+  --shadow-soft: 0 18px 44px rgba(21, 35, 50, 0.06);
+  --shadow-strong: 0 24px 58px rgba(21, 35, 50, 0.09);
 }
 
 * {
@@ -34,6 +36,7 @@ body {
   background: var(--color-background);
   color: var(--color-ink);
   font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+  font-feature-settings: "ss01" 1, "cv10" 1;
   text-rendering: optimizeLegibility;
 }
 
@@ -56,7 +59,7 @@ select {
 .site-container {
   margin-inline: auto;
   width: 100%;
-  max-width: 1200px;
+  max-width: 1280px;
   padding-inline: 1.5rem;
 }
 
@@ -82,7 +85,7 @@ select {
 .surface-panel {
   background: rgba(255, 255, 255, 0.92);
   border: 1px solid var(--color-border);
-  box-shadow: 0 18px 44px rgba(34, 34, 33, 0.06);
+  box-shadow: var(--shadow-soft);
 }
 
 .grid-mesh {

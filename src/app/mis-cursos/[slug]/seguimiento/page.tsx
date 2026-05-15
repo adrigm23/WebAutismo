@@ -26,6 +26,24 @@ type TrackingPageProps = {
   params: Promise<{ slug: string }>;
 };
 
+function TrackingStat(input: {
+  label: string;
+  value: string;
+  detail: string;
+}) {
+  return (
+    <Card className="px-5 py-5">
+      <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--color-muted)]">
+        {input.label}
+      </p>
+      <p className="mt-3 text-[2rem] font-semibold leading-none tracking-[-0.05em] text-[var(--color-ink)]">
+        {input.value}
+      </p>
+      <p className="mt-2 text-sm leading-6 text-[var(--color-muted)]">{input.detail}</p>
+    </Card>
+  );
+}
+
 export async function generateMetadata({
   params
 }: TrackingPageProps): Promise<Metadata> {
@@ -260,83 +278,67 @@ export default async function CourseTrackingPage({ params }: TrackingPageProps) 
           Volver al curso
         </Link>
 
-        <Card className="overflow-hidden border-[rgba(12,113,195,0.16)] bg-[linear-gradient(135deg,rgba(255,255,255,0.98),rgba(229,238,248,0.82))] p-8 lg:p-10">
-          <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+        <Card className="overflow-hidden border-[rgba(12,113,195,0.16)] bg-[linear-gradient(135deg,rgba(255,255,255,0.98),rgba(229,238,248,0.82))] p-8 lg:p-9">
+          <div className="grid gap-7 xl:grid-cols-[minmax(0,1fr)_24rem] xl:items-end">
             <div className="max-w-4xl">
               <div className="flex flex-wrap items-center gap-2">
                 <Badge tone="teacher">{getRoleLabel(access.role)}</Badge>
                 <Badge tone="muted">Seguimiento academico</Badge>
               </div>
-              <h1 className="mt-4 text-[3.6rem] font-semibold tracking-[-0.08em] text-[var(--color-ink)]">
+              <h1 className="mt-4 text-[3.35rem] font-semibold leading-[0.98] tracking-[-0.08em] text-[var(--color-ink)]">
                 {course.title}
               </h1>
-              <p className="mt-4 max-w-3xl text-[1.06rem] leading-8 text-[var(--color-ink)]/84">
+              <p className="mt-4 max-w-3xl text-[1.02rem] leading-8 text-[var(--color-ink)]/84">
                 Aqui puedes revisar tanto el progreso manual por modulo como las entregas reales de
                 ejercicios publicadas dentro del campus.
               </p>
             </div>
 
-            <div className="flex flex-wrap items-center gap-3">
-              <div className="rounded-2xl border border-[var(--color-border)] bg-white px-5 py-4 text-sm text-[var(--color-muted)]">
-                {exerciseSummary.pending > 0
-                  ? `${exerciseSummary.pending} entregas pendientes`
-                  : `${progressRows.length} alumnos con historico`}
+            <div className="space-y-4">
+              <TrackingStat
+                detail={exerciseSummary.pending > 0 ? "Entregas que necesitan revision docente." : "Sin bloqueos inmediatos en revision."}
+                label="Pendientes"
+                value={`${exerciseSummary.pending}`}
+              />
+              <div className="flex flex-wrap gap-3">
+                <Link
+                  className="inline-flex items-center rounded-2xl border border-[var(--color-primary)] px-4 py-3 text-sm font-semibold text-[var(--color-primary)] transition hover:bg-[var(--color-primary-soft)]"
+                  href={`/mis-cursos/${slug}`}
+                >
+                  Ir al campus
+                </Link>
+                <Link
+                  className="inline-flex items-center rounded-2xl border border-[var(--color-primary)] px-4 py-3 text-sm font-semibold text-[var(--color-primary)] transition hover:bg-[var(--color-primary-soft)]"
+                  href={`/mis-cursos/${slug}/foro`}
+                >
+                  Abrir foro
+                </Link>
               </div>
-              <Link
-                className="inline-flex items-center rounded-xl border border-[var(--color-primary)] px-4 py-3 text-sm font-semibold text-[var(--color-primary)] transition hover:bg-[var(--color-primary-soft)]"
-                href={`/mis-cursos/${slug}`}
-              >
-                Ir al campus
-              </Link>
-              <Link
-                className="inline-flex items-center rounded-xl border border-[var(--color-primary)] px-4 py-3 text-sm font-semibold text-[var(--color-primary)] transition hover:bg-[var(--color-primary-soft)]"
-                href={`/mis-cursos/${slug}/foro`}
-              >
-                Abrir foro
-              </Link>
             </div>
           </div>
         </Card>
 
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <Card className="p-5">
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-muted)]">
-              Alumnado con historial
-            </p>
-            <p className="mt-3 text-[2.1rem] font-semibold text-[var(--color-ink)]">
-              {progressRows.length}
-            </p>
-          </Card>
-          <Card className="p-5">
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-muted)]">
-              Ejercicios publicados
-            </p>
-            <p className="mt-3 text-[2.1rem] font-semibold text-[var(--color-ink)]">
-              {exerciseSummary.exercises}
-            </p>
-          </Card>
-          <Card className="p-5">
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-muted)]">
-              Entregas registradas
-            </p>
-            <p className="mt-3 text-[2.1rem] font-semibold text-[var(--color-ink)]">
-              {exerciseSummary.submissions}
-            </p>
-            <p className="mt-2 text-sm text-[var(--color-muted)]">
-              {submissionStudentIds.size} alumnos han entregado al menos un ejercicio.
-            </p>
-          </Card>
-          <Card className="p-5">
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-muted)]">
-              Revisiones
-            </p>
-            <p className="mt-3 text-[2.1rem] font-semibold text-[var(--color-ink)]">
-              {exerciseSummary.pending}
-            </p>
-            <p className="mt-2 text-sm text-[var(--color-muted)]">
-              Pendientes. {exerciseSummary.reviewed} revisadas y {exerciseSummary.changesRequested} con cambios.
-            </p>
-          </Card>
+          <TrackingStat
+            detail="Personas con trazabilidad de progreso o actividad real."
+            label="Alumnado con historial"
+            value={`${progressRows.length}`}
+          />
+          <TrackingStat
+            detail="Ejercicios visibles ahora mismo dentro del campus."
+            label="Ejercicios publicados"
+            value={`${exerciseSummary.exercises}`}
+          />
+          <TrackingStat
+            detail={`${submissionStudentIds.size} alumnos han entregado al menos una vez.`}
+            label="Entregas registradas"
+            value={`${exerciseSummary.submissions}`}
+          />
+          <TrackingStat
+            detail={`${exerciseSummary.reviewed} revisadas y ${exerciseSummary.changesRequested} con cambios solicitados.`}
+            label="Revisiones"
+            value={`${exerciseSummary.pending}`}
+          />
         </div>
 
         <section className="space-y-4">

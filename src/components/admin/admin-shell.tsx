@@ -116,16 +116,16 @@ export function AdminShell({ user, children }: AdminShellProps) {
   const navigationItems = adminNavigation;
 
   return (
-    <div className="min-h-screen bg-[#f7f4ef] text-[var(--color-ink)]">
+    <div className="min-h-screen bg-[linear-gradient(180deg,#f7f4ef_0%,#f3f6fa_52%,#fbfaf8_100%)] text-[var(--color-ink)]">
       <div className="grid min-h-screen lg:grid-cols-[290px_minmax(0,1fr)]">
-        <aside className="sticky top-0 hidden h-screen overflow-y-auto border-r border-[#d6dde6] bg-[#f6f3ee] lg:flex lg:flex-col">
+        <aside className="sticky top-0 hidden h-screen overflow-y-auto border-r border-[#d6dde6] bg-[linear-gradient(180deg,#f5f1eb_0%,#f4f7fb_100%)] lg:flex lg:flex-col">
           <div className="px-8 pb-7 pt-10">
             <Link className="block" href="/admin">
-              <div className="text-[2.5rem] font-bold tracking-[-0.07em] text-[var(--color-primary)]">
+              <div className="text-[2.35rem] font-bold tracking-[-0.07em] text-[var(--color-primary)]">
                 {siteConfig.shortName}
               </div>
-              <p className="mt-3 text-[0.82rem] font-semibold uppercase tracking-[0.26em] text-[#22384f]">
-                Administracion del campus
+              <p className="mt-3 text-[0.74rem] font-semibold uppercase tracking-[0.28em] text-[#22384f]">
+                Control central del campus
               </p>
             </Link>
           </div>
@@ -210,7 +210,7 @@ export function AdminShell({ user, children }: AdminShellProps) {
                     <Search className="hidden h-5 w-5 sm:block" strokeWidth={1.8} />
                   </span>
                   <input
-                    className="h-14 w-full rounded-full border border-[#c8d2de] bg-white pl-6 pr-5 text-[1.03rem] text-[#1f2c3a] shadow-[0_8px_20px_rgba(15,44,76,0.04)] outline-none transition placeholder:text-[#6c7784] focus:border-[var(--color-primary)] focus:ring-2 focus:ring-[rgba(12,113,195,0.12)] sm:pl-14"
+                    className="h-13 w-full rounded-full border border-[#c8d2de] bg-white pl-6 pr-5 text-[0.98rem] text-[#1f2c3a] shadow-[0_8px_20px_rgba(15,44,76,0.04)] outline-none transition placeholder:text-[#6c7784] focus:border-[var(--color-primary)] focus:ring-2 focus:ring-[rgba(12,113,195,0.12)] sm:pl-14"
                     defaultValue={searchValue}
                     name="q"
                     placeholder={searchPlaceholder}
