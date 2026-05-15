@@ -13,6 +13,9 @@ export function CreateCourseEditionCard({
       <h2 className="text-[1.8rem] font-semibold tracking-[-0.05em] text-[var(--color-ink)]">
         Crear edicion
       </h2>
+      <p className="mt-3 text-sm leading-7 text-[#5f7083]">
+        Genera una nueva convocatoria del curso seleccionado con sus fechas y ventana de acceso.
+      </p>
       <form action={createCourseEditionAction} className="mt-5 space-y-4">
         <input name="courseId" type="hidden" value={courseId} />
         <Input name="label" placeholder="Etiqueta visible" required />

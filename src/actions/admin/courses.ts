@@ -62,7 +62,7 @@ export async function createCourseAction(formData: FormData) {
   });
 
   revalidateAdminViews();
-  redirect("/admin");
+  redirect(`/admin/courses?courseId=${course.id}#course-detail`);
 }
 
 export async function updateCourseAction(formData: FormData) {
@@ -98,7 +98,7 @@ export async function updateCourseAction(formData: FormData) {
   });
 
   revalidateAdminViews();
-  redirect("/admin");
+  redirect(`/admin/courses?courseId=${course.id}#course-detail`);
 }
 
 export async function cloneCourseAction(formData: FormData) {
@@ -159,7 +159,7 @@ export async function cloneCourseAction(formData: FormData) {
   });
 
   revalidateAdminViews();
-  redirect("/admin");
+  redirect(`/admin/courses?courseId=${clonedCourse.id}#course-detail`);
 }
 
 export async function createCourseEditionAction(formData: FormData) {
@@ -211,7 +211,7 @@ export async function createCourseEditionAction(formData: FormData) {
   });
 
   revalidateAdminViews();
-  redirect("/admin");
+  redirect(`/admin/courses?courseId=${courseId}#course-detail`);
 }
 
 export async function updateCourseEditionAction(formData: FormData) {

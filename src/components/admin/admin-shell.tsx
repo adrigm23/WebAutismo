@@ -95,10 +95,10 @@ function getPrimaryAction(input: {
   }
 
   if (input.pathname.startsWith("/admin/courses")) {
-    return { href: "/admin/courses?create=1#create-course", label: "+ Nuevo curso" };
+    return { href: "/admin/courses#create-course", label: "+ Nuevo curso" };
   }
 
-  return { href: "/admin/courses?create=1#create-course", label: "+ Nuevo curso" };
+  return { href: "/admin/courses#create-course", label: "+ Nuevo curso" };
 }
 
 export function AdminShell({ user, children }: AdminShellProps) {
@@ -118,7 +118,7 @@ export function AdminShell({ user, children }: AdminShellProps) {
   return (
     <div className="min-h-screen bg-[#f7f4ef] text-[var(--color-ink)]">
       <div className="grid min-h-screen lg:grid-cols-[290px_minmax(0,1fr)]">
-        <aside className="hidden border-r border-[#d6dde6] bg-[#f6f3ee] lg:flex lg:flex-col">
+        <aside className="sticky top-0 hidden h-screen overflow-y-auto border-r border-[#d6dde6] bg-[#f6f3ee] lg:flex lg:flex-col">
           <div className="px-8 pb-7 pt-10">
             <Link className="block" href="/admin">
               <div className="text-[2.5rem] font-bold tracking-[-0.07em] text-[var(--color-primary)]">
@@ -193,7 +193,7 @@ export function AdminShell({ user, children }: AdminShellProps) {
         </aside>
 
         <div className="min-w-0">
-          <header className="border-b border-[#d6dde6] bg-[#f7f4ef]/96 backdrop-blur-md">
+          <header className="sticky top-0 z-20 border-b border-[#d6dde6] bg-[#f7f4ef]/96 backdrop-blur-md">
             <div className="flex flex-wrap items-center justify-between gap-4 px-5 py-4 sm:px-7 xl:px-10">
               <div className="lg:hidden">
                 <Link className="text-[1.65rem] font-bold tracking-[-0.06em] text-[var(--color-primary)]" href="/admin">

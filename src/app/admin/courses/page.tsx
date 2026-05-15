@@ -14,6 +14,7 @@ import type {
   EditableCourseDetail
 } from "@/components/admin/courses/types";
 import { ButtonLink } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { getSearchParamValue } from "@/lib/admin-console";
 import { requireAdminConsoleUser } from "@/lib/admin-console-server";
 import { demoAdminCourses } from "@/lib/admin-demo";
@@ -267,7 +268,7 @@ export default async function AdminCoursesPage({ searchParams }: CoursesPageProp
             <ButtonLink href="#course-filters" variant="secondary">
               Filtrar
             </ButtonLink>
-            <ButtonLink href="/admin/courses?create=1#create-course">Crear curso</ButtonLink>
+            <ButtonLink href="#create-course">Crear curso</ButtonLink>
           </>
         }
         description="Gestiona curriculum, estado del catalogo, docentes asignados y clonado de cursos para acelerar nuevas ediciones."
@@ -298,17 +299,28 @@ export default async function AdminCoursesPage({ searchParams }: CoursesPageProp
         />
       </section>
 
-      <CourseFiltersCard q={q} status={status} />
-      <CourseTableCard rows={tableRows} />
-
-      <section className="grid gap-6 2xl:grid-cols-[1.15fr_0.85fr]">
-        <div className="space-y-6">
+      <section className="grid gap-6 2xl:grid-cols-[minmax(0,1.15fr)_24rem]">
+        <div className="space-y-6 min-w-0">
+          <CourseFiltersCard q={q} status={status} />
+          <CourseTableCard rows={tableRows} />
           {editableDetail ? <CourseDetailCard course={editableDetail} /> : null}
         </div>
 
-        <div className="space-y-6">
-          {create === "1" || courses.length === 0 ? <CreateCourseCard /> : null}
-          {selectedCourse ? <CreateCourseEditionCard courseId={selectedCourse.id} /> : null}
+        <div className="space-y-6 self-start 2xl:sticky 2xl:top-28">
+          <CreateCourseCard />
+          {selectedCourse ? (
+            <CreateCourseEditionCard courseId={selectedCourse.id} />
+          ) : (
+            <Card className="rounded-[2rem] p-7">
+              <h2 className="text-[1.5rem] font-semibold tracking-[-0.05em] text-[var(--color-ink)]">
+                Crear edicion
+              </h2>
+              <p className="mt-3 text-sm leading-7 text-[#5f7083]">
+                Selecciona un curso en la tabla y pulsa en gestionar curso para preparar su
+                siguiente edicion desde este mismo lateral.
+              </p>
+            </Card>
+          )}
         </div>
       </section>
     </div>
