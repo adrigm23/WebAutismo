@@ -20,7 +20,7 @@ export function CourseDetailCard({
   course: EditableCourseDetail;
 }) {
   return (
-    <Card className="rounded-[2rem] p-7">
+    <Card className="scroll-mt-28 rounded-[2rem] p-7" id="course-detail">
       <div className="flex flex-wrap items-start justify-between gap-5">
         <div>
           <h2 className="text-[2rem] font-semibold tracking-[-0.06em] text-[var(--color-ink)]">

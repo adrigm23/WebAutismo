@@ -5,6 +5,7 @@ export type CourseFilterStatus = "ALL" | CourseStatus;
 export type CourseTableRow = {
   id: string;
   href: string;
+  isSelected: boolean;
   title: string;
   slug: string;
   status: CourseStatus;

@@ -29,7 +29,10 @@ export function CourseTableCard({
           </thead>
           <tbody className="divide-y divide-[#e0e7ee]">
             {rows.map((course) => (
-              <tr className="align-top" key={course.id}>
+              <tr
+                className={course.isSelected ? "align-top bg-[var(--color-primary-soft)]/45" : "align-top"}
+                key={course.id}
+              >
                 <td className="px-7 py-6">
                   <Link href={course.href}>
                     <span className="block text-[1.16rem] font-semibold text-[var(--color-ink)]">
@@ -53,7 +56,7 @@ export function CourseTableCard({
                 </td>
                 <td className="px-7 py-6 text-right">
                   <ButtonLink href={course.href} variant="secondary">
-                    Gestionar
+                    Gestionar curso
                   </ButtonLink>
                 </td>
               </tr>

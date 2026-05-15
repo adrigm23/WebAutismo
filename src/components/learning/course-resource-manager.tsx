@@ -40,6 +40,18 @@ export function CourseResourceManager({
     managedResources.map((resource, index) => [resource.id, index] as const)
   );
 
+  function getExternalHostLabel(url: string | null) {
+    if (!url) {
+      return null;
+    }
+
+    try {
+      return new URL(url).hostname.replace(/^www\./, "");
+    } catch {
+      return null;
+    }
+  }
+
   function getStudentSubmissionBadge(resource: CampusResourceItem) {
     if (!resource.isExercise) {
       return null;
@@ -107,6 +119,16 @@ export function CourseResourceManager({
               </p>
             ) : null}
 
+            {!canModerate && resource.isExercise && resource.isExternal ? (
+              <p className="text-sm leading-7 text-[var(--color-muted)]">
+                El boton superior abre el enunciado externo en{" "}
+                <strong className="text-[var(--color-ink)]">
+                  {getExternalHostLabel(resource.linkUrl) ?? "otra pestana"}
+                </strong>
+                . La entrega se registra aqui mismo, debajo de esta tarjeta.
+              </p>
+            ) : null}
+
             {resource.createdByName || resource.createdAt ? (
               <p className="text-xs uppercase tracking-[0.14em] text-[var(--color-muted)]">
                 {resource.createdByName ? `Publicado por ${resource.createdByName}` : "Publicado"}
@@ -122,7 +144,11 @@ export function CourseResourceManager({
                 href={resource.href}
                 target={resource.isExternal ? "_blank" : undefined}
               >
-                {resource.isExternal ? "Abrir enlace" : "Descargar"}
+                {resource.isExternal
+                  ? resource.isExercise
+                    ? "Abrir enunciado"
+                    : "Abrir enlace"
+                  : "Descargar"}
               </Link>
             ) : null}
           </div>

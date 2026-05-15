@@ -51,7 +51,7 @@ function buildCourseHref(input: {
 
   qs.set("courseId", input.courseId);
 
-  return `/admin/courses?${qs.toString()}`;
+  return `/admin/courses?${qs.toString()}#course-detail`;
 }
 
 export default async function AdminCoursesPage({ searchParams }: CoursesPageProps) {
@@ -84,6 +84,7 @@ export default async function AdminCoursesPage({ searchParams }: CoursesPageProp
         courseId: course.id,
         create
       }),
+      isSelected: course.id === selectedDemoCourse?.id,
       title: course.title,
       slug: course.slug,
       status: course.status as "ACTIVE" | "INACTIVE",
@@ -222,6 +223,7 @@ export default async function AdminCoursesPage({ searchParams }: CoursesPageProp
       courseId: course.id,
       create
     }),
+    isSelected: course.id === selectedCourse?.id,
     title: course.title,
     slug: course.slug,
     status: course.status,
