@@ -619,8 +619,9 @@ export default async function CourseTrackingPage({ params }: TrackingPageProps) 
               <div className="mt-4 space-y-3">
                 {reviewQueue.length ? (
                   reviewQueue.slice(0, 4).map((entry) => (
-                    <div
-                      className="rounded-2xl border border-[rgba(12,113,195,0.08)] bg-[var(--color-surface)] px-4 py-4"
+                    <Link
+                      className="block rounded-2xl border border-[rgba(12,113,195,0.08)] bg-[var(--color-surface)] px-4 py-4 transition hover:border-[var(--color-primary)] hover:bg-white"
+                      href={`#submission-${entry.submission.id}`}
                       key={entry.submission.id}
                     >
                       <div className="flex items-start justify-between gap-3">
@@ -645,7 +646,7 @@ export default async function CourseTrackingPage({ params }: TrackingPageProps) 
                       <p className="mt-2 text-xs uppercase tracking-[0.14em] text-[var(--color-muted)]">
                         {formatDateTime(entry.submission.submittedAt)}
                       </p>
-                    </div>
+                    </Link>
                   ))
                 ) : (
                   <div className="rounded-2xl border border-dashed border-[rgba(12,113,195,0.18)] bg-[var(--color-surface)] px-4 py-5 text-sm leading-7 text-[var(--color-muted)]">
