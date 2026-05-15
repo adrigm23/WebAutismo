@@ -79,7 +79,8 @@ export function CourseResourceManager({
   function renderResourceCard(resource: CampusResourceItem) {
     return (
       <div
-        className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5"
+        className="scroll-mt-36 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5"
+        id={`resource-${resource.id}`}
         key={resource.id}
       >
         <div className="flex items-start justify-between gap-4">
@@ -209,7 +210,10 @@ export function CourseResourceManager({
   return (
     <div className="space-y-4">
       {canModerate ? (
-        <div className="rounded-2xl border border-[rgba(12,113,195,0.16)] bg-white p-5 shadow-[0_16px_32px_rgba(12,113,195,0.06)]">
+        <div
+          className="scroll-mt-36 rounded-2xl border border-[rgba(12,113,195,0.16)] bg-white p-5 shadow-[0_16px_32px_rgba(12,113,195,0.06)]"
+          id="resource-manager-top"
+        >
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <p className="text-lg font-semibold text-[var(--color-ink)]">Publicar recurso del curso</p>

@@ -96,7 +96,7 @@ export function buildStudentPendingItems(pendingSources: StudentDashboardPending
   const items: PendingDashboardItem[] = [];
 
   for (const resource of pendingSources) {
-    const href = `/mis-cursos/${resource.courseSlug}?tab=resources`;
+    const href = `/mis-cursos/${resource.courseSlug}?tab=resources#resource-${resource.resourceId}`;
     const courseLabel = `Curso: ${resource.courseTitle}`;
 
     if (resource.viewerSubmission?.status === "CHANGES_REQUESTED") {

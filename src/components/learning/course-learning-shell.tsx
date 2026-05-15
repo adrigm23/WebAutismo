@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { startTransition, useMemo, useState } from "react";
+import { startTransition, useEffect, useMemo, useState } from "react";
 import {
   ArrowRight,
   CircleHelp,
@@ -46,10 +46,12 @@ function SurfaceCard(input: {
   title?: string;
   description?: string;
   className?: string;
+  id?: string;
   children: ReactNode;
 }) {
   return (
     <section
+      id={input.id}
       className={cn(
         "rounded-[30px] border border-[rgba(12,113,195,0.12)] bg-white p-6 shadow-[0_22px_48px_rgba(34,34,33,0.06)] lg:p-7",
         input.className
@@ -244,8 +246,31 @@ export function CourseLearningShell({
     [managedExercises]
   );
 
+  const primaryResourceTargetId = useMemo(() => {
+    if (canModerate) {
+      return "resource-manager-top";
+    }
+
+    return studentOpenExercises[0]
+      ? `resource-${studentOpenExercises[0].id}`
+      : managedExercises[0]
+        ? `resource-${managedExercises[0].id}`
+        : "resources-panel";
+  }, [canModerate, managedExercises, studentOpenExercises]);
+
   function buildTabHref(tab: SidebarTab) {
     return tab === "content" ? `/mis-cursos/${course.slug}` : `/mis-cursos/${course.slug}?tab=${tab}`;
+  }
+
+  function scrollToCampusTarget(targetId: string) {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    window.requestAnimationFrame(() => {
+      const target = document.getElementById(targetId);
+      target?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
   }
 
   function handleTabChange(nextTab: SidebarTab) {
@@ -257,6 +282,44 @@ export function CourseLearningShell({
       window.history.replaceState(window.history.state, "", buildTabHref(nextTab));
     }
   }
+
+  function handleResourceWorkspaceOpen(targetId?: string) {
+    const nextTargetId = targetId ?? primaryResourceTargetId;
+
+    if (activeTab !== "resources") {
+      handleTabChange("resources");
+
+      if (typeof window !== "undefined") {
+        const nextUrl = `${buildTabHref("resources")}#${nextTargetId}`;
+        window.history.replaceState(window.history.state, "", nextUrl);
+      }
+
+      window.setTimeout(() => {
+        scrollToCampusTarget(nextTargetId);
+      }, 60);
+      return;
+    }
+
+    if (typeof window !== "undefined") {
+      const nextUrl = `${buildTabHref("resources")}#${nextTargetId}`;
+      window.history.replaceState(window.history.state, "", nextUrl);
+    }
+
+    scrollToCampusTarget(nextTargetId);
+  }
+
+  useEffect(() => {
+    if (typeof window === "undefined" || activeTab !== "resources") {
+      return;
+    }
+
+    const hash = window.location.hash.replace(/^#/, "");
+    if (!hash) {
+      return;
+    }
+
+    scrollToCampusTarget(hash);
+  }, [activeTab]);
 
   const primarySummary = canModerate
     ? {
@@ -464,7 +527,7 @@ export function CourseLearningShell({
                   <div className="flex flex-wrap gap-3">
                     <button
                       className="inline-flex items-center justify-center rounded-xl bg-[var(--color-primary)] px-5 py-3 text-sm font-semibold text-white shadow-[0_16px_30px_rgba(12,113,195,0.18)] transition duration-200 hover:bg-[var(--color-primary-strong)]"
-                      onClick={() => handleTabChange("resources")}
+                      onClick={() => handleResourceWorkspaceOpen()}
                       type="button"
                     >
                       {canModerate ? "Gestionar recursos y tareas" : "Abrir tareas del curso"}
@@ -542,7 +605,7 @@ export function CourseLearningShell({
                             : `${studentOpenExercises.length} tareas abiertas y ${studentUnderReviewExercises.length} entregas en revision.`
                         }
                         cta={canModerate ? "Ir a recursos y tareas" : "Abrir tareas y entregas"}
-                        onClick={() => handleTabChange("resources")}
+                        onClick={() => handleResourceWorkspaceOpen()}
                         title={canModerate ? "Gestiona materiales y ejercicios" : "Resuelve tus tareas"}
                       />
                       <ActionCard
@@ -659,11 +722,13 @@ export function CourseLearningShell({
 
             {activeTab === "resources" ? (
               <SurfaceCard
+                className="scroll-mt-36"
                 description={
                   canModerate
                     ? "Publica materiales, abre ejercicios y revisa entregas sin sacar al usuario del flujo academico."
                     : "Aqui se concentran materiales, tareas, entregas y feedback del curso."
                 }
+                id="resources-panel"
                 title="Recursos y tareas"
               >
                 <div className="mb-6 grid gap-4 md:grid-cols-3">

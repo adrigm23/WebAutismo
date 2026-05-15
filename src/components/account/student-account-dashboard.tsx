@@ -72,7 +72,9 @@ export function StudentAccountDashboard({
   const pendingItems = buildStudentPendingItems(pendingSources);
   const initials = getStudentDashboardInitials(fullName);
   const forumHref = primaryCourse ? `/mis-cursos/${primaryCourse.space.course.slug}/foro` : "/cursos";
-  const resourcesHref = primaryCourse ? `/mis-cursos/${primaryCourse.space.course.slug}?tab=resources` : "/cursos";
+  const resourcesHref =
+    pendingItems[0]?.href ??
+    (primaryCourse ? `/mis-cursos/${primaryCourse.space.course.slug}?tab=resources#resources-panel` : "/cursos");
   const completionRate = primaryCourse?.progress.completionRate ?? 0;
   const completedModules = primaryCourse?.progress.completedModules ?? 0;
   const totalModules = primaryCourse?.progress.totalModules ?? 0;

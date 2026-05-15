@@ -57,7 +57,7 @@ export function getTeacherCoursePaths(course: TeacherDashboardCourseSummary | nu
 
   return {
     campusHref: `/mis-cursos/${course.space.course.slug}`,
-    resourcesHref: `/mis-cursos/${course.space.course.slug}?tab=resources`,
+    resourcesHref: `/mis-cursos/${course.space.course.slug}?tab=resources#resource-manager-top`,
     trackingHref: `/mis-cursos/${course.space.course.slug}/seguimiento`,
     forumHref: `/mis-cursos/${course.space.course.slug}/foro`
   };
