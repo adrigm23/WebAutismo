@@ -786,6 +786,7 @@ export function CourseLearningShell({
           detail: "Entregas ya enviadas y esperando respuesta docente."
         }
       ];
+  const showCompactContentHeader = activeTab === "content" && !isFocusedTaskWorkspace;
 
   return (
     <div className="min-h-screen bg-[linear-gradient(180deg,#f7f5ef_0%,#f3f7fb_52%,#fbfaf8_100%)]">
@@ -903,6 +904,73 @@ export function CourseLearningShell({
                   <ButtonLink href={`/mis-cursos/${course.slug}/foro`} prefetch variant="ghost">
                     Abrir foro privado
                   </ButtonLink>
+                </div>
+              </SurfaceCard>
+            ) : showCompactContentHeader ? (
+              <SurfaceCard
+                description="El campus abre directamente en la leccion activa para que el alumno entre por contenido, no por un panel vacio."
+                title="Leccion activa"
+              >
+                <div className="grid gap-5 xl:grid-cols-[minmax(0,1.1fr)_minmax(16rem,0.9fr)]">
+                  <div className="space-y-4">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Badge tone={canModerate ? "teacher" : "student"}>{roleLabel}</Badge>
+                      {currentModule ? <Badge tone="muted">Modulo {currentModule.index + 1}</Badge> : null}
+                      {editionLabel ? <Badge tone="muted">{editionLabel}</Badge> : null}
+                    </div>
+                    <div>
+                      <h2 className="text-[2.55rem] font-semibold leading-[0.98] tracking-[-0.07em] text-[var(--color-ink)]">
+                        {currentModule ? currentModule.title : course.title}
+                      </h2>
+                      <p className="mt-3 max-w-3xl text-[1.02rem] leading-8 text-[var(--color-muted)]">
+                        {currentModule
+                          ? currentModule.description
+                          : "Selecciona un modulo para abrir una leccion con contenido y tarea asociada."}
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap gap-3">
+                      {currentModulePrimaryMaterial ? (
+                        <button
+                          className="inline-flex items-center justify-center rounded-xl bg-[var(--color-primary)] px-5 py-3 text-sm font-semibold text-white shadow-[0_16px_30px_rgba(12,113,195,0.18)] transition duration-200 hover:bg-[var(--color-primary-strong)]"
+                          onClick={() => openWorkspaceTarget("content", "content-current-module")}
+                          type="button"
+                        >
+                          Abrir leccion
+                        </button>
+                      ) : null}
+                      {currentModuleExercises[0] ? (
+                        <button
+                          className="inline-flex items-center justify-center rounded-xl border border-[var(--color-primary)] px-5 py-3 text-sm font-semibold text-[var(--color-primary)] transition hover:bg-[var(--color-primary-soft)]"
+                          onClick={() => handleResourceWorkspaceOpen(`resource-${currentModuleExercises[0].id}`)}
+                          type="button"
+                        >
+                          {canModerate ? "Abrir tarea del modulo" : "Ir a la actividad"}
+                        </button>
+                      ) : null}
+                    </div>
+                  </div>
+
+                  <div className="grid gap-4 md:grid-cols-3 xl:grid-cols-1">
+                    <SummaryMetric
+                      detail={currentModule?.estimatedTime ?? "Sin tiempo estimado configurado."}
+                      label="Tiempo"
+                      value={currentModule ? currentModule.estimatedTime : "N/D"}
+                    />
+                    <SummaryMetric
+                      detail="Materiales asociados al modulo actual."
+                      label="Materiales"
+                      value={`${currentModuleMaterials.length}`}
+                    />
+                    <SummaryMetric
+                      detail={
+                        canModerate
+                          ? "Actividades del modulo actual para seguimiento."
+                          : "Tareas ligadas a esta leccion."
+                      }
+                      label="Tareas"
+                      value={`${currentModuleExercises.length}`}
+                    />
+                  </div>
                 </div>
               </SurfaceCard>
             ) : (
@@ -1031,50 +1099,7 @@ export function CourseLearningShell({
 
             {activeTab === "content" ? (
               <>
-                <div className="grid gap-6 lg:grid-cols-[minmax(0,0.86fr)_minmax(0,1.14fr)]">
-                  <SurfaceCard
-                    id="content-workflow"
-                    description={
-                      canModerate
-                        ? "Este recorrido resume donde debe ocurrir cada accion del campus para que la experiencia sea clara."
-                        : "Sigue este orden para no perder contexto entre modulos, tareas y soporte."
-                    }
-                    title="Ruta de trabajo"
-                  >
-                    <div className="space-y-4">
-                      <ActionCard
-                        body={
-                          nextPendingModule
-                            ? `Continua por ${nextPendingModule.title} y marca el avance cuando termines.`
-                            : "No hay modulos disponibles para revisar en este momento."
-                        }
-                        cta="Ver contenido actual"
-                        onClick={() => openWorkspaceTarget("content", "content-current-module")}
-                        title={canModerate ? "Valida el recorrido del campus" : "Empieza por el contenido"}
-                      />
-                      <ActionCard
-                        body={
-                          canModerate
-                            ? `${managedExercises.length} ejercicios activos y ${teacherPendingReviews} entregas pendientes de revision.`
-                            : `${studentOpenExercises.length} tareas abiertas y ${studentUnderReviewExercises.length} entregas en revision.`
-                        }
-                        cta={canModerate ? "Ir a recursos y tareas" : "Abrir tareas y entregas"}
-                        onClick={() => handleResourceWorkspaceOpen()}
-                        title={canModerate ? "Gestiona materiales y ejercicios" : "Resuelve tus tareas"}
-                      />
-                      <ActionCard
-                        body={
-                          canModerate
-                            ? "Usa el foro para anuncios y acompanamiento del grupo."
-                            : "El foro sirve para dudas y avisos; la entrega vive dentro del campus."
-                        }
-                        cta="Abrir soporte del curso"
-                        onClick={() => openWorkspaceTarget("support", "support-forum-categories")}
-                        title={canModerate ? "Coordina la comunidad" : "Consulta dudas o avisos"}
-                      />
-                    </div>
-                  </SurfaceCard>
-
+                <div className="grid gap-6 lg:grid-cols-[minmax(0,1.14fr)_minmax(0,0.86fr)]">
                   <SurfaceCard
                     description="Cada modulo agrupa su explicacion, material principal y tarea asociada dentro de una misma leccion."
                     id="content-current-module"
@@ -1178,6 +1203,49 @@ export function CourseLearningShell({
                         Cuando el curso tenga modulos, podras revisarlos y marcarlos desde aqui.
                       </p>
                     )}
+                  </SurfaceCard>
+
+                  <SurfaceCard
+                    id="content-workflow"
+                    description={
+                      canModerate
+                        ? "Este recorrido resume donde debe ocurrir cada accion del campus para que la experiencia sea clara."
+                        : "Sigue este orden para no perder contexto entre modulos, tareas y soporte."
+                    }
+                    title="Ruta de trabajo"
+                  >
+                    <div className="space-y-4">
+                      <ActionCard
+                        body={
+                          nextPendingModule
+                            ? `Continua por ${nextPendingModule.title} y marca el avance cuando termines.`
+                            : "No hay modulos disponibles para revisar en este momento."
+                        }
+                        cta="Ver contenido actual"
+                        onClick={() => openWorkspaceTarget("content", "content-current-module")}
+                        title={canModerate ? "Valida el recorrido del campus" : "Empieza por el contenido"}
+                      />
+                      <ActionCard
+                        body={
+                          canModerate
+                            ? `${managedExercises.length} ejercicios activos y ${teacherPendingReviews} entregas pendientes de revision.`
+                            : `${studentOpenExercises.length} tareas abiertas y ${studentUnderReviewExercises.length} entregas en revision.`
+                        }
+                        cta={canModerate ? "Ir a recursos y tareas" : "Abrir tareas y entregas"}
+                        onClick={() => handleResourceWorkspaceOpen()}
+                        title={canModerate ? "Gestiona materiales y ejercicios" : "Resuelve tus tareas"}
+                      />
+                      <ActionCard
+                        body={
+                          canModerate
+                            ? "Usa el foro para anuncios y acompanamiento del grupo."
+                            : "El foro sirve para dudas y avisos; la entrega vive dentro del campus."
+                        }
+                        cta="Abrir soporte del curso"
+                        onClick={() => openWorkspaceTarget("support", "support-forum-categories")}
+                        title={canModerate ? "Coordina la comunidad" : "Consulta dudas o avisos"}
+                      />
+                    </div>
                   </SurfaceCard>
                 </div>
 
