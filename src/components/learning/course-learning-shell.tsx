@@ -201,7 +201,8 @@ export function CourseLearningShell({
   initialActiveTab
 }: LearningShellProps) {
   const [selectedModuleIndex, setSelectedModuleIndex] = useState(0);
-  const [activeTab, setActiveTab] = useState<SidebarTab>(initialActiveTab);
+  const [pendingActiveTab, setPendingActiveTab] = useState<SidebarTab | null>(null);
+  const activeTab = pendingActiveTab ?? initialActiveTab;
   const currentModule = progress.modules[selectedModuleIndex] ?? progress.modules[0] ?? null;
   const nextPendingModule = useMemo(
     () => progress.modules.find((module) => !module.isCompleted) ?? progress.modules[0] ?? null,
@@ -249,7 +250,7 @@ export function CourseLearningShell({
 
   function handleTabChange(nextTab: SidebarTab) {
     startTransition(() => {
-      setActiveTab(nextTab);
+      setPendingActiveTab(nextTab);
     });
 
     if (typeof window !== "undefined") {
@@ -308,42 +309,19 @@ export function CourseLearningShell({
   return (
     <div className="min-h-screen bg-[linear-gradient(180deg,#f7f5ef_0%,#f3f7fb_52%,#fbfaf8_100%)]">
       <header className="sticky top-0 z-30 border-b border-[rgba(12,113,195,0.12)] bg-white/95 backdrop-blur-md">
-        <div className="px-6 py-5 lg:px-12">
-          <div className="flex flex-col gap-5">
+        <div className="px-6 py-4 lg:px-12">
+          <div className="flex flex-col gap-4">
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-4">
-                  <Link className="text-xl font-medium text-[var(--color-primary)]" href="/mi-cuenta" prefetch>
+                  <Link className="text-lg font-medium text-[var(--color-primary)]" href="/mi-cuenta" prefetch>
                     Volver al dashboard
                   </Link>
-                  <span className="hidden h-10 w-px bg-[var(--color-border)] lg:block" />
-                  <h1 className="truncate text-[2.5rem] font-semibold tracking-[-0.06em] text-[var(--color-ink)]">
+                  <span className="hidden h-8 w-px bg-[var(--color-border)] lg:block" />
+                  <h1 className="truncate text-[2.15rem] font-semibold tracking-[-0.06em] text-[var(--color-ink)]">
                     {course.title}
                   </h1>
                 </div>
-                <nav
-                  aria-label="Navegacion del campus"
-                  className="mt-5 flex flex-wrap items-center gap-3"
-                >
-                  <ButtonLink href={`/mis-cursos/${course.slug}`} prefetch variant="secondary">
-                    Campus
-                  </ButtonLink>
-                  <ButtonLink href={`/mis-cursos/${course.slug}/foro`} prefetch variant="ghost">
-                    Foro
-                  </ButtonLink>
-                  {canModerate ? (
-                    <ButtonLink
-                      href={`/mis-cursos/${course.slug}/seguimiento`}
-                      prefetch
-                      variant="ghost"
-                    >
-                      Seguimiento
-                    </ButtonLink>
-                  ) : null}
-                  <ButtonLink href="/mi-cuenta" prefetch variant="ghost">
-                    Mi cuenta
-                  </ButtonLink>
-                </nav>
               </div>
 
               <div className="flex flex-wrap items-center gap-3">
@@ -352,25 +330,62 @@ export function CourseLearningShell({
               </div>
             </div>
 
-            <div className="flex flex-wrap gap-3 border-t border-[rgba(12,113,195,0.08)] pt-4">
-              <WorkspaceTabButton
-                active={activeTab === "content"}
-                icon={LayoutPanelTop}
-                label="Contenido"
-                onClick={() => handleTabChange("content")}
-              />
-              <WorkspaceTabButton
-                active={activeTab === "resources"}
-                icon={FolderOpen}
-                label="Recursos y tareas"
-                onClick={() => handleTabChange("resources")}
-              />
-              <WorkspaceTabButton
-                active={activeTab === "support"}
-                icon={CircleHelp}
-                label="Soporte"
-                onClick={() => handleTabChange("support")}
-              />
+            <div className="flex flex-col gap-3 border-t border-[rgba(12,113,195,0.08)] pt-3 xl:flex-row xl:items-center xl:justify-between">
+              <nav
+                aria-label="Navegacion del campus"
+                className="flex flex-wrap items-center gap-2"
+              >
+                <ButtonLink
+                  className="px-4 py-2.5 text-sm"
+                  href={`/mis-cursos/${course.slug}`}
+                  prefetch
+                  variant="secondary"
+                >
+                  Campus
+                </ButtonLink>
+                <ButtonLink
+                  className="px-4 py-2.5 text-sm"
+                  href={`/mis-cursos/${course.slug}/foro`}
+                  prefetch
+                  variant="ghost"
+                >
+                  Foro
+                </ButtonLink>
+                {canModerate ? (
+                  <ButtonLink
+                    className="px-4 py-2.5 text-sm"
+                    href={`/mis-cursos/${course.slug}/seguimiento`}
+                    prefetch
+                    variant="ghost"
+                  >
+                    Seguimiento
+                  </ButtonLink>
+                ) : null}
+                <ButtonLink className="px-4 py-2.5 text-sm" href="/mi-cuenta" prefetch variant="ghost">
+                  Mi cuenta
+                </ButtonLink>
+              </nav>
+
+              <div className="flex flex-wrap gap-2 xl:justify-end">
+                <WorkspaceTabButton
+                  active={activeTab === "content"}
+                  icon={LayoutPanelTop}
+                  label="Contenido"
+                  onClick={() => handleTabChange("content")}
+                />
+                <WorkspaceTabButton
+                  active={activeTab === "resources"}
+                  icon={FolderOpen}
+                  label="Recursos y tareas"
+                  onClick={() => handleTabChange("resources")}
+                />
+                <WorkspaceTabButton
+                  active={activeTab === "support"}
+                  icon={CircleHelp}
+                  label="Soporte"
+                  onClick={() => handleTabChange("support")}
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -447,9 +462,13 @@ export function CourseLearningShell({
                   </div>
 
                   <div className="flex flex-wrap gap-3">
-                    <ButtonLink href={buildTabHref("resources")} prefetch>
+                    <button
+                      className="inline-flex items-center justify-center rounded-xl bg-[var(--color-primary)] px-5 py-3 text-sm font-semibold text-white shadow-[0_16px_30px_rgba(12,113,195,0.18)] transition duration-200 hover:bg-[var(--color-primary-strong)]"
+                      onClick={() => handleTabChange("resources")}
+                      type="button"
+                    >
                       {canModerate ? "Gestionar recursos y tareas" : "Abrir tareas del curso"}
-                    </ButtonLink>
+                    </button>
                     <ButtonLink href={`/mis-cursos/${course.slug}/foro`} prefetch variant="secondary">
                       Abrir foro privado
                     </ButtonLink>
