@@ -1,18 +1,20 @@
 import type { Metadata } from "next";
-import { PlatformLanding } from "@/components/platform/platform-landing";
+import { HomeLanding } from "@/components/platform/home/home-landing";
 import { absoluteUrl } from "@/lib/site";
 
+const title = "Formación especializada en autismo";
+const description =
+  "Plataforma de formación digital con catálogo, compra online, campus privado y foro por curso para familias, profesionales y entidades.";
+
 export const metadata: Metadata = {
-  title: "Formacion especializada en autismo",
-  description:
-    "Plataforma de formacion digital con catalogo, compra online, campus privado y foro por curso.",
+  title,
+  description,
   alternates: {
     canonical: absoluteUrl("/")
   },
   openGraph: {
-    title: "Formacion especializada en autismo",
-    description:
-      "Plataforma de formacion digital con catalogo, compra online, campus privado y foro por curso.",
+    title,
+    description,
     url: absoluteUrl("/"),
     type: "website"
   }
@@ -21,5 +23,5 @@ export const metadata: Metadata = {
 export const revalidate = 3600;
 
 export default async function HomePage() {
-  return <PlatformLanding />;
+  return <HomeLanding />;
 }
