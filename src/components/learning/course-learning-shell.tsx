@@ -18,8 +18,11 @@ import { CourseResourceManager } from "@/components/learning/course-resource-man
 import { Badge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button";
 import type { CatalogCourse } from "@/lib/course-catalog";
+import { CampusOnboarding } from "@/components/campus/campus-onboarding";
+import { CampusProgressBar } from "@/components/campus/campus-progress-bar";
 import {
   buildCourseContentHref,
+  buildCourseForumHref,
   buildCourseResourcesHref,
   buildCourseTrackingHref
 } from "@/lib/course-navigation";
@@ -47,6 +50,8 @@ type LearningShellProps = {
   accessUntil?: Date | null;
   initialActiveTab: SidebarTab;
   initialFocusedResourceId?: string | null;
+  initialModuleIndex?: number;
+  showOnboarding?: boolean;
 };
 
 export type SidebarTab = "content" | "resources" | "support";
@@ -387,7 +392,7 @@ function ModuleLessonPreview(input: {
           {preview.kind === "pdf" || preview.kind === "embed" ? (
             <iframe
               allow={preview.kind === "embed" ? "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" : undefined}
-              className="h-[32rem] w-full bg-white"
+              className="aspect-video max-h-[min(70vh,32rem)] w-full bg-white"
               src={preview.src}
               title={input.resource.title}
             />
@@ -397,14 +402,14 @@ function ModuleLessonPreview(input: {
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 alt={input.resource.title}
-                className="h-[32rem] w-full object-contain bg-white"
+                className="max-h-[min(70vh,32rem)] w-full object-contain bg-white"
                 src={preview.src}
               />
             </>
           ) : null}
           {preview.kind === "video" ? (
             <video
-              className="h-[32rem] w-full bg-[#101722]"
+              className="aspect-video max-h-[min(70vh,32rem)] w-full bg-[#101722]"
               controls
               preload="metadata"
               src={preview.src}
@@ -442,9 +447,11 @@ export function CourseLearningShell({
   editionLabel,
   accessUntil,
   initialActiveTab,
-  initialFocusedResourceId = null
+  initialFocusedResourceId = null,
+  initialModuleIndex = 0,
+  showOnboarding = false
 }: LearningShellProps) {
-  const [selectedModuleIndex, setSelectedModuleIndex] = useState(0);
+  const [selectedModuleIndex, setSelectedModuleIndex] = useState(initialModuleIndex);
   const [pendingActiveTab, setPendingActiveTab] = useState<SidebarTab | null>(null);
   const [focusedResourceId, setFocusedResourceId] = useState<string | null>(() => {
     if (initialFocusedResourceId) {
@@ -605,6 +612,24 @@ export function CourseLearningShell({
       const target = document.getElementById(targetId);
       target?.scrollIntoView({ behavior: "smooth", block: "start" });
     });
+  }
+
+  function selectModule(index: number) {
+    setSelectedModuleIndex(index);
+
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const params = new URLSearchParams(window.location.search);
+    params.set("module", String(index));
+    const query = params.toString();
+    const hash = window.location.hash;
+    window.history.replaceState(
+      window.history.state,
+      "",
+      `/mis-cursos/${course.slug}${query ? `?${query}` : ""}${hash}`
+    );
   }
 
   function handleTabChange(nextTab: SidebarTab) {
@@ -789,7 +814,7 @@ export function CourseLearningShell({
   const showCompactContentHeader = activeTab === "content" && !isFocusedTaskWorkspace;
 
   return (
-    <div className="min-h-screen bg-[linear-gradient(180deg,#f7f5ef_0%,#f3f7fb_52%,#fbfaf8_100%)]">
+    <div className="campus-calm-bg min-h-screen">
       <header className="sticky top-0 z-30 border-b border-[rgba(12,113,195,0.12)] bg-white/95 backdrop-blur-md">
         <div className="px-6 py-4 lg:px-12">
           <div className="flex flex-col gap-4">
@@ -863,12 +888,14 @@ export function CourseLearningShell({
                     isFocusedTaskWorkspace ? clearFocusedTaskWorkspace() : handleTabChange("resources")
                   }
                 />
-                <WorkspaceTabButton
-                  active={activeTab === "support"}
-                  icon={CircleHelp}
-                  label="Soporte"
-                  onClick={() => handleTabChange("support")}
-                />
+                <ButtonLink
+                  className="px-4 py-2.5 text-sm"
+                  href={buildCourseForumHref(course.slug)}
+                  prefetch
+                  variant="ghost"
+                >
+                  Comunidad
+                </ButtonLink>
               </div>
             </div>
           </div>
@@ -876,9 +903,10 @@ export function CourseLearningShell({
       </header>
 
       <div className="px-6 py-8 lg:px-12 xl:py-10">
+        <CampusOnboarding courseSlug={course.slug} showInitially={showOnboarding} />
         <div
           className={cn(
-            "grid gap-6",
+            "mt-6 grid gap-6",
             isFocusedTaskWorkspace
               ? "xl:grid-cols-1"
               : "xl:grid-cols-[minmax(0,1fr)_22rem] 2xl:grid-cols-[minmax(0,1fr)_24rem]"
@@ -998,17 +1026,27 @@ export function CourseLearningShell({
                     ) : null}
                   </div>
 
-                  <div className="grid gap-4 md:grid-cols-3">
-                    {heroMetrics.map((metric) => (
-                      <SummaryMetric
-                        detail={metric.detail}
-                        key={metric.label}
-                        label={metric.label}
-                        value={metric.value}
-                      />
-                    ))}
-                  </div>
+                  {canModerate ? (
+                    <div className="grid gap-4 md:grid-cols-3">
+                      {heroMetrics.map((metric) => (
+                        <SummaryMetric
+                          detail={metric.detail}
+                          key={metric.label}
+                          label={metric.label}
+                          value={metric.value}
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <CampusProgressBar
+                      completedModules={progress.completedModules}
+                      completionRate={progress.completionRate}
+                      nextModuleLabel={nextPendingModule?.title ?? null}
+                      totalModules={progress.totalModules}
+                    />
+                  )}
 
+                  {canModerate ? (
                   <div className="rounded-[24px] border border-[rgba(12,113,195,0.12)] bg-[var(--color-surface)] p-5">
                     <div className="flex flex-wrap items-center justify-between gap-4">
                       <div>
@@ -1040,6 +1078,7 @@ export function CourseLearningShell({
                       <span>{progress.pendingModules} modulos pendientes</span>
                     </div>
                   </div>
+                  ) : null}
 
                   <div className="flex flex-wrap gap-3">
                     <button
@@ -1265,7 +1304,7 @@ export function CourseLearningShell({
                               ? ` · ${managedResourcesByModuleId.get(module.id)?.filter((resource) => !resource.isExercise).length ?? 0} materiales · ${managedResourcesByModuleId.get(module.id)?.filter((resource) => resource.isExercise).length ?? 0} tareas`
                               : ""
                           }`}
-                          onClick={() => setSelectedModuleIndex(module.index)}
+                          onClick={() => selectModule(module.index)}
                           stateLabel={
                             module.isCompleted
                               ? "Revisado"

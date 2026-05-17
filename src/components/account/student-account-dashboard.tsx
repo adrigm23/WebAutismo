@@ -104,7 +104,7 @@ export function StudentAccountDashboard({
               >
                 {[
                   { label: "Mi cuenta", href: "/mi-cuenta", active: true },
-                  { label: "Mis cursos", href: "#mis-cursos", active: false },
+                  { label: "Mis cursos", href: "/mis-cursos", active: false },
                   { label: "Foro", href: forumHref, active: false }
                 ].map((item) => (
                   <Link

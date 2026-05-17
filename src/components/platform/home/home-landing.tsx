@@ -35,6 +35,7 @@ export async function HomeLanding() {
       <section
         aria-labelledby="home-pillars-heading"
         className="site-container py-16 sm:py-20"
+        id="home-pillars"
       >
         <HomeSectionHeader
           align="center"
@@ -96,7 +97,11 @@ export async function HomeLanding() {
         </div>
       </section>
 
-      <section aria-labelledby="home-steps-heading" className="site-container py-16 sm:py-20">
+      <section
+        aria-labelledby="home-steps-heading"
+        className="site-container py-16 sm:py-20"
+        id="home-steps"
+      >
         <div className="grid gap-12 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:items-start">
           <HomeSectionHeader
             description="Sin promesas vacías: cada paso corresponde a funcionalidades reales del producto."

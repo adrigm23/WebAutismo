@@ -28,10 +28,10 @@ export default async function CoursesPage() {
     <div className="pb-24 pt-14 lg:pt-16">
       <section className="site-container">
         <div className="max-w-4xl">
-          <h1 className="text-6xl font-semibold tracking-[-0.07em] text-[var(--color-ink)] lg:text-[4.3rem]">
-            Catalogo de cursos
+          <h1 className="text-display-xl font-semibold text-[var(--color-ink)]">
+            Catálogo de cursos
           </h1>
-          <p className="mt-5 text-[1.18rem] leading-10 text-[var(--color-ink)]/88">
+          <p className="mt-5 text-body-lg text-[var(--color-muted)]">
             Descubre una oferta formativa especializada, pensada para familias, docentes y
             profesionales que necesitan contenido claro, aplicable y acceso gestionado por
             ediciones reales del campus.

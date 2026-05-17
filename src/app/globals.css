@@ -20,6 +20,59 @@
   --color-gold: var(--color-accent);
   --shadow-soft: 0 18px 44px rgba(21, 35, 50, 0.06);
   --shadow-strong: 0 24px 58px rgba(21, 35, 50, 0.09);
+  --radius-surface: 1rem;
+  --radius-pill: 9999px;
+}
+
+.text-display-xl {
+  font-size: clamp(2.25rem, 4.8vw, 3.5rem);
+  line-height: 1.05;
+  letter-spacing: -0.05em;
+}
+
+.text-display-lg {
+  font-size: clamp(1.85rem, 3.2vw, 2.5rem);
+  line-height: 1.08;
+  letter-spacing: -0.04em;
+}
+
+.text-display-md {
+  font-size: clamp(1.35rem, 2.2vw, 1.75rem);
+  line-height: 1.15;
+  letter-spacing: -0.03em;
+}
+
+.text-body-lg {
+  font-size: 1.0625rem;
+  line-height: 1.75;
+}
+
+.surface-card {
+  border-radius: var(--radius-surface);
+}
+
+.campus-calm-bg {
+  background: var(--color-background);
+}
+
+.skip-link {
+  position: absolute;
+  left: 1rem;
+  top: -4rem;
+  z-index: 100;
+  border-radius: 0.5rem;
+  background: var(--color-primary);
+  color: #fff;
+  font-size: 0.875rem;
+  font-weight: 600;
+  padding: 0.65rem 1rem;
+  transition: top 160ms ease;
+}
+
+.skip-link:focus {
+  top: 1rem;
+  outline: 2px solid var(--color-ink);
+  outline-offset: 2px;
 }
 
 * {

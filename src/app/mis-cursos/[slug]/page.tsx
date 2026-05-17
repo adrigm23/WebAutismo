@@ -15,12 +15,35 @@ import { firstValue } from "@/lib/utils";
 
 type MyCoursePageProps = {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ tab?: string | string[]; resource?: string | string[] }>;
+  searchParams: Promise<{
+    tab?: string | string[];
+    resource?: string | string[];
+    module?: string | string[];
+    onboarding?: string | string[];
+  }>;
 };
 
 function getSidebarTab(value: string | string[] | undefined) {
   const candidate = firstValue(value);
   return candidate === "resources" || candidate === "support" ? candidate : "content";
+}
+
+function getModuleIndex(value: string | string[] | undefined, moduleCount: number) {
+  const raw = firstValue(value);
+  if (!raw) {
+    return 0;
+  }
+
+  const parsed = Number.parseInt(raw, 10);
+  if (Number.isNaN(parsed) || parsed < 0) {
+    return 0;
+  }
+
+  if (moduleCount <= 0) {
+    return 0;
+  }
+
+  return Math.min(parsed, moduleCount - 1);
 }
 
 export async function generateMetadata({
@@ -40,7 +63,7 @@ export async function generateMetadata({
 
 export default async function MyCoursePage({ params, searchParams }: MyCoursePageProps) {
   const { slug } = await params;
-  const { tab, resource } = await searchParams;
+  const { tab, resource, module, onboarding } = await searchParams;
   const course = await getCatalogCourseBySlug(slug);
 
   if (!course) {
@@ -57,16 +80,24 @@ export default async function MyCoursePage({ params, searchParams }: MyCoursePag
   });
 
   if (!access.allowed) {
-    redirect(`/checkout/${course.slug}`);
+    redirect(`/mis-cursos/${course.slug}/renovar-acceso`);
   }
 
   const canModerate = canModerateCourse(access.role);
-  const activeTab = getSidebarTab(tab);
+  const requestedTab = getSidebarTab(tab);
+
+  if (requestedTab === "support") {
+    redirect(`/mis-cursos/${course.slug}/foro`);
+  }
+
+  const activeTab = requestedTab;
   const focusedResourceId = activeTab === "resources" ? firstValue(resource) ?? null : null;
   const progress = await getCourseProgressDetailsForUser({
     userId: user.id,
     course
   });
+  const initialModuleIndex = getModuleIndex(module, progress.modules.length);
+  const showOnboarding = firstValue(onboarding) === "1";
 
   const [forumCategories, resources] = await Promise.all([
     getForumCategories(course.slug, access.role),
@@ -89,6 +120,8 @@ export default async function MyCoursePage({ params, searchParams }: MyCoursePag
       initialFocusedResourceId={focusedResourceId}
       editionLabel={course.activeEdition?.label ?? null}
       accessUntil={access.enrollment?.accessUntil ?? course.activeEdition?.accessUntil ?? null}
+      initialModuleIndex={initialModuleIndex}
+      showOnboarding={showOnboarding}
     />
   );
 }

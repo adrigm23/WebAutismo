@@ -7,8 +7,11 @@ export default function PublicLayout({
 }: Readonly<{ children: ReactNode }>) {
   return (
     <>
+      <a className="skip-link" href="#contenido-principal">
+        Saltar al contenido
+      </a>
       <SiteHeader />
-      <main>{children}</main>
+      <main id="contenido-principal">{children}</main>
       <SiteFooter />
     </>
   );

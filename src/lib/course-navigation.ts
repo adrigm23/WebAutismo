@@ -7,6 +7,8 @@ function buildWorkspaceHref(input: {
   tab: CourseWorkspaceTab;
   targetId?: string | null;
   resourceId?: string | null;
+  moduleIndex?: number | null;
+  onboarding?: boolean;
 }) {
   const params = new URLSearchParams();
 
@@ -18,17 +20,34 @@ function buildWorkspaceHref(input: {
     params.set("resource", input.resourceId);
   }
 
+  if (typeof input.moduleIndex === "number" && input.moduleIndex >= 0) {
+    params.set("module", String(input.moduleIndex));
+  }
+
+  if (input.onboarding) {
+    params.set("onboarding", "1");
+  }
+
   const query = params.toString();
   const hash = input.targetId ? `#${input.targetId}` : "";
 
   return `/mis-cursos/${input.courseSlug}${query ? `?${query}` : ""}${hash}`;
 }
 
-export function buildCourseContentHref(courseSlug: string, targetId = "content-current-module") {
+export function buildCourseContentHref(
+  courseSlug: string,
+  options?: {
+    targetId?: string;
+    moduleIndex?: number;
+    onboarding?: boolean;
+  }
+) {
   return buildWorkspaceHref({
     courseSlug,
     tab: "content",
-    targetId
+    targetId: options?.targetId ?? "content-current-module",
+    moduleIndex: options?.moduleIndex ?? null,
+    onboarding: options?.onboarding
   });
 }
 

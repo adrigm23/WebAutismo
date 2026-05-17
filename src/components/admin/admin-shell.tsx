@@ -20,6 +20,7 @@ import {
   UsersRound
 } from "lucide-react";
 import { logoutAction } from "@/actions/session";
+import { AdminMobileNav } from "@/components/admin/admin-mobile-nav";
 import { ButtonLink } from "@/components/ui/button";
 import { adminNavigation, getAdminSearchPlaceholder, getUserInitials } from "@/lib/admin-console";
 import { isDemoUserId } from "@/lib/demo-auth";
@@ -195,10 +196,11 @@ export function AdminShell({ user, children }: AdminShellProps) {
         <div className="min-w-0">
           <header className="sticky top-0 z-20 border-b border-[#d6dde6] bg-[#f7f4ef]/96 backdrop-blur-md">
             <div className="flex flex-wrap items-center justify-between gap-4 px-5 py-4 sm:px-7 xl:px-10">
-              <div className="lg:hidden">
+              <div className="flex flex-col gap-3 lg:hidden">
                 <Link className="text-[1.65rem] font-bold tracking-[-0.06em] text-[var(--color-primary)]" href="/admin">
                   {siteConfig.shortName} Admin
                 </Link>
+                <AdminMobileNav />
               </div>
 
               <form action={pathname} className="w-full max-w-[34rem]">
