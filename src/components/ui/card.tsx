@@ -1,13 +1,16 @@
 import type { HTMLAttributes } from "react";
 import { cn } from "@/lib/utils";
 
-type CardProps = HTMLAttributes<HTMLDivElement>;
+type CardProps = HTMLAttributes<HTMLDivElement> & {
+  surface?: "default" | "glass";
+};
 
-export function Card({ className, ...props }: CardProps) {
+export function Card({ className, surface = "default", ...props }: CardProps) {
   return (
     <div
       className={cn(
-        "rounded-[26px] border border-[rgba(12,113,195,0.1)] bg-[rgba(255,255,255,0.94)] shadow-[0_18px_42px_-30px_rgba(21,35,50,0.18)] backdrop-blur-sm",
+        "ui-card-base",
+        surface === "glass" && "backdrop-blur-sm",
         className
       )}
       {...props}

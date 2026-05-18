@@ -24,13 +24,13 @@ export function ThreadReplyForm({
   const [state, action] = useActionState(createForumReplyAction, initialState);
 
   return (
-    <form action={action} className="space-y-4">
+    <form action={action} className="space-y-5">
       <input name="courseSlug" type="hidden" value={courseSlug} />
       <input name="categorySlug" type="hidden" value={categorySlug} />
       <input name="threadId" type="hidden" value={threadId} />
 
       <label className="block space-y-2">
-        <span className="text-sm font-medium text-[var(--color-ink)]">Responder al hilo</span>
+        <span className="text-sm font-semibold text-[var(--color-ink)]">Responder al hilo</span>
         <Textarea
           disabled={disabled}
           name="body"
@@ -45,28 +45,31 @@ export function ThreadReplyForm({
       </label>
 
       <label className="block space-y-2">
-        <span className="text-sm font-medium text-[var(--color-ink)]">Archivos o imagenes</span>
+        <span className="text-sm font-semibold text-[var(--color-ink)]">Archivos o imágenes</span>
         <Input
-          className="h-auto px-3 py-3 file:mr-3 file:rounded-lg file:border-0 file:bg-[var(--color-primary-soft)] file:px-3 file:py-2 file:text-sm file:font-semibold file:text-[var(--color-primary)]"
+          className="h-auto px-3 py-3 file:mr-3 file:rounded-[var(--radius-sm)] file:border-0 file:bg-[var(--color-primary-soft)] file:px-3 file:py-2 file:text-sm file:font-semibold file:text-[var(--color-primary)]"
           disabled={disabled}
           multiple
           name="attachments"
           type="file"
         />
+        <p className="text-xs leading-6 text-[var(--color-muted)]">
+          Puedes adjuntar material de apoyo si ayuda a contextualizar la respuesta.
+        </p>
       </label>
 
       <label className="block space-y-2">
-        <span className="text-sm font-medium text-[var(--color-ink)]">Enlaces externos</span>
+        <span className="text-sm font-semibold text-[var(--color-ink)]">Enlaces externos</span>
         <Textarea
           disabled={disabled}
           name="attachmentLinks"
-          placeholder="Un enlace por linea."
+          placeholder="Un enlace por línea."
           rows={3}
         />
       </label>
 
       {state.error ? (
-        <p className="rounded-2xl border border-[#efb3a6] bg-[#fff1ec] px-4 py-3 text-sm text-[#9b4128]">
+        <p className="rounded-[var(--radius-md)] border border-[#efb3a6] bg-[#fff1ec] px-4 py-3 text-sm text-[#9b4128]">
           {state.error}
         </p>
       ) : null}

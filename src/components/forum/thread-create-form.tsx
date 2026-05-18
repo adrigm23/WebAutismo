@@ -15,6 +15,9 @@ type ThreadCreateFormProps = {
   allowAnnouncement?: boolean;
 };
 
+const selectClassName =
+  "ui-control-base min-h-[var(--control-height-md)] px-4 text-sm";
+
 export function ThreadCreateForm({
   courseSlug,
   categorySlug,
@@ -24,7 +27,7 @@ export function ThreadCreateForm({
   const [state, action] = useActionState(createForumThreadAction, initialState);
 
   return (
-    <form action={action} className="space-y-4">
+    <form action={action} className="space-y-5">
       <input name="courseSlug" type="hidden" value={courseSlug} />
       <input name="categorySlug" type="hidden" value={categorySlug} />
 
@@ -32,18 +35,14 @@ export function ThreadCreateForm({
         <div className="space-y-4">
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="block space-y-2">
-              <span className="text-sm font-medium text-[var(--color-ink)]">Tipo</span>
-              <select
-                className="h-12 w-full rounded-xl border border-[var(--color-border)] bg-white px-4 text-sm text-[var(--color-ink)] shadow-sm outline-none transition focus:border-[var(--color-primary)] focus:ring-2 focus:ring-[color:rgba(12,113,195,0.18)]"
-                defaultValue="DISCUSSION"
-                name="threadType"
-              >
+              <span className="text-sm font-semibold text-[var(--color-ink)]">Tipo</span>
+              <select className={selectClassName} defaultValue="DISCUSSION" name="threadType">
                 <option value="DISCUSSION">Hilo</option>
                 <option value="ANNOUNCEMENT">Anuncio</option>
               </select>
             </label>
 
-            <label className="flex items-center gap-3 rounded-xl border border-[var(--color-border)] bg-white px-4 py-3">
+            <label className="flex items-center gap-3 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-white px-4 py-3 shadow-[var(--shadow-inset-soft)]">
               <input
                 className="h-4 w-4 accent-[var(--color-primary)]"
                 name="isReadOnly"
@@ -54,12 +53,12 @@ export function ThreadCreateForm({
           </div>
 
           <label className="block space-y-2">
-            <span className="text-sm font-medium text-[var(--color-ink)]">
+            <span className="text-sm font-semibold text-[var(--color-ink)]">
               Programar anuncio (opcional)
             </span>
             <Input name="scheduledFor" type="datetime-local" />
             <p className="text-xs leading-6 text-[var(--color-muted)]">
-              Si completas esta fecha, el contenido quedara oculto para el alumnado hasta ese
+              Si completas esta fecha, el contenido queda oculto para el alumnado hasta ese
               momento. Solo se aplica a anuncios.
             </p>
           </label>
@@ -69,15 +68,15 @@ export function ThreadCreateForm({
       )}
 
       <label className="block space-y-2">
-        <span className="text-sm font-medium text-[var(--color-ink)]">Titulo del hilo</span>
+        <span className="text-sm font-semibold text-[var(--color-ink)]">Título del hilo</span>
         <Input name="title" placeholder="Ej.: Duda sobre la unidad 1" required />
       </label>
 
       <label className="block space-y-2">
-        <span className="text-sm font-medium text-[var(--color-ink)]">Mensaje inicial</span>
+        <span className="text-sm font-semibold text-[var(--color-ink)]">Mensaje inicial</span>
         <Textarea
           name="body"
-          placeholder="Describe tu duda, reflexion o aportacion para el grupo."
+          placeholder="Describe tu duda, reflexión o aportación para el grupo."
           required
           rows={compact ? 5 : 7}
         />
@@ -85,11 +84,11 @@ export function ThreadCreateForm({
 
       <div className="grid gap-4">
         <label className="block space-y-2">
-          <span className="text-sm font-medium text-[var(--color-ink)]">
-            Adjuntar archivos o imagenes
+          <span className="text-sm font-semibold text-[var(--color-ink)]">
+            Adjuntar archivos o imágenes
           </span>
           <Input
-            className="h-auto px-3 py-3 file:mr-3 file:rounded-lg file:border-0 file:bg-[var(--color-primary-soft)] file:px-3 file:py-2 file:text-sm file:font-semibold file:text-[var(--color-primary)]"
+            className="h-auto px-3 py-3 file:mr-3 file:rounded-[var(--radius-sm)] file:border-0 file:bg-[var(--color-primary-soft)] file:px-3 file:py-2 file:text-sm file:font-semibold file:text-[var(--color-primary)]"
             multiple
             name="attachments"
             type="file"
@@ -100,24 +99,24 @@ export function ThreadCreateForm({
         </label>
 
         <label className="block space-y-2">
-          <span className="text-sm font-medium text-[var(--color-ink)]">
+          <span className="text-sm font-semibold text-[var(--color-ink)]">
             Enlaces o recursos externos
           </span>
           <Textarea
             name="attachmentLinks"
-            placeholder="Pega un enlace por linea. Los videos de YouTube o Vimeo se guardaran como recurso de video."
+            placeholder="Pega un enlace por línea. Los vídeos de YouTube o Vimeo se guardarán como recurso de vídeo."
             rows={3}
           />
         </label>
       </div>
 
       {state.error ? (
-        <p className="rounded-2xl border border-[#efb3a6] bg-[#fff1ec] px-4 py-3 text-sm text-[#9b4128]">
+        <p className="rounded-[var(--radius-md)] border border-[#efb3a6] bg-[#fff1ec] px-4 py-3 text-sm text-[#9b4128]">
           {state.error}
         </p>
       ) : null}
 
-      <SubmitButton pendingLabel="Publicando..." className={compact ? "" : "w-full sm:w-auto"}>
+      <SubmitButton className={compact ? "" : "w-full sm:w-auto"} pendingLabel="Publicando...">
         {allowAnnouncement ? "Publicar o programar" : "Crear hilo"}
       </SubmitButton>
     </form>

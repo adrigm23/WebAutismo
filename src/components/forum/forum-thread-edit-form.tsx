@@ -34,6 +34,9 @@ type ForumThreadEditFormProps = {
   }>;
 };
 
+const selectClassName =
+  "ui-control-base min-h-14 px-4 text-sm sm:text-base";
+
 export function ForumThreadEditForm({
   courseSlug,
   categorySlug,
@@ -55,8 +58,8 @@ export function ForumThreadEditForm({
       <input name="nextPath" type="hidden" value={nextPath} />
 
       <div className="space-y-6">
-        <section className="overflow-hidden rounded-[28px] border border-[rgba(12,113,195,0.14)] bg-white shadow-[0_18px_40px_rgba(34,34,33,0.05)]">
-          <div className="border-b border-[rgba(12,113,195,0.1)] px-6 py-5">
+        <section className="ui-card-base overflow-hidden">
+          <div className="border-b border-[rgba(12,113,195,0.1)] px-5 py-5 sm:px-6">
             <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--color-muted)]">
               Edición del hilo
             </p>
@@ -65,13 +68,13 @@ export function ForumThreadEditForm({
             </h2>
           </div>
 
-          <div className="space-y-5 px-6 py-6">
+          <div className="space-y-5 px-5 py-5 sm:px-6">
             <label className="block space-y-2">
               <span className="text-sm font-semibold uppercase tracking-[0.14em] text-[var(--color-muted)]">
                 Título del hilo
               </span>
               <Input
-                className="h-16 rounded-2xl px-5 text-lg"
+                className="min-h-14 px-5 text-base sm:text-lg"
                 defaultValue={initialValues.title}
                 name="title"
                 required
@@ -83,7 +86,7 @@ export function ForumThreadEditForm({
                 Mensaje inicial
               </span>
               <Textarea
-                className="min-h-[20rem] rounded-2xl px-5 py-4 text-base leading-8"
+                className="min-h-[20rem] px-5 py-4 text-base leading-8"
                 defaultValue={initialValues.body}
                 name="body"
                 required
@@ -93,8 +96,8 @@ export function ForumThreadEditForm({
           </div>
         </section>
 
-        <section className="overflow-hidden rounded-[28px] border border-dashed border-[rgba(12,113,195,0.22)] bg-white shadow-[0_18px_40px_rgba(34,34,33,0.04)]">
-          <div className="border-b border-[rgba(12,113,195,0.1)] px-6 py-5">
+        <section className="ui-card-base overflow-hidden border-dashed">
+          <div className="border-b border-[rgba(12,113,195,0.1)] px-5 py-5 sm:px-6">
             <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--color-muted)]">
               Adjuntos
             </p>
@@ -103,16 +106,14 @@ export function ForumThreadEditForm({
             </h2>
           </div>
 
-          <div className="space-y-5 px-6 py-6">
+          <div className="space-y-5 px-5 py-5 sm:px-6">
             {existingAttachments.length ? (
-              <div className="rounded-2xl border border-[rgba(12,113,195,0.12)] bg-[#fcfbf8] px-4 py-4">
-                <p className="text-sm font-semibold text-[var(--color-ink)]">
-                  Adjuntos actuales
-                </p>
+              <div className="rounded-[var(--radius-md)] border border-[rgba(12,113,195,0.12)] bg-[#fcfbf8] px-4 py-4">
+                <p className="text-sm font-semibold text-[var(--color-ink)]">Adjuntos actuales</p>
                 <div className="mt-3 flex flex-wrap gap-2">
                   {existingAttachments.map((attachment) => (
                     <div
-                      className="flex items-center gap-2 rounded-full border border-[var(--color-border)] bg-white px-3 py-1 text-sm text-[var(--color-ink)]"
+                      className="flex items-center gap-2 rounded-[var(--radius-pill)] border border-[var(--color-border)] bg-white px-3 py-1 text-sm text-[var(--color-ink)]"
                       key={attachment.id}
                     >
                       <span>{attachment.label}</span>
@@ -136,11 +137,11 @@ export function ForumThreadEditForm({
             ) : null}
 
             <label className="block space-y-2">
-              <span className="text-sm font-medium text-[var(--color-ink)]">
+              <span className="text-sm font-semibold text-[var(--color-ink)]">
                 Añadir archivos o imágenes
               </span>
               <Input
-                className="h-auto rounded-2xl px-4 py-4 file:mr-3 file:rounded-xl file:border-0 file:bg-[var(--color-primary-soft)] file:px-3 file:py-2 file:text-sm file:font-semibold file:text-[var(--color-primary)]"
+                className="h-auto px-4 py-4 file:mr-3 file:rounded-[var(--radius-sm)] file:border-0 file:bg-[var(--color-primary-soft)] file:px-3 file:py-2 file:text-sm file:font-semibold file:text-[var(--color-primary)]"
                 multiple
                 name="attachments"
                 type="file"
@@ -148,11 +149,10 @@ export function ForumThreadEditForm({
             </label>
 
             <label className="block space-y-2">
-              <span className="text-sm font-medium text-[var(--color-ink)]">
+              <span className="text-sm font-semibold text-[var(--color-ink)]">
                 Añadir enlaces externos
               </span>
               <Textarea
-                className="rounded-2xl px-5 py-4"
                 name="attachmentLinks"
                 placeholder="Un enlace por línea."
                 rows={4}
@@ -163,23 +163,23 @@ export function ForumThreadEditForm({
       </div>
 
       <aside className="space-y-6 xl:sticky xl:top-28 xl:self-start">
-        <section className="overflow-hidden rounded-[28px] border border-[rgba(255,182,6,0.35)] bg-white shadow-[0_18px_40px_rgba(34,34,33,0.05)]">
-          <div className="border-b border-[rgba(12,113,195,0.1)] px-6 py-5">
+        <section className="ui-card-base overflow-hidden">
+          <div className="border-b border-[rgba(12,113,195,0.1)] px-5 py-5 sm:px-6">
             <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--color-muted)]">
               Ajustes
             </p>
-            <h2 className="mt-2 text-[2rem] font-semibold tracking-[-0.03em] text-[var(--color-ink)]">
+            <h2 className="mt-2 text-[1.85rem] font-semibold tracking-[-0.03em] text-[var(--color-ink)]">
               Publicación
             </h2>
           </div>
 
-          <div className="space-y-5 px-6 py-6">
+          <div className="space-y-5 px-5 py-5 sm:px-6">
             {allowAnnouncement ? (
               <>
                 <label className="block space-y-2">
-                  <span className="text-sm font-medium text-[var(--color-ink)]">Tipo</span>
+                  <span className="text-sm font-semibold text-[var(--color-ink)]">Tipo</span>
                   <select
-                    className="h-14 w-full rounded-2xl border border-[var(--color-border)] bg-white px-4 text-sm text-[var(--color-ink)] outline-none transition focus:border-[var(--color-primary)] focus:ring-2 focus:ring-[rgba(12,113,195,0.18)]"
+                    className={selectClassName}
                     name="threadType"
                     onChange={(event) =>
                       setThreadType(event.target.value as "DISCUSSION" | "ANNOUNCEMENT")
@@ -191,7 +191,7 @@ export function ForumThreadEditForm({
                   </select>
                 </label>
 
-                <label className="flex items-start gap-3 rounded-2xl border border-[var(--color-border)] bg-[#faf8f4] px-4 py-4">
+                <label className="flex items-start gap-3 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[#faf8f4] px-4 py-4">
                   <input
                     className="mt-1 h-4 w-4 accent-[var(--color-primary)]"
                     defaultChecked={initialValues.isReadOnly}
@@ -207,7 +207,7 @@ export function ForumThreadEditForm({
                 </label>
 
                 <label className="block space-y-2">
-                  <span className="text-sm font-medium text-[var(--color-ink)]">
+                  <span className="text-sm font-semibold text-[var(--color-ink)]">
                     Programar publicación
                   </span>
                   <Input
@@ -218,7 +218,7 @@ export function ForumThreadEditForm({
                   />
                 </label>
 
-                <label className="flex items-start gap-3 rounded-2xl border border-[var(--color-border)] bg-[#faf8f4] px-4 py-4">
+                <label className="flex items-start gap-3 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[#faf8f4] px-4 py-4">
                   <input
                     className="mt-1 h-4 w-4 accent-[var(--color-primary)]"
                     defaultChecked={initialValues.isPinned}
@@ -239,18 +239,18 @@ export function ForumThreadEditForm({
           </div>
         </section>
 
-        <section className="rounded-[28px] border border-[rgba(12,113,195,0.14)] bg-white p-6 shadow-[0_18px_40px_rgba(34,34,33,0.04)]">
+        <section className="ui-card-base p-5 sm:p-6">
           <div className="space-y-4">
             {state.error ? (
-              <p className="rounded-2xl border border-[#efb3a6] bg-[#fff1ec] px-4 py-3 text-sm text-[#9b4128]">
+              <p className="rounded-[var(--radius-md)] border border-[#efb3a6] bg-[#fff1ec] px-4 py-3 text-sm text-[#9b4128]">
                 {state.error}
               </p>
             ) : null}
 
-            <SubmitButton className="w-full justify-center rounded-2xl py-4 text-base" pendingLabel="Guardando...">
+            <SubmitButton className="w-full justify-center py-4 text-base" pendingLabel="Guardando...">
               Guardar cambios
             </SubmitButton>
-            <ButtonLink className="w-full justify-center rounded-2xl py-4" href={cancelHref} variant="ghost">
+            <ButtonLink className="w-full justify-center py-4" href={cancelHref} variant="subtle">
               Cancelar
             </ButtonLink>
           </div>

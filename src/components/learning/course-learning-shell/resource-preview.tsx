@@ -121,7 +121,7 @@ export function ModuleLessonPreview(input: {
 
   if (!input.resource) {
     return (
-      <div className="rounded-[24px] border border-dashed border-[rgba(12,113,195,0.18)] bg-[var(--color-surface)] p-6 text-sm leading-7 text-[var(--color-muted)]">
+      <div className="ui-empty-state p-6 text-sm leading-7 text-[var(--color-muted)]">
         Este modulo todavia no tiene un material principal publicado. Puedes seguir el resumen del modulo y revisar la tarea asociada cuando se publique.
       </div>
     );
@@ -138,7 +138,7 @@ export function ModuleLessonPreview(input: {
         </div>
         {input.resource.href ? (
           <Link
-            className="inline-flex items-center rounded-xl border border-[var(--color-primary)] px-4 py-3 text-sm font-semibold text-[var(--color-primary)] transition hover:bg-[var(--color-primary-soft)]"
+            className="inline-flex min-h-[var(--control-height-md)] items-center rounded-[var(--radius-md)] border border-[rgba(12,113,195,0.18)] bg-white/94 px-4 py-2.5 text-sm font-semibold text-[var(--color-primary)] shadow-[var(--shadow-inset-soft)] transition hover:-translate-y-[1px] hover:border-[rgba(12,113,195,0.34)] hover:bg-[rgba(12,113,195,0.05)]"
             href={input.resource.href}
             prefetch={false}
             target={input.resource.isExternal ? "_blank" : undefined}
@@ -152,7 +152,7 @@ export function ModuleLessonPreview(input: {
       <p className="text-sm leading-7 text-[var(--color-muted)]">{input.resource.description}</p>
 
       {preview ? (
-        <div className="overflow-hidden rounded-[24px] border border-[rgba(12,113,195,0.12)] bg-[#f7f9fb]">
+        <div className="overflow-hidden rounded-[var(--radius-lg)] border border-[rgba(12,113,195,0.12)] bg-[#f7f9fb]">
           {preview.kind === "pdf" || preview.kind === "embed" ? (
             <iframe
               allow={preview.kind === "embed" ? "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" : undefined}
@@ -181,7 +181,7 @@ export function ModuleLessonPreview(input: {
           ) : null}
         </div>
       ) : (
-        <div className="rounded-[24px] border border-[rgba(12,113,195,0.12)] bg-[var(--color-surface)] p-5">
+        <div className="rounded-[var(--radius-lg)] border border-[rgba(12,113,195,0.12)] bg-[var(--color-surface)] p-5">
           <div className="flex items-start gap-3">
             {input.resource.resourceType === "MATERIAL" ? (
               <FileText className="mt-1 h-5 w-5 text-[var(--color-primary)]" />

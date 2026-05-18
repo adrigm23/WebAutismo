@@ -1,11 +1,11 @@
 "use client";
 
-import { FolderOpen, LayoutPanelTop } from "lucide-react";
+import Link from "next/link";
+import { FolderOpen, LayoutPanelTop, LifeBuoy, MessageSquareText } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { ButtonLink } from "@/components/ui/button";
-import { buildCourseForumHref } from "@/lib/course-navigation";
+import { buildCourseForumHref, buildCourseTrackingHref } from "@/lib/course-navigation";
 import { cn } from "@/lib/utils";
-import { WorkspaceTabButton } from "./primitives";
+import { SimpleModeToggle, WorkspaceTabButton } from "./primitives";
 import type { SidebarTab } from "./types";
 
 type CourseLearningHeaderProps = {
@@ -32,52 +32,62 @@ export function CourseLearningHeader({
   onSimpleModeChange
 }: CourseLearningHeaderProps) {
   return (
-    <header className="sticky top-0 z-30 border-b border-[rgba(12,113,195,0.12)] bg-white/95 backdrop-blur-md">
-      <div className="px-6 py-4 lg:px-12">
+    <header className="sticky top-0 z-30 border-b border-[rgba(12,113,195,0.12)] bg-[rgba(255,255,255,0.94)] backdrop-blur-md">
+      <div className="site-container py-4">
         <div className="flex flex-col gap-4">
-          <div className="flex flex-wrap items-start justify-between gap-4">
-            <div className="min-w-0">
-              <div className="flex flex-wrap items-center gap-4">
-                <ButtonLink className="px-0 text-lg font-medium" href="/mi-cuenta" prefetch variant="ghost">
-                  Volver al dashboard
-                </ButtonLink>
-                <span className="hidden h-8 w-px bg-[var(--color-border)] lg:block" />
-                <h1 className="truncate text-[2.15rem] font-semibold tracking-[-0.06em] text-[var(--color-ink)]">
-                  {courseTitle}
-                </h1>
+          <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge tone={canModerate ? "info" : "warning"}>{roleLabel}</Badge>
+                <Badge tone="outline">{canModerate ? "Campus docente" : "Campus del curso"}</Badge>
               </div>
+              <h1 className="mt-3 text-display-md font-semibold text-[var(--color-ink)]">
+                {courseTitle}
+              </h1>
+              <p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--color-muted)]">
+                El campus mantiene contenido, tareas y soporte dentro del mismo recorrido para no
+                romper el contexto de aprendizaje.
+              </p>
             </div>
 
-            <div className="flex flex-wrap items-center gap-3">
-              <Badge tone={canModerate ? "teacher" : "student"}>{roleLabel}</Badge>
-              <Badge tone="muted">{canModerate ? "Espacio de seguimiento" : "Acceso vigente"}</Badge>
+            <div className="flex flex-wrap items-center gap-2 xl:justify-end">
+              <Link
+                className="inline-flex min-h-11 items-center justify-center rounded-[var(--radius-pill)] px-3.5 py-2 text-sm font-semibold text-[var(--color-ink)] transition hover:bg-[var(--color-primary-soft)] hover:text-[var(--color-primary)]"
+                href="/mi-cuenta"
+              >
+                Mi cuenta
+              </Link>
+              <Link
+                className="inline-flex min-h-11 items-center justify-center rounded-[var(--radius-pill)] px-3.5 py-2 text-sm font-semibold text-[var(--color-ink)] transition hover:bg-[var(--color-primary-soft)] hover:text-[var(--color-primary)]"
+                href="/mis-cursos"
+              >
+                Mis cursos
+              </Link>
+              <Link
+                className="inline-flex min-h-11 items-center justify-center rounded-[var(--radius-pill)] border border-[var(--color-primary)] bg-white px-3.5 py-2 text-sm font-semibold text-[var(--color-primary)] shadow-[var(--shadow-inset-soft)] transition"
+                href={`/mis-cursos/${courseSlug}`}
+              >
+                Campus
+              </Link>
+              {canModerate ? (
+                <Link
+                  className="inline-flex min-h-11 items-center justify-center rounded-[var(--radius-pill)] px-3.5 py-2 text-sm font-semibold text-[var(--color-ink)] transition hover:bg-[var(--color-primary-soft)] hover:text-[var(--color-primary)]"
+                  href={buildCourseTrackingHref({ courseSlug })}
+                >
+                  Seguimiento
+                </Link>
+              ) : null}
+              <Link
+                className="inline-flex min-h-11 items-center justify-center rounded-[var(--radius-pill)] px-3.5 py-2 text-sm font-semibold text-[var(--color-ink)] transition hover:bg-[var(--color-primary-soft)] hover:text-[var(--color-primary)]"
+                href={buildCourseForumHref(courseSlug)}
+              >
+                Foro
+              </Link>
             </div>
           </div>
 
           <div className="flex flex-col gap-3 border-t border-[rgba(12,113,195,0.08)] pt-3 xl:flex-row xl:items-center xl:justify-between">
             <nav aria-label="Navegacion del campus" className="flex flex-wrap items-center gap-2">
-              <ButtonLink className="px-4 py-2.5 text-sm" href={`/mis-cursos/${courseSlug}`} prefetch variant="secondary">
-                Campus
-              </ButtonLink>
-              <ButtonLink className="px-4 py-2.5 text-sm" href={`/mis-cursos/${courseSlug}/foro`} prefetch variant="ghost">
-                Foro
-              </ButtonLink>
-              {canModerate ? (
-                <ButtonLink
-                  className="px-4 py-2.5 text-sm"
-                  href={`/mis-cursos/${courseSlug}/seguimiento`}
-                  prefetch
-                  variant="ghost"
-                >
-                  Seguimiento
-                </ButtonLink>
-              ) : null}
-              <ButtonLink className="px-4 py-2.5 text-sm" href="/mi-cuenta" prefetch variant="ghost">
-                Mi cuenta
-              </ButtonLink>
-            </nav>
-
-            <div className="flex flex-wrap items-center gap-2 xl:justify-end">
               <WorkspaceTabButton
                 active={activeTab === "content"}
                 icon={LayoutPanelTop}
@@ -90,37 +100,26 @@ export function CourseLearningHeader({
                 label="Recursos y tareas"
                 onClick={onResourcesClick}
               />
-              <ButtonLink
-                className="px-4 py-2.5 text-sm"
-                href={buildCourseForumHref(courseSlug)}
-                prefetch
-                variant="ghost"
-              >
-                Comunidad
-              </ButtonLink>
-              <button
-                aria-label={
-                  simpleMode
-                    ? "Cambiar a vista completa del campus"
-                    : "Cambiar a vista simple del campus"
-                }
-                aria-pressed={simpleMode}
+              <WorkspaceTabButton
+                active={activeTab === "support"}
+                icon={MessageSquareText}
+                label="Comunidad"
+                onClick={() => onTabChange("support")}
+              />
+              <Link
                 className={cn(
-                  "inline-flex min-h-12 items-center justify-center rounded-full border px-4 py-2 text-left transition",
-                  simpleMode
-                    ? "border-[var(--color-primary)] bg-[var(--color-primary-soft)] text-[var(--color-primary)]"
-                    : "border-[var(--color-border)] bg-white text-[var(--color-ink)] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]"
+                  "inline-flex min-h-11 items-center justify-center gap-2 rounded-[var(--radius-pill)] px-3.5 py-2 text-sm font-semibold transition",
+                  "text-[var(--color-ink)] hover:bg-[var(--color-primary-soft)] hover:text-[var(--color-primary)]"
                 )}
-                onClick={onSimpleModeChange}
-                type="button"
+                href={buildCourseForumHref(courseSlug)}
               >
-                <span className="flex flex-col leading-tight">
-                  <span className="text-sm font-semibold">Vista simple</span>
-                  <span className="text-xs text-[var(--color-muted)]">
-                    {simpleMode ? "Activa" : "Desactivada"}
-                  </span>
-                </span>
-              </button>
+                <LifeBuoy className="h-4 w-4" />
+                Foro real
+              </Link>
+            </nav>
+
+            <div className="flex flex-wrap items-center gap-2 xl:justify-end">
+              <SimpleModeToggle active={simpleMode} onClick={onSimpleModeChange} />
             </div>
           </div>
         </div>

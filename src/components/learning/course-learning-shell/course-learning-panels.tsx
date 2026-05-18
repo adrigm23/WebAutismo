@@ -6,7 +6,7 @@ import { CampusProgressBar } from "@/components/campus/campus-progress-bar";
 import { CourseProgressToggleForm } from "@/components/learning/course-progress-toggle-form";
 import { CourseResourceManager } from "@/components/learning/course-resource-manager";
 import { Badge } from "@/components/ui/badge";
-import { ButtonLink } from "@/components/ui/button";
+import { Button, ButtonLink } from "@/components/ui/button";
 import { buildCourseContentHref, buildCourseTrackingHref } from "@/lib/course-navigation";
 import type { CatalogCourse } from "@/lib/course-catalog";
 import type { CampusResourceItem } from "@/lib/course-resources";
@@ -126,13 +126,9 @@ export function FocusedTaskIntro(input: {
       title="Entrega del ejercicio"
     >
       <div className="flex flex-wrap items-center gap-3">
-        <button
-          className="inline-flex items-center justify-center rounded-xl border border-[var(--color-border)] px-4 py-3 text-sm font-semibold text-[var(--color-ink)] transition hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]"
-          onClick={input.onClearFocus}
-          type="button"
-        >
+        <Button onClick={input.onClearFocus} type="button" variant="secondary">
           Ver todas las tareas
-        </button>
+        </Button>
         <ButtonLink href={buildCourseContentHref(input.courseSlug)} prefetch variant="ghost">
           Volver al contenido
         </ButtonLink>
@@ -164,15 +160,15 @@ export function CompactLessonHeader(input: {
       <div className="grid gap-5 xl:grid-cols-[minmax(0,1.1fr)_minmax(16rem,0.9fr)]">
         <div className="space-y-4">
           <div className="flex flex-wrap items-center gap-2">
-            <Badge tone={input.canModerate ? "teacher" : "student"}>{input.roleLabel}</Badge>
-            {input.currentModule ? <Badge tone="muted">Modulo {input.currentModule.index + 1}</Badge> : null}
-            {input.editionLabel ? <Badge tone="muted">{input.editionLabel}</Badge> : null}
+            <Badge tone={input.canModerate ? "info" : "warning"}>{input.roleLabel}</Badge>
+            {input.currentModule ? <Badge tone="outline">Modulo {input.currentModule.index + 1}</Badge> : null}
+            {input.editionLabel ? <Badge tone="outline">{input.editionLabel}</Badge> : null}
           </div>
           <div>
-            <h2 className="text-[2.55rem] font-semibold leading-[0.98] tracking-[-0.07em] text-[var(--color-ink)]">
+            <h2 className="text-display-lg font-semibold text-[var(--color-ink)]">
               {input.currentModule ? input.currentModule.title : input.course.title}
             </h2>
-            <p className="mt-3 max-w-3xl text-[1.02rem] leading-8 text-[var(--color-muted)]">
+            <p className="mt-3 max-w-3xl text-body-lg text-[var(--color-muted)]">
               {input.currentModule
                 ? input.currentModule.description
                 : "Selecciona un modulo para abrir una leccion con contenido y tarea asociada."}
@@ -180,22 +176,14 @@ export function CompactLessonHeader(input: {
           </div>
           <div className="flex flex-wrap gap-3">
             {input.currentModulePrimaryMaterial ? (
-              <button
-                className="inline-flex items-center justify-center rounded-xl bg-[var(--color-primary)] px-5 py-3 text-sm font-semibold text-white shadow-[0_16px_30px_rgba(12,113,195,0.18)] transition duration-200 hover:bg-[var(--color-primary-strong)]"
-                onClick={input.onOpenCurrentLesson}
-                type="button"
-              >
+              <Button onClick={input.onOpenCurrentLesson} type="button">
                 Abrir leccion
-              </button>
+              </Button>
             ) : null}
             {input.currentModuleExercises[0] ? (
-              <button
-                className="inline-flex items-center justify-center rounded-xl border border-[var(--color-primary)] px-5 py-3 text-sm font-semibold text-[var(--color-primary)] transition hover:bg-[var(--color-primary-soft)]"
-                onClick={input.onOpenCurrentExercise}
-                type="button"
-              >
+              <Button onClick={input.onOpenCurrentExercise} type="button" variant="secondary">
                 {input.canModerate ? "Abrir tarea del modulo" : "Ir a la actividad"}
-              </button>
+              </Button>
             ) : null}
           </div>
         </div>
@@ -258,16 +246,16 @@ export function CourseLearningHero({
       >
         <div className="space-y-5 p-5 lg:p-6">
           <div className="flex flex-wrap items-center gap-2">
-            <Badge tone={canModerate ? "teacher" : "student"}>{roleLabel}</Badge>
-            <Badge tone="muted">{course.level}</Badge>
-            <Badge tone="muted">{course.format}</Badge>
+            <Badge tone={canModerate ? "info" : "warning"}>{roleLabel}</Badge>
+            <Badge tone="outline">{course.level}</Badge>
+            <Badge tone="outline">{course.format}</Badge>
           </div>
 
           <div>
-            <h2 className="text-[3rem] font-semibold leading-[0.96] tracking-[-0.08em] text-[var(--color-ink)] lg:text-[3.15rem]">
+            <h2 className="text-display-lg font-semibold text-[var(--color-ink)] lg:text-display-xl">
               {primarySummary.title}
             </h2>
-            <p className="mt-3 max-w-3xl text-[1rem] leading-7 text-[var(--color-muted)]">
+            <p className="mt-3 max-w-3xl text-body-lg text-[var(--color-muted)]">
               {primarySummary.body}
             </p>
             {editionLabel ? (
@@ -299,7 +287,7 @@ export function CourseLearningHero({
           )}
 
           {canModerate ? (
-            <div className="rounded-[22px] border border-[rgba(12,113,195,0.12)] bg-[var(--color-surface)] p-4">
+            <div className="rounded-[var(--radius-md)] border border-[rgba(12,113,195,0.12)] bg-[var(--color-surface)] p-4">
               <div className="flex flex-wrap items-center justify-between gap-4">
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-muted)]">
@@ -333,13 +321,9 @@ export function CourseLearningHero({
           ) : null}
 
           <div className="flex flex-wrap gap-2.5">
-            <button
-              className="inline-flex items-center justify-center rounded-xl bg-[var(--color-primary)] px-5 py-3 text-sm font-semibold text-white shadow-[0_16px_30px_rgba(12,113,195,0.18)] transition duration-200 hover:bg-[var(--color-primary-strong)]"
-              onClick={onOpenResources}
-              type="button"
-            >
+            <Button onClick={onOpenResources} type="button">
               {canModerate ? "Gestionar recursos y tareas" : "Abrir tareas del curso"}
-            </button>
+            </Button>
             <ButtonLink href={`/mis-cursos/${course.slug}/foro`} prefetch variant="secondary">
               Abrir foro privado
             </ButtonLink>
@@ -369,9 +353,9 @@ export function CourseLearningHero({
           )}
         >
           <div className="space-y-4">
-            <CourseArtwork className="h-[17rem] w-full rounded-[24px] border-0" course={course} variant="hero" />
+            <CourseArtwork className="h-[17rem] w-full rounded-[var(--radius-lg)] border-0" course={course} variant="hero" />
 
-            <div className="rounded-[22px] border border-[rgba(12,113,195,0.12)] bg-white p-4">
+            <div className="rounded-[var(--radius-md)] border border-[rgba(12,113,195,0.12)] bg-white p-4">
               <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[var(--color-muted)]">
                 Estado del curso
               </p>
@@ -385,28 +369,20 @@ export function CourseLearningHero({
             </div>
 
             {!canModerate && (currentModulePrimaryMaterial || currentModuleExercises.length > 0) ? (
-              <div className="rounded-[22px] border border-[rgba(12,113,195,0.12)] bg-white p-4">
+              <div className="rounded-[var(--radius-md)] border border-[rgba(12,113,195,0.12)] bg-white p-4">
                 <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[var(--color-muted)]">
                   Acceso directo
                 </p>
                 <div className="mt-3 flex flex-wrap gap-2.5">
                   {currentModulePrimaryMaterial ? (
-                    <button
-                      className="inline-flex items-center justify-center rounded-xl bg-[var(--color-primary)] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[var(--color-primary-strong)]"
-                      onClick={onOpenCurrentLesson}
-                      type="button"
-                    >
+                    <Button onClick={onOpenCurrentLesson} type="button">
                       Abrir leccion
-                    </button>
+                    </Button>
                   ) : null}
                   {currentModuleExercises[0] ? (
-                    <button
-                      className="inline-flex items-center justify-center rounded-xl border border-[var(--color-primary)] px-4 py-3 text-sm font-semibold text-[var(--color-primary)] transition hover:bg-[var(--color-primary-soft)]"
-                      onClick={onOpenCurrentExercise}
-                      type="button"
-                    >
+                    <Button onClick={onOpenCurrentExercise} type="button" variant="secondary">
                       Ir a la actividad
-                    </button>
+                    </Button>
                   ) : null}
                 </div>
                 {currentModule ? (
@@ -459,14 +435,14 @@ export function CourseLearningContentTab({
           {currentModule ? (
             <div className="space-y-5">
               <div className="flex flex-wrap items-center gap-3">
-                <Badge tone={currentModule.isCompleted ? "teacher" : "student"}>
+                <Badge tone={currentModule.isCompleted ? "success" : "warning"}>
                   {currentModule.isCompleted ? "Revisado" : "Pendiente"}
                 </Badge>
-                <Badge tone="muted">Modulo {currentModule.index + 1}</Badge>
+                <Badge tone="outline">Modulo {currentModule.index + 1}</Badge>
               </div>
               <div className="grid gap-4 xl:grid-cols-[minmax(0,1.2fr)_minmax(18rem,0.8fr)]">
                 <div className="space-y-5">
-                  <p className="text-[1.02rem] leading-7 text-[var(--color-ink)]">
+                  <p className="text-body-lg text-[var(--color-ink)]">
                     {currentModule.description}
                   </p>
                   <div className="grid gap-4 md:grid-cols-2">
@@ -477,7 +453,7 @@ export function CourseLearningContentTab({
                 </div>
 
                 <div className="space-y-4">
-                  <div className="rounded-[20px] border border-[rgba(12,113,195,0.12)] bg-[var(--color-surface)] p-4">
+                  <div className="rounded-[var(--radius-md)] border border-[rgba(12,113,195,0.12)] bg-[var(--color-surface)] p-4">
                     <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[var(--color-primary)]">
                       Leccion del modulo
                     </p>
@@ -523,13 +499,13 @@ export function CourseLearningContentTab({
                   ))}
 
                   {!currentModuleMaterials.length && !currentModuleExercises.length ? (
-                    <div className="rounded-[20px] border border-dashed border-[rgba(12,113,195,0.18)] bg-white p-4 text-sm leading-6 text-[var(--color-muted)]">
+                    <div className="ui-empty-state p-4 text-sm leading-6 text-[var(--color-muted)]">
                       Este modulo todavia no tiene materiales ni tareas ligados de forma explicita.
                     </div>
                   ) : null}
                 </div>
               </div>
-              <div className="flex flex-wrap items-center justify-between gap-4 rounded-[20px] border border-[rgba(12,113,195,0.12)] bg-[var(--color-surface)] p-4">
+              <div className="flex flex-wrap items-center justify-between gap-4 rounded-[var(--radius-md)] border border-[rgba(12,113,195,0.12)] bg-[var(--color-surface)] p-4">
                 <p className="text-sm leading-6 text-[var(--color-muted)]">
                   {currentModule.completedAt
                     ? `Marcado como revisado el ${formatDate(currentModule.completedAt)}.`
@@ -627,10 +603,10 @@ export function CourseLearningContentTab({
                   }
                   stateTone={
                     module.isCompleted
-                      ? "teacher"
+                      ? "success"
                       : module.index === selectedModuleIndex
-                        ? "student"
-                        : "muted"
+                        ? "brand"
+                        : "outline"
                   }
                   title={`Modulo ${module.index + 1} · ${module.title}`}
                 />
@@ -638,7 +614,7 @@ export function CourseLearningContentTab({
             })}
           </div>
         ) : (
-          <div className="rounded-[20px] border border-dashed border-[rgba(12,113,195,0.18)] bg-[var(--color-surface)] p-4 text-sm leading-6 text-[var(--color-muted)]">
+          <div className="ui-empty-state p-4 text-sm leading-6 text-[var(--color-muted)]">
             Este curso todavia no tiene modulos configurados.
           </div>
         )}
@@ -745,7 +721,7 @@ export function CourseLearningSupportTab({
           {forumCategories.length ? (
             forumCategories.map((category) => (
               <Link
-                className="rounded-[24px] border border-[rgba(12,113,195,0.12)] bg-[var(--color-surface)] p-5 transition hover:border-[var(--color-primary)] hover:bg-white"
+                className="rounded-[var(--radius-lg)] border border-[rgba(12,113,195,0.12)] bg-[var(--color-surface)] p-5 transition hover:border-[var(--color-primary)] hover:bg-white"
                 href={`/mis-cursos/${courseSlug}/foro/${category.slug}`}
                 key={category.id}
                 prefetch
@@ -757,12 +733,12 @@ export function CourseLearningSupportTab({
                       {category.description}
                     </p>
                   </div>
-                  <Badge tone="muted">{category._count.threads} hilos</Badge>
+                  <Badge tone="outline">{category._count.threads} hilos</Badge>
                 </div>
               </Link>
             ))
           ) : (
-            <div className="rounded-[24px] border border-dashed border-[rgba(12,113,195,0.18)] bg-[var(--color-surface)] p-5 text-sm leading-7 text-[var(--color-muted)]">
+            <div className="ui-empty-state p-5 text-sm leading-7 text-[var(--color-muted)]">
               Aun no hay categorias activas en el foro del curso.
             </div>
           )}

@@ -2,13 +2,13 @@
 
 import type { ReactNode } from "react";
 import { useFormStatus } from "react-dom";
-import { Button } from "@/components/ui/button";
+import { Button, type ButtonVariant } from "@/components/ui/button";
 
 type SubmitButtonProps = {
   children: ReactNode;
   pendingLabel?: string;
   className?: string;
-  variant?: "primary" | "secondary" | "ghost" | "accent";
+  variant?: ButtonVariant;
 };
 
 export function SubmitButton({

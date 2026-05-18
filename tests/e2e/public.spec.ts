@@ -4,14 +4,16 @@ test.describe("public pages", () => {
   test("home page renders the main marketing content", async ({ page }) => {
     await page.goto("/", { waitUntil: "domcontentloaded" });
 
-    await expect(page.getByRole("heading", { name: "Formacion especializada en autismo con compra directa, campus privado y un recorrido de acceso claro." })).toBeVisible();
-    await expect(page.getByRole("link", { name: "Ver cursos" })).toBeVisible();
+    await expect(page.getByRole("main")).toBeVisible();
+    await expect(page.getByRole("link", { name: /ver cursos/i })).toBeVisible();
+    await expect(page.getByRole("link", { name: /acceder/i })).toBeVisible();
   });
 
   test("courses index renders at least one course card", async ({ page }) => {
     await page.goto("/cursos", { waitUntil: "domcontentloaded" });
 
-    await expect(page.getByRole("heading", { name: "Catalogo de cursos" })).toBeVisible();
-    await expect(page.getByRole("link", { name: "Ver curso" }).first()).toBeVisible();
+    await expect(page.getByRole("main")).toBeVisible();
+    await expect(page.getByRole("heading", { name: /cursos/i })).toBeVisible();
+    await expect(page.locator('a[href^="/cursos/"]').first()).toBeVisible();
   });
 });

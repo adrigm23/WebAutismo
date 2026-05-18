@@ -2,13 +2,13 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import {
-  PencilLine,
   CheckCircle2,
   ChevronRight,
   FileText,
   ImageIcon,
   Lock,
   Paperclip,
+  PencilLine,
   Pin,
   PinOff,
   PlayCircle,
@@ -100,7 +100,7 @@ function AttachmentList({
 
         return (
           <a
-            className="flex min-w-[16rem] items-center gap-3 rounded-2xl border border-[var(--color-border)] bg-white px-4 py-3 text-sm text-[var(--color-ink)] transition hover:border-[var(--color-primary)]"
+            className="inline-flex min-w-[15rem] items-center gap-3 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-white px-4 py-3 text-sm text-[var(--color-ink)] shadow-[var(--shadow-inset-soft)] transition hover:border-[rgba(12,113,195,0.3)] hover:bg-[var(--color-primary-soft)]"
             href={href}
             key={attachment.id}
             rel={isExternal ? "noreferrer" : undefined}
@@ -123,7 +123,10 @@ function firstValue(value?: string | string[]) {
 
 export default async function ForumThreadPage({ params, searchParams }: ForumThreadPageProps) {
   const { slug, categorySlug, threadId } = await params;
-  const currentPage = Math.max(Number.parseInt(firstValue((await searchParams).page) ?? "1", 10) || 1, 1);
+  const currentPage = Math.max(
+    Number.parseInt(firstValue((await searchParams).page) ?? "1", 10) || 1,
+    1
+  );
   const course = await getCatalogCourseBySlug(slug);
 
   if (!course) {
@@ -167,10 +170,10 @@ export default async function ForumThreadPage({ params, searchParams }: ForumThr
   });
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 lg:space-y-8">
       <div className="flex flex-wrap items-center gap-2 text-sm text-[var(--color-muted)]">
         <Link className="hover:text-[var(--color-primary)]" href={`/mis-cursos/${course.slug}/foro`}>
-          Foro
+          Comunidad
         </Link>
         <ChevronRight className="h-4 w-4" />
         <Link
@@ -180,12 +183,12 @@ export default async function ForumThreadPage({ params, searchParams }: ForumThr
           {forumData.category.title}
         </Link>
         <ChevronRight className="h-4 w-4" />
-        <span className="text-[var(--color-ink)]">Detalle</span>
+        <span className="text-[var(--color-ink)]">Hilo</span>
       </div>
 
-      <article className="overflow-hidden rounded-[30px] border border-[rgba(12,113,195,0.14)] bg-white shadow-[0_22px_48px_rgba(34,34,33,0.06)]">
+      <article className="ui-card-base overflow-hidden">
         <div
-          className={`h-1 ${
+          className={`h-1.5 ${
             forumData.thread.isResolved
               ? "bg-[linear-gradient(90deg,#ffb606,#f7d986,#0c71c3)]"
               : forumData.thread.type === "ANNOUNCEMENT"
@@ -193,21 +196,23 @@ export default async function ForumThreadPage({ params, searchParams }: ForumThr
                 : "bg-[linear-gradient(90deg,#0c71c3,#69b4ff)]"
           }`}
         />
-        <div className="px-6 py-6 sm:px-8">
+        <div className="px-5 py-5 sm:px-6">
           <div className="flex flex-col gap-6 xl:flex-row xl:items-start xl:justify-between">
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2">
-                {forumData.thread.isPinned ? <Badge tone="accent">Fijado</Badge> : null}
-                {forumData.thread.type === "ANNOUNCEMENT" ? <Badge tone="default">Anuncio</Badge> : null}
-                {forumData.thread.isResolved ? <Badge tone="teacher">Resuelto</Badge> : null}
-                {forumData.thread.isClosed ? <Badge tone="muted">Cerrado</Badge> : null}
-                {forumData.thread.isReadOnly ? <Badge tone="muted">Solo lectura</Badge> : null}
-                <Badge tone={canModerateCourse(forumData.thread.authorRole) ? "teacher" : "student"}>
+                {forumData.thread.isPinned ? <Badge tone="warning">Fijado</Badge> : null}
+                {forumData.thread.type === "ANNOUNCEMENT" ? (
+                  <Badge tone="brand">Anuncio</Badge>
+                ) : null}
+                {forumData.thread.isResolved ? <Badge tone="success">Resuelto</Badge> : null}
+                {forumData.thread.isClosed ? <Badge tone="outline">Cerrado</Badge> : null}
+                {forumData.thread.isReadOnly ? <Badge tone="outline">Solo lectura</Badge> : null}
+                <Badge tone={canModerateCourse(forumData.thread.authorRole) ? "info" : "warning"}>
                   {getRoleLabel(forumData.thread.authorRole)}
                 </Badge>
               </div>
 
-              <h1 className="mt-5 text-5xl font-semibold tracking-[-0.05em] text-[var(--color-ink)] sm:text-[3.5rem]">
+              <h1 className="mt-4 text-display-md font-semibold text-[var(--color-ink)]">
                 {forumData.thread.title}
               </h1>
 
@@ -232,8 +237,8 @@ export default async function ForumThreadPage({ params, searchParams }: ForumThr
               </div>
             </div>
 
-            <div className="flex flex-wrap items-center gap-3 xl:justify-end">
-              <div className="rounded-[24px] border border-[rgba(12,113,195,0.12)] bg-[#faf8f4] px-5 py-4">
+            <div className="grid gap-3 sm:grid-cols-2 xl:min-w-[18rem] xl:max-w-[20rem]">
+              <div className="rounded-[var(--radius-md)] border border-[rgba(12,113,195,0.1)] bg-[#faf8f4] px-4 py-4">
                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-muted)]">
                   Respuestas
                 </p>
@@ -241,7 +246,7 @@ export default async function ForumThreadPage({ params, searchParams }: ForumThr
                   {repliesPagination.totalItems}
                 </p>
               </div>
-              <div className="rounded-[24px] border border-[rgba(12,113,195,0.12)] bg-[#faf8f4] px-5 py-4">
+              <div className="rounded-[var(--radius-md)] border border-[rgba(12,113,195,0.1)] bg-[#faf8f4] px-4 py-4">
                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-muted)]">
                   Estado
                 </p>
@@ -256,15 +261,15 @@ export default async function ForumThreadPage({ params, searchParams }: ForumThr
             </div>
           </div>
 
-          <div className="mt-8 rounded-[28px] border border-[rgba(12,113,195,0.1)] bg-[#fcfbf8] px-6 py-6">
-            <div className="whitespace-pre-line text-lg leading-9 text-[var(--color-ink)]">
+          <div className="mt-8 rounded-[var(--radius-lg)] border border-[rgba(12,113,195,0.1)] bg-[#fcfbf8] px-5 py-5">
+            <div className="whitespace-pre-line text-base leading-8 text-[var(--color-ink)] sm:text-lg sm:leading-9">
               {forumData.thread.body}
             </div>
             <AttachmentList attachments={forumData.thread.attachments} />
           </div>
 
           {forumData.thread.isClosed || forumData.thread.isReadOnly ? (
-            <div className="mt-6 rounded-[24px] border border-[rgba(12,113,195,0.12)] bg-[#f7f4ef] px-5 py-4 text-sm leading-7 text-[var(--color-muted)]">
+            <div className="ui-state-panel mt-6 px-5 py-4 text-sm leading-7 text-[var(--color-muted)]">
               {forumData.thread.isReadOnly
                 ? "Este hilo está en modo solo lectura. El alumnado puede consultarlo, pero no añadir nuevas respuestas."
                 : "Este hilo ha sido cerrado por el equipo docente y ya no admite nuevas respuestas."}
@@ -275,7 +280,7 @@ export default async function ForumThreadPage({ params, searchParams }: ForumThr
             {canEditThread ? (
               <ButtonLink
                 href={`/mis-cursos/${course.slug}/foro/${categorySlug}/${threadId}/editar`}
-                variant="ghost"
+                variant="subtle"
               >
                 <PencilLine className="mr-2 h-4 w-4" />
                 Editar hilo
@@ -291,7 +296,7 @@ export default async function ForumThreadPage({ params, searchParams }: ForumThr
                 type="hidden"
                 value="Revisar hilo por posible incumplimiento de las normas del foro."
               />
-              <Button type="submit" variant="ghost">
+              <Button type="submit" variant="subtle">
                 Reportar hilo
               </Button>
             </form>
@@ -303,7 +308,7 @@ export default async function ForumThreadPage({ params, searchParams }: ForumThr
                   <input name="categorySlug" type="hidden" value={categorySlug} />
                   <input name="threadId" type="hidden" value={threadId} />
                   <input name="nextPath" type="hidden" value={nextPath} />
-                  <Button type="submit" variant="ghost">
+                  <Button type="submit" variant="subtle">
                     {forumData.thread.isPinned ? (
                       <>
                         <PinOff className="mr-2 h-4 w-4" />
@@ -323,7 +328,7 @@ export default async function ForumThreadPage({ params, searchParams }: ForumThr
                   <input name="categorySlug" type="hidden" value={categorySlug} />
                   <input name="threadId" type="hidden" value={threadId} />
                   <input name="nextPath" type="hidden" value={nextPath} />
-                  <Button type="submit" variant="ghost">
+                  <Button type="submit" variant="subtle">
                     {forumData.thread.isClosed ? (
                       <>
                         <Unlock className="mr-2 h-4 w-4" />
@@ -360,15 +365,15 @@ export default async function ForumThreadPage({ params, searchParams }: ForumThr
       <section className="space-y-5">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <h2 className="text-4xl font-semibold tracking-[-0.04em] text-[var(--color-ink)]">
+            <h2 className="text-3xl font-semibold tracking-[-0.04em] text-[var(--color-ink)] sm:text-[2.25rem]">
               Respuestas ({repliesPagination.totalItems})
             </h2>
-            <p className="mt-2 text-base text-[var(--color-muted)]">
+            <p className="mt-2 text-sm leading-7 text-[var(--color-muted)] sm:text-base">
               Ordenadas cronológicamente para seguir el contexto del hilo.
             </p>
           </div>
           <p className="text-sm text-[var(--color-muted)]">
-            Pagina {repliesPagination.page} de {repliesPagination.totalPages} · orden cronologico
+            Página {repliesPagination.page} de {repliesPagination.totalPages} · orden cronológico
           </p>
         </div>
 
@@ -385,9 +390,9 @@ export default async function ForumThreadPage({ params, searchParams }: ForumThr
 
               return (
                 <article
-                  className={`overflow-hidden rounded-[28px] border px-6 py-6 shadow-[0_18px_40px_rgba(34,34,33,0.05)] ${
+                  className={`overflow-hidden rounded-[var(--radius-lg)] border px-5 py-5 shadow-[var(--shadow-soft)] sm:px-6 ${
                     isResolved
-                      ? "border-[rgba(255,182,6,0.36)] bg-[rgba(255,182,6,0.1)]"
+                      ? "border-[rgba(255,182,6,0.34)] bg-[rgba(255,182,6,0.1)]"
                       : post.deletedAt
                         ? "border-dashed border-[rgba(12,113,195,0.16)] bg-[#f7f4ef]"
                         : "border-[rgba(12,113,195,0.14)] bg-white"
@@ -395,14 +400,14 @@ export default async function ForumThreadPage({ params, searchParams }: ForumThr
                   key={post.id}
                 >
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="text-lg font-semibold text-[var(--color-ink)]">
+                    <span className="text-base font-semibold text-[var(--color-ink)] sm:text-lg">
                       {post.author.name}
                     </span>
-                    <Badge tone={canModerateCourse(post.authorRole) ? "teacher" : "student"}>
+                    <Badge tone={canModerateCourse(post.authorRole) ? "info" : "warning"}>
                       {getRoleLabel(post.authorRole)}
                     </Badge>
                     {isResolved ? (
-                      <Badge tone="accent">
+                      <Badge tone="success">
                         <CheckCircle2 className="mr-1 h-3.5 w-3.5" />
                         Solución útil
                       </Badge>
@@ -417,7 +422,7 @@ export default async function ForumThreadPage({ params, searchParams }: ForumThr
                     ) : null}
                   </div>
 
-                  <div className="mt-5 whitespace-pre-line text-base leading-8 text-[var(--color-ink)]">
+                  <div className="mt-5 whitespace-pre-line text-sm leading-7 text-[var(--color-ink)] sm:text-base sm:leading-8">
                     {post.deletedAt
                       ? "Mensaje eliminado por moderación. Se conserva el rastro para auditoría del hilo."
                       : post.body}
@@ -429,7 +434,7 @@ export default async function ForumThreadPage({ params, searchParams }: ForumThr
                     {canEditPost && !post.deletedAt ? (
                       <ButtonLink
                         href={`/mis-cursos/${course.slug}/foro/${categorySlug}/${threadId}/respuesta/${post.id}/editar`}
-                        variant="ghost"
+                        variant="subtle"
                       >
                         <PencilLine className="mr-2 h-4 w-4" />
                         Editar respuesta
@@ -447,7 +452,7 @@ export default async function ForumThreadPage({ params, searchParams }: ForumThr
                           type="hidden"
                           value="Revisar respuesta por posible incumplimiento de las normas del foro."
                         />
-                        <Button type="submit" variant="ghost">
+                        <Button type="submit" variant="subtle">
                           Reportar respuesta
                         </Button>
                       </form>
@@ -461,7 +466,7 @@ export default async function ForumThreadPage({ params, searchParams }: ForumThr
                           <input name="threadId" type="hidden" value={threadId} />
                           <input name="postId" type="hidden" value={post.id} />
                           <input name="nextPath" type="hidden" value={nextPath} />
-                          <Button type="submit" variant="ghost">
+                          <Button type="submit" variant="subtle">
                             {isResolved ? "Quitar resuelta" : "Marcar resuelta"}
                           </Button>
                         </form>
@@ -490,7 +495,7 @@ export default async function ForumThreadPage({ params, searchParams }: ForumThr
                         <input name="threadId" type="hidden" value={threadId} />
                         <input name="postId" type="hidden" value={post.id} />
                         <input name="nextPath" type="hidden" value={nextPath} />
-                        <Button type="submit" variant="ghost">
+                        <Button type="submit" variant="subtle">
                           Restaurar respuesta
                         </Button>
                       </form>
@@ -500,25 +505,26 @@ export default async function ForumThreadPage({ params, searchParams }: ForumThr
               );
             })
           ) : (
-            <div className="rounded-[28px] border border-dashed border-[rgba(12,113,195,0.16)] bg-white px-6 py-10 text-[var(--color-muted)]">
+            <div className="ui-empty-state px-6 py-10 text-sm leading-7 text-[var(--color-muted)]">
               Todavía no hay respuestas en este hilo.
             </div>
           )}
         </div>
+
         {repliesPagination.totalPages > 1 ? (
-          <div className="flex flex-wrap items-center justify-between gap-4 rounded-[24px] border border-[var(--color-border)] bg-white px-5 py-4">
+          <div className="ui-state-panel flex flex-col gap-4 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-sm text-[var(--color-muted)]">
-              Mostrando pagina {repliesPagination.page} de {repliesPagination.totalPages}
+              Mostrando página {repliesPagination.page} de {repliesPagination.totalPages}
             </p>
             <div className="flex flex-wrap gap-3">
               {repliesPagination.hasPreviousPage ? (
-                <ButtonLink href={`${nextPath}?page=${repliesPagination.page - 1}`} variant="secondary">
-                  Pagina anterior
+                <ButtonLink href={`${nextPath}?page=${repliesPagination.page - 1}`} variant="neutral">
+                  Página anterior
                 </ButtonLink>
               ) : null}
               {repliesPagination.hasNextPage ? (
-                <ButtonLink href={`${nextPath}?page=${repliesPagination.page + 1}`} variant="secondary">
-                  Pagina siguiente
+                <ButtonLink href={`${nextPath}?page=${repliesPagination.page + 1}`} variant="neutral">
+                  Página siguiente
                 </ButtonLink>
               ) : null}
             </div>
@@ -526,10 +532,10 @@ export default async function ForumThreadPage({ params, searchParams }: ForumThr
         ) : null}
       </section>
 
-      <section className="rounded-[30px] border border-[rgba(12,113,195,0.14)] bg-white px-6 py-6 shadow-[0_18px_40px_rgba(34,34,33,0.05)]">
+      <section className="ui-card-base px-5 py-5 sm:px-6">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <h2 className="text-3xl font-semibold tracking-[-0.04em] text-[var(--color-ink)]">
+            <h2 className="text-2xl font-semibold tracking-[-0.04em] text-[var(--color-ink)] sm:text-3xl">
               Añadir respuesta
             </h2>
             <p className="mt-2 text-sm leading-7 text-[var(--color-muted)]">
@@ -537,7 +543,7 @@ export default async function ForumThreadPage({ params, searchParams }: ForumThr
             </p>
           </div>
 
-          <ButtonLink href={`/mis-cursos/${course.slug}/foro/${categorySlug}`} variant="ghost">
+          <ButtonLink href={`/mis-cursos/${course.slug}/foro/${categorySlug}`} variant="subtle">
             Volver a la categoría
           </ButtonLink>
         </div>

@@ -19,7 +19,7 @@ export function SurfaceCard({
   return (
     <Component
       className={cn(
-        "surface-card rounded-2xl border border-[rgba(12,113,195,0.12)] bg-white p-6 shadow-[var(--shadow-soft)] lg:p-7",
+        "surface-card ui-card-base p-6 lg:p-7",
         className
       )}
       {...props}

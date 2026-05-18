@@ -6,11 +6,10 @@ import {
   Compass,
   FileCheck2,
   GraduationCap,
-  LogOut,
   MessageSquareText,
   Settings2
 } from "lucide-react";
-import { logoutAction } from "@/actions/session";
+import { AccountAuthHeader } from "@/components/account/account-auth-header";
 import {
   buildStudentPendingItems,
   getNextStudentModuleLabel,
@@ -24,7 +23,7 @@ import {
 } from "@/components/account/student-dashboard-shared";
 import { CourseArtwork } from "@/components/course-artwork";
 import { Badge } from "@/components/ui/badge";
-import { Button, ButtonLink } from "@/components/ui/button";
+import { ButtonLink } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import type { DashboardNotificationSnapshot, StudentDashboardPendingSource } from "@/lib/account-dashboard";
 import {
@@ -33,7 +32,7 @@ import {
   buildCourseResourcesHref
 } from "@/lib/course-navigation";
 import { siteConfig } from "@/lib/site";
-import { cn, formatRelativeTime } from "@/lib/utils";
+import { formatRelativeTime } from "@/lib/utils";
 
 type StudentAccountDashboardProps = {
   firstName: string;
@@ -84,89 +83,52 @@ export function StudentAccountDashboard({
   const completedModules = primaryCourse?.progress.completedModules ?? 0;
   const totalModules = primaryCourse?.progress.totalModules ?? 0;
   const pendingCount = pendingItems.length;
+  const activeCoursesCount = studentCourses.length;
+  const navItems = [
+    { label: "Mi cuenta", href: "/mi-cuenta", active: true },
+    { label: "Mis cursos", href: "/mis-cursos" },
+    ...(primaryCourse ? [{ label: "Foro", href: forumHref }] : [])
+  ];
 
   return (
     <div className="min-h-screen bg-[linear-gradient(180deg,#f9f6f1_0%,#f6f8fb_52%,#fbfaf7_100%)] pb-24">
-      <header className="sticky top-0 z-40 border-b border-[rgba(12,113,195,0.14)] bg-[rgba(255,255,255,0.92)] backdrop-blur-md">
-        <div className="site-container py-4">
-          <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between xl:gap-6">
-            <Link
-              className="shrink-0 text-[1.8rem] font-semibold tracking-[-0.05em] text-[var(--color-primary)]"
-              href="/mi-cuenta"
-            >
-              {siteConfig.shortName}
-            </Link>
-
-            <div className="flex flex-col gap-3 xl:min-w-0 xl:flex-1 xl:flex-row xl:items-center xl:justify-between">
-              <nav
-                aria-label="Navegacion privada del alumno"
-                className="flex flex-wrap items-center gap-1.5 xl:flex-nowrap xl:justify-center"
-              >
-                {[
-                  { label: "Mi cuenta", href: "/mi-cuenta", active: true },
-                  { label: "Mis cursos", href: "/mis-cursos", active: false },
-                  { label: "Foro", href: forumHref, active: false }
-                ].map((item) => (
-                  <Link
-                    className={cn(
-                      "inline-flex items-center justify-center rounded-full px-3.5 py-2 text-sm font-semibold whitespace-nowrap transition",
-                      item.active
-                        ? "border border-[var(--color-primary)] bg-white text-[var(--color-primary)]"
-                        : "text-[var(--color-ink)] hover:bg-[var(--color-primary-soft)] hover:text-[var(--color-primary)]"
-                    )}
-                    href={item.href}
-                    key={item.label}
-                  >
-                    {item.label}
-                  </Link>
-                ))}
-              </nav>
-
-              <div className="flex flex-wrap items-center gap-2 xl:flex-nowrap xl:justify-end">
-                <Link
-                  className="inline-flex items-center justify-center rounded-full px-3 py-2 text-sm font-semibold text-[var(--color-ink)] transition hover:bg-[var(--color-primary-soft)] hover:text-[var(--color-primary)]"
-                  href="#actividad-reciente"
-                >
-                  <Bell className="mr-2 h-4 w-4" />
-                  Avisos
-                  <Suspense fallback={null}>
-                    <StudentUnreadBadge notificationSnapshotPromise={notificationSnapshotPromise} />
-                  </Suspense>
-                </Link>
-                <Link
-                  className="inline-flex items-center justify-center rounded-full px-3 py-2 text-sm font-semibold text-[var(--color-ink)] transition hover:bg-[var(--color-primary-soft)] hover:text-[var(--color-primary)]"
-                  href="#preferencias"
-                >
-                  <Settings2 className="mr-2 h-4 w-4" />
-                  Preferencias
-                </Link>
-                <a
-                  className="inline-flex items-center justify-center rounded-full px-3 py-2 text-sm font-semibold text-[var(--color-ink)] transition hover:bg-[var(--color-primary-soft)] hover:text-[var(--color-primary)]"
-                  href={`mailto:${siteConfig.supportEmail}`}
-                >
-                  <CircleHelp className="mr-2 h-4 w-4" />
-                  Soporte
-                </a>
-                <div className="flex min-w-0 items-center gap-3 rounded-full border border-[var(--color-border)] bg-white px-3 py-2 xl:max-w-[17rem]">
-                  <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[var(--color-primary-soft)] text-sm font-semibold text-[var(--color-primary)]">
-                    {initials}
-                  </div>
-                  <div className="min-w-0 overflow-hidden">
-                    <p className="truncate text-sm font-semibold text-[var(--color-ink)]">{fullName}</p>
-                    <p className="text-xs text-[var(--color-muted)]">Alumno</p>
-                  </div>
-                </div>
-                <form action={logoutAction}>
-                  <Button className="px-3 py-2" type="submit" variant="ghost">
-                    <LogOut className="h-4 w-4 xl:mr-2" />
-                    <span className="hidden xl:inline">Salir</span>
-                  </Button>
-                </form>
-              </div>
-            </div>
-          </div>
-        </div>
-      </header>
+      <AccountAuthHeader
+        fullName={fullName}
+        initials={initials}
+        navItems={navItems}
+        primaryAction={
+          primaryCourse
+            ? {
+                label: "Continuar curso",
+                href: buildCourseContentHref(primaryCourse.space.course.slug)
+              }
+            : null
+        }
+        roleLabel="Alumno"
+        utilityItems={[
+          {
+            label: "Avisos",
+            href: "#actividad-reciente",
+            icon: <Bell className="h-4 w-4" />,
+            badge: (
+              <Suspense fallback={null}>
+                <StudentUnreadBadge notificationSnapshotPromise={notificationSnapshotPromise} />
+              </Suspense>
+            )
+          },
+          {
+            label: "Preferencias",
+            href: "#preferencias",
+            icon: <Settings2 className="h-4 w-4" />
+          },
+          {
+            label: "Soporte",
+            href: `mailto:${siteConfig.supportEmail}`,
+            icon: <CircleHelp className="h-4 w-4" />,
+            external: true
+          }
+        ]}
+      />
 
       <main className="site-container pt-8">
         {isDemoUser ? (
@@ -191,15 +153,34 @@ export function StudentAccountDashboard({
                     Hola, {firstName}
                   </h1>
                   <p className="mt-4 max-w-3xl text-[1.03rem] leading-8 text-[var(--color-ink)]/82">
-                    Tu campus debe decirte que sigue, que esta pendiente y donde actuar sin obligarte a buscar. Desde aqui controlas curso, tareas y acompanamiento.
+                    Entra aqui para continuar el curso correcto, ver tus tareas abiertas y resolver
+                    pendientes sin navegar a ciegas entre pantallas.
                   </p>
+
+                  <div className="mt-6 flex flex-wrap gap-3">
+                    {primaryCourse ? (
+                      <>
+                        <ButtonLink href={buildCourseContentHref(primaryCourse.space.course.slug)}>
+                          Continuar curso
+                        </ButtonLink>
+                        <ButtonLink href={resourcesHref} variant="secondary">
+                          Ver tareas
+                        </ButtonLink>
+                      </>
+                    ) : (
+                      <ButtonLink href="/cursos">Explorar catalogo</ButtonLink>
+                    )}
+                    <ButtonLink href="/mis-cursos" variant="ghost">
+                      Ver todos mis cursos
+                    </ButtonLink>
+                  </div>
                 </div>
 
                 <div className="grid gap-4 sm:grid-cols-3 xl:grid-cols-1">
                   <StudentDashboardStat
-                    detail={primaryCourse ? "Curso principal listo para continuar." : "Sin cursos activos ahora mismo."}
-                    label="Curso activo"
-                    value={primaryCourse ? "1" : "0"}
+                    detail={primaryCourse ? "Curso principal listo para retomar." : "Sin cursos activos ahora mismo."}
+                    label="Cursos activos"
+                    value={`${activeCoursesCount}`}
                   />
                   <StudentDashboardStat
                     detail={primaryCourse ? `${completedModules} de ${totalModules} modulos revisados.` : "Aun no has empezado el recorrido."}
@@ -232,6 +213,7 @@ export function StudentAccountDashboard({
                   <div className="flex flex-col justify-between p-7 lg:p-8">
                     <div>
                       <div className="flex flex-wrap items-center gap-3">
+                        <Badge tone="brand">Curso actual</Badge>
                         <Badge tone="student">Acceso {primaryCourse.space.accessState}</Badge>
                         <Badge tone="muted">{primaryCourse.space.course.level}</Badge>
                         <Badge tone="muted">{primaryCourse.space.course.format}</Badge>
@@ -281,11 +263,8 @@ export function StudentAccountDashboard({
                       <ButtonLink href={resourcesHref} variant="secondary">
                         Ver tareas
                       </ButtonLink>
-                      <ButtonLink
-                        href={buildCourseForumHref(primaryCourse.space.course.slug)}
-                        variant="ghost"
-                      >
-                        Ir al foro
+                      <ButtonLink href="/mis-cursos" variant="ghost">
+                        Ver todos mis cursos
                       </ButtonLink>
                     </div>
                   </div>
@@ -313,8 +292,8 @@ export function StudentAccountDashboard({
           </div>
 
           <div className="space-y-6">
-            <Card className="p-6">
-              <div className="flex items-center gap-3">
+              <Card className="p-6">
+                <div className="flex items-center gap-3">
                 <div className="grid h-12 w-12 place-items-center rounded-2xl bg-[rgba(255,182,6,0.16)] text-[#8c5b00]">
                   <FileCheck2 className="h-5 w-5" />
                 </div>
@@ -328,9 +307,9 @@ export function StudentAccountDashboard({
                 </div>
               </div>
 
-              <div className="mt-6 space-y-3">
-                {pendingItems.length ? (
-                  pendingItems.map((item) => (
+                <div className="mt-6 space-y-3">
+                  {pendingItems.length ? (
+                    pendingItems.map((item) => (
                     <Link
                       className="block rounded-[22px] border border-[var(--color-border)] bg-[var(--color-surface)] p-4 transition hover:border-[var(--color-primary)]"
                       href={item.href}
@@ -346,6 +325,9 @@ export function StudentAccountDashboard({
                           </p>
                           <p className="mt-3 text-xs uppercase tracking-[0.16em] text-[var(--color-muted)]">
                             {item.meta}
+                          </p>
+                          <p className="mt-3 text-sm font-semibold text-[var(--color-primary)]">
+                            Abrir tarea
                           </p>
                         </div>
                         <Badge className="shrink-0" tone={item.badgeTone}>
@@ -381,9 +363,14 @@ export function StudentAccountDashboard({
                 Mis cursos
               </h2>
             </div>
-            <ButtonLink href="/cursos" variant="ghost">
-              Explorar catalogo
-            </ButtonLink>
+            <div className="flex flex-wrap gap-3">
+              <ButtonLink href="/mis-cursos" variant="secondary">
+                Ver area completa
+              </ButtonLink>
+              <ButtonLink href="/cursos" variant="ghost">
+                Explorar catalogo
+              </ButtonLink>
+            </div>
           </div>
 
           {studentCourses.length ? (
@@ -397,7 +384,7 @@ export function StudentAccountDashboard({
                     />
                     <div className="p-6">
                       <div className="flex flex-wrap items-center gap-3">
-                        <Badge tone="student">{course.space.course.level}</Badge>
+                          <Badge tone="student">{course.space.course.level}</Badge>
                         <Badge tone="muted">{course.progress.completionRate}% progreso</Badge>
                       </div>
 
@@ -420,6 +407,17 @@ export function StudentAccountDashboard({
                         />
                       </div>
 
+                      <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm text-[var(--color-muted)]">
+                        <span>
+                          {course.progress.completedModules} de {course.progress.totalModules} modulos
+                        </span>
+                        <span>
+                          {course.progress.lastCompletedAt
+                            ? `Actividad ${formatRelativeTime(course.progress.lastCompletedAt)}`
+                            : "Sin actividad registrada"}
+                        </span>
+                      </div>
+
                       <div className="mt-6 flex flex-wrap gap-3">
                         <ButtonLink href={buildCourseContentHref(course.space.course.slug)}>
                           Abrir curso
@@ -435,29 +433,26 @@ export function StudentAccountDashboard({
                   </Card>
                 ))
               ) : primaryCourse ? (
-                <Card className="xl:col-span-3 p-8">
-                  <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                    <div>
+              <Card className="xl:col-span-3 p-8">
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                  <div>
                       <p className="text-[1.6rem] font-semibold text-[var(--color-ink)]">
                         Este es tu curso activo principal
                       </p>
                       <p className="mt-2 max-w-3xl text-[1rem] leading-8 text-[var(--color-muted)]">
-                        Cuando tengas mas matriculas activas, apareceran aqui con su progreso y
-                        acceso directo al campus.
-                      </p>
-                    </div>
-                    <ButtonLink
-                      href={buildCourseContentHref(primaryCourse.space.course.slug)}
-                      variant="secondary"
-                    >
+                      Cuando tengas mas matriculas activas, apareceran aqui con su progreso y
+                      acceso directo al campus.
+                    </p>
+                  </div>
+                    <ButtonLink href={buildCourseContentHref(primaryCourse.space.course.slug)} variant="secondary">
                       Abrir campus
                     </ButtonLink>
-                  </div>
+                </div>
                 </Card>
               ) : null}
             </div>
           ) : (
-            <Card className="p-8">
+            <Card className="ui-empty-state p-8">
               <p className="text-[1.04rem] leading-8 text-[var(--color-ink)]/84">
                 Todavia no tienes cursos asociados. Cuando completes una compra o te asignen un
                 curso, apareceran aqui con su estado de acceso real.

@@ -15,13 +15,26 @@
   --color-accent: #ffb606;
   --color-accent-soft: #fff1cc;
   --color-success: #0a6d54;
+  --color-success-soft: #dbf2ea;
+  --color-danger: #b54708;
+  --color-danger-soft: #fff1e7;
   --color-teal: var(--color-primary);
   --color-coral: var(--color-accent);
   --color-gold: var(--color-accent);
+  --surface-border-subtle: rgba(12, 113, 195, 0.12);
+  --focus-ring: rgba(12, 113, 195, 0.18);
   --shadow-soft: 0 18px 44px rgba(21, 35, 50, 0.06);
+  --shadow-medium: 0 20px 42px -28px rgba(21, 35, 50, 0.2);
   --shadow-strong: 0 24px 58px rgba(21, 35, 50, 0.09);
-  --radius-surface: 1rem;
+  --shadow-inset-soft: inset 0 1px 0 rgba(255, 255, 255, 0.75);
+  --radius-sm: 0.75rem;
+  --radius-md: 1rem;
+  --radius-lg: 1.5rem;
+  --radius-xl: 2rem;
+  --radius-surface: var(--radius-lg);
   --radius-pill: 9999px;
+  --control-height-md: 3rem;
+  --control-height-lg: 3.25rem;
 }
 
 .text-display-xl {
@@ -49,6 +62,49 @@
 
 .surface-card {
   border-radius: var(--radius-surface);
+}
+
+.ui-card-base {
+  border: 1px solid var(--surface-border-subtle);
+  border-radius: var(--radius-lg);
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: var(--shadow-soft);
+}
+
+.ui-control-base {
+  width: 100%;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: white;
+  color: var(--color-ink);
+  box-shadow: var(--shadow-inset-soft);
+  outline: none;
+  transition:
+    border-color 200ms ease,
+    box-shadow 200ms ease,
+    background-color 200ms ease;
+}
+
+.ui-control-base::placeholder {
+  color: color-mix(in srgb, var(--color-muted) 72%, white);
+}
+
+.ui-control-base:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px var(--focus-ring);
+}
+
+.ui-state-panel {
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--surface-border-subtle);
+  background: white;
+  box-shadow: var(--shadow-soft);
+}
+
+.ui-empty-state {
+  border-radius: var(--radius-lg);
+  border: 1px dashed rgba(12, 113, 195, 0.18);
+  background: white;
 }
 
 .campus-calm-bg {

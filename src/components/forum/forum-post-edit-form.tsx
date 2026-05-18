@@ -48,8 +48,8 @@ export function ForumPostEditForm({
       <input name="nextPath" type="hidden" value={nextPath} />
 
       <div className="space-y-6">
-        <section className="overflow-hidden rounded-[28px] border border-[rgba(12,113,195,0.14)] bg-white shadow-[0_18px_40px_rgba(34,34,33,0.05)]">
-          <div className="border-b border-[rgba(12,113,195,0.1)] px-6 py-5">
+        <section className="ui-card-base overflow-hidden">
+          <div className="border-b border-[rgba(12,113,195,0.1)] px-5 py-5 sm:px-6">
             <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--color-muted)]">
               Edición de respuesta
             </p>
@@ -58,13 +58,13 @@ export function ForumPostEditForm({
             </h2>
           </div>
 
-          <div className="space-y-5 px-6 py-6">
+          <div className="space-y-5 px-5 py-5 sm:px-6">
             <label className="block space-y-2">
               <span className="text-sm font-semibold uppercase tracking-[0.14em] text-[var(--color-muted)]">
                 Respuesta
               </span>
               <Textarea
-                className="min-h-[18rem] rounded-2xl px-5 py-4 text-base leading-8"
+                className="min-h-[18rem] px-5 py-4 text-base leading-8"
                 defaultValue={initialBody}
                 name="body"
                 required
@@ -74,8 +74,8 @@ export function ForumPostEditForm({
           </div>
         </section>
 
-        <section className="overflow-hidden rounded-[28px] border border-dashed border-[rgba(12,113,195,0.22)] bg-white shadow-[0_18px_40px_rgba(34,34,33,0.04)]">
-          <div className="border-b border-[rgba(12,113,195,0.1)] px-6 py-5">
+        <section className="ui-card-base overflow-hidden border-dashed">
+          <div className="border-b border-[rgba(12,113,195,0.1)] px-5 py-5 sm:px-6">
             <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--color-muted)]">
               Adjuntos
             </p>
@@ -84,16 +84,14 @@ export function ForumPostEditForm({
             </h2>
           </div>
 
-          <div className="space-y-5 px-6 py-6">
+          <div className="space-y-5 px-5 py-5 sm:px-6">
             {existingAttachments.length ? (
-              <div className="rounded-2xl border border-[rgba(12,113,195,0.12)] bg-[#fcfbf8] px-4 py-4">
-                <p className="text-sm font-semibold text-[var(--color-ink)]">
-                  Adjuntos actuales
-                </p>
+              <div className="rounded-[var(--radius-md)] border border-[rgba(12,113,195,0.12)] bg-[#fcfbf8] px-4 py-4">
+                <p className="text-sm font-semibold text-[var(--color-ink)]">Adjuntos actuales</p>
                 <div className="mt-3 flex flex-wrap gap-2">
                   {existingAttachments.map((attachment) => (
                     <div
-                      className="flex items-center gap-2 rounded-full border border-[var(--color-border)] bg-white px-3 py-1 text-sm text-[var(--color-ink)]"
+                      className="flex items-center gap-2 rounded-[var(--radius-pill)] border border-[var(--color-border)] bg-white px-3 py-1 text-sm text-[var(--color-ink)]"
                       key={attachment.id}
                     >
                       <span>{attachment.label}</span>
@@ -117,11 +115,11 @@ export function ForumPostEditForm({
             ) : null}
 
             <label className="block space-y-2">
-              <span className="text-sm font-medium text-[var(--color-ink)]">
+              <span className="text-sm font-semibold text-[var(--color-ink)]">
                 Añadir archivos o imágenes
               </span>
               <Input
-                className="h-auto rounded-2xl px-4 py-4 file:mr-3 file:rounded-xl file:border-0 file:bg-[var(--color-primary-soft)] file:px-3 file:py-2 file:text-sm file:font-semibold file:text-[var(--color-primary)]"
+                className="h-auto px-4 py-4 file:mr-3 file:rounded-[var(--radius-sm)] file:border-0 file:bg-[var(--color-primary-soft)] file:px-3 file:py-2 file:text-sm file:font-semibold file:text-[var(--color-primary)]"
                 multiple
                 name="attachments"
                 type="file"
@@ -129,11 +127,10 @@ export function ForumPostEditForm({
             </label>
 
             <label className="block space-y-2">
-              <span className="text-sm font-medium text-[var(--color-ink)]">
+              <span className="text-sm font-semibold text-[var(--color-ink)]">
                 Añadir enlaces externos
               </span>
               <Textarea
-                className="rounded-2xl px-5 py-4"
                 name="attachmentLinks"
                 placeholder="Un enlace por línea."
                 rows={4}
@@ -144,18 +141,18 @@ export function ForumPostEditForm({
       </div>
 
       <aside className="space-y-6 xl:sticky xl:top-28 xl:self-start">
-        <section className="rounded-[28px] border border-[rgba(12,113,195,0.14)] bg-white p-6 shadow-[0_18px_40px_rgba(34,34,33,0.04)]">
+        <section className="ui-card-base p-5 sm:p-6">
           <div className="space-y-4">
             {state.error ? (
-              <p className="rounded-2xl border border-[#efb3a6] bg-[#fff1ec] px-4 py-3 text-sm text-[#9b4128]">
+              <p className="rounded-[var(--radius-md)] border border-[#efb3a6] bg-[#fff1ec] px-4 py-3 text-sm text-[#9b4128]">
                 {state.error}
               </p>
             ) : null}
 
-            <SubmitButton className="w-full justify-center rounded-2xl py-4 text-base" pendingLabel="Guardando...">
+            <SubmitButton className="w-full justify-center py-4 text-base" pendingLabel="Guardando...">
               Guardar cambios
             </SubmitButton>
-            <ButtonLink className="w-full justify-center rounded-2xl py-4" href={cancelHref} variant="ghost">
+            <ButtonLink className="w-full justify-center py-4" href={cancelHref} variant="subtle">
               Cancelar
             </ButtonLink>
           </div>

@@ -187,7 +187,7 @@ export async function TeacherRecentActivitySection(input: {
       <div className="flex items-center gap-3">
         <Bell className="h-5 w-5 text-[var(--color-primary)]" />
         <h2 className="text-[1.8rem] font-semibold tracking-[-0.04em] text-[var(--color-ink)]">
-          Actividad reciente
+          Actividad docente
         </h2>
       </div>
 
@@ -212,7 +212,7 @@ export async function TeacherRecentActivitySection(input: {
             </Link>
           ))
         ) : (
-          <div className="rounded-[20px] border border-dashed border-[rgba(12,113,195,0.18)] bg-white p-4 text-sm leading-6 text-[var(--color-muted)]">
+          <div className="ui-empty-state p-4 text-sm leading-6 text-[var(--color-muted)]">
             Sin actividad reciente. Las actualizaciones del alumnado apareceran aqui cuando haya
             entregas, avisos o movimiento en el foro.
           </div>
@@ -225,6 +225,7 @@ export async function TeacherRecentActivitySection(input: {
 export async function TeacherCommunityCard(input: {
   paths: ReturnType<typeof getTeacherCoursePaths>;
   resources: number;
+  hasCourseContext: boolean;
   notificationSnapshotPromise: Promise<DashboardNotificationSnapshot>;
 }) {
   const snapshot = await input.notificationSnapshotPromise;
@@ -239,7 +240,7 @@ export async function TeacherCommunityCard(input: {
       </div>
 
       <div className="mt-5 space-y-3">
-        <div className="rounded-[20px] bg-[var(--color-surface)] p-4">
+        <div className="rounded-[var(--radius-md)] bg-[var(--color-surface)] p-4">
           <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[var(--color-muted)]">
             Avisos del foro
           </p>
@@ -251,7 +252,7 @@ export async function TeacherCommunityCard(input: {
           </p>
         </div>
 
-        <div className="rounded-[20px] bg-[var(--color-surface)] p-4">
+        <div className="rounded-[var(--radius-md)] bg-[var(--color-surface)] p-4">
           <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[var(--color-muted)]">
             Recursos
           </p>
@@ -261,14 +262,21 @@ export async function TeacherCommunityCard(input: {
           </p>
         </div>
 
-        <div className="flex flex-wrap gap-2.5">
-          <ButtonLink href={input.paths.forumHref} variant="secondary">
-            Abrir foro
-          </ButtonLink>
-          <ButtonLink href={input.paths.resourcesHref} prefetch variant="ghost">
-            Ir a recursos
-          </ButtonLink>
-        </div>
+        {input.hasCourseContext ? (
+          <div className="flex flex-wrap gap-2.5">
+            <ButtonLink href={input.paths.forumHref} variant="secondary">
+              Abrir foro
+            </ButtonLink>
+            <ButtonLink href={input.paths.resourcesHref} prefetch variant="ghost">
+              Ir a recursos
+            </ButtonLink>
+          </div>
+        ) : (
+          <div className="ui-empty-state p-4 text-sm leading-6 text-[var(--color-muted)]">
+            Cuando tengas un curso docente activo, apareceran aqui los accesos directos a foro y
+            recursos.
+          </div>
+        )}
       </div>
     </Card>
   );
@@ -289,7 +297,7 @@ export async function TeacherPreferencesCard(input: {
       </div>
 
       <div className="mt-5 space-y-2.5">
-        {[
+        {[ 
           {
             title: "Solo email",
             description: "Recibe avisos por correo y reduce ruido dentro del panel.",
@@ -336,7 +344,7 @@ export async function TeacherPreferencesCard(input: {
               >
                 <div className="flex items-center justify-between gap-4">
                   <p className="text-base font-semibold text-[var(--color-ink)]">{option.title}</p>
-                  <Badge tone={isSelected ? "teacher" : "muted"}>
+                  <Badge tone={isSelected ? "info" : "outline"}>
                     {isSelected ? "Activa" : "Disponible"}
                   </Badge>
                 </div>

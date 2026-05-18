@@ -45,6 +45,27 @@ function getReviewStatusLabel(status: ReviewStatus) {
   return status === "CHANGES_REQUESTED" ? "Cambios solicitados" : "Pendiente de revision";
 }
 
+function getReviewStatusMeta(status: ReviewStatus) {
+  if (status === "REVIEWED") {
+    return {
+      tone: "success" as const,
+      statusLabel: "Revision cerrada"
+    };
+  }
+
+  if (status === "CHANGES_REQUESTED") {
+    return {
+      tone: "info" as const,
+      statusLabel: "Esperando nueva version"
+    };
+  }
+
+  return {
+    tone: "warning" as const,
+    statusLabel: "Pendiente de revision"
+  };
+}
+
 function formatReviewScore(score: number | null) {
   if (typeof score !== "number" || Number.isNaN(score)) {
     return null;
@@ -119,20 +140,22 @@ function ReviewActionButtons(input: {
   const { pending } = useFormStatus();
 
   return (
-    <div className="flex flex-wrap justify-end gap-2.5">
+    <div className="flex w-full flex-wrap justify-stretch gap-2.5 sm:w-auto sm:justify-end">
       <Button
+        className="flex-1 sm:flex-none"
         disabled={pending}
         name="status"
         onClick={() => input.onIntentChange("CHANGES_REQUESTED")}
         type="submit"
         value="CHANGES_REQUESTED"
-        variant="secondary"
+        variant="neutral"
       >
         {pending && input.pendingIntent === "CHANGES_REQUESTED"
           ? "Solicitando cambios..."
           : "Solicitar cambios"}
       </Button>
       <Button
+        className="flex-1 sm:flex-none"
         disabled={pending}
         name="status"
         onClick={() => input.onIntentChange("REVIEWED")}
@@ -253,10 +276,11 @@ export function CourseExerciseReviewForm({
     Boolean(reviewSnapshot.scoreLabel) ||
     Boolean(reviewSnapshot.passStatusLabel) ||
     Boolean(reviewSnapshot.reviewedAt);
+  const statusMeta = getReviewStatusMeta(reviewSnapshot.status);
 
   return (
     <div
-      className="scroll-mt-36 rounded-[1.5rem] border border-[rgba(12,113,195,0.12)] bg-white p-4 shadow-[0_18px_42px_-34px_rgba(12,113,195,0.34)] lg:p-[1.125rem]"
+      className="ui-state-panel scroll-mt-36 rounded-[var(--radius-lg)] border-[rgba(12,113,195,0.12)] bg-white p-4 lg:p-[1.125rem]"
       id={`submission-${submission.id}`}
     >
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_12.5rem]">
@@ -271,24 +295,12 @@ export function CourseExerciseReviewForm({
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-2">
-              <Badge
-                tone={
-                  reviewSnapshot.status === "SUBMITTED"
-                    ? "accent"
-                    : reviewSnapshot.status === "REVIEWED"
-                      ? "teacher"
-                      : "student"
-                }
-              >
-                {reviewSnapshot.statusLabel}
-              </Badge>
+              <Badge tone={statusMeta.tone}>{reviewSnapshot.statusLabel}</Badge>
               {reviewSnapshot.scoreLabel ? (
-                <Badge tone="teacher">{reviewSnapshot.scoreLabel}/10</Badge>
+                <Badge tone="brand">{reviewSnapshot.scoreLabel}/10</Badge>
               ) : null}
               {reviewSnapshot.passStatusLabel ? (
-                <Badge
-                  tone={reviewSnapshot.isPassed ? "teacher" : "accent"}
-                >
+                <Badge tone={reviewSnapshot.isPassed ? "success" : "danger"}>
                   {reviewSnapshot.passStatusLabel}
                 </Badge>
               ) : null}
@@ -296,7 +308,7 @@ export function CourseExerciseReviewForm({
           </div>
 
           {submission.body ? (
-            <div className="rounded-[1.2rem] border border-[rgba(12,113,195,0.08)] bg-[var(--color-surface)] px-4 py-3.5 text-sm leading-6 text-[var(--color-ink)]">
+            <div className="rounded-[var(--radius-md)] border border-[rgba(12,113,195,0.08)] bg-[var(--color-surface)] px-4 py-3.5 text-sm leading-6 text-[var(--color-ink)]">
               {submission.body}
             </div>
           ) : null}
@@ -325,9 +337,9 @@ export function CourseExerciseReviewForm({
           </div>
 
           {hasReviewSummary ? (
-            <div className="rounded-[1.2rem] border border-[rgba(12,113,195,0.08)] bg-[linear-gradient(135deg,rgba(241,245,248,0.96),rgba(255,255,255,0.98))] px-4 py-3.5 text-sm leading-6 text-[var(--color-muted)] shadow-[inset_0_1px_0_rgba(255,255,255,0.72)]">
+            <div className="rounded-[var(--radius-md)] border border-[rgba(12,113,195,0.08)] bg-[linear-gradient(135deg,rgba(241,245,248,0.96),rgba(255,255,255,0.98))] px-4 py-3.5 text-sm leading-6 text-[var(--color-muted)] shadow-[inset_0_1px_0_rgba(255,255,255,0.72)]">
               <div className="flex flex-wrap items-center gap-2">
-                <Badge tone="muted">Revision actual</Badge>
+                <Badge tone="outline">Revision actual</Badge>
                 {reviewSnapshot.reviewedAt ? (
                   <span className="text-xs uppercase tracking-[0.14em] text-[var(--color-muted)]">
                     {formatDateTime(reviewSnapshot.reviewedAt)}
@@ -365,7 +377,7 @@ export function CourseExerciseReviewForm({
         </div>
 
         <div className="grid gap-2.5 sm:grid-cols-3 xl:grid-cols-1">
-          <div className="rounded-[1.2rem] border border-[rgba(12,113,195,0.08)] bg-white px-4 py-3.5">
+          <div className="rounded-[var(--radius-md)] border border-[rgba(12,113,195,0.08)] bg-white px-4 py-3.5">
             <p className="text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-[var(--color-muted)]">
               Entregada
             </p>
@@ -373,15 +385,15 @@ export function CourseExerciseReviewForm({
               {formatDateTime(submission.submittedAt)}
             </p>
           </div>
-          <div className="rounded-[1.2rem] border border-[rgba(12,113,195,0.08)] bg-white px-4 py-3.5">
+          <div className="rounded-[var(--radius-md)] border border-[rgba(12,113,195,0.08)] bg-white px-4 py-3.5">
             <p className="text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-[var(--color-muted)]">
               Estado
             </p>
             <p className="mt-2 text-sm font-semibold text-[var(--color-ink)]">
-              {reviewSnapshot.statusLabel}
+              {statusMeta.statusLabel}
             </p>
           </div>
-          <div className="rounded-[1.2rem] border border-[rgba(12,113,195,0.08)] bg-white px-4 py-3.5">
+          <div className="rounded-[var(--radius-md)] border border-[rgba(12,113,195,0.08)] bg-white px-4 py-3.5">
             <p className="text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-[var(--color-muted)]">
               Nota final
             </p>
@@ -441,7 +453,7 @@ export function CourseExerciseReviewForm({
         {pendingIntent ? (
           <div
             aria-live="polite"
-            className="rounded-[1.2rem] border border-[rgba(12,113,195,0.12)] bg-[linear-gradient(135deg,rgba(12,113,195,0.08),rgba(255,255,255,0.98))] px-4 py-3 text-sm text-[var(--color-ink)] shadow-[0_16px_28px_-24px_rgba(12,113,195,0.32)]"
+            className="rounded-[var(--radius-md)] border border-[rgba(12,113,195,0.12)] bg-[linear-gradient(135deg,rgba(12,113,195,0.08),rgba(255,255,255,0.98))] px-4 py-3 text-sm text-[var(--color-ink)] shadow-[0_16px_28px_-24px_rgba(12,113,195,0.32)]"
             role="status"
           >
             <span className="inline-flex items-center gap-2 font-medium">
@@ -457,7 +469,7 @@ export function CourseExerciseReviewForm({
         ) : null}
 
         {state.error ? (
-          <p className="rounded-[1.2rem] border border-[#efb3a6] bg-[#fff1ec] px-4 py-3 text-sm text-[#9b4128]">
+          <p className="rounded-[var(--radius-md)] border border-[rgba(181,71,8,0.24)] bg-[var(--color-danger-soft)] px-4 py-3 text-sm text-[var(--color-danger)]">
             {state.error}
           </p>
         ) : null}
@@ -465,7 +477,7 @@ export function CourseExerciseReviewForm({
         {successNotice ? (
           <p
             aria-live="polite"
-            className="rounded-[1.2rem] border border-[#b9dfc2] bg-[linear-gradient(135deg,#eff9f1,#f8fcf8)] px-4 py-3 text-sm text-[#1d6b35] shadow-[0_16px_28px_-24px_rgba(29,107,53,0.35)]"
+            className="rounded-[var(--radius-md)] border border-[rgba(10,109,84,0.2)] bg-[linear-gradient(135deg,#eff9f1,#f8fcf8)] px-4 py-3 text-sm text-[var(--color-success)] shadow-[0_16px_28px_-24px_rgba(29,107,53,0.35)]"
             role="status"
           >
             <span className="inline-flex items-center gap-2 font-medium">
@@ -479,19 +491,15 @@ export function CourseExerciseReviewForm({
           <div
             className={cn(
               "inline-flex items-center gap-2 rounded-full px-3 py-2 text-xs uppercase tracking-[0.14em]",
-              reviewSnapshot.status === "REVIEWED"
-                ? "bg-[rgba(28,121,74,0.1)] text-[#1c794a]"
-                : reviewSnapshot.status === "CHANGES_REQUESTED"
-                  ? "bg-[rgba(212,135,25,0.12)] text-[#9f6612]"
-                  : "bg-[rgba(12,113,195,0.08)] text-[var(--color-primary)]"
+              statusMeta.tone === "success"
+                ? "bg-[rgba(10,109,84,0.1)] text-[var(--color-success)]"
+                : statusMeta.tone === "info"
+                  ? "bg-[rgba(12,113,195,0.08)] text-[var(--color-primary)]"
+                  : "bg-[rgba(255,182,6,0.18)] text-[#8c5b00]"
             )}
           >
             <Clock3 className="h-3.5 w-3.5" />
-            {reviewSnapshot.status === "REVIEWED"
-              ? "Revision cerrada"
-              : reviewSnapshot.status === "CHANGES_REQUESTED"
-                ? "Esperando nueva version"
-                : "Pendiente de revision"}
+            {statusMeta.statusLabel}
           </div>
 
           <ReviewActionButtons
