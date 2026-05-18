@@ -25,12 +25,22 @@ export function CampusOnboarding({ courseSlug, showInitially = false }: CampusOn
       return;
     }
 
-    try {
-      const done = window.localStorage.getItem(storageKey(courseSlug));
-      setVisible(!done);
-    } catch {
-      setVisible(showInitially);
-    }
+    const nextVisible = (() => {
+      try {
+        const done = window.localStorage.getItem(storageKey(courseSlug));
+        return !done;
+      } catch {
+        return showInitially;
+      }
+    })();
+
+    const timeoutId = window.setTimeout(() => {
+      setVisible(nextVisible);
+    }, 0);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
   }, [courseSlug, showInitially]);
 
   if (!visible) {
