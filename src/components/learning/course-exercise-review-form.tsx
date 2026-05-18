@@ -119,14 +119,14 @@ function ReviewActionButtons(input: {
   const { pending } = useFormStatus();
 
   return (
-    <div className="flex flex-wrap justify-end gap-3">
+    <div className="flex flex-wrap justify-end gap-2.5">
       <Button
         disabled={pending}
         name="status"
         onClick={() => input.onIntentChange("CHANGES_REQUESTED")}
         type="submit"
         value="CHANGES_REQUESTED"
-        variant="ghost"
+        variant="secondary"
       >
         {pending && input.pendingIntent === "CHANGES_REQUESTED"
           ? "Solicitando cambios..."
@@ -138,7 +138,6 @@ function ReviewActionButtons(input: {
         onClick={() => input.onIntentChange("REVIEWED")}
         type="submit"
         value="REVIEWED"
-        variant="secondary"
       >
         {pending && input.pendingIntent === "REVIEWED"
           ? "Guardando revision..."
@@ -257,11 +256,11 @@ export function CourseExerciseReviewForm({
 
   return (
     <div
-      className="scroll-mt-36 rounded-[1.65rem] border border-[rgba(12,113,195,0.12)] bg-white p-5 shadow-[0_18px_42px_-34px_rgba(12,113,195,0.34)]"
+      className="scroll-mt-36 rounded-[1.5rem] border border-[rgba(12,113,195,0.12)] bg-white p-4 shadow-[0_18px_42px_-34px_rgba(12,113,195,0.34)] lg:p-[1.125rem]"
       id={`submission-${submission.id}`}
     >
-      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_14rem]">
-        <div className="space-y-4">
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_12.5rem]">
+        <div className="space-y-3.5">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div className="min-w-0">
               <p className="text-[1.02rem] font-semibold text-[var(--color-ink)]">
@@ -297,7 +296,7 @@ export function CourseExerciseReviewForm({
           </div>
 
           {submission.body ? (
-            <div className="rounded-[1.35rem] border border-[rgba(12,113,195,0.08)] bg-[var(--color-surface)] px-4 py-4 text-sm leading-7 text-[var(--color-ink)]">
+            <div className="rounded-[1.2rem] border border-[rgba(12,113,195,0.08)] bg-[var(--color-surface)] px-4 py-3.5 text-sm leading-6 text-[var(--color-ink)]">
               {submission.body}
             </div>
           ) : null}
@@ -326,7 +325,7 @@ export function CourseExerciseReviewForm({
           </div>
 
           {hasReviewSummary ? (
-            <div className="rounded-[1.35rem] border border-[rgba(12,113,195,0.08)] bg-[linear-gradient(135deg,rgba(241,245,248,0.96),rgba(255,255,255,0.98))] px-4 py-4 text-sm leading-7 text-[var(--color-muted)]">
+            <div className="rounded-[1.2rem] border border-[rgba(12,113,195,0.08)] bg-[linear-gradient(135deg,rgba(241,245,248,0.96),rgba(255,255,255,0.98))] px-4 py-3.5 text-sm leading-6 text-[var(--color-muted)] shadow-[inset_0_1px_0_rgba(255,255,255,0.72)]">
               <div className="flex flex-wrap items-center gap-2">
                 <Badge tone="muted">Revision actual</Badge>
                 {reviewSnapshot.reviewedAt ? (
@@ -336,9 +335,9 @@ export function CourseExerciseReviewForm({
                 ) : null}
               </div>
               {reviewSnapshot.feedback ? (
-                <p className="mt-3 text-[var(--color-ink)]">{reviewSnapshot.feedback}</p>
+                <p className="mt-2.5 text-[var(--color-ink)]">{reviewSnapshot.feedback}</p>
               ) : null}
-              <div className="mt-3 flex flex-wrap gap-3 text-xs uppercase tracking-[0.14em] text-[var(--color-muted)]">
+              <div className="mt-2.5 flex flex-wrap gap-3 text-xs uppercase tracking-[0.14em] text-[var(--color-muted)]">
                 {reviewSnapshot.scoreLabel ? (
                   <span>
                     Nota <strong className="text-[var(--color-ink)]">{reviewSnapshot.scoreLabel}/10</strong>
@@ -365,32 +364,32 @@ export function CourseExerciseReviewForm({
           ) : null}
         </div>
 
-        <div className="grid gap-3 sm:grid-cols-3 xl:grid-cols-1">
-          <div className="rounded-[1.35rem] border border-[rgba(12,113,195,0.08)] bg-white px-4 py-4">
+        <div className="grid gap-2.5 sm:grid-cols-3 xl:grid-cols-1">
+          <div className="rounded-[1.2rem] border border-[rgba(12,113,195,0.08)] bg-white px-4 py-3.5">
             <p className="text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-[var(--color-muted)]">
               Entregada
             </p>
-            <p className="mt-3 text-sm font-semibold text-[var(--color-ink)]">
+            <p className="mt-2 text-sm font-semibold text-[var(--color-ink)]">
               {formatDateTime(submission.submittedAt)}
             </p>
           </div>
-          <div className="rounded-[1.35rem] border border-[rgba(12,113,195,0.08)] bg-white px-4 py-4">
+          <div className="rounded-[1.2rem] border border-[rgba(12,113,195,0.08)] bg-white px-4 py-3.5">
             <p className="text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-[var(--color-muted)]">
               Estado
             </p>
-            <p className="mt-3 text-sm font-semibold text-[var(--color-ink)]">
+            <p className="mt-2 text-sm font-semibold text-[var(--color-ink)]">
               {reviewSnapshot.statusLabel}
             </p>
           </div>
-          <div className="rounded-[1.35rem] border border-[rgba(12,113,195,0.08)] bg-white px-4 py-4">
+          <div className="rounded-[1.2rem] border border-[rgba(12,113,195,0.08)] bg-white px-4 py-3.5">
             <p className="text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-[var(--color-muted)]">
               Nota final
             </p>
-            <p className="mt-3 text-sm font-semibold text-[var(--color-ink)]">
+            <p className="mt-2 text-sm font-semibold text-[var(--color-ink)]">
               {reviewSnapshot.scoreLabel ? `${reviewSnapshot.scoreLabel}/10` : "Sin nota"}
             </p>
             {typeof passingScore === "number" ? (
-              <p className="mt-2 text-xs leading-5 text-[var(--color-muted)]">
+              <p className="mt-1.5 text-xs leading-5 text-[var(--color-muted)]">
                 Aprueba con {formatReviewScore(passingScore)}/10
               </p>
             ) : null}
@@ -398,17 +397,17 @@ export function CourseExerciseReviewForm({
         </div>
       </div>
 
-      <form action={formAction} className="mt-5 space-y-4 border-t border-[rgba(12,113,195,0.08)] pt-5" onSubmitCapture={handleSubmitCapture}>
+      <form action={formAction} className="mt-4 space-y-3.5 border-t border-[rgba(12,113,195,0.08)] pt-4" onSubmitCapture={handleSubmitCapture}>
         <input name="courseSlug" type="hidden" value={courseSlug} />
         <input name="submissionId" type="hidden" value={submission.id} />
 
-        <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_14rem]">
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_12.5rem]">
           <label className="block space-y-2">
             <span className="text-sm font-medium text-[var(--color-ink)]">
               Feedback docente
             </span>
             <Textarea
-              className="min-h-28"
+              className="min-h-[7.5rem] resize-y xl:min-h-[8.25rem]"
               name="feedback"
               onChange={(event) => setFeedbackValue(event.target.value)}
               placeholder="Explica que esta bien, que debe corregirse y que esperas en la siguiente version."
@@ -433,7 +432,7 @@ export function CourseExerciseReviewForm({
                 value={scoreValue}
               />
             </label>
-            <div className="rounded-[1.2rem] bg-[var(--color-surface)] px-4 py-4 text-xs leading-6 text-[var(--color-muted)]">
+            <div className="rounded-[1.1rem] bg-[var(--color-surface)] px-4 py-3 text-xs leading-5 text-[var(--color-muted)]">
               La nota es obligatoria al cerrar la revision. Si solicitas cambios, la nota actual se retira.
             </div>
           </div>
@@ -442,7 +441,7 @@ export function CourseExerciseReviewForm({
         {pendingIntent ? (
           <div
             aria-live="polite"
-            className="rounded-[1.2rem] border border-[rgba(12,113,195,0.12)] bg-[rgba(12,113,195,0.05)] px-4 py-3 text-sm text-[var(--color-ink)]"
+            className="rounded-[1.2rem] border border-[rgba(12,113,195,0.12)] bg-[linear-gradient(135deg,rgba(12,113,195,0.08),rgba(255,255,255,0.98))] px-4 py-3 text-sm text-[var(--color-ink)] shadow-[0_16px_28px_-24px_rgba(12,113,195,0.32)]"
             role="status"
           >
             <span className="inline-flex items-center gap-2 font-medium">
@@ -451,7 +450,7 @@ export function CourseExerciseReviewForm({
                 ? "Guardando revision..."
                 : "Guardando revision y solicitud de cambios..."}
             </span>
-            <p className="mt-2 text-xs leading-6 text-[var(--color-muted)]">
+            <p className="mt-1.5 text-xs leading-5 text-[var(--color-muted)]">
               La entrega se esta actualizando. No hace falta salir de esta vista.
             </p>
           </div>
@@ -466,7 +465,7 @@ export function CourseExerciseReviewForm({
         {successNotice ? (
           <p
             aria-live="polite"
-            className="rounded-[1.2rem] border border-[#b9dfc2] bg-[#eff9f1] px-4 py-3 text-sm text-[#1d6b35]"
+            className="rounded-[1.2rem] border border-[#b9dfc2] bg-[linear-gradient(135deg,#eff9f1,#f8fcf8)] px-4 py-3 text-sm text-[#1d6b35] shadow-[0_16px_28px_-24px_rgba(29,107,53,0.35)]"
             role="status"
           >
             <span className="inline-flex items-center gap-2 font-medium">

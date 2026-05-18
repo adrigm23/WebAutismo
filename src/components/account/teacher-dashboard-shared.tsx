@@ -141,12 +141,12 @@ function buildTeacherActivity(input: {
 
 export function TeacherSectionSkeleton(input: { title: string; lines?: number }) {
   return (
-    <Card className="p-6">
-      <div className="h-8 w-52 animate-pulse rounded-full bg-[var(--color-surface)]" />
-      <div className="mt-6 space-y-3">
+    <Card className="p-5">
+      <div className="h-7 w-44 animate-pulse rounded-full bg-[var(--color-surface)]" />
+      <div className="mt-5 space-y-2.5">
         {Array.from({ length: input.lines ?? 3 }).map((_, index) => (
           <div
-            className="h-24 animate-pulse rounded-[22px] bg-[var(--color-surface)]"
+            className="h-20 animate-pulse rounded-[20px] bg-[var(--color-surface)]"
             key={`${input.title}-${index}`}
           />
         ))}
@@ -165,7 +165,7 @@ export async function TeacherUnreadBadge(input: {
   }
 
   return (
-    <span className="ml-2 rounded-full bg-[var(--color-primary)] px-2 py-0.5 text-xs text-white">
+    <span className="ml-1.5 rounded-full bg-[var(--color-primary)] px-2 py-0.5 text-[0.68rem] font-semibold text-white shadow-[0_8px_18px_rgba(12,113,195,0.18)]">
       {snapshot.unreadCount}
     </span>
   );
@@ -183,19 +183,19 @@ export async function TeacherRecentActivitySection(input: {
   });
 
   return (
-    <Card className="p-6" id="actividad-docente">
+    <Card className="p-5" id="actividad-docente">
       <div className="flex items-center gap-3">
         <Bell className="h-5 w-5 text-[var(--color-primary)]" />
-        <h2 className="text-[2rem] font-semibold tracking-[-0.04em] text-[var(--color-ink)]">
+        <h2 className="text-[1.8rem] font-semibold tracking-[-0.04em] text-[var(--color-ink)]">
           Actividad reciente
         </h2>
       </div>
 
-      <div className="mt-6 space-y-4">
+      <div className="mt-5 space-y-3">
         {recentActivity.length ? (
           recentActivity.slice(0, 3).map((item) => (
             <Link
-              className="block rounded-[22px] border border-[var(--color-border)] bg-white p-4 transition hover:border-[var(--color-primary)]"
+              className="block rounded-[20px] border border-[var(--color-border)] bg-white/92 p-4 transition hover:-translate-y-[1px] hover:border-[var(--color-primary)] hover:shadow-[0_16px_28px_-24px_rgba(12,113,195,0.34)]"
               href={item.href}
               key={item.id}
             >
@@ -208,11 +208,11 @@ export async function TeacherRecentActivitySection(input: {
               <p className="mt-3 text-lg font-semibold leading-tight text-[var(--color-ink)]">
                 {item.title}
               </p>
-              <p className="mt-2 text-sm leading-7 text-[var(--color-muted)]">{item.body}</p>
+              <p className="mt-1.5 text-sm leading-6 text-[var(--color-muted)]">{item.body}</p>
             </Link>
           ))
         ) : (
-          <div className="rounded-[22px] border border-dashed border-[rgba(12,113,195,0.18)] bg-white p-5 text-sm leading-7 text-[var(--color-muted)]">
+          <div className="rounded-[20px] border border-dashed border-[rgba(12,113,195,0.18)] bg-white p-4 text-sm leading-6 text-[var(--color-muted)]">
             Sin actividad reciente. Las actualizaciones del alumnado apareceran aqui cuando haya
             entregas, avisos o movimiento en el foro.
           </div>
@@ -230,38 +230,38 @@ export async function TeacherCommunityCard(input: {
   const snapshot = await input.notificationSnapshotPromise;
 
   return (
-    <Card className="p-8">
+    <Card className="p-6">
       <div className="flex items-center gap-3">
         <MessageSquareText className="h-5 w-5 text-[var(--color-primary)]" />
-        <h2 className="text-[2rem] font-semibold tracking-[-0.04em] text-[var(--color-ink)]">
+        <h2 className="text-[1.8rem] font-semibold tracking-[-0.04em] text-[var(--color-ink)]">
           Foro y comunidad
         </h2>
       </div>
 
-      <div className="mt-6 space-y-4">
-        <div className="rounded-[22px] bg-[var(--color-surface)] p-5">
+      <div className="mt-5 space-y-3">
+        <div className="rounded-[20px] bg-[var(--color-surface)] p-4">
           <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[var(--color-muted)]">
             Avisos del foro
           </p>
-          <p className="mt-3 text-[2rem] font-semibold text-[var(--color-ink)]">
+          <p className="mt-2.5 text-[1.85rem] font-semibold text-[var(--color-ink)]">
             {snapshot.forumNotifications.unreadCount}
           </p>
-          <p className="mt-2 text-sm leading-7 text-[var(--color-muted)]">
+          <p className="mt-1.5 text-sm leading-6 text-[var(--color-muted)]">
             Notificaciones no leidas asociadas a tus cursos.
           </p>
         </div>
 
-        <div className="rounded-[22px] bg-[var(--color-surface)] p-5">
+        <div className="rounded-[20px] bg-[var(--color-surface)] p-4">
           <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[var(--color-muted)]">
             Recursos
           </p>
-          <p className="mt-3 text-[2rem] font-semibold text-[var(--color-ink)]">{input.resources}</p>
-          <p className="mt-2 text-sm leading-7 text-[var(--color-muted)]">
+          <p className="mt-2.5 text-[1.85rem] font-semibold text-[var(--color-ink)]">{input.resources}</p>
+          <p className="mt-1.5 text-sm leading-6 text-[var(--color-muted)]">
             Materiales o ejercicios gestionados desde el campus.
           </p>
         </div>
 
-        <div className="flex flex-wrap gap-3">
+        <div className="flex flex-wrap gap-2.5">
           <ButtonLink href={input.paths.forumHref} variant="secondary">
             Abrir foro
           </ButtonLink>
@@ -280,15 +280,15 @@ export async function TeacherPreferencesCard(input: {
   const preference = (await input.notificationSnapshotPromise).preference;
 
   return (
-    <Card className="p-8">
+    <Card className="p-6">
       <div className="flex items-center gap-3">
         <Settings2 className="h-5 w-5 text-[var(--color-primary)]" />
-        <h2 className="text-[2rem] font-semibold tracking-[-0.04em] text-[var(--color-ink)]">
+        <h2 className="text-[1.8rem] font-semibold tracking-[-0.04em] text-[var(--color-ink)]">
           Preferencias
         </h2>
       </div>
 
-      <div className="mt-6 space-y-3">
+      <div className="mt-5 space-y-2.5">
         {[
           {
             title: "Solo email",
@@ -327,20 +327,20 @@ export async function TeacherPreferencesCard(input: {
               />
               <button
                 className={cn(
-                  "w-full rounded-[22px] border px-5 py-4 text-left transition",
+                  "w-full rounded-[20px] border px-4 py-3.5 text-left transition",
                   isSelected
-                    ? "border-[var(--color-primary)] bg-[var(--color-primary-soft)]"
-                    : "border-[var(--color-border)] bg-[var(--color-surface)] hover:border-[var(--color-primary)]"
+                    ? "border-[var(--color-primary)] bg-[rgba(12,113,195,0.08)] shadow-[0_16px_28px_-24px_rgba(12,113,195,0.36)]"
+                    : "border-[var(--color-border)] bg-[var(--color-surface)] hover:border-[var(--color-primary)] hover:bg-white"
                 )}
                 type="submit"
               >
                 <div className="flex items-center justify-between gap-4">
-                  <p className="text-lg font-semibold text-[var(--color-ink)]">{option.title}</p>
+                  <p className="text-base font-semibold text-[var(--color-ink)]">{option.title}</p>
                   <Badge tone={isSelected ? "teacher" : "muted"}>
                     {isSelected ? "Activa" : "Disponible"}
                   </Badge>
                 </div>
-                <p className="mt-2 text-sm leading-7 text-[var(--color-muted)]">
+                <p className="mt-1.5 text-sm leading-6 text-[var(--color-muted)]">
                   {option.description}
                 </p>
               </button>

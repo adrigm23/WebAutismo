@@ -17,17 +17,17 @@ export function SurfaceCard(input: {
     <section
       id={input.id}
       className={cn(
-        "rounded-[30px] border border-[rgba(12,113,195,0.12)] bg-white p-6 shadow-[0_22px_48px_rgba(34,34,33,0.06)] lg:p-7",
+        "rounded-[28px] border border-[rgba(12,113,195,0.1)] bg-white/96 p-5 shadow-[0_20px_42px_-28px_rgba(21,35,50,0.2)] lg:p-6",
         input.className
       )}
     >
       {input.title ? (
-        <div className="mb-5">
-          <h2 className="text-[2rem] font-semibold tracking-[-0.05em] text-[var(--color-ink)]">
+        <div className="mb-4">
+          <h2 className="text-[1.85rem] font-semibold tracking-[-0.05em] text-[var(--color-ink)]">
             {input.title}
           </h2>
           {input.description ? (
-            <p className="mt-2 max-w-3xl text-sm leading-7 text-[var(--color-muted)]">
+            <p className="mt-1.5 max-w-3xl text-sm leading-6 text-[var(--color-muted)]">
               {input.description}
             </p>
           ) : null}
@@ -44,14 +44,14 @@ export function SummaryMetric(input: {
   detail: string;
 }) {
   return (
-    <div className="rounded-[24px] border border-[rgba(12,113,195,0.12)] bg-[var(--color-surface)] p-4">
+    <div className="rounded-[20px] border border-[rgba(12,113,195,0.1)] bg-[var(--color-surface)] p-3.5">
       <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-muted)]">
         {input.label}
       </p>
-      <p className="mt-3 text-[1.85rem] font-semibold leading-tight tracking-[-0.04em] text-[var(--color-ink)]">
+      <p className="mt-2 text-[1.65rem] font-semibold leading-tight tracking-[-0.04em] text-[var(--color-ink)]">
         {input.value}
       </p>
-      <p className="mt-2 text-sm leading-7 text-[var(--color-muted)]">{input.detail}</p>
+      <p className="mt-1 text-sm leading-6 text-[var(--color-muted)]">{input.detail}</p>
     </div>
   );
 }
@@ -67,10 +67,10 @@ export function WorkspaceTabButton(input: {
   return (
     <button
       className={cn(
-        "inline-flex items-center justify-center gap-2 rounded-full border px-4 py-3 text-sm font-semibold transition",
+        "inline-flex items-center justify-center gap-2 rounded-full border px-3.5 py-2.5 text-sm font-semibold transition",
         input.active
           ? "border-[var(--color-primary)] bg-[var(--color-primary)] text-white shadow-[0_12px_22px_rgba(12,113,195,0.18)]"
-          : "border-[var(--color-border)] bg-white text-[var(--color-ink)] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]"
+          : "border-[var(--color-border)] bg-white text-[var(--color-ink)] hover:border-[var(--color-primary)] hover:bg-[rgba(12,113,195,0.05)] hover:text-[var(--color-primary)]"
       )}
       onClick={input.onClick}
       type="button"
@@ -89,13 +89,13 @@ export function ActionCard(input: {
 }) {
   return (
     <button
-      className="w-full rounded-[24px] border border-[rgba(12,113,195,0.12)] bg-[var(--color-surface)] p-5 text-left transition hover:border-[var(--color-primary)] hover:bg-[var(--color-primary-soft)]"
+      className="w-full rounded-[22px] border border-[rgba(12,113,195,0.1)] bg-[var(--color-surface)] p-4 text-left transition hover:-translate-y-[1px] hover:border-[var(--color-primary)] hover:bg-white hover:shadow-[0_16px_28px_-24px_rgba(12,113,195,0.34)]"
       onClick={input.onClick}
       type="button"
     >
-      <p className="text-lg font-semibold text-[var(--color-ink)]">{input.title}</p>
-      <p className="mt-3 text-sm leading-7 text-[var(--color-muted)]">{input.body}</p>
-      <span className="mt-4 inline-flex items-center text-sm font-semibold text-[var(--color-primary)]">
+      <p className="text-base font-semibold text-[var(--color-ink)]">{input.title}</p>
+      <p className="mt-2 text-sm leading-6 text-[var(--color-muted)]">{input.body}</p>
+      <span className="mt-3 inline-flex items-center text-sm font-semibold text-[var(--color-primary)]">
         {input.cta}
         <ArrowRight className="ml-2 h-4 w-4" />
       </span>
@@ -114,17 +114,17 @@ export function ModuleRow(input: {
   return (
     <button
       className={cn(
-        "flex w-full items-start justify-between gap-4 rounded-[22px] border p-4 text-left transition",
+        "flex w-full items-start justify-between gap-4 rounded-[20px] border p-3.5 text-left transition",
         input.isSelected
-          ? "border-[var(--color-primary)] bg-[var(--color-primary-soft)]"
-          : "border-[rgba(12,113,195,0.1)] bg-white hover:border-[var(--color-primary)]"
+          ? "border-[var(--color-primary)] bg-[rgba(12,113,195,0.08)] shadow-[0_16px_28px_-24px_rgba(12,113,195,0.34)]"
+          : "border-[rgba(12,113,195,0.1)] bg-white hover:border-[var(--color-primary)] hover:bg-[rgba(12,113,195,0.03)]"
       )}
       onClick={input.onClick}
       type="button"
     >
       <div className="min-w-0">
-        <p className="text-lg font-semibold text-[var(--color-ink)]">{input.title}</p>
-        <p className="mt-2 text-sm leading-7 text-[var(--color-muted)]">{input.meta}</p>
+        <p className="text-base font-semibold text-[var(--color-ink)]">{input.title}</p>
+        <p className="mt-1.5 text-sm leading-6 text-[var(--color-muted)]">{input.meta}</p>
       </div>
       <Badge tone={input.stateTone}>{input.stateLabel}</Badge>
     </button>
@@ -139,12 +139,12 @@ export function InfoPanel(input: {
   onAction?: () => void;
 }) {
   return (
-    <div className="rounded-[24px] border border-[rgba(12,113,195,0.12)] bg-[var(--color-surface)] p-5">
-      <p className="text-lg font-semibold text-[var(--color-ink)]">{input.title}</p>
-      <p className="mt-3 text-sm leading-7 text-[var(--color-muted)]">{input.body}</p>
+    <div className="rounded-[20px] border border-[rgba(12,113,195,0.1)] bg-[var(--color-surface)] p-4">
+      <p className="text-base font-semibold text-[var(--color-ink)]">{input.title}</p>
+      <p className="mt-2 text-sm leading-6 text-[var(--color-muted)]">{input.body}</p>
       {input.onAction && input.ctaLabel ? (
         <button
-          className="mt-4 inline-flex items-center text-sm font-semibold text-[var(--color-primary)]"
+          className="mt-3 inline-flex items-center text-sm font-semibold text-[var(--color-primary)]"
           onClick={input.onAction}
           type="button"
         >
@@ -154,7 +154,7 @@ export function InfoPanel(input: {
       ) : null}
       {input.ctaHref && input.ctaLabel ? (
         <Link
-          className="mt-4 inline-flex items-center text-sm font-semibold text-[var(--color-primary)]"
+          className="mt-3 inline-flex items-center text-sm font-semibold text-[var(--color-primary)]"
           href={input.ctaHref}
           prefetch
         >
@@ -175,14 +175,14 @@ export function ModuleResourceCard(input: {
 }) {
   return (
     <button
-      className="w-full rounded-[22px] border border-[rgba(12,113,195,0.12)] bg-white p-5 text-left transition hover:border-[var(--color-primary)] hover:bg-[var(--color-primary-soft)]"
+      className="w-full rounded-[20px] border border-[rgba(12,113,195,0.1)] bg-white p-4 text-left transition hover:-translate-y-[1px] hover:border-[var(--color-primary)] hover:bg-[rgba(12,113,195,0.03)] hover:shadow-[0_16px_28px_-24px_rgba(12,113,195,0.34)]"
       onClick={input.onClick}
       type="button"
     >
       <Badge tone="muted">{input.badge}</Badge>
-      <p className="mt-4 text-lg font-semibold text-[var(--color-ink)]">{input.title}</p>
-      <p className="mt-3 text-sm leading-7 text-[var(--color-muted)]">{input.body}</p>
-      <span className="mt-4 inline-flex items-center text-sm font-semibold text-[var(--color-primary)]">
+      <p className="mt-3 text-base font-semibold text-[var(--color-ink)]">{input.title}</p>
+      <p className="mt-2 text-sm leading-6 text-[var(--color-muted)]">{input.body}</p>
+      <span className="mt-3 inline-flex items-center text-sm font-semibold text-[var(--color-primary)]">
         {input.ctaLabel}
         <ArrowRight className="ml-2 h-4 w-4" />
       </span>

@@ -444,17 +444,17 @@ export function CourseLearningShell({
         simpleMode={simpleMode}
       />
 
-      <div className="px-6 py-8 lg:px-12 xl:py-10">
+      <div className="px-6 py-7 lg:px-12 xl:py-9">
         <CampusOnboarding courseSlug={course.slug} showInitially={showOnboarding} />
         <div
           className={cn(
-            "mt-6 grid gap-6",
+            "mt-5 grid gap-5",
             isFocusedTaskWorkspace || simpleMode
               ? "xl:grid-cols-1"
-              : "xl:grid-cols-[minmax(0,1fr)_22rem] 2xl:grid-cols-[minmax(0,1fr)_24rem]"
+              : "xl:grid-cols-[minmax(0,1fr)_19.5rem] 2xl:grid-cols-[minmax(0,1fr)_21rem]"
           )}
         >
-          <div className="space-y-6">
+          <div className="space-y-5">
             {isFocusedTaskWorkspace ? (
               <FocusedTaskIntro courseSlug={course.slug} onClearFocus={clearFocusedTaskWorkspace} />
             ) : showCompactContentHeader ? (

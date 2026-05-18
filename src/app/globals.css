@@ -212,5 +212,6 @@ details > summary::-webkit-details-marker {
   box-shadow:
     0 0 0 2px rgba(12, 113, 195, 0.28),
     0 24px 54px rgba(12, 113, 195, 0.14);
-  transition: box-shadow 180ms ease;
+  transition: box-shadow 220ms ease, transform 220ms ease;
+  transform: translateY(-1px);
 }

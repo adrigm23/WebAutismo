@@ -3,17 +3,17 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 
 const baseStyles =
-  "inline-flex items-center justify-center rounded-2xl px-5 py-3 text-sm font-semibold tracking-[-0.01em] transition duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50";
+  "inline-flex items-center justify-center rounded-[1.15rem] px-4 py-2.5 text-sm font-semibold tracking-[-0.01em] transition-[transform,box-shadow,background-color,border-color,color,opacity] duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 active:scale-[0.985] disabled:pointer-events-none disabled:opacity-50";
 
 const variants = {
   primary:
-    "bg-[var(--color-primary)] text-white shadow-[0_16px_30px_rgba(12,113,195,0.18)] hover:bg-[var(--color-primary-strong)] hover:shadow-[0_20px_34px_rgba(12,113,195,0.22)] focus-visible:ring-[var(--color-primary)]",
+    "bg-[linear-gradient(180deg,var(--color-primary)_0%,var(--color-primary-strong)_100%)] text-white shadow-[0_14px_26px_rgba(12,113,195,0.18)] hover:-translate-y-[1px] hover:shadow-[0_18px_30px_rgba(12,113,195,0.24)] focus-visible:ring-[var(--color-primary)]",
   secondary:
-    "border border-[rgba(12,113,195,0.22)] bg-white text-[var(--color-primary)] hover:border-[var(--color-primary)] hover:bg-[var(--color-primary-soft)] focus-visible:ring-[var(--color-primary)]",
+    "border border-[rgba(12,113,195,0.18)] bg-white/94 text-[var(--color-primary)] shadow-[inset_0_1px_0_rgba(255,255,255,0.75)] hover:-translate-y-[1px] hover:border-[rgba(12,113,195,0.34)] hover:bg-[rgba(12,113,195,0.05)] focus-visible:ring-[var(--color-primary)]",
   ghost:
-    "text-[var(--color-primary)] hover:bg-[var(--color-primary-soft)] focus-visible:ring-[var(--color-primary)]",
+    "text-[var(--color-primary)] hover:bg-white/80 hover:text-[var(--color-primary-strong)] focus-visible:ring-[var(--color-primary)]",
   accent:
-    "bg-[var(--color-accent)] text-[#1d1d1c] shadow-[0_14px_24px_rgba(255,182,6,0.18)] hover:bg-[#f1aa00] focus-visible:ring-[var(--color-accent)]"
+    "bg-[linear-gradient(180deg,var(--color-accent)_0%,#f1aa00_100%)] text-[#1d1d1c] shadow-[0_12px_24px_rgba(255,182,6,0.18)] hover:-translate-y-[1px] hover:shadow-[0_16px_28px_rgba(255,182,6,0.24)] focus-visible:ring-[var(--color-accent)]"
 };
 
 type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {

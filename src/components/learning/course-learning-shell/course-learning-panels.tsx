@@ -256,7 +256,7 @@ export function CourseLearningHero({
           simpleMode ? "lg:grid-cols-1" : "lg:grid-cols-[minmax(0,1.15fr)_minmax(20rem,0.85fr)]"
         )}
       >
-        <div className="space-y-6 p-6 lg:p-8">
+        <div className="space-y-5 p-5 lg:p-6">
           <div className="flex flex-wrap items-center gap-2">
             <Badge tone={canModerate ? "teacher" : "student"}>{roleLabel}</Badge>
             <Badge tone="muted">{course.level}</Badge>
@@ -264,14 +264,14 @@ export function CourseLearningHero({
           </div>
 
           <div>
-            <h2 className="text-[3.4rem] font-semibold leading-[0.96] tracking-[-0.08em] text-[var(--color-ink)]">
+            <h2 className="text-[3rem] font-semibold leading-[0.96] tracking-[-0.08em] text-[var(--color-ink)] lg:text-[3.15rem]">
               {primarySummary.title}
             </h2>
-            <p className="mt-4 max-w-3xl text-[1.06rem] leading-8 text-[var(--color-muted)]">
+            <p className="mt-3 max-w-3xl text-[1rem] leading-7 text-[var(--color-muted)]">
               {primarySummary.body}
             </p>
             {editionLabel ? (
-              <p className="mt-4 text-sm leading-7 text-[var(--color-muted)]">
+              <p className="mt-3 text-sm leading-6 text-[var(--color-muted)]">
                 Edicion activa: <strong className="text-[var(--color-ink)]">{editionLabel}</strong>
                 {accessUntil ? ` | Acceso previsto hasta ${formatDate(accessUntil)}` : ""}
               </p>
@@ -299,13 +299,13 @@ export function CourseLearningHero({
           )}
 
           {canModerate ? (
-            <div className="rounded-[24px] border border-[rgba(12,113,195,0.12)] bg-[var(--color-surface)] p-5">
+            <div className="rounded-[22px] border border-[rgba(12,113,195,0.12)] bg-[var(--color-surface)] p-4">
               <div className="flex flex-wrap items-center justify-between gap-4">
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-muted)]">
                     Progreso guardado
                   </p>
-                  <p className="mt-2 text-[2rem] font-semibold tracking-[-0.04em] text-[var(--color-ink)]">
+                  <p className="mt-1.5 text-[1.75rem] font-semibold tracking-[-0.04em] text-[var(--color-ink)]">
                     {progress.completedModules} de {progress.totalModules} modulos revisados
                   </p>
                 </div>
@@ -313,26 +313,26 @@ export function CourseLearningHero({
                   <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-muted)]">
                     Ultima actividad
                   </p>
-                  <p className="mt-2 text-lg font-semibold text-[var(--color-ink)]">
+                  <p className="mt-1.5 text-base font-semibold text-[var(--color-ink)]">
                     {progress.lastCompletedAt ? formatDate(progress.lastCompletedAt) : "Sin actividad"}
                   </p>
                 </div>
               </div>
-              <div className="mt-5 h-3 overflow-hidden rounded-full bg-white">
+              <div className="mt-4 h-2.5 overflow-hidden rounded-full bg-white">
                 <div
                   aria-hidden="true"
                   className="h-full rounded-full bg-[var(--color-primary)] transition-[width]"
                   style={{ width: `${progress.completionRate}%` }}
                 />
               </div>
-              <div className="mt-3 flex flex-wrap items-center justify-between gap-3 text-sm text-[var(--color-muted)]">
+              <div className="mt-2.5 flex flex-wrap items-center justify-between gap-3 text-sm text-[var(--color-muted)]">
                 <span>{progress.completionRate}% marcado como revisado</span>
                 <span>{progress.pendingModules} modulos pendientes</span>
               </div>
             </div>
           ) : null}
 
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-wrap gap-2.5">
             <button
               className="inline-flex items-center justify-center rounded-xl bg-[var(--color-primary)] px-5 py-3 text-sm font-semibold text-white shadow-[0_16px_30px_rgba(12,113,195,0.18)] transition duration-200 hover:bg-[var(--color-primary-strong)]"
               onClick={onOpenResources}
@@ -364,18 +364,18 @@ export function CourseLearningHero({
 
         <div
           className={cn(
-            "border-t border-[rgba(12,113,195,0.08)] bg-[linear-gradient(180deg,#f8fafc_0%,#f1f5f8_100%)] p-6 lg:p-8",
+            "border-t border-[rgba(12,113,195,0.08)] bg-[linear-gradient(180deg,#f8fafc_0%,#f1f5f8_100%)] p-5 lg:p-6",
             simpleMode ? "lg:border-l-0 lg:border-t" : "lg:border-l lg:border-t-0"
           )}
         >
-          <div className="space-y-5">
-            <CourseArtwork className="h-[20rem] w-full rounded-[26px] border-0" course={course} variant="hero" />
+          <div className="space-y-4">
+            <CourseArtwork className="h-[17rem] w-full rounded-[24px] border-0" course={course} variant="hero" />
 
-            <div className="rounded-[26px] border border-[rgba(12,113,195,0.12)] bg-white p-5">
+            <div className="rounded-[22px] border border-[rgba(12,113,195,0.12)] bg-white p-4">
               <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[var(--color-muted)]">
                 Estado del curso
               </p>
-              <p className="mt-3 text-sm leading-7 text-[var(--color-ink)]">
+              <p className="mt-2.5 text-sm leading-6 text-[var(--color-ink)]">
                 {progress.isCompleted
                   ? "Todo el recorrido del curso ya figura como revisado."
                   : progress.hasStarted
@@ -385,11 +385,11 @@ export function CourseLearningHero({
             </div>
 
             {!canModerate && (currentModulePrimaryMaterial || currentModuleExercises.length > 0) ? (
-              <div className="rounded-[26px] border border-[rgba(12,113,195,0.12)] bg-white p-5">
+              <div className="rounded-[22px] border border-[rgba(12,113,195,0.12)] bg-white p-4">
                 <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[var(--color-muted)]">
                   Acceso directo
                 </p>
-                <div className="mt-4 flex flex-wrap gap-3">
+                <div className="mt-3 flex flex-wrap gap-2.5">
                   {currentModulePrimaryMaterial ? (
                     <button
                       className="inline-flex items-center justify-center rounded-xl bg-[var(--color-primary)] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[var(--color-primary-strong)]"
@@ -410,7 +410,7 @@ export function CourseLearningHero({
                   ) : null}
                 </div>
                 {currentModule ? (
-                  <p className="mt-4 text-sm leading-7 text-[var(--color-muted)]">
+                  <p className="mt-3 text-sm leading-6 text-[var(--color-muted)]">
                     {currentModuleMaterials.length} materiales y {currentModuleExercises.length} tareas ligados al modulo actual.
                   </p>
                 ) : null}
@@ -447,7 +447,7 @@ export function CourseLearningContentTab({
     <>
       <div
         className={cn(
-          "grid gap-6",
+          "grid gap-5",
           simpleMode ? "lg:grid-cols-1" : "lg:grid-cols-[minmax(0,1.14fr)_minmax(0,0.86fr)]"
         )}
       >
@@ -466,7 +466,7 @@ export function CourseLearningContentTab({
               </div>
               <div className="grid gap-4 xl:grid-cols-[minmax(0,1.2fr)_minmax(18rem,0.8fr)]">
                 <div className="space-y-5">
-                  <p className="text-[1.05rem] leading-8 text-[var(--color-ink)]">
+                  <p className="text-[1.02rem] leading-7 text-[var(--color-ink)]">
                     {currentModule.description}
                   </p>
                   <div className="grid gap-4 md:grid-cols-2">
@@ -477,11 +477,11 @@ export function CourseLearningContentTab({
                 </div>
 
                 <div className="space-y-4">
-                  <div className="rounded-[24px] border border-[rgba(12,113,195,0.12)] bg-[var(--color-surface)] p-5">
+                  <div className="rounded-[20px] border border-[rgba(12,113,195,0.12)] bg-[var(--color-surface)] p-4">
                     <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[var(--color-primary)]">
                       Leccion del modulo
                     </p>
-                    <p className="mt-3 text-sm leading-7 text-[var(--color-muted)]">
+                    <p className="mt-2 text-sm leading-6 text-[var(--color-muted)]">
                       Aqui tienes el contenido principal del modulo y, debajo, las tareas asociadas para que el recorrido sea lineal y facil de seguir.
                     </p>
                   </div>
@@ -523,14 +523,14 @@ export function CourseLearningContentTab({
                   ))}
 
                   {!currentModuleMaterials.length && !currentModuleExercises.length ? (
-                    <div className="rounded-[24px] border border-dashed border-[rgba(12,113,195,0.18)] bg-white p-5 text-sm leading-7 text-[var(--color-muted)]">
+                    <div className="rounded-[20px] border border-dashed border-[rgba(12,113,195,0.18)] bg-white p-4 text-sm leading-6 text-[var(--color-muted)]">
                       Este modulo todavia no tiene materiales ni tareas ligados de forma explicita.
                     </div>
                   ) : null}
                 </div>
               </div>
-              <div className="flex flex-wrap items-center justify-between gap-4 rounded-[24px] border border-[rgba(12,113,195,0.12)] bg-[var(--color-surface)] p-5">
-                <p className="text-sm leading-7 text-[var(--color-muted)]">
+              <div className="flex flex-wrap items-center justify-between gap-4 rounded-[20px] border border-[rgba(12,113,195,0.12)] bg-[var(--color-surface)] p-4">
+                <p className="text-sm leading-6 text-[var(--color-muted)]">
                   {currentModule.completedAt
                     ? `Marcado como revisado el ${formatDate(currentModule.completedAt)}.`
                     : "Todavia no has marcado este modulo como revisado."}
@@ -638,7 +638,7 @@ export function CourseLearningContentTab({
             })}
           </div>
         ) : (
-          <div className="rounded-[24px] border border-dashed border-[rgba(12,113,195,0.18)] bg-[var(--color-surface)] p-5 text-sm leading-7 text-[var(--color-muted)]">
+          <div className="rounded-[20px] border border-dashed border-[rgba(12,113,195,0.18)] bg-[var(--color-surface)] p-4 text-sm leading-6 text-[var(--color-muted)]">
             Este curso todavia no tiene modulos configurados.
           </div>
         )}
@@ -824,10 +824,10 @@ export function CourseLearningAside({
   onOpenWorkspaceTarget
 }: CourseLearningAsideProps) {
   return (
-    <aside className="xl:sticky xl:top-[9.5rem] xl:max-h-[calc(100vh-10rem)] xl:self-start xl:overflow-y-auto xl:pr-1">
+    <aside className="xl:sticky xl:top-[8.25rem] xl:max-h-[calc(100vh-8.75rem)] xl:self-start xl:overflow-y-auto xl:pr-1">
       <div className="space-y-4">
         <SurfaceCard
-          className="p-5"
+          className="p-4"
           description="Resumen permanente del estado del curso para no perder contexto al navegar por el campus."
           title="Centro de control"
         >

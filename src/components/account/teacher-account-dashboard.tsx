@@ -60,14 +60,14 @@ function TeacherDashboardStat(input: {
   detail: string;
 }) {
   return (
-    <div className="rounded-[24px] border border-[rgba(12,113,195,0.12)] bg-[rgba(255,255,255,0.84)] px-5 py-5 shadow-[0_18px_34px_rgba(34,34,33,0.05)] backdrop-blur-sm">
-      <p className="text-[0.72rem] font-semibold uppercase tracking-[0.2em] text-[var(--color-muted)]">
+    <div className="rounded-[22px] border border-[rgba(12,113,195,0.1)] bg-[rgba(255,255,255,0.84)] px-4 py-4 shadow-[0_18px_34px_-28px_rgba(34,34,33,0.22)] backdrop-blur-sm">
+      <p className="text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-[var(--color-muted)]">
         {input.label}
       </p>
-      <p className="mt-3 text-[2rem] font-semibold leading-none tracking-[-0.05em] text-[var(--color-ink)]">
+      <p className="mt-2.5 text-[1.85rem] font-semibold leading-none tracking-[-0.05em] text-[var(--color-ink)]">
         {input.value}
       </p>
-      <p className="mt-2 text-sm leading-6 text-[var(--color-muted)]">{input.detail}</p>
+      <p className="mt-1.5 text-sm leading-5 text-[var(--color-muted)]">{input.detail}</p>
     </div>
   );
 }
@@ -97,7 +97,7 @@ export function TeacherAccountDashboard({
   return (
     <div className="min-h-screen bg-[linear-gradient(180deg,#f8f6f1_0%,#f4f7fb_52%,#fbfaf8_100%)]">
       <div className="mx-auto flex min-h-screen max-w-[1600px] items-start">
-        <aside className="hidden h-screen w-[18.5rem] shrink-0 self-start overflow-y-auto border-r border-[rgba(12,113,195,0.12)] bg-[rgba(255,255,255,0.72)] px-6 py-8 backdrop-blur-md xl:sticky xl:top-0 xl:flex xl:flex-col">
+        <aside className="hidden h-screen w-[17.25rem] shrink-0 self-start overflow-y-auto border-r border-[rgba(12,113,195,0.12)] bg-[rgba(255,255,255,0.72)] px-5 py-6 backdrop-blur-md xl:sticky xl:top-0 xl:flex xl:flex-col">
           <Link
             className="text-[1.6rem] font-semibold leading-tight tracking-[-0.04em] text-[var(--color-primary)]"
             href="/mi-cuenta"
@@ -106,7 +106,7 @@ export function TeacherAccountDashboard({
           </Link>
           <p className="mt-2 text-sm leading-7 text-[var(--color-muted)]">{siteConfig.name}</p>
 
-          <div className="mt-8 flex items-center gap-4 rounded-[24px] border border-[var(--color-border)] bg-white p-4">
+          <div className="mt-6 flex items-center gap-3 rounded-[22px] border border-[var(--color-border)] bg-white/92 p-3.5 shadow-[0_12px_24px_-22px_rgba(21,35,50,0.28)]">
             <div className="grid h-14 w-14 place-items-center rounded-full bg-[var(--color-primary-soft)] text-lg font-semibold text-[var(--color-primary)]">
               {initials}
             </div>
@@ -116,7 +116,7 @@ export function TeacherAccountDashboard({
             </div>
           </div>
 
-          <div className="mt-8 grid gap-3">
+          <div className="mt-6 grid gap-2.5">
             {primaryCourse ? (
               <ButtonLink href={paths.trackingHref}>Ver seguimiento</ButtonLink>
             ) : (
@@ -129,7 +129,7 @@ export function TeacherAccountDashboard({
             )}
           </div>
 
-          <nav aria-label="Navegacion docente" className="mt-8 space-y-2">
+          <nav aria-label="Navegacion docente" className="mt-7 space-y-1.5">
             {[
               {
                 label: "Dashboard",
@@ -164,10 +164,10 @@ export function TeacherAccountDashboard({
             ].map(({ label, href, icon: Icon, active }) => (
               <Link
                 className={cn(
-                  "flex items-center gap-3 rounded-2xl px-4 py-3 text-[1rem] font-medium transition",
+                  "flex items-center gap-3 rounded-2xl px-4 py-2.5 text-[1rem] font-medium transition",
                   active
-                    ? "bg-[rgba(12,113,195,0.14)] text-[var(--color-primary)]"
-                    : "text-[var(--color-ink)] hover:bg-[var(--color-primary-soft)] hover:text-[var(--color-primary)]"
+                    ? "bg-[rgba(12,113,195,0.12)] text-[var(--color-primary)] shadow-[inset_0_1px_0_rgba(255,255,255,0.65)]"
+                    : "text-[var(--color-ink)] hover:bg-[rgba(12,113,195,0.06)] hover:text-[var(--color-primary)]"
                 )}
                 href={href}
                 key={label}
@@ -178,16 +178,16 @@ export function TeacherAccountDashboard({
             ))}
           </nav>
 
-          <div className="mt-auto space-y-3 border-t border-[rgba(12,113,195,0.12)] pt-6">
+          <div className="mt-auto space-y-2.5 border-t border-[rgba(12,113,195,0.12)] pt-5">
             <Link
-              className="flex items-center gap-3 rounded-2xl px-4 py-3 text-[1rem] font-medium text-[var(--color-ink)] transition hover:bg-[var(--color-primary-soft)] hover:text-[var(--color-primary)]"
+              className="flex items-center gap-3 rounded-2xl px-4 py-2.5 text-[1rem] font-medium text-[var(--color-ink)] transition hover:bg-[rgba(12,113,195,0.06)] hover:text-[var(--color-primary)]"
               href="#preferencias"
             >
               <Settings2 className="h-5 w-5" />
               Ajustes
             </Link>
             <form action={logoutAction}>
-              <Button className="w-full justify-start px-4 py-3" type="submit" variant="ghost">
+              <Button className="w-full justify-start px-4 py-2.5" type="submit" variant="ghost">
                 <LogOut className="mr-3 h-5 w-5" />
                 Cerrar sesion
               </Button>
@@ -197,15 +197,15 @@ export function TeacherAccountDashboard({
 
         <div className="min-w-0 flex-1">
           <header className="sticky top-0 z-40 border-b border-[rgba(12,113,195,0.12)] bg-[rgba(255,255,255,0.92)] backdrop-blur-md">
-            <div className="flex flex-wrap items-center justify-between gap-4 px-6 py-4 lg:px-10">
-              <div className="flex flex-wrap items-center gap-6">
+            <div className="flex flex-wrap items-center justify-between gap-4 px-6 py-3.5 lg:px-10">
+              <div className="flex flex-wrap items-center gap-5">
                 <Link
                   className="text-[2rem] font-semibold tracking-[-0.05em] text-[var(--color-primary)]"
                   href="/mi-cuenta"
                 >
                   {siteConfig.shortName}
                 </Link>
-                <nav aria-label="Navegacion superior docente" className="hidden items-center gap-3 md:flex">
+                <nav aria-label="Navegacion superior docente" className="hidden items-center gap-2.5 md:flex">
                   <ButtonLink href="/mi-cuenta" variant="ghost">
                     Mi cuenta
                   </ButtonLink>
@@ -216,7 +216,7 @@ export function TeacherAccountDashboard({
                     Foro
                   </ButtonLink>
                   <a
-                    className="inline-flex items-center justify-center rounded-xl px-5 py-3 text-sm font-semibold text-[var(--color-primary)] transition hover:bg-[var(--color-primary-soft)]"
+                    className="inline-flex items-center justify-center rounded-[1.15rem] px-4 py-2.5 text-sm font-semibold text-[var(--color-primary)] transition hover:bg-white/80 hover:text-[var(--color-primary-strong)]"
                     href={`mailto:${siteConfig.supportEmail}`}
                   >
                     Soporte
@@ -224,7 +224,7 @@ export function TeacherAccountDashboard({
                 </nav>
               </div>
 
-              <div className="flex flex-wrap items-center gap-3">
+              <div className="flex flex-wrap items-center gap-2.5">
                 <ButtonLink href="#actividad-docente" variant="ghost">
                   <Bell className="mr-2 h-4 w-4" />
                   Avisos
@@ -236,7 +236,7 @@ export function TeacherAccountDashboard({
                   <Settings2 className="mr-2 h-4 w-4" />
                   Preferencias
                 </ButtonLink>
-                <div className="flex items-center gap-3 rounded-full border border-[var(--color-border)] bg-white px-3 py-2">
+                <div className="flex items-center gap-3 rounded-full border border-[var(--color-border)] bg-white/92 px-3 py-1.5 shadow-[0_12px_24px_-22px_rgba(21,35,50,0.32)]">
                   <div className="grid h-10 w-10 place-items-center rounded-full bg-[var(--color-primary-soft)] text-sm font-semibold text-[var(--color-primary)]">
                     {initials}
                   </div>
@@ -249,9 +249,9 @@ export function TeacherAccountDashboard({
             </div>
           </header>
 
-          <main className="px-6 py-8 lg:px-10">
+          <main className="px-6 py-7 lg:px-10">
             {isDemoUser ? (
-              <Card className="mb-8 border-[#f0d098] bg-[#fff1cf] p-6">
+              <Card className="mb-6 border-[#f0d098] bg-[#fff1cf] p-5">
                 <p className="text-lg font-semibold text-[#7c5300]">Modo demo activo</p>
                 <p className="mt-2 text-base leading-7 text-[#805c16]">
                   Estas navegando con una cuenta docente de prueba sin base de datos. Puedes revisar
@@ -260,22 +260,22 @@ export function TeacherAccountDashboard({
               </Card>
             ) : null}
 
-            <section className="grid gap-8">
-              <Card className="overflow-hidden border-[rgba(12,113,195,0.16)] bg-[linear-gradient(135deg,rgba(255,255,255,0.98),rgba(229,238,248,0.82))] p-8 lg:p-9">
-                <div className="grid gap-7 xl:grid-cols-[minmax(0,1fr)_26rem] xl:items-end">
+            <section className="grid gap-6">
+              <Card className="overflow-hidden border-[rgba(12,113,195,0.16)] bg-[linear-gradient(135deg,rgba(255,255,255,0.98),rgba(229,238,248,0.82))] p-6 lg:p-7">
+                <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_23.5rem] xl:items-start">
                   <div className="max-w-4xl">
                     <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--color-primary)]">
                       Centro docente
                     </p>
-                    <h1 className="mt-4 text-[3.45rem] font-semibold leading-[0.98] tracking-[-0.07em] text-[var(--color-ink)]">
+                    <h1 className="mt-3 text-[2.85rem] font-semibold leading-[0.96] tracking-[-0.07em] text-[var(--color-ink)] lg:text-[3.2rem]">
                       Hola, {firstName}. Controla cursos, entregas y acompanamiento desde un panel mas operativo.
                     </h1>
-                    <p className="mt-5 max-w-3xl text-[1.03rem] leading-8 text-[var(--color-ink)]/84">
+                    <p className="mt-4 max-w-3xl text-[1rem] leading-7 text-[var(--color-ink)]/82">
                       Tu espacio docente debe permitir priorizar, revisar y publicar sin navegar a ciegas. Aqui concentramos seguimiento, actividad y acceso directo al campus.
                     </p>
                   </div>
 
-                  <div className="grid gap-4 sm:grid-cols-3 xl:grid-cols-1">
+                  <div className="grid gap-3 sm:grid-cols-3 xl:grid-cols-1">
                     <TeacherDashboardStat
                       detail={`${formatCompactNumber(globalSummary.activeLearners)} alumnos con actividad en seguimiento.`}
                       label="Alumnado activo"
@@ -296,59 +296,59 @@ export function TeacherAccountDashboard({
               </Card>
 
               {primaryCourse ? (
-                <div className="grid gap-6 xl:grid-cols-[minmax(0,1.35fr)_22rem]">
-                  <Card className="overflow-hidden border-[rgba(12,113,195,0.2)] p-8">
-                    <div className="grid gap-6 lg:grid-cols-[minmax(18rem,0.7fr)_minmax(0,1fr)]">
+                <div className="grid gap-5 xl:grid-cols-[minmax(0,1.35fr)_20rem]">
+                  <Card className="overflow-hidden border-[rgba(12,113,195,0.2)] p-6 lg:p-7">
+                    <div className="grid gap-5 lg:grid-cols-[minmax(16rem,0.7fr)_minmax(0,1fr)]">
                       <CourseArtwork
-                        className="h-full min-h-[18rem] w-full rounded-[28px] border-0"
+                        className="h-full min-h-[15.5rem] w-full rounded-[26px] border-0"
                         course={primaryCourse.space.course}
                         variant="hero"
                       />
 
                       <div className="flex flex-col justify-between">
                         <div>
-                          <div className="flex flex-wrap items-center gap-3">
+                          <div className="flex flex-wrap items-center gap-2">
                             <Badge tone="accent">Curso prioritario</Badge>
                             <Badge tone="muted">{primaryCourse.space.role}</Badge>
                           </div>
-                          <h2 className="mt-5 text-[3rem] font-semibold leading-[1.04] tracking-[-0.05em] text-[var(--color-ink)]">
+                          <h2 className="mt-4 text-[2.4rem] font-semibold leading-[1.02] tracking-[-0.05em] text-[var(--color-ink)] lg:text-[2.65rem]">
                             {primaryCourse.space.course.title}
                           </h2>
-                          <p className="mt-4 text-base leading-8 text-[var(--color-muted)]">
+                          <p className="mt-3 text-sm leading-7 text-[var(--color-muted)] lg:text-[0.96rem]">
                             {primaryCourse.learnerCount
                               ? `${primaryCourse.learnerCount} alumnos con seguimiento activo y ${primaryCourse.pendingReviewItems.length} entregas pendientes de revision.`
                               : "Todavia no hay alumnado con progreso registrado en este curso."}
                           </p>
                         </div>
 
-                        <div className="mt-8 grid gap-4 sm:grid-cols-3">
-                          <div className="rounded-[24px] bg-[var(--color-surface)] p-5">
-                            <p className="text-[2rem] font-semibold text-[var(--color-ink)]">
+                        <div className="mt-6 grid gap-3 sm:grid-cols-3">
+                          <div className="rounded-[20px] bg-[var(--color-surface)] p-4">
+                            <p className="text-[1.75rem] font-semibold text-[var(--color-ink)]">
                               {primaryCourse.pendingReviewItems.length}
                             </p>
-                            <p className="mt-1 text-sm leading-7 text-[var(--color-muted)]">
+                            <p className="mt-1 text-sm leading-6 text-[var(--color-muted)]">
                               Entregas pendientes
                             </p>
                           </div>
-                          <div className="rounded-[24px] bg-[var(--color-surface)] p-5">
-                            <p className="text-[2rem] font-semibold text-[var(--color-ink)]">
+                          <div className="rounded-[20px] bg-[var(--color-surface)] p-4">
+                            <p className="text-[1.75rem] font-semibold text-[var(--color-ink)]">
                               {primaryCourse.managedResourceCount}
                             </p>
-                            <p className="mt-1 text-sm leading-7 text-[var(--color-muted)]">
+                            <p className="mt-1 text-sm leading-6 text-[var(--color-muted)]">
                               Recursos gestionados
                             </p>
                           </div>
-                          <div className="rounded-[24px] bg-[var(--color-surface)] p-5">
-                            <p className="text-[2rem] font-semibold text-[var(--color-ink)]">
+                          <div className="rounded-[20px] bg-[var(--color-surface)] p-4">
+                            <p className="text-[1.75rem] font-semibold text-[var(--color-ink)]">
                               {primaryCourse.averageCompletionRate}%
                             </p>
-                            <p className="mt-1 text-sm leading-7 text-[var(--color-muted)]">
+                            <p className="mt-1 text-sm leading-6 text-[var(--color-muted)]">
                               Progreso medio
                             </p>
                           </div>
                         </div>
 
-                        <div className="mt-8 flex flex-wrap gap-3">
+                        <div className="mt-6 flex flex-wrap gap-2.5">
                           <ButtonLink href={paths.campusHref} prefetch>
                             Entrar al campus
                           </ButtonLink>
@@ -363,16 +363,16 @@ export function TeacherAccountDashboard({
                     </div>
                   </Card>
 
-                  <div className="space-y-6">
-                    <Card className="p-6">
+                  <div className="space-y-5">
+                    <Card className="p-5">
                       <div className="flex items-center gap-3">
                         <Users className="h-5 w-5 text-[var(--color-primary)]" />
-                        <h2 className="text-[2rem] font-semibold tracking-[-0.04em] text-[var(--color-ink)]">
+                        <h2 className="text-[1.8rem] font-semibold tracking-[-0.04em] text-[var(--color-ink)]">
                           Seguimiento global
                         </h2>
                       </div>
 
-                      <div className="mt-6 space-y-5 text-sm">
+                      <div className="mt-5 space-y-4 text-sm">
                         <div className="flex items-center justify-between gap-4">
                           <span className="text-[var(--color-muted)]">Alumnos activos</span>
                           <span className="text-xl font-semibold text-[var(--color-ink)]">
@@ -387,7 +387,7 @@ export function TeacherAccountDashboard({
                               : "0%"}
                           </span>
                         </div>
-                        <div className="h-3 overflow-hidden rounded-full bg-[var(--color-surface)]">
+                        <div className="h-2.5 overflow-hidden rounded-full bg-[var(--color-surface)]">
                           <div
                             aria-hidden="true"
                             className="h-full rounded-full bg-[var(--color-primary)]"
@@ -402,7 +402,7 @@ export function TeacherAccountDashboard({
                             {globalSummary.averageCompletionRate}%
                           </span>
                         </div>
-                        <div className="h-3 overflow-hidden rounded-full bg-[var(--color-surface)]">
+                        <div className="h-2.5 overflow-hidden rounded-full bg-[var(--color-surface)]">
                           <div
                             aria-hidden="true"
                             className="h-full rounded-full bg-[var(--color-primary)]"
@@ -421,18 +421,18 @@ export function TeacherAccountDashboard({
                   </div>
                 </div>
               ) : (
-                <Card className="overflow-hidden border-[rgba(12,113,195,0.18)] p-8 lg:p-10">
-                  <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-center">
+                <Card className="overflow-hidden border-[rgba(12,113,195,0.18)] p-6 lg:p-8">
+                  <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_18rem] lg:items-center">
                     <div>
                       <Badge tone="teacher">Estado actual</Badge>
-                      <h2 className="mt-6 text-[3.3rem] font-semibold tracking-[-0.06em] text-[var(--color-ink)]">
+                      <h2 className="mt-5 text-[2.8rem] font-semibold tracking-[-0.06em] text-[var(--color-ink)]">
                         Aun no tienes cursos asignados
                       </h2>
-                      <p className="mt-4 max-w-2xl text-[1.08rem] leading-8 text-[var(--color-muted)]">
+                      <p className="mt-3 max-w-2xl text-[1rem] leading-7 text-[var(--color-muted)]">
                         Tu panel de docencia esta listo. En cuanto se te asigne un curso o una
                         edicion, aqui aparecera tu centro de control, seguimiento y entregas.
                       </p>
-                      <div className="mt-8 flex flex-wrap gap-3">
+                      <div className="mt-6 flex flex-wrap gap-2.5">
                         <a
                           className="inline-flex items-center justify-center rounded-xl bg-[var(--color-primary)] px-5 py-3 text-sm font-semibold text-white shadow-[0_16px_30px_rgba(12,113,195,0.18)] transition hover:bg-[var(--color-primary-strong)]"
                           href={`mailto:${siteConfig.supportEmail}`}
@@ -449,20 +449,20 @@ export function TeacherAccountDashboard({
                     </div>
 
                     <div className="grid place-items-center">
-                      <div className="grid h-56 w-56 place-items-center rounded-full bg-[radial-gradient(circle,rgba(229,238,248,0.95)_0%,rgba(248,246,241,0.45)_70%)] text-[var(--color-primary)]">
-                        <BookOpenCheck className="h-20 w-20" />
+                      <div className="grid h-48 w-48 place-items-center rounded-full bg-[radial-gradient(circle,rgba(229,238,248,0.95)_0%,rgba(248,246,241,0.45)_70%)] text-[var(--color-primary)]">
+                        <BookOpenCheck className="h-16 w-16" />
                       </div>
                     </div>
                   </div>
                 </Card>
               )}
 
-              <div className="grid gap-6 xl:grid-cols-[minmax(0,1.35fr)_22rem]">
-                <Card className="p-8">
+              <div className="grid gap-5 xl:grid-cols-[minmax(0,1.35fr)_20rem]">
+                <Card className="p-6">
                   <div className="flex flex-wrap items-center justify-between gap-4">
                     <div className="flex items-center gap-3">
                       <FileClock className="h-5 w-5 text-[var(--color-primary)]" />
-                      <h2 className="text-[2rem] font-semibold tracking-[-0.04em] text-[var(--color-ink)]">
+                      <h2 className="text-[1.8rem] font-semibold tracking-[-0.04em] text-[var(--color-ink)]">
                         Pendiente de revisar
                       </h2>
                     </div>
@@ -473,11 +473,11 @@ export function TeacherAccountDashboard({
                     ) : null}
                   </div>
 
-                  <div className="mt-6 space-y-4">
+                  <div className="mt-5 space-y-3">
                     {pendingReviewItems.length ? (
                       pendingReviewItems.map((item) => (
                         <Link
-                          className="block rounded-[22px] border border-[var(--color-border)] bg-[var(--color-surface)] p-5 transition hover:border-[var(--color-primary)]"
+                          className="block rounded-[20px] border border-[var(--color-border)] bg-[var(--color-surface)] p-4 transition hover:-translate-y-[1px] hover:border-[var(--color-primary)] hover:bg-white hover:shadow-[0_16px_28px_-24px_rgba(12,113,195,0.34)]"
                           href={item.href}
                           key={item.id}
                         >
@@ -498,7 +498,7 @@ export function TeacherAccountDashboard({
                         </Link>
                       ))
                     ) : (
-                      <div className="rounded-[22px] border border-dashed border-[rgba(12,113,195,0.18)] bg-[var(--color-surface)] p-5 text-sm leading-7 text-[var(--color-muted)]">
+                      <div className="rounded-[20px] border border-dashed border-[rgba(12,113,195,0.18)] bg-[var(--color-surface)] p-4 text-sm leading-6 text-[var(--color-muted)]">
                         No hay entregas pendientes por revisar en este momento.
                       </div>
                     )}
@@ -515,38 +515,38 @@ export function TeacherAccountDashboard({
               </div>
 
               <section id="mis-cursos">
-                <div className="mb-6 flex items-center gap-3">
+                <div className="mb-5 flex items-center gap-3">
                   <GraduationCap className="h-5 w-5 text-[var(--color-primary)]" />
-                  <h2 className="text-[3rem] font-semibold tracking-[-0.06em] text-[var(--color-ink)]">
+                  <h2 className="text-[2.35rem] font-semibold tracking-[-0.06em] text-[var(--color-ink)]">
                     Tus cursos
                   </h2>
                 </div>
 
                 {secondaryCourses.length ? (
-                  <div className="grid gap-6 xl:grid-cols-2">
+                  <div className="grid gap-5 xl:grid-cols-2">
                     {secondaryCourses.map((course) => (
                       <Card className="overflow-hidden p-0" key={`teacher-course-${course.space.course.slug}`}>
                         <CourseArtwork
-                          className="h-52 w-full rounded-none border-0"
+                          className="h-44 w-full rounded-none border-0"
                           course={course.space.course}
                         />
-                        <div className="p-6">
-                          <div className="flex flex-wrap items-center gap-3">
+                        <div className="p-5">
+                          <div className="flex flex-wrap items-center gap-2">
                             <Badge tone="teacher">{course.space.role}</Badge>
                             <Badge tone="muted">{course.space.course.level}</Badge>
                             <Badge tone="muted">{course.space.course.format}</Badge>
                           </div>
 
-                          <h3 className="mt-4 text-[2rem] font-semibold leading-tight tracking-[-0.05em] text-[var(--color-ink)]">
+                          <h3 className="mt-3 text-[1.7rem] font-semibold leading-tight tracking-[-0.05em] text-[var(--color-ink)]">
                             {course.space.course.title}
                           </h3>
-                          <p className="mt-3 text-sm leading-7 text-[var(--color-muted)]">
+                          <p className="mt-2.5 text-sm leading-6 text-[var(--color-muted)]">
                             {course.learnerCount
                               ? `${course.learnerCount} alumnos, ${course.pendingReviewItems.length} entregas pendientes y ${course.managedResourceCount} recursos gestionados.`
                               : "Todavia no hay seguimiento registrado para este curso."}
                           </p>
 
-                          <div className="mt-6 grid gap-4 sm:grid-cols-3">
+                          <div className="mt-5 grid gap-3 sm:grid-cols-3">
                             <div className="rounded-[20px] bg-[var(--color-surface)] p-4">
                               <p className="text-lg font-semibold text-[var(--color-ink)]">
                                 {course.learnerCount}
@@ -573,7 +573,7 @@ export function TeacherAccountDashboard({
                             </div>
                           </div>
 
-                          <div className="mt-6 flex flex-wrap gap-3">
+                          <div className="mt-5 flex flex-wrap gap-2.5">
                             <ButtonLink href={buildCourseContentHref(course.space.course.slug)} prefetch>
                               Entrar al campus
                             </ButtonLink>
@@ -604,48 +604,48 @@ export function TeacherAccountDashboard({
                     ))}
                   </div>
                 ) : primaryCourse ? (
-                  <Card className="p-8">
+                  <Card className="p-6">
                     <p className="text-[1.6rem] font-semibold text-[var(--color-ink)]">
                       Este es tu curso docente principal
                     </p>
-                    <p className="mt-3 max-w-3xl text-[1rem] leading-8 text-[var(--color-muted)]">
+                    <p className="mt-2.5 max-w-3xl text-[1rem] leading-7 text-[var(--color-muted)]">
                       Cuando tengas mas asignaciones activas, apareceran aqui con su acceso directo
                       a campus, seguimiento y foro.
                     </p>
                   </Card>
                 ) : hasTeacherRoleWithoutCourses ? (
-                  <Card className="p-8">
-                    <p className="text-[1.04rem] leading-8 text-[var(--color-ink)]/84">
+                  <Card className="p-6">
+                    <p className="text-[1.04rem] leading-7 text-[var(--color-ink)]/84">
                       Aun no hay cursos asignados a tu cuenta docente.
                     </p>
                   </Card>
                 ) : null}
               </section>
 
-              <section className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)]" id="preferencias">
-                <Card className="p-8">
+              <section className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)]" id="preferencias">
+                <Card className="p-6">
                   <div className="flex items-center gap-3">
                     <CircleHelp className="h-5 w-5 text-[var(--color-primary)]" />
-                    <h2 className="text-[2rem] font-semibold tracking-[-0.04em] text-[var(--color-ink)]">
+                    <h2 className="text-[1.8rem] font-semibold tracking-[-0.04em] text-[var(--color-ink)]">
                       Soporte docente
                     </h2>
                   </div>
 
-                  <div className="mt-6 grid gap-4 md:grid-cols-2">
-                    <div className="rounded-[22px] bg-[var(--color-surface)] p-5">
+                  <div className="mt-5 grid gap-3 md:grid-cols-2">
+                    <div className="rounded-[20px] bg-[var(--color-surface)] p-4">
                       <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[var(--color-muted)]">
                         Operativa
                       </p>
-                      <p className="mt-3 text-sm leading-7 text-[var(--color-ink)]">
+                      <p className="mt-2.5 text-sm leading-6 text-[var(--color-ink)]">
                         Usa el seguimiento para revisar progreso del alumnado y el campus del curso
                         para gestionar recursos y ejercicios.
                       </p>
                     </div>
-                    <div className="rounded-[22px] bg-[var(--color-surface)] p-5">
+                    <div className="rounded-[20px] bg-[var(--color-surface)] p-4">
                       <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[var(--color-muted)]">
                         Contacto
                       </p>
-                      <p className="mt-3 text-sm leading-7 text-[var(--color-ink)]">
+                      <p className="mt-2.5 text-sm leading-6 text-[var(--color-ink)]">
                         Si necesitas soporte organizativo o acceso a nuevas ediciones, escribe a{" "}
                         {siteConfig.supportEmail}.
                       </p>
@@ -653,7 +653,7 @@ export function TeacherAccountDashboard({
                   </div>
 
                   <a
-                    className="mt-6 inline-flex items-center rounded-xl border border-[var(--color-primary)] px-5 py-3 text-sm font-semibold text-[var(--color-primary)] transition hover:bg-[var(--color-primary-soft)]"
+                    className="mt-5 inline-flex items-center rounded-[1.15rem] border border-[var(--color-primary)] px-4 py-2.5 text-sm font-semibold text-[var(--color-primary)] transition hover:bg-white hover:text-[var(--color-primary-strong)]"
                     href={`mailto:${siteConfig.supportEmail}`}
                   >
                     Contactar soporte
