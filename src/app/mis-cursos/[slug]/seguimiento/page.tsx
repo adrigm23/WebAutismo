@@ -124,7 +124,11 @@ export default async function CourseTrackingPage({ params }: TrackingPageProps) 
     status: CourseEnrollmentStatus;
     accessStartsAt: Date;
     accessUntil: Date | null;
-    user: { id: string };
+    user: {
+      id: string;
+      name: string;
+      email: string;
+    };
   }> = [];
   const exerciseResourcesPromise = getCampusResources({
     course,
@@ -133,8 +137,7 @@ export default async function CourseTrackingPage({ params }: TrackingPageProps) 
   }).then((resources) => resources.filter((resource) => resource.isManaged && resource.isExercise));
 
   try {
-    [progressRows, enrollments, exerciseResources] = await Promise.all([
-      getLearnerProgressRowsForCatalogCourse(course),
+    [enrollments, exerciseResources] = await Promise.all([
       getDb().courseEnrollment.findMany({
         where: {
           course: {
@@ -144,7 +147,9 @@ export default async function CourseTrackingPage({ params }: TrackingPageProps) 
         include: {
           user: {
             select: {
-              id: true
+              id: true,
+              name: true,
+              email: true
             }
           }
         },
@@ -154,6 +159,9 @@ export default async function CourseTrackingPage({ params }: TrackingPageProps) 
       }),
       exerciseResourcesPromise
     ]);
+    progressRows = await getLearnerProgressRowsForCatalogCourse(course, {
+      enrollments
+    });
   } catch (error) {
     if (!isDatabaseConnectionError(error)) {
       throw error;
@@ -164,6 +172,10 @@ export default async function CourseTrackingPage({ params }: TrackingPageProps) 
       exerciseResourcesPromise
     ]);
   }
+
+  const progressRowsByUserId = new Map(
+    progressRows.map((progressRow) => [progressRow.userId, progressRow] as const)
+  );
 
   const latestEnrollmentByUser = new Map<string, (typeof enrollments)[number]>();
 
@@ -285,7 +297,7 @@ export default async function CourseTrackingPage({ params }: TrackingPageProps) 
     .map((row) => ({
       ...row,
       averageScore: row.scoredCount ? row.scoreTotal / row.scoredCount : null,
-      progressRow: progressRows.find((progressRow) => progressRow.userId === row.userId) ?? null
+      progressRow: progressRowsByUserId.get(row.userId) ?? null
     }))
     .sort((left, right) =>
       (right.latestSubmittedAt?.getTime() ?? 0) - (left.latestSubmittedAt?.getTime() ?? 0)
@@ -807,6 +819,7 @@ export default async function CourseTrackingPage({ params }: TrackingPageProps) 
                       <CourseExerciseReviewForm
                         courseSlug={slug}
                         key={submission.id}
+                        passingScore={resource.passingScore}
                         submission={submission}
                       />
                     ))

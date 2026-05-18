@@ -56,6 +56,15 @@ export type CourseLearnerProgressRow = {
   lastCompletedAt: Date | null;
 };
 
+type CourseLearnerProgressEnrollment = {
+  userId: string;
+  user: {
+    id: string;
+    name: string;
+    email: string;
+  };
+};
+
 export type CourseLearnerProgressSummary = {
   learnerIds: string[];
   learnerCount: number;
@@ -626,30 +635,35 @@ export async function getLearnerProgressRowsForCourse(courseSlug: string): Promi
 }
 
 export async function getLearnerProgressRowsForCatalogCourse(
-  course: CourseProgressCourseShape
+  course: CourseProgressCourseShape,
+  input?: {
+    enrollments?: CourseLearnerProgressEnrollment[];
+  }
 ): Promise<CourseLearnerProgressRow[]> {
   const courseSlug = course.slug;
 
   try {
-    const enrollmentsPromise = getDb().courseEnrollment.findMany({
-      where: {
-        course: {
-          slug: courseSlug
-        }
-      },
-      include: {
-        user: {
-          select: {
-            id: true,
-            name: true,
-            email: true
+    const enrollmentsPromise = input?.enrollments
+      ? Promise.resolve(input.enrollments)
+      : getDb().courseEnrollment.findMany({
+          where: {
+            course: {
+              slug: courseSlug
+            }
+          },
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                email: true
+              }
+            }
+          },
+          orderBy: {
+            createdAt: "desc"
           }
-        }
-      },
-      orderBy: {
-        createdAt: "desc"
-      }
-    });
+        });
 
     const progressRecordsPromise = (async () => {
       try {

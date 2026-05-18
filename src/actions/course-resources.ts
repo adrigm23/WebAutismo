@@ -115,6 +115,18 @@ async function writeAuditLogSafely(...args: Parameters<typeof writeAuditLog>) {
   }
 }
 
+async function sendPlatformNotificationSafely(
+  ...args: Parameters<typeof sendPlatformNotification>
+) {
+  try {
+    await sendPlatformNotification(...args);
+  } catch (error) {
+    captureOperationalWarning("Course resource notification delivery failed.", {
+      error: error instanceof Error ? error : new Error(String(error))
+    });
+  }
+}
+
 function getCourseResourceActionError(error: unknown, fallbackMessage: string) {
   if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2003") {
     return "El modulo seleccionado ya no es valido para este curso. Recarga la pagina y vuelve a intentarlo.";
@@ -916,49 +928,49 @@ export async function reviewCourseResourceSubmissionAction(
       feedback: parsed.data.feedback
     });
 
-    await writeAuditLogSafely({
-      actorId: user.id,
-      action:
-        parsed.data.status === "REVIEWED"
-          ? "COURSE_RESOURCE_SUBMISSION_REVIEWED"
-          : "COURSE_RESOURCE_SUBMISSION_CHANGES_REQUESTED",
-      entityType: "COURSE_RESOURCE_SUBMISSION",
-      entityId: reviewedSubmission.id,
-      entityLabel: submission.resource.title,
-      metadata: {
-        courseSlug: parsed.data.courseSlug,
-        resourceTitle: submission.resource.title,
-        studentId: submission.student.id,
-        studentEmail: submission.student.email,
-        score,
-        reviewedAt: reviewedSubmission.reviewedAt?.toISOString() ?? null
-      }
-    });
-
-    await sendPlatformNotification({
-      userId: submission.student.id,
-      category: "COURSE",
-      title:
-        parsed.data.status === "REVIEWED"
-          ? "Tu entrega ya ha sido revisada"
-          : "Hay cambios solicitados en tu entrega",
-      body:
-        parsed.data.status === "REVIEWED"
-          ? `Ya puedes consultar el feedback docente${score !== null ? ` y tu nota (${score}/10)` : ""} de ${submission.resource.title}.`
-          : `Revisa el feedback docente y actualiza tu entrega de ${submission.resource.title}.`,
-      linkPath: buildCourseResourcesHref(
-        parsed.data.courseSlug,
-        `resource-${submission.resource.id}`
-      ),
-      metadata: {
-        courseSlug: parsed.data.courseSlug,
-        resourceId: submission.resource.id,
-        submissionId: reviewedSubmission.id
-      }
-    });
+    await Promise.all([
+      writeAuditLogSafely({
+        actorId: user.id,
+        action:
+          parsed.data.status === "REVIEWED"
+            ? "COURSE_RESOURCE_SUBMISSION_REVIEWED"
+            : "COURSE_RESOURCE_SUBMISSION_CHANGES_REQUESTED",
+        entityType: "COURSE_RESOURCE_SUBMISSION",
+        entityId: reviewedSubmission.id,
+        entityLabel: submission.resource.title,
+        metadata: {
+          courseSlug: parsed.data.courseSlug,
+          resourceTitle: submission.resource.title,
+          studentId: submission.student.id,
+          studentEmail: submission.student.email,
+          score,
+          reviewedAt: reviewedSubmission.reviewedAt?.toISOString() ?? null
+        }
+      }),
+      sendPlatformNotificationSafely({
+        userId: submission.student.id,
+        category: "COURSE",
+        title:
+          parsed.data.status === "REVIEWED"
+            ? "Tu entrega ya ha sido revisada"
+            : "Hay cambios solicitados en tu entrega",
+        body:
+          parsed.data.status === "REVIEWED"
+            ? `Ya puedes consultar el feedback docente${score !== null ? ` y tu nota (${score}/10)` : ""} de ${submission.resource.title}.`
+            : `Revisa el feedback docente y actualiza tu entrega de ${submission.resource.title}.`,
+        linkPath: buildCourseResourcesHref(
+          parsed.data.courseSlug,
+          `resource-${submission.resource.id}`
+        ),
+        metadata: {
+          courseSlug: parsed.data.courseSlug,
+          resourceId: submission.resource.id,
+          submissionId: reviewedSubmission.id
+        }
+      })
+    ]);
 
     revalidateCourseCampusView(parsed.data.courseSlug);
-    revalidateCourseTrackingView(parsed.data.courseSlug);
 
     return {
       success:

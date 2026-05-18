@@ -192,6 +192,7 @@ export function CourseResourceManager({
                   <CourseExerciseReviewForm
                     courseSlug={course.slug}
                     key={submission.id}
+                    passingScore={resource.passingScore}
                     submission={submission}
                   />
                 ))
