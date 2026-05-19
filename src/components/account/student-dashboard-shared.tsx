@@ -90,10 +90,10 @@ export function getNextStudentModuleLabel(course: StudentDashboardCourse) {
   const nextModule = course.progress.modules.find((module) => !module.isCompleted);
 
   if (nextModule) {
-    return `Siguiente paso: modulo ${nextModule.index + 1} - ${nextModule.title}`;
+    return `Siguiente paso: módulo ${nextModule.index + 1} - ${nextModule.title}`;
   }
 
-  return "Has completado todos los modulos disponibles en este curso.";
+  return "Has completado todos los módulos disponibles en este curso.";
 }
 
 export function buildStudentPendingItems(pendingSources: StudentDashboardPendingSource[]) {
@@ -142,9 +142,9 @@ export function buildStudentPendingItems(pendingSources: StudentDashboardPending
         id: `review-${resource.resourceId}`,
         href,
         title: resource.title,
-        description: "Tu entrega ya esta enviada y pendiente de revision docente.",
+        description: "Tu entrega ya está enviada y pendiente de revisión docente.",
         meta: courseLabel,
-        badgeLabel: "En revision",
+        badgeLabel: "En revisión",
         badgeTone: "muted",
         priority: 2,
         dueAt: resource.dueAt
@@ -278,8 +278,8 @@ export async function StudentRecentActivitySection(input: {
           ))
         ) : (
           <div className="rounded-[22px] border border-dashed border-[rgba(12,113,195,0.18)] bg-white p-5 text-sm leading-7 text-[var(--color-muted)]">
-            Todavia no hay actividad reciente. Cuando el equipo docente publique avisos o haya
-            movimiento en tus foros privados, lo veras aqui.
+            Todavía no hay actividad reciente. Cuando el equipo docente publique avisos o haya
+            movimiento en tus foros privados, lo verás aquí.
           </div>
         )}
       </div>

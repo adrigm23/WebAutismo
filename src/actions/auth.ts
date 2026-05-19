@@ -26,23 +26,23 @@ export type AuthFormState = {
 const registerSchema = z
   .object({
     name: z.string().min(2, "Introduce tu nombre."),
-    email: z.string().email("Introduce un email valido."),
-    password: z.string().min(8, "La contrasena debe tener al menos 8 caracteres."),
-    confirmPassword: z.string().min(8, "Confirma la contrasena."),
+    email: z.string().email("Introduce un email válido."),
+    password: z.string().min(8, "La contraseña debe tener al menos 8 caracteres."),
+    confirmPassword: z.string().min(8, "Confirma la contraseña."),
     next: z.string().optional()
   })
   .refine((data) => data.password === data.confirmPassword, {
-    message: "Las contrasenas no coinciden.",
+    message: "Las contraseñas no coinciden.",
     path: ["confirmPassword"]
   });
 
 const loginSchema = z.object({
-  email: z.string().email("Introduce un email valido."),
-  password: z.string().min(8, "La contrasena debe tener al menos 8 caracteres."),
+  email: z.string().email("Introduce un email válido."),
+  password: z.string().min(8, "La contraseña debe tener al menos 8 caracteres."),
   next: z.string().optional()
 });
 
-const INVALID_LOGIN_MESSAGE = "Credenciales no validas.";
+const INVALID_LOGIN_MESSAGE = "Credenciales no válidas.";
 const DUMMY_PASSWORD_HASH = "$2b$10$UVxjH7726JLyAsVadN8HVe3Kt0jMDfhJESSea8meSy76yz/Tm3sKy";
 
 function getOptionalString(formData: FormData, key: string) {
@@ -86,7 +86,7 @@ async function createUserWithOptionalEmailVerification(input: {
 
     if (verificationRequired) {
       throw new Error(
-        "La verificacion por correo requiere aplicar la migracion pendiente de la base de datos."
+        "La verificación por correo requiere aplicar la migración pendiente de la base de datos."
       );
     }
 
@@ -146,7 +146,7 @@ export async function registerAction(
     if (isEmailVerificationRequired() && !canSendEmailMessage()) {
       return {
         error:
-          "La verificacion obligatoria por email esta activada, pero el envio de correo no esta configurado."
+          "La verificación obligatoria por email está activada, pero el envío de correo no está configurado."
       };
     }
 
@@ -224,7 +224,7 @@ export async function registerAction(
     if (isDatabaseSchemaDriftError(error)) {
       return {
         error:
-          "La aplicacion necesita aplicar la migracion pendiente de la base de datos antes de completar esta operacion."
+          "La aplicación necesita aplicar la migración pendiente de la base de datos antes de completar esta operación."
       };
     }
 
@@ -290,7 +290,7 @@ export async function loginAction(
     }
 
     if (!user.isActive) {
-      return { error: "Tu cuenta esta desactivada. Contacta con administracion." };
+      return { error: "Tu cuenta está desactivada. Contacta con administración." };
     }
 
     if (isEmailVerificationRequired()) {
@@ -299,13 +299,13 @@ export async function loginAction(
       if (!verificationState.schemaReady) {
         return {
           error:
-            "El acceso con verificacion de correo todavia no esta disponible en este entorno. Aplica la migracion pendiente de la base de datos."
+            "El acceso con verificación de correo todavía no está disponible en este entorno. Aplica la migración pendiente de la base de datos."
         };
       }
 
       if (!verificationState.emailVerifiedAt) {
         return {
-          error: "Debes verificar tu correo electronico antes de acceder al campus."
+          error: "Debes verificar tu correo electrónico antes de acceder al campus."
         };
       }
     }
@@ -329,7 +329,7 @@ export async function loginAction(
     if (isDatabaseSchemaDriftError(error)) {
       return {
         error:
-          "La aplicacion necesita aplicar la migracion pendiente de la base de datos antes de completar esta operacion."
+          "La aplicación necesita aplicar la migración pendiente de la base de datos antes de completar esta operación."
       };
     }
 

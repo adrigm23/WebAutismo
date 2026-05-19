@@ -83,22 +83,25 @@ export default async function ForumHomePage({
       </div>
 
       <section className="ui-card-base overflow-hidden">
-        <div className="border-b border-[rgba(12,113,195,0.1)] px-5 py-5 sm:px-6">
+        <div className="px-5 py-5 sm:px-6">
           <div className="flex flex-wrap items-center gap-2">
             <Badge tone={canModerate ? "info" : "warning"}>{getRoleLabel(access.role)}</Badge>
-            <Badge tone="outline">{history.activeSpace.editionLabel}</Badge>
-            <Badge tone="brand">Comunidad activa</Badge>
+            <Badge className="hidden sm:inline-flex" tone="outline">
+              {history.activeSpace.editionLabel}
+            </Badge>
           </div>
-          <h1 className="mt-4 text-display-md font-semibold text-[var(--color-ink)]">
+          <h1 className="mt-4 text-display-sm font-semibold text-[var(--color-ink)] sm:text-display-md">
             Categorías del foro
           </h1>
           <p className="mt-3 max-w-3xl text-sm leading-7 text-[var(--color-muted)] sm:text-base">
-            Accede a anuncios, dudas y conversaciones del curso dentro del mismo recorrido
-            autenticado que campus, seguimiento y cuenta.
+            Elige una categoría y entra directamente en anuncios, dudas o conversaciones del curso.
+          </p>
+          <p className="mt-4 text-sm leading-6 text-[var(--color-muted)]">
+            {formatCompactNumber(totalThreads)} hilos visibles en {categories.length} categorías.
           </p>
         </div>
 
-        <div className="grid gap-3 px-5 py-5 sm:grid-cols-3 sm:px-6">
+        <div className="hidden grid-cols-3 gap-3 border-t border-[rgba(12,113,195,0.1)] px-5 py-5 sm:grid sm:px-6">
           <div className="rounded-[var(--radius-md)] border border-[rgba(12,113,195,0.1)] bg-[#faf8f4] px-4 py-4">
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-muted)]">
               Hilos visibles
@@ -134,20 +137,20 @@ export default async function ForumHomePage({
 
             return (
               <Link
-                className="ui-card-base group relative flex min-h-[15.5rem] flex-col overflow-hidden px-5 py-5 transition hover:-translate-y-[2px] hover:border-[rgba(12,113,195,0.24)]"
+                className="ui-card-base group relative flex min-h-[13.5rem] flex-col overflow-hidden px-5 py-5 transition hover:-translate-y-[2px] hover:border-[rgba(12,113,195,0.24)]"
                 href={`/mis-cursos/${course.slug}/foro/${category.slug}`}
                 key={category.id}
               >
                 <div className={`absolute inset-y-0 left-0 w-1 ${preset.accentClass}`} />
                 <div className="flex items-start justify-between gap-4">
-                  <div className={`grid h-12 w-12 place-items-center rounded-2xl ${preset.iconClass}`}>
+                  <div className={`grid h-11 w-11 shrink-0 place-items-center rounded-2xl ${preset.iconClass}`}>
                     <Icon className="h-5 w-5" />
                   </div>
-                  <MoveRight className="h-5 w-5 text-[var(--color-muted)] transition group-hover:translate-x-1 group-hover:text-[var(--color-primary)]" />
+                  <MoveRight className="h-5 w-5 shrink-0 text-[var(--color-muted)] transition group-hover:translate-x-1 group-hover:text-[var(--color-primary)]" />
                 </div>
 
-                <div className="mt-5">
-                  <h2 className="text-[1.7rem] font-semibold tracking-[-0.04em] text-[var(--color-ink)]">
+                <div className="mt-4 min-w-0">
+                  <h2 className="text-[1.45rem] font-semibold tracking-[-0.04em] text-[var(--color-ink)] sm:text-[1.7rem]">
                     {category.title}
                   </h2>
                   <p className="mt-3 text-sm leading-7 text-[var(--color-muted)] sm:text-base">
@@ -155,8 +158,8 @@ export default async function ForumHomePage({
                   </p>
                 </div>
 
-                <div className="mt-auto space-y-3 pt-6">
-                  <div className={`rounded-[var(--radius-md)] px-4 py-3 ${preset.softClass}`}>
+                <div className="mt-auto space-y-3 pt-5">
+                  <div className={`hidden rounded-[var(--radius-md)] px-4 py-3 sm:block ${preset.softClass}`}>
                     <p className="text-sm leading-6 text-[var(--color-ink)]">
                       {preset.expectedContent}
                     </p>
@@ -182,24 +185,23 @@ export default async function ForumHomePage({
             <div className="absolute inset-0 bg-[linear-gradient(135deg,transparent_0%,transparent_42%,rgba(12,113,195,0.04)_42%,rgba(12,113,195,0.04)_46%,transparent_46%,transparent_82%,rgba(255,182,6,0.06)_82%,rgba(255,182,6,0.06)_86%,transparent_86%)]" />
             <div className="relative flex h-full flex-col">
               <div className="flex items-start justify-between gap-4">
-                <div className="grid h-12 w-12 place-items-center rounded-2xl bg-[rgba(12,113,195,0.08)] text-[var(--color-primary)]">
+                <div className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-[rgba(12,113,195,0.08)] text-[var(--color-primary)]">
                   <ShieldCheck className="h-5 w-5" />
                 </div>
-                <Lock className="h-5 w-5 text-[var(--color-muted)]" />
+                <Lock className="h-5 w-5 shrink-0 text-[var(--color-muted)]" />
               </div>
 
-              <div className="mt-5">
-                <Badge tone="info">Docencia y moderación</Badge>
-                <h2 className="mt-3 text-[1.7rem] font-semibold tracking-[-0.04em] text-[var(--color-ink)]">
+              <div className="mt-4">
+                <Badge tone="info">Docencia</Badge>
+                <h2 className="mt-3 text-[1.45rem] font-semibold tracking-[-0.04em] text-[var(--color-ink)] sm:text-[1.7rem]">
                   Gestión de comunidad
                 </h2>
                 <p className="mt-3 text-sm leading-7 text-[var(--color-muted)] sm:text-base">
-                  Revisa contenido reportado, restaura mensajes y consulta el histórico por
-                  edición sin salir del área autenticada.
+                  Revisa contenido reportado o consulta el histórico sin salir del área del curso.
                 </p>
               </div>
 
-              <div className="mt-auto flex flex-wrap gap-3 pt-6">
+              <div className="mt-auto flex flex-wrap gap-3 pt-5">
                 <ButtonLink href={`/mis-cursos/${course.slug}/foro/moderacion`} variant="neutral">
                   Abrir moderación
                 </ButtonLink>

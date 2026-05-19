@@ -17,22 +17,22 @@ export type AccountSecurityFormState = {
 };
 
 const passwordResetRequestSchema = z.object({
-  email: z.string().email("Introduce un email valido.")
+  email: z.string().email("Introduce un email válido.")
 });
 
 const passwordResetSchema = z
   .object({
-    token: z.string().min(1, "Falta el token de recuperacion."),
-    password: z.string().min(8, "La contrasena debe tener al menos 8 caracteres."),
-    confirmPassword: z.string().min(8, "Confirma la contrasena.")
+    token: z.string().min(1, "Falta el token de recuperación."),
+    password: z.string().min(8, "La contraseña debe tener al menos 8 caracteres."),
+    confirmPassword: z.string().min(8, "Confirma la contraseña.")
   })
   .refine((data) => data.password === data.confirmPassword, {
-    message: "Las contrasenas no coinciden.",
+    message: "Las contraseñas no coinciden.",
     path: ["confirmPassword"]
   });
 
 const EMAIL_DELIVERY_DISABLED_MESSAGE =
-  "El envio de correo no esta configurado en este entorno.";
+  "El envío de correo no está configurado en este entorno.";
 
 export async function requestPasswordResetAction(
   _: AccountSecurityFormState,
@@ -79,7 +79,7 @@ export async function requestPasswordResetAction(
 
   return {
     success:
-      "Si existe una cuenta activa asociada a ese correo, acabamos de enviar instrucciones para restablecer la contrasena."
+      "Si existe una cuenta activa asociada a ese correo, acabamos de enviar instrucciones para restablecer la contraseña."
   };
 }
 
@@ -95,7 +95,7 @@ export async function resetPasswordAction(
 
   if (!parsed.success) {
     return {
-      error: parsed.error.issues[0]?.message ?? "Revisa la nueva contrasena."
+      error: parsed.error.issues[0]?.message ?? "Revisa la nueva contraseña."
     };
   }
 
@@ -106,7 +106,7 @@ export async function resetPasswordAction(
 
   if (!user) {
     return {
-      error: "El enlace de recuperacion no es valido o ya ha caducado."
+      error: "El enlace de recuperación no es válido o ya ha caducado."
     };
   }
 

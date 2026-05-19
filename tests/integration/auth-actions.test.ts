@@ -70,7 +70,7 @@ describe("auth server actions", () => {
     const result = await loginAction({}, formData);
 
     expect(result).toEqual({
-      error: "Credenciales no validas."
+      error: "Credenciales no válidas."
     });
     expect(createSessionMock).not.toHaveBeenCalled();
   });

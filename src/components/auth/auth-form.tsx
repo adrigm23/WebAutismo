@@ -39,26 +39,26 @@ export function AuthForm({
       ) : null}
 
       <label className="block space-y-2">
-        <span className="text-sm font-medium text-[var(--color-ink)]">Correo electronico</span>
+        <span className="text-sm font-medium text-[var(--color-ink)]">Correo electrónico</span>
         <Input autoComplete="email" name="email" placeholder="tu@email.com" required type="email" />
       </label>
 
       <label className="block space-y-2">
         <div className="flex items-center justify-between gap-3">
-          <span className="text-sm font-medium text-[var(--color-ink)]">Contrasena</span>
+          <span className="text-sm font-medium text-[var(--color-ink)]">Contraseña</span>
           {mode === "login" && showForgotLink ? (
             <Link
               className="text-sm font-medium text-[var(--color-primary)] underline-offset-4 hover:underline"
               href="/recuperar-contrasena"
             >
-              Has olvidado tu contrasena?
+              ¿Has olvidado tu contraseña?
             </Link>
           ) : null}
         </div>
         <Input
           autoComplete={mode === "login" ? "current-password" : "new-password"}
           name="password"
-          placeholder="Introduce tu contrasena"
+          placeholder="Introduce tu contraseña"
           required
           type="password"
         />
@@ -66,11 +66,11 @@ export function AuthForm({
 
       {mode === "register" ? (
         <label className="block space-y-2">
-          <span className="text-sm font-medium text-[var(--color-ink)]">Confirmar contrasena</span>
+          <span className="text-sm font-medium text-[var(--color-ink)]">Confirmar contraseña</span>
           <Input
             autoComplete="new-password"
             name="confirmPassword"
-            placeholder="Repite tu contrasena"
+            placeholder="Repite tu contraseña"
             required
             type="password"
           />

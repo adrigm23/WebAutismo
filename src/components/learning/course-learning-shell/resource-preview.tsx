@@ -122,7 +122,7 @@ export function ModuleLessonPreview(input: {
   if (!input.resource) {
     return (
       <div className="ui-empty-state p-6 text-sm leading-7 text-[var(--color-muted)]">
-        Este modulo todavia no tiene un material principal publicado. Puedes seguir el resumen del modulo y revisar la tarea asociada cuando se publique.
+        Este módulo todavía no tiene un material principal publicado. Puedes seguir el resumen del módulo y revisar la tarea asociada cuando se publique.
       </div>
     );
   }
@@ -191,7 +191,7 @@ export function ModuleLessonPreview(input: {
             <div>
               <p className="text-base font-semibold text-[var(--color-ink)]">Vista previa no integrada</p>
               <p className="mt-2 text-sm leading-7 text-[var(--color-muted)]">
-                Este material no se puede previsualizar dentro del campus con el formato actual, pero sigue accesible desde el boton superior.
+                Este material no se puede previsualizar dentro del campus con el formato actual, pero sigue accesible desde el botón superior.
               </p>
             </div>
           </div>

@@ -1,0 +1,15 @@
+{
+  "cookies": [
+    {
+      "name": "academy_session",
+      "value": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJkZW1vLXN0dWRlbnQiLCJpYXQiOjE3NzkyMDM4MDQsImV4cCI6MTc4MTc5NTgwNH0.xkhIcELsVzzvxfLJ5bMIEI2PDbun4ZQfDp6J208cPkw",
+      "domain": "localhost",
+      "path": "/",
+      "expires": 1781795804.433065,
+      "httpOnly": true,
+      "secure": false,
+      "sameSite": "Lax"
+    }
+  ],
+  "origins": []
+}

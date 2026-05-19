@@ -3,7 +3,7 @@ import Link from "next/link";
 import { PasswordResetForm } from "@/components/auth/password-reset-form";
 
 export const metadata: Metadata = {
-  title: "Restablecer contrasena",
+  title: "Restablecer contraseña",
   robots: {
     index: false,
     follow: false
@@ -29,10 +29,10 @@ export default async function ResetPasswordPage({ searchParams }: ResetPasswordP
             Seguridad de cuenta
           </p>
           <h1 className="text-5xl font-semibold tracking-[-0.05em] text-[var(--color-ink)]">
-            Restablecer contrasena
+            Restablecer contraseña
           </h1>
           <p className="text-lg leading-8 text-[var(--color-muted)]">
-            Define una nueva contrasena segura para recuperar el acceso al campus.
+            Define una nueva contraseña segura para recuperar el acceso al campus.
           </p>
         </div>
 
@@ -41,7 +41,7 @@ export default async function ResetPasswordPage({ searchParams }: ResetPasswordP
             <PasswordResetForm token={token} />
           ) : (
             <div className="rounded-2xl border border-[#efb3a6] bg-[#fff1ec] px-4 py-3 text-sm text-[#9b4128]">
-              Falta el token de recuperacion. Solicita un nuevo enlace.
+              Falta el token de recuperación. Solicita un nuevo enlace.
             </div>
           )}
         </div>

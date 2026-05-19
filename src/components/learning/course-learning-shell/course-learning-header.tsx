@@ -31,6 +31,66 @@ export function CourseLearningHeader({
   simpleMode,
   onSimpleModeChange
 }: CourseLearningHeaderProps) {
+  if (!canModerate) {
+    return (
+      <header className="sticky top-0 z-30 border-b border-[rgba(12,113,195,0.12)] bg-[rgba(255,255,255,0.94)] backdrop-blur-md">
+        <div className="site-container py-4">
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-primary)]">
+                  Campus del curso
+                </p>
+                <h1 className="mt-2 text-display-md font-semibold text-[var(--color-ink)]">
+                  {courseTitle}
+                </h1>
+                <p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--color-muted)]">
+                  Empieza por la lección activa y abre tus tareas solo cuando lo necesites.
+                </p>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2 lg:justify-end">
+                <Link
+                  className="inline-flex min-h-11 items-center justify-center rounded-[var(--radius-pill)] px-3.5 py-2 text-sm font-semibold text-[var(--color-ink)] transition hover:bg-[var(--color-primary-soft)] hover:text-[var(--color-primary)]"
+                  href="/mis-cursos"
+                >
+                  Mis cursos
+                </Link>
+                <Link
+                  className="inline-flex min-h-11 items-center justify-center rounded-[var(--radius-pill)] px-3.5 py-2 text-sm font-semibold text-[var(--color-ink)] transition hover:bg-[var(--color-primary-soft)] hover:text-[var(--color-primary)]"
+                  href="/mi-cuenta"
+                >
+                  Mi cuenta
+                </Link>
+                <Link
+                  className="inline-flex min-h-11 items-center justify-center rounded-[var(--radius-pill)] border border-[var(--color-border)] px-3.5 py-2 text-sm font-semibold text-[var(--color-ink)] transition hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]"
+                  href={buildCourseForumHref(courseSlug)}
+                >
+                  Foro
+                </Link>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2 border-t border-[rgba(12,113,195,0.08)] pt-3">
+              <WorkspaceTabButton
+                active={activeTab === "content"}
+                icon={LayoutPanelTop}
+                label="Lección"
+                onClick={() => onTabChange("content")}
+              />
+              <WorkspaceTabButton
+                active={activeTab === "resources"}
+                icon={FolderOpen}
+                label="Tareas"
+                onClick={onResourcesClick}
+              />
+            </div>
+          </div>
+        </div>
+      </header>
+    );
+  }
+
   return (
     <header className="sticky top-0 z-30 border-b border-[rgba(12,113,195,0.12)] bg-[rgba(255,255,255,0.94)] backdrop-blur-md">
       <div className="site-container py-4">

@@ -16,7 +16,7 @@ export function PasswordResetRequestForm() {
   return (
     <form action={formAction} className="space-y-4">
       <label className="block space-y-2">
-        <span className="text-sm font-medium text-[var(--color-ink)]">Correo electronico</span>
+        <span className="text-sm font-medium text-[var(--color-ink)]">Correo electrónico</span>
         <Input autoComplete="email" name="email" placeholder="tu@email.com" required type="email" />
       </label>
 
@@ -41,7 +41,7 @@ export function PasswordResetRequestForm() {
       ) : null}
 
       <SubmitButton className="w-full" pendingLabel="Enviando instrucciones...">
-        Enviar enlace de recuperacion
+        Enviar enlace de recuperación
       </SubmitButton>
     </form>
   );

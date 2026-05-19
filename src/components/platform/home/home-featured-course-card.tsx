@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { ArrowUpRight, Clock3, MonitorPlay } from "lucide-react";
 import { CourseArtwork } from "@/components/course-artwork";
 import type { CatalogCourse } from "@/lib/course-catalog";
 import { formatPrice } from "@/lib/utils";
@@ -10,16 +9,15 @@ type HomeFeaturedCourseCardProps = {
 
 export function HomeFeaturedCourseCard({ course }: HomeFeaturedCourseCardProps) {
   return (
-    <article className="group flex h-full flex-col overflow-hidden rounded-2xl border border-[rgba(12,113,195,0.14)] bg-white shadow-[var(--shadow-soft)] transition duration-200 hover:-translate-y-0.5 hover:shadow-[var(--shadow-strong)] motion-reduce:transform-none">
-      <div className="relative p-4 pb-0">
-        <CourseArtwork className="h-44 w-full sm:h-48" course={course} variant="card" />
-        <span className="absolute left-7 top-7 rounded-md bg-[rgba(12,113,195,0.94)] px-2.5 py-1 text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-white">
-          {course.category}
-        </span>
-      </div>
+    <article className="group flex h-full flex-col overflow-hidden rounded-[1.6rem] border border-[rgba(12,113,195,0.12)] bg-white/88 transition duration-200 hover:border-[rgba(12,113,195,0.2)] hover:bg-white motion-reduce:transform-none">
+      <CourseArtwork className="h-44 w-full border-0 sm:h-48" course={course} variant="card" />
 
-      <div className="flex flex-1 flex-col px-5 pb-5 pt-4 sm:px-6 sm:pb-6">
-        <h3 className="text-xl font-semibold leading-snug tracking-[-0.03em] text-[var(--color-ink)] sm:text-[1.35rem]">
+      <div className="flex flex-1 flex-col px-5 pb-5 pt-5 sm:px-6 sm:pb-6">
+        <p className="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-[var(--color-primary)]">
+          {course.category}
+        </p>
+
+        <h3 className="mt-3 text-[1.75rem] font-semibold leading-tight tracking-[-0.04em] text-[var(--color-ink)]">
           <Link
             className="transition-colors group-hover:text-[var(--color-primary)]"
             href={`/cursos/${course.slug}`}
@@ -27,31 +25,24 @@ export function HomeFeaturedCourseCard({ course }: HomeFeaturedCourseCardProps) 
             {course.title}
           </Link>
         </h3>
+
         <p className="mt-3 line-clamp-3 text-sm leading-7 text-[var(--color-muted)]">
           {course.shortDescription}
         </p>
 
-        <ul className="mt-5 space-y-2 text-sm text-[var(--color-ink)]">
-          <li className="flex items-center gap-2.5">
-            <Clock3 aria-hidden className="h-4 w-4 text-[var(--color-primary)]" />
-            <span>{course.duration}</span>
-          </li>
-          <li className="flex items-center gap-2.5">
-            <MonitorPlay aria-hidden className="h-4 w-4 text-[var(--color-primary)]" />
-            <span>{course.format}</span>
-          </li>
-        </ul>
+        <p className="mt-4 text-sm leading-6 text-[var(--color-muted)]">
+          {course.duration} · {course.format}
+        </p>
 
-        <div className="mt-auto flex items-end justify-between gap-4 border-t border-[rgba(12,113,195,0.12)] pt-4">
+        <div className="mt-auto flex items-end justify-between gap-4 border-t border-[rgba(12,113,195,0.12)] pt-5">
           <p className="text-2xl font-semibold tracking-[-0.04em] text-[var(--color-primary)] tabular-nums">
             {formatPrice(course.priceInCents)}
           </p>
           <Link
-            className="inline-flex items-center gap-1.5 rounded-xl bg-[var(--color-primary)] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[var(--color-primary-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2"
+            className="text-sm font-semibold text-[var(--color-primary)] underline-offset-4 transition hover:underline"
             href={`/cursos/${course.slug}`}
           >
             Ver curso
-            <ArrowUpRight aria-hidden className="h-4 w-4" />
           </Link>
         </div>
       </div>

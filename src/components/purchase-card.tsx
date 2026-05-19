@@ -1,4 +1,5 @@
-import { BadgeCheck, CalendarCheck2, Clock3, Lock, MonitorPlay } from "lucide-react";
+import { Clock3, Lock, MonitorPlay } from "lucide-react";
+import { CourseArtwork } from "@/components/course-artwork";
 import { ButtonLink } from "@/components/ui/button";
 import type { CatalogCourse } from "@/lib/course-catalog";
 import { formatPrice } from "@/lib/utils";
@@ -10,63 +11,84 @@ type PurchaseCardProps = {
 
 export function PurchaseCard({ course, purchaseMode }: PurchaseCardProps) {
   const isLiveMode = purchaseMode === "live";
+  const leadTeacher = course.teachers[0] ?? null;
+  const editionLabel = course.activeEdition?.label ?? null;
 
   return (
-    <div className="rounded-2xl border border-[var(--color-border)] bg-white p-10 shadow-[0_18px_40px_rgba(34,34,33,0.06)]">
-      <div className="flex items-center justify-between gap-4">
-        <p className="text-base font-medium text-[var(--color-ink)]">Precio de inscripcion</p>
-        <div className="inline-flex items-center gap-2 rounded-full bg-[var(--color-surface)] px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-muted)]">
+    <div className="rounded-[28px] border border-[rgba(12,113,195,0.12)] bg-white p-6 shadow-[0_18px_40px_rgba(34,34,33,0.06)] lg:p-7">
+      <CourseArtwork
+        className="mb-5 hidden h-44 w-full rounded-[24px] border-0 lg:block"
+        course={course}
+        variant="hero"
+      />
+
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--color-primary)]">
+            Inscripcion
+          </p>
+          <p className="mt-2 text-sm leading-6 text-[var(--color-muted)]">
+            Compra clara, acceso personal y activacion vinculada a tu cuenta.
+          </p>
+        </div>
+        <div className="inline-flex items-center gap-2 rounded-full bg-[var(--color-surface)] px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-[var(--color-muted)]">
           <Lock className="h-3.5 w-3.5" />
           {isLiveMode ? "Pago real" : "Modo demo"}
         </div>
       </div>
 
-      <p className="mt-2 text-[4rem] font-semibold tracking-[-0.06em] text-[var(--color-ink)]">
+      <p className="mt-5 text-[3.5rem] font-semibold tracking-[-0.07em] text-[var(--color-ink)] lg:text-[4rem]">
         {formatPrice(course.priceInCents)}
       </p>
+      <p className="mt-3 text-sm leading-7 text-[var(--color-muted)]">
+        El checkout se mantiene intacto. Esta capa solo reduce ruido y deja la decision de compra
+        mas clara.
+      </p>
 
-      <div className="mt-8 space-y-5 border-t border-[rgba(12,113,195,0.14)] pt-8 text-[1.05rem] text-[var(--color-ink)]">
-        <div className="flex gap-4">
-          <MonitorPlay className="mt-1 h-5 w-5 text-[var(--color-primary)]" />
-          <span>{course.format}</span>
-        </div>
-        <div className="flex gap-4">
-          <Clock3 className="mt-1 h-5 w-5 text-[var(--color-primary)]" />
-          <span>Duracion estimada: {course.duration}</span>
-        </div>
-        <div className="flex gap-4">
-          <CalendarCheck2 className="mt-1 h-5 w-5 text-[var(--color-primary)]" />
-          <span>
-            Acceso segun la edicion activa y, si aplica, su ventana de consulta posterior.
-          </span>
-        </div>
-        <div className="flex gap-4">
-          <BadgeCheck className="mt-1 h-5 w-5 text-[var(--color-primary)]" />
-          <span>
-            {isLiveMode
-              ? "Checkout seguro con Stripe y confirmacion automatica por correo."
-              : "Activacion local de prueba sin cobro real, pensada para este entorno."}
-          </span>
-        </div>
-      </div>
-
-      {!isLiveMode ? (
-        <div className="mt-8 rounded-2xl border border-[rgba(255,182,6,0.4)] bg-[var(--color-accent-soft)] px-4 py-4 text-sm leading-7 text-[var(--color-ink)]">
-          Este curso se esta mostrando en modo demo. El boton final activa acceso local de
-          prueba y no procesa ningun pago real.
-        </div>
-      ) : null}
-
-      <div className="mt-10">
+      <div className="mt-6">
         <ButtonLink className="w-full" href={`/checkout/${course.slug}`} variant="accent">
           {isLiveMode ? "Continuar con la compra" : "Revisar acceso demo"}
         </ButtonLink>
       </div>
 
-      <p className="mt-8 text-center text-sm font-medium text-[var(--color-ink)]">
+      <dl className="mt-7 divide-y divide-[rgba(12,113,195,0.12)] border-t border-[rgba(12,113,195,0.12)] text-sm">
+        <div className="flex items-start gap-3 py-4">
+          <MonitorPlay className="mt-0.5 h-4 w-4 shrink-0 text-[var(--color-primary)]" />
+          <div>
+            <dt className="font-semibold text-[var(--color-ink)]">Formato</dt>
+            <dd className="mt-1 leading-6 text-[var(--color-muted)]">{course.format}</dd>
+          </div>
+        </div>
+        <div className="flex items-start gap-3 py-4">
+          <Clock3 className="mt-0.5 h-4 w-4 shrink-0 text-[var(--color-primary)]" />
+          <div>
+            <dt className="font-semibold text-[var(--color-ink)]">Duracion</dt>
+            <dd className="mt-1 leading-6 text-[var(--color-muted)]">{course.duration}</dd>
+          </div>
+        </div>
+        <div className="py-4">
+          <dt className="font-semibold text-[var(--color-ink)]">Acceso</dt>
+          <dd className="mt-1 leading-6 text-[var(--color-muted)]">
+            {editionLabel
+              ? `La matricula se vincula a ${editionLabel} y mantiene la ventana de consulta configurada para esa edicion.`
+              : "El acceso queda asociado a tu cuenta y se activa segun la edicion vigente del curso."}
+          </dd>
+        </div>
+        {leadTeacher ? (
+          <div className="py-4">
+            <dt className="font-semibold text-[var(--color-ink)]">Equipo docente</dt>
+            <dd className="mt-1 leading-6 text-[var(--color-muted)]">
+              {leadTeacher.name}
+              {leadTeacher.role ? ` · ${leadTeacher.role}` : ""}
+            </dd>
+          </div>
+        ) : null}
+      </dl>
+
+      <p className="mt-5 text-sm leading-7 text-[var(--color-muted)]">
         {isLiveMode
-          ? "Compra protegida y acceso individual al contenido adquirido."
-          : "Entorno de validacion con acceso individual sin cobro real."}
+          ? "El cobro se realiza fuera de esta pagina, en la pasarela segura de Stripe."
+          : "Este entorno activa acceso local de prueba y no procesa ningun cobro real."}
       </p>
     </div>
   );

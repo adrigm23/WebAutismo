@@ -15,22 +15,22 @@ export function PasswordResetForm({ token }: { token: string }) {
       <input name="token" type="hidden" value={token} />
 
       <label className="block space-y-2">
-        <span className="text-sm font-medium text-[var(--color-ink)]">Nueva contrasena</span>
+        <span className="text-sm font-medium text-[var(--color-ink)]">Nueva contraseña</span>
         <Input
           autoComplete="new-password"
           name="password"
-          placeholder="Introduce tu nueva contrasena"
+          placeholder="Introduce tu nueva contraseña"
           required
           type="password"
         />
       </label>
 
       <label className="block space-y-2">
-        <span className="text-sm font-medium text-[var(--color-ink)]">Confirmar contrasena</span>
+        <span className="text-sm font-medium text-[var(--color-ink)]">Confirmar contraseña</span>
         <Input
           autoComplete="new-password"
           name="confirmPassword"
-          placeholder="Repite tu nueva contrasena"
+          placeholder="Repite tu nueva contraseña"
           required
           type="password"
         />
@@ -46,8 +46,8 @@ export function PasswordResetForm({ token }: { token: string }) {
         </p>
       ) : null}
 
-      <SubmitButton className="w-full" pendingLabel="Actualizando contrasena...">
-        Guardar nueva contrasena
+      <SubmitButton className="w-full" pendingLabel="Actualizando contraseña...">
+        Guardar nueva contraseña
       </SubmitButton>
     </form>
   );

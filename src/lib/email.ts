@@ -90,7 +90,7 @@ export async function sendNotificationEmail(input: {
             ? `<p><a href="${safeActionUrl}" style="display: inline-block; background: #0d6356; color: white; padding: 12px 18px; border-radius: 999px; text-decoration: none;">${safeActionLabel}</a></p>`
             : ""
         }
-        <p>Tambien puedes revisar tu cuenta aqui:</p>
+        <p>También puedes revisar tu cuenta aquí:</p>
         <p><a href="${safeAccountUrl}">${safeAccountUrl}</a></p>
         <p>${safeSiteName}</p>
       </div>
@@ -123,10 +123,10 @@ export async function sendPasswordResetEmail(input: {
   await sendNotificationEmail({
     email: input.email,
     name: input.name,
-    subject: "Restablece tu contrasena",
-    title: "Recuperacion de contrasena",
-    body: `Hemos recibido una solicitud para restablecer tu contrasena. El enlace caduca el ${input.expiresAt.toLocaleString("es-ES")}. Si no has sido tu, puedes ignorar este mensaje.`,
-    actionLabel: "Restablecer contrasena",
+    subject: "Restablece tu contraseña",
+    title: "Recuperación de contraseña",
+    body: `Hemos recibido una solicitud para restablecer tu contraseña. El enlace caduca el ${input.expiresAt.toLocaleString("es-ES")}. Si no has sido tú, puedes ignorar este mensaje.`,
+    actionLabel: "Restablecer contraseña",
     actionUrl: resetUrl
   });
 }
@@ -142,9 +142,9 @@ export async function sendEmailVerificationEmail(input: {
   await sendNotificationEmail({
     email: input.email,
     name: input.name,
-    subject: "Verifica tu correo electronico",
-    title: "Verificacion de email",
-    body: `Confirma tu direccion de correo para activar completamente tu acceso al campus. El enlace caduca el ${input.expiresAt.toLocaleString("es-ES")}.`,
+    subject: "Verifica tu correo electrónico",
+    title: "Verificación de email",
+    body: `Confirma tu dirección de correo para activar completamente tu acceso al campus. El enlace caduca el ${input.expiresAt.toLocaleString("es-ES")}.`,
     actionLabel: "Verificar email",
     actionUrl: verificationUrl
   });

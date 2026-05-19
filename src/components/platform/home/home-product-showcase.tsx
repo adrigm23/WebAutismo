@@ -1,15 +1,7 @@
-import { CheckCircle2 } from "lucide-react";
-
-const modules = [
-  { label: "Módulo 1", state: "Completado" },
-  { label: "Módulo 2", state: "En curso" },
-  { label: "Foro del curso", state: "Activo" }
-];
-
 export function HomeProductShowcase() {
   return (
-    <div aria-label="Vista previa del campus y del flujo de formación" className="relative">
-      <div className="overflow-hidden rounded-[1.35rem] border border-[rgba(12,113,195,0.14)] bg-[var(--color-surface-strong)] shadow-[var(--shadow-strong)]">
+    <div aria-label="Vista previa del campus y del flujo de formacion" className="relative">
+      <div className="overflow-hidden rounded-[1.5rem] border border-[rgba(12,113,195,0.14)] bg-[var(--color-surface-strong)] shadow-[0_22px_56px_rgba(21,35,50,0.08)]">
         <div className="flex items-center gap-2 border-b border-[rgba(12,113,195,0.1)] bg-[var(--color-surface)] px-4 py-3">
           <span aria-hidden className="h-2.5 w-2.5 rounded-full bg-[#e2c4c4]" />
           <span aria-hidden className="h-2.5 w-2.5 rounded-full bg-[#e8d9a8]" />
@@ -19,68 +11,43 @@ export function HomeProductShowcase() {
           </span>
         </div>
 
-        <div className="grid gap-0 lg:grid-cols-[11rem_1fr]">
-          <div
-            aria-hidden
-            className="hidden border-r border-[rgba(12,113,195,0.1)] bg-[var(--color-surface)] p-4 lg:block"
-          >
-            <p className="text-[0.65rem] font-semibold uppercase tracking-[0.18em] text-[var(--color-muted)]">
-              Área privada
+        <div className="space-y-0 px-6 py-6">
+          <div className="border-b border-[rgba(12,113,195,0.1)] pb-5">
+            <p className="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-[var(--color-primary)]">
+              Curso activo
             </p>
-            <ul className="mt-4 space-y-2 text-sm text-[var(--color-ink)]">
-              <li className="rounded-lg bg-white px-3 py-2 font-medium text-[var(--color-primary)]">
-                Mis cursos
-              </li>
-              <li className="rounded-lg px-3 py-2 text-[var(--color-muted)]">Mi cuenta</li>
-              <li className="rounded-lg px-3 py-2 text-[var(--color-muted)]">Foro</li>
-            </ul>
+            <p className="mt-3 text-[1.9rem] font-semibold leading-tight tracking-[-0.04em] text-[var(--color-ink)]">
+              Intervencion en autismo
+            </p>
+            <p className="mt-3 max-w-md text-sm leading-7 text-[var(--color-muted)]">
+              Un acceso claro al campus, materiales del curso y seguimiento dentro de la misma
+              cuenta.
+            </p>
           </div>
 
-          <div className="p-5 sm:p-6">
-            <div className="flex flex-wrap items-start justify-between gap-3">
-              <div>
-                <p className="text-xs font-medium text-[var(--color-muted)]">Curso activo</p>
-                <p className="mt-1 text-lg font-semibold tracking-[-0.03em] text-[var(--color-ink)]">
-                  Intervención en autismo
-                </p>
-              </div>
-              <span className="rounded-full bg-[var(--color-primary-soft)] px-3 py-1 text-xs font-semibold text-[var(--color-primary)]">
-                Edición vigente
-              </span>
+          <div className="grid gap-0 border-b border-[rgba(12,113,195,0.1)] py-5">
+            <div className="flex items-center justify-between gap-4 py-3">
+              <p className="text-sm font-medium text-[var(--color-ink)]">Contenido del curso</p>
+              <span className="text-sm text-[var(--color-muted)]">Disponible</span>
             </div>
+            <div className="flex items-center justify-between gap-4 py-3">
+              <p className="text-sm font-medium text-[var(--color-ink)]">Tareas y materiales</p>
+              <span className="text-sm text-[var(--color-muted)]">Acceso privado</span>
+            </div>
+            <div className="flex items-center justify-between gap-4 py-3">
+              <p className="text-sm font-medium text-[var(--color-ink)]">Foro del curso</p>
+              <span className="text-sm text-[var(--color-muted)]">Protegido</span>
+            </div>
+          </div>
 
-            <div className="mt-5 grid gap-3 sm:grid-cols-3">
-              {modules.map((module) => (
-                <div
-                  className="rounded-xl border border-[rgba(12,113,195,0.12)] bg-[var(--color-surface)] p-3"
-                  key={module.label}
-                >
-                  <p className="text-xs font-medium text-[var(--color-muted)]">{module.label}</p>
-                  <p className="mt-2 text-sm font-semibold text-[var(--color-ink)]">{module.state}</p>
-                </div>
-              ))}
-            </div>
-
-            <div className="mt-4 rounded-xl border border-[rgba(12,113,195,0.12)] bg-white p-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-muted)]">
-                Inscripción
-              </p>
-              <ul className="mt-3 space-y-2.5">
-                {[
-                  "Pago seguro cuando Stripe está activo",
-                  "Activación visible en tu cuenta",
-                  "Foro y materiales bajo permisos"
-                ].map((item) => (
-                  <li className="flex items-start gap-2.5 text-sm text-[var(--color-ink)]" key={item}>
-                    <CheckCircle2
-                      aria-hidden
-                      className="mt-0.5 h-4 w-4 shrink-0 text-[var(--color-primary)]"
-                    />
-                    <span>{item}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
+          <div className="pt-5">
+            <p className="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-[var(--color-primary)]">
+              Flujo de acceso
+            </p>
+            <p className="mt-3 text-sm leading-7 text-[var(--color-muted)]">
+              La compra activa el curso en tu cuenta y mantiene el acceso segun matricula y
+              ventana de edicion.
+            </p>
           </div>
         </div>
       </div>

@@ -55,6 +55,7 @@ export function CourseLearningShell({
       : null;
   });
   const activeTab = pendingActiveTab ?? initialActiveTab;
+  const effectiveSimpleMode = canModerate ? simpleMode : true;
   const currentModule = progress.modules[selectedModuleIndex] ?? progress.modules[0] ?? null;
   const nextPendingModule = useMemo(
     () => progress.modules.find((module) => !module.isCompleted) ?? progress.modules[0] ?? null,
@@ -441,7 +442,7 @@ export function CourseLearningShell({
         onSimpleModeChange={toggleSimpleMode}
         onTabChange={handleTabChange}
         roleLabel={roleLabel}
-        simpleMode={simpleMode}
+        simpleMode={effectiveSimpleMode}
       />
 
       <div className="site-container py-7 xl:py-9">
@@ -449,7 +450,7 @@ export function CourseLearningShell({
         <div
           className={cn(
             "mt-6 grid gap-6",
-            isFocusedTaskWorkspace || simpleMode
+            isFocusedTaskWorkspace || effectiveSimpleMode
               ? "xl:grid-cols-1"
               : "xl:grid-cols-[minmax(0,1fr)_19.5rem] 2xl:grid-cols-[minmax(0,1fr)_21rem]"
           )}
@@ -457,7 +458,7 @@ export function CourseLearningShell({
           <div className="space-y-5">
             {isFocusedTaskWorkspace ? (
               <FocusedTaskIntro courseSlug={course.slug} onClearFocus={clearFocusedTaskWorkspace} />
-            ) : showCompactContentHeader ? (
+            ) : !canModerate && showCompactContentHeader ? (
               <CompactLessonHeader
                 canModerate={canModerate}
                 course={course}
@@ -474,7 +475,24 @@ export function CourseLearningShell({
                 onOpenCurrentLesson={() => openWorkspaceTarget("content", "content-current-module")}
                 roleLabel={roleLabel}
               />
-            ) : (
+            ) : canModerate && showCompactContentHeader ? (
+              <CompactLessonHeader
+                canModerate={canModerate}
+                course={course}
+                currentModule={currentModule}
+                currentModuleExercises={currentModuleExercises}
+                currentModuleMaterials={currentModuleMaterials}
+                currentModulePrimaryMaterial={currentModulePrimaryMaterial}
+                editionLabel={editionLabel}
+                onOpenCurrentExercise={() => {
+                  if (currentModuleExercises[0]) {
+                    handleResourceWorkspaceOpen(`resource-${currentModuleExercises[0].id}`);
+                  }
+                }}
+                onOpenCurrentLesson={() => openWorkspaceTarget("content", "content-current-module")}
+                roleLabel={roleLabel}
+              />
+            ) : canModerate ? (
               <CourseLearningHero
                 accessUntil={accessUntil}
                 canModerate={canModerate}
@@ -497,9 +515,9 @@ export function CourseLearningShell({
                 primarySummary={primarySummary}
                 progress={progress}
                 roleLabel={roleLabel}
-                simpleMode={simpleMode}
+                simpleMode={effectiveSimpleMode}
               />
-            )}
+            ) : null}
 
             {activeTab === "content" ? (
               <CourseLearningContentTab
@@ -517,7 +535,7 @@ export function CourseLearningShell({
                 onSelectModule={selectModule}
                 progress={progress}
                 selectedModuleIndex={selectedModuleIndex}
-                simpleMode={simpleMode}
+                simpleMode={effectiveSimpleMode}
                 studentOpenExercisesCount={studentOpenExercises.length}
                 studentUnderReviewExercisesCount={studentUnderReviewExercises.length}
                 teacherPendingReviews={teacherPendingReviews}
@@ -535,7 +553,7 @@ export function CourseLearningShell({
                 onExitFocus={clearFocusedTaskWorkspace}
                 resources={resources}
                 roleLabel={roleLabel}
-                simpleMode={simpleMode}
+                simpleMode={effectiveSimpleMode}
                 studentUnderReviewExercisesCount={studentUnderReviewExercises.length}
                 teacherPendingReviews={teacherPendingReviews}
               />
@@ -546,12 +564,12 @@ export function CourseLearningShell({
                 canModerate={canModerate}
                 courseSlug={course.slug}
                 forumCategories={forumCategories}
-                simpleMode={simpleMode}
+                simpleMode={effectiveSimpleMode}
               />
             ) : null}
           </div>
 
-          {!isFocusedTaskWorkspace && !simpleMode ? (
+          {!isFocusedTaskWorkspace && !effectiveSimpleMode ? (
             <CourseLearningAside
               canModerate={canModerate}
               courseSlug={course.slug}

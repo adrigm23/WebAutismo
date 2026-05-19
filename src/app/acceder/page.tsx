@@ -40,9 +40,9 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
       showDemoNotice={isDemoAuthEnabled()}
       statusMessage={
         showVerificationMessage
-          ? "Tu cuenta se ha creado. Revisa tu correo y verifica tu direccion antes de acceder."
+          ? "Tu cuenta se ha creado. Revisa tu correo y verifica tu dirección antes de acceder."
           : showResetMessage
-            ? "Tu contrasena se ha actualizado. Ya puedes iniciar sesion con la nueva clave."
+            ? "Tu contraseña se ha actualizado. Ya puedes iniciar sesión con la nueva clave."
             : null
       }
     />

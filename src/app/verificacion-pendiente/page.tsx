@@ -6,7 +6,7 @@ import { logoutAction } from "@/actions/session";
 import { getCurrentUser } from "@/lib/auth";
 
 export const metadata: Metadata = {
-  title: "Verificacion pendiente",
+  title: "Verificación pendiente",
   robots: {
     index: false,
     follow: false
@@ -48,20 +48,20 @@ export default async function VerificationPendingPage({
             Verifica tu correo antes de continuar
           </h1>
           <p className="text-lg leading-8 text-[var(--color-muted)]">
-            Hemos bloqueado temporalmente el acceso al campus hasta que confirmes la direccion de
+            Hemos bloqueado temporalmente el acceso al campus hasta que confirmes la dirección de
             correo asociada a tu cuenta.
           </p>
         </div>
 
         {sent ? (
           <div className="rounded-[24px] border border-[rgba(12,113,195,0.14)] bg-white px-5 py-4 text-sm leading-7 text-[var(--color-ink)] shadow-[0_12px_24px_rgba(34,34,33,0.05)]">
-            Hemos reenviado un nuevo enlace de verificacion a <strong>{user.email}</strong>.
+            Hemos reenviado un nuevo enlace de verificación a <strong>{user.email}</strong>.
           </div>
         ) : null}
 
         {error === "email-delivery" ? (
           <div className="rounded-2xl border border-[#efb3a6] bg-[#fff1ec] px-4 py-3 text-sm text-[#9b4128]">
-            El envio de correo no esta configurado correctamente en este entorno.
+            El envío de correo no está configurado correctamente en este entorno.
           </div>
         ) : null}
 
@@ -70,7 +70,7 @@ export default async function VerificationPendingPage({
             Cuenta pendiente: <strong>{user.email}</strong>
           </p>
           <p className="mt-3 text-sm leading-7 text-[var(--color-muted)]">
-            Revisa tu bandeja de entrada y tambien la carpeta de spam. Si el enlace ha caducado,
+            Revisa tu bandeja de entrada y también la carpeta de spam. Si el enlace ha caducado,
             puedes solicitar uno nuevo.
           </p>
 
@@ -78,13 +78,13 @@ export default async function VerificationPendingPage({
             <form action={resendEmailVerificationAction}>
               <input name="nextPath" type="hidden" value="/verificacion-pendiente" />
               <button className="rounded-xl bg-[var(--color-primary)] px-5 py-3 text-sm font-semibold text-white transition hover:opacity-90" type="submit">
-                Reenviar verificacion
+                Reenviar verificación
               </button>
             </form>
 
             <form action={logoutAction}>
               <button className="rounded-xl border border-[var(--color-border)] px-5 py-3 text-sm font-semibold text-[var(--color-ink)] transition hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]" type="submit">
-                Cerrar sesion
+                Cerrar sesión
               </button>
             </form>
           </div>
@@ -92,7 +92,7 @@ export default async function VerificationPendingPage({
 
         <div className="text-center text-sm text-[var(--color-muted)]">
           <Link className="text-[var(--color-primary)] underline-offset-4 hover:underline" href="/soporte">
-            Necesito ayuda con la verificacion
+            Necesito ayuda con la verificación
           </Link>
         </div>
       </div>

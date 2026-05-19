@@ -94,7 +94,7 @@ export default async function MyCoursesPage() {
       : 0;
   const primaryAction = primaryStudentCourse
     ? {
-        label: "Continuar curso",
+        label: "Continuar lección",
         href: buildCourseContentHref(primaryStudentCourse.space.course.slug)
       }
     : staffSpaces[0]
@@ -165,7 +165,7 @@ export default async function MyCoursesPage() {
               Mis cursos
             </h1>
             <p className="mt-4 max-w-3xl text-body-lg text-[var(--color-muted)]">
-              Entra al campus correcto, retoma tu progreso y localiza tus accesos activos sin
+              Entra en la lección correcta, retoma tu progreso y localiza tus accesos activos sin
               perderte entre listados planos.
             </p>
 
@@ -232,7 +232,7 @@ export default async function MyCoursesPage() {
                   <div>
                     <div className="flex flex-wrap items-center gap-3">
                       <span className="inline-flex items-center rounded-[var(--radius-pill)] bg-[var(--color-primary-soft)] px-3 py-1 text-xs font-semibold text-[var(--color-primary)]">
-                        Curso a continuar
+                        Lección a continuar
                       </span>
                       <span className="inline-flex items-center rounded-[var(--radius-pill)] border border-[var(--color-border)] bg-white px-3 py-1 text-xs font-semibold text-[var(--color-muted)]">
                         {primaryStudentCourse.space.course.level}
@@ -273,7 +273,7 @@ export default async function MyCoursesPage() {
 
                     <div className="mt-5 flex flex-wrap gap-3">
                       <ButtonLink href={buildCourseContentHref(primaryStudentCourse.space.course.slug)}>
-                        Continuar curso
+                        Continuar lección
                       </ButtonLink>
                       <ButtonLink
                         href={buildCourseResourcesHref(primaryStudentCourse.space.course.slug)}
@@ -355,7 +355,7 @@ export default async function MyCoursesPage() {
 
                         <div className="mt-5 flex flex-wrap gap-3">
                           <ButtonLink href={buildCourseContentHref(space.course.slug)}>
-                            {completion > 0 ? "Continuar curso" : "Entrar al campus"}
+                            {completion > 0 ? "Continuar lección" : "Abrir lección"}
                           </ButtonLink>
                           <Link
                             className="inline-flex items-center gap-1.5 self-center text-sm font-semibold text-[var(--color-primary)]"
@@ -380,7 +380,7 @@ export default async function MyCoursesPage() {
                   </p>
                   <div className="mt-5 flex flex-wrap gap-3">
                     <ButtonLink href={buildCourseContentHref(primaryStudentCourse.space.course.slug)}>
-                      Continuar curso
+                      Continuar lección
                     </ButtonLink>
                     <ButtonLink
                       href={buildCourseResourcesHref(primaryStudentCourse.space.course.slug)}

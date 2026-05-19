@@ -99,7 +99,7 @@ export function StudentAccountDashboard({
         primaryAction={
           primaryCourse
             ? {
-                label: "Continuar curso",
+                label: "Continuar lección",
                 href: buildCourseContentHref(primaryCourse.space.course.slug)
               }
             : null
@@ -135,7 +135,7 @@ export function StudentAccountDashboard({
           <Card className="mb-8 border-[#f0d098] bg-[#fff1cf] p-6">
             <p className="text-lg font-semibold text-[#7c5300]">Modo demo activo</p>
             <p className="mt-2 text-base leading-7 text-[#805c16]">
-              Estas navegando con una cuenta de prueba sin base de datos. Puedes revisar la
+              Estás navegando con una cuenta de prueba sin base de datos. Puedes revisar la
               experiencia del alumno, pero los cambios no se guardan.
             </p>
           </Card>
@@ -153,22 +153,22 @@ export function StudentAccountDashboard({
                     Hola, {firstName}
                   </h1>
                   <p className="mt-4 max-w-3xl text-[1.03rem] leading-8 text-[var(--color-ink)]/82">
-                    Entra aqui para continuar el curso correcto, ver tus tareas abiertas y resolver
-                    pendientes sin navegar a ciegas entre pantallas.
+                    Entra aquí para retomar tu lección activa, abrir tus tareas pendientes y seguir
+                    el curso sin navegar a ciegas entre pantallas.
                   </p>
 
                   <div className="mt-6 flex flex-wrap gap-3">
                     {primaryCourse ? (
                       <>
                         <ButtonLink href={buildCourseContentHref(primaryCourse.space.course.slug)}>
-                          Continuar curso
+                          Continuar lección
                         </ButtonLink>
                         <ButtonLink href={resourcesHref} variant="secondary">
                           Ver tareas
                         </ButtonLink>
                       </>
                     ) : (
-                      <ButtonLink href="/cursos">Explorar catalogo</ButtonLink>
+                      <ButtonLink href="/cursos">Explorar catálogo</ButtonLink>
                     )}
                     <ButtonLink href="/mis-cursos" variant="ghost">
                       Ver todos mis cursos
@@ -183,7 +183,7 @@ export function StudentAccountDashboard({
                     value={`${activeCoursesCount}`}
                   />
                   <StudentDashboardStat
-                    detail={primaryCourse ? `${completedModules} de ${totalModules} modulos revisados.` : "Aun no has empezado el recorrido."}
+                    detail={primaryCourse ? `${completedModules} de ${totalModules} módulos revisados.` : "Aún no has empezado el recorrido."}
                     label="Progreso"
                     value={`${completionRate}%`}
                   />
@@ -244,13 +244,13 @@ export function StudentAccountDashboard({
                         </div>
                         <div className="mt-3 flex flex-wrap items-center justify-between gap-3 text-sm text-[var(--color-muted)]">
                           <span>
-                            {primaryCourse.progress.completedModules} de {primaryCourse.progress.totalModules} modulos
+                            {primaryCourse.progress.completedModules} de {primaryCourse.progress.totalModules} módulos
                             marcados
                           </span>
                           <span>
                             {primaryCourse.progress.lastCompletedAt
-                              ? `Ultima actividad ${formatRelativeTime(primaryCourse.progress.lastCompletedAt)}`
-                              : "Aun no has registrado progreso"}
+                              ? `Última actividad ${formatRelativeTime(primaryCourse.progress.lastCompletedAt)}`
+                              : "Aún no has registrado progreso"}
                           </span>
                         </div>
                       </div>
@@ -258,7 +258,7 @@ export function StudentAccountDashboard({
 
                     <div className="mt-8 flex flex-wrap gap-3">
                       <ButtonLink href={buildCourseContentHref(primaryCourse.space.course.slug)}>
-                        Continuar curso
+                        Continuar lección
                       </ButtonLink>
                       <ButtonLink href={resourcesHref} variant="secondary">
                         Ver tareas
@@ -277,14 +277,14 @@ export function StudentAccountDashboard({
                     <GraduationCap className="h-12 w-12" />
                   </div>
                   <h2 className="mt-8 text-[3rem] font-semibold tracking-[-0.06em] text-[var(--color-ink)]">
-                    Aun no tienes cursos activos
+                    Aún no tienes cursos activos
                   </h2>
                   <p className="mt-4 text-lg leading-9 text-[var(--color-muted)]">
-                    Explora el catalogo y accede a tus proximas formaciones desde un campus
+                    Explora el catálogo y accede a tus próximas formaciones desde un campus
                     privado con recursos, ejercicios y comunidad por curso.
                   </p>
                   <ButtonLink className="mt-8" href="/cursos">
-                    Explorar catalogo
+                    Explorar catálogo
                   </ButtonLink>
                 </div>
               </Card>
@@ -339,7 +339,7 @@ export function StudentAccountDashboard({
                 ) : (
                   <div className="rounded-[22px] border border-dashed border-[rgba(12,113,195,0.18)] bg-[var(--color-surface)] p-5 text-sm leading-7 text-[var(--color-muted)]">
                     No hay entregas pendientes ahora mismo. Cuando se publique un nuevo ejercicio o
-                    necesites responder a una revision, aparecera aqui.
+                    necesites responder a una revisión, aparecerá aquí.
                   </div>
                 )}
               </div>
@@ -368,7 +368,7 @@ export function StudentAccountDashboard({
                 Ver area completa
               </ButtonLink>
               <ButtonLink href="/cursos" variant="ghost">
-                Explorar catalogo
+                Explorar catálogo
               </ButtonLink>
             </div>
           </div>
@@ -395,8 +395,8 @@ export function StudentAccountDashboard({
                         {course.progress.isCompleted
                           ? "Curso completado en tu seguimiento manual."
                           : course.progress.hasStarted
-                            ? `${course.progress.pendingModules} modulos pendientes por revisar.`
-                            : "Aun no has empezado este curso en el campus."}
+                            ? `${course.progress.pendingModules} módulos pendientes por revisar.`
+                            : "Aún no has empezado este curso en el campus."}
                       </p>
 
                       <div className="mt-6 h-3 overflow-hidden rounded-full bg-[var(--color-surface)]">
@@ -409,7 +409,7 @@ export function StudentAccountDashboard({
 
                       <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm text-[var(--color-muted)]">
                         <span>
-                          {course.progress.completedModules} de {course.progress.totalModules} modulos
+                          {course.progress.completedModules} de {course.progress.totalModules} módulos
                         </span>
                         <span>
                           {course.progress.lastCompletedAt
@@ -420,7 +420,7 @@ export function StudentAccountDashboard({
 
                       <div className="mt-6 flex flex-wrap gap-3">
                         <ButtonLink href={buildCourseContentHref(course.space.course.slug)}>
-                          Abrir curso
+                          Abrir lección
                         </ButtonLink>
                         <ButtonLink
                           href={buildCourseResourcesHref(course.space.course.slug)}
@@ -440,7 +440,7 @@ export function StudentAccountDashboard({
                         Este es tu curso activo principal
                       </p>
                       <p className="mt-2 max-w-3xl text-[1rem] leading-8 text-[var(--color-muted)]">
-                      Cuando tengas mas matriculas activas, apareceran aqui con su progreso y
+                      Cuando tengas más matrículas activas, aparecerán aquí con su progreso y
                       acceso directo al campus.
                     </p>
                   </div>
@@ -454,8 +454,8 @@ export function StudentAccountDashboard({
           ) : (
             <Card className="ui-empty-state p-8">
               <p className="text-[1.04rem] leading-8 text-[var(--color-ink)]/84">
-                Todavia no tienes cursos asociados. Cuando completes una compra o te asignen un
-                curso, apareceran aqui con su estado de acceso real.
+                Todavía no tienes cursos asociados. Cuando completes una compra o te asignen un
+                curso, aparecerán aquí con su estado de acceso real.
               </p>
               <ButtonLink className="mt-6" href="/cursos">
                 Explorar cursos
@@ -490,7 +490,7 @@ export function StudentAccountDashboard({
                 </p>
                 <p className="mt-2 text-sm leading-7 text-[var(--color-muted)]">
                   Consulta anuncios, dudas y respuestas del equipo docente asociadas a tu
-                  matricula. Las tareas viven dentro del campus.
+                  matrícula. Las tareas viven dentro del campus.
                 </p>
                 <ButtonLink className="mt-5" href={forumHref} variant="secondary">
                   Abrir foro
@@ -546,7 +546,7 @@ export function StudentAccountDashboard({
                   Seguimiento
                 </p>
                 <p className="mt-3 text-sm leading-7 text-[var(--color-ink)]">
-                  El progreso se guarda cuando marcas modulos como revisados dentro del campus.
+                  El progreso se guarda cuando marcas módulos como revisados dentro del campus.
                 </p>
               </div>
               <div className="rounded-[22px] bg-[var(--color-surface)] p-5">
@@ -562,7 +562,7 @@ export function StudentAccountDashboard({
                   Acceso
                 </p>
                 <p className="mt-3 text-sm leading-7 text-[var(--color-ink)]">
-                  Tu matricula controla recursos, campus y foro privado segun la ventana de acceso.
+                  Tu matrícula controla recursos, campus y foro privado según la ventana de acceso.
                 </p>
               </div>
             </div>

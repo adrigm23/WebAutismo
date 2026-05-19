@@ -3,7 +3,7 @@ import Link from "next/link";
 import { PasswordResetRequestForm } from "@/components/auth/password-reset-request-form";
 
 export const metadata: Metadata = {
-  title: "Recuperar contrasena",
+  title: "Recuperar contraseña",
   robots: {
     index: false,
     follow: false
@@ -19,11 +19,11 @@ export default function ForgotPasswordPage() {
             Seguridad de cuenta
           </p>
           <h1 className="text-5xl font-semibold tracking-[-0.05em] text-[var(--color-ink)]">
-            Recuperar contrasena
+            Recuperar contraseña
           </h1>
           <p className="text-lg leading-8 text-[var(--color-muted)]">
             Introduce el correo de tu cuenta. Si existe una cuenta activa, enviaremos un enlace
-            temporal para restablecer la contrasena.
+            temporal para restablecer la contraseña.
           </p>
         </div>
 
