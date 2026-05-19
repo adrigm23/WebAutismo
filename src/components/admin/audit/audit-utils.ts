@@ -7,7 +7,7 @@ export function getEntityTypeLabel(entityType: AuditEntityType) {
     case "COURSE":
       return "Curso";
     case "COURSE_EDITION":
-      return "Edicion";
+      return "Edición";
     case "COURSE_ENROLLMENT":
       return "Matricula";
     case "COURSE_RESOURCE":
@@ -34,7 +34,11 @@ export function formatMetadataKey(key: string) {
 }
 
 export function formatMetadataValue(value: unknown) {
-  if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
+  if (
+    typeof value === "string" ||
+    typeof value === "number" ||
+    typeof value === "boolean"
+  ) {
     return String(value);
   }
 

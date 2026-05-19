@@ -1,6 +1,12 @@
 import type { Metadata } from "next";
 import type { CourseEnrollmentStatus } from "@prisma/client";
-import { BarChart3, ChevronLeft, CircleHelp, FileClock, FolderKanban } from "lucide-react";
+import {
+  BarChart3,
+  ChevronLeft,
+  CircleHelp,
+  FileClock,
+  FolderKanban,
+} from "lucide-react";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { AccountAuthHeader } from "@/components/account/account-auth-header";
@@ -14,12 +20,12 @@ import { getCatalogCourseBySlug } from "@/lib/course-catalog";
 import {
   canAccessCourseCommunityForCourse,
   canModerateCourse,
-  getRoleLabel
+  getRoleLabel,
 } from "@/lib/course-community";
 import {
   buildCourseContentHref,
   buildCourseForumHref,
-  buildCourseResourcesHref
+  buildCourseResourcesHref,
 } from "@/lib/course-navigation";
 import { getEnrollmentAccessState } from "@/lib/course-editions";
 import { isDatabaseConnectionError } from "@/lib/db-errors";
@@ -41,16 +47,27 @@ function TrackingStat(input: {
   label: string;
   value: string;
   detail: string;
+  compactOnMobile?: boolean;
 }) {
   return (
-    <Card className="rounded-[var(--radius-md)] px-4 py-4">
+    <Card
+      className={`rounded-[var(--radius-md)] px-3.5 py-3.5 sm:px-4 sm:py-4 ${
+        input.compactOnMobile ? "sm:min-h-[unset]" : ""
+      }`}
+    >
       <p className="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-[var(--color-muted)]">
         {input.label}
       </p>
-      <p className="mt-2.5 text-[1.8rem] font-semibold leading-none tracking-[-0.05em] text-[var(--color-ink)]">
+      <p className="mt-2 text-[1.45rem] font-semibold leading-none tracking-[-0.05em] text-[var(--color-ink)] sm:mt-2.5 sm:text-[1.8rem]">
         {input.value}
       </p>
-      <p className="mt-1.5 text-sm leading-5 text-[var(--color-muted)]">{input.detail}</p>
+      <p
+        className={`mt-1 text-xs leading-5 text-[var(--color-muted)] sm:mt-1.5 sm:text-sm ${
+          input.compactOnMobile ? "hidden sm:block" : ""
+        }`}
+      >
+        {input.detail}
+      </p>
     </Card>
   );
 }
@@ -61,15 +78,15 @@ function TrackingCompactStat(input: {
   detail: string;
 }) {
   return (
-    <div className="ui-card-base rounded-[var(--radius-md)] bg-[rgba(255,255,255,0.84)] px-4 py-4">
+    <div className="ui-card-base rounded-[var(--radius-md)] bg-[rgba(255,255,255,0.84)] px-3.5 py-3 sm:px-4 sm:py-4">
       <p className="text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-[var(--color-muted)]">
         {input.label}
       </p>
-      <div className="mt-2.5 flex items-end justify-between gap-3">
-        <p className="text-[1.55rem] font-semibold leading-none tracking-[-0.05em] text-[var(--color-ink)]">
+      <div className="mt-2 flex items-end justify-between gap-2 sm:mt-2.5 sm:gap-3">
+        <p className="text-[1.35rem] font-semibold leading-none tracking-[-0.05em] text-[var(--color-ink)] sm:text-[1.55rem]">
           {input.value}
         </p>
-        <p className="max-w-[11rem] text-right text-xs leading-5 text-[var(--color-muted)]">
+        <p className="hidden max-w-[11rem] text-right text-xs leading-5 text-[var(--color-muted)] sm:block">
           {input.detail}
         </p>
       </div>
@@ -82,7 +99,7 @@ function getReviewStatusMeta(status: SubmissionReviewStatus) {
     return {
       tone: "success" as const,
       shortLabel: "Revisada",
-      queueLabel: "Revision cerrada"
+      queueLabel: "Revisión cerrada",
     };
   }
 
@@ -90,40 +107,42 @@ function getReviewStatusMeta(status: SubmissionReviewStatus) {
     return {
       tone: "info" as const,
       shortLabel: "Cambios solicitados",
-      queueLabel: "Esperando nueva version"
+      queueLabel: "Esperando nueva versión",
     };
   }
 
   return {
     tone: "warning" as const,
     shortLabel: "Pendiente",
-    queueLabel: "Pendiente de revision"
+    queueLabel: "Pendiente de revisión",
   };
 }
 
-function getAccessStateMeta(state: ReturnType<typeof getEnrollmentAccessState>) {
+function getAccessStateMeta(
+  state: ReturnType<typeof getEnrollmentAccessState>,
+) {
   if (state === "active") {
     return {
       tone: "success" as const,
-      label: "Acceso activo"
+      label: "Acceso activo",
     };
   }
 
   if (state === "scheduled") {
     return {
       tone: "info" as const,
-      label: "Acceso programado"
+      label: "Acceso programado",
     };
   }
 
   return {
     tone: "outline" as const,
-    label: state === "expired" ? "Acceso expirado" : "Acceso inactivo"
+    label: state === "expired" ? "Acceso expirado" : "Acceso inactivo",
   };
 }
 
 export async function generateMetadata({
-  params
+  params,
 }: TrackingPageProps): Promise<Metadata> {
   const { slug } = await params;
   const course = await getCatalogCourseBySlug(slug);
@@ -132,12 +151,14 @@ export async function generateMetadata({
     title: course ? `Seguimiento | ${course.title}` : "Seguimiento",
     robots: {
       index: false,
-      follow: false
-    }
+      follow: false,
+    },
   };
 }
 
-export default async function CourseTrackingPage({ params }: TrackingPageProps) {
+export default async function CourseTrackingPage({
+  params,
+}: TrackingPageProps) {
   const { slug } = await params;
   const course = await getCatalogCourseBySlug(slug);
 
@@ -151,7 +172,7 @@ export default async function CourseTrackingPage({ params }: TrackingPageProps) 
     email: user.email,
     course,
     userGlobalRole: user.globalRole,
-    userIsActive: user.isActive
+    userIsActive: user.isActive,
   });
 
   if (!access.allowed) {
@@ -161,14 +182,16 @@ export default async function CourseTrackingPage({ params }: TrackingPageProps) 
   if (
     !canViewCourseProgress({
       globalRole: user.globalRole,
-      viewerRole: access.role
+      viewerRole: access.role,
     })
   ) {
     redirect(`/mis-cursos/${slug}`);
   }
 
   const canModerate = canModerateCourse(access.role);
-  let progressRows = [] as Awaited<ReturnType<typeof getLearnerProgressRowsForCatalogCourse>>;
+  let progressRows = [] as Awaited<
+    ReturnType<typeof getLearnerProgressRowsForCatalogCourse>
+  >;
   let exerciseResources = [] as Awaited<ReturnType<typeof getCampusResources>>;
   let enrollments: Array<{
     userId: string;
@@ -184,34 +207,36 @@ export default async function CourseTrackingPage({ params }: TrackingPageProps) 
   const exerciseResourcesPromise = getCampusResources({
     course,
     viewerUserId: user.id,
-    canModerate
-  }).then((resources) => resources.filter((resource) => resource.isManaged && resource.isExercise));
+    canModerate,
+  }).then((resources) =>
+    resources.filter((resource) => resource.isManaged && resource.isExercise),
+  );
 
   try {
     [enrollments, exerciseResources] = await Promise.all([
       getDb().courseEnrollment.findMany({
         where: {
           course: {
-            slug
-          }
+            slug,
+          },
         },
         include: {
           user: {
             select: {
               id: true,
               name: true,
-              email: true
-            }
-          }
+              email: true,
+            },
+          },
         },
         orderBy: {
-          createdAt: "desc"
-        }
+          createdAt: "desc",
+        },
       }),
-      exerciseResourcesPromise
+      exerciseResourcesPromise,
     ]);
     progressRows = await getLearnerProgressRowsForCatalogCourse(course, {
-      enrollments
+      enrollments,
     });
   } catch (error) {
     if (!isDatabaseConnectionError(error)) {
@@ -220,15 +245,20 @@ export default async function CourseTrackingPage({ params }: TrackingPageProps) 
 
     [progressRows, exerciseResources] = await Promise.all([
       getLearnerProgressRowsForCatalogCourse(course),
-      exerciseResourcesPromise
+      exerciseResourcesPromise,
     ]);
   }
 
   const progressRowsByUserId = new Map(
-    progressRows.map((progressRow) => [progressRow.userId, progressRow] as const)
+    progressRows.map(
+      (progressRow) => [progressRow.userId, progressRow] as const,
+    ),
   );
 
-  const latestEnrollmentByUser = new Map<string, (typeof enrollments)[number]>();
+  const latestEnrollmentByUser = new Map<
+    string,
+    (typeof enrollments)[number]
+  >();
 
   for (const enrollment of enrollments) {
     if (!latestEnrollmentByUser.has(enrollment.userId)) {
@@ -241,10 +271,14 @@ export default async function CourseTrackingPage({ params }: TrackingPageProps) 
     (summary, resource) => {
       summary.exercises += 1;
       summary.submissions += resource.submissions.length;
-      summary.pending += resource.submissions.filter((submission) => submission.status === "SUBMITTED").length;
-      summary.reviewed += resource.submissions.filter((submission) => submission.status === "REVIEWED").length;
+      summary.pending += resource.submissions.filter(
+        (submission) => submission.status === "SUBMITTED",
+      ).length;
+      summary.reviewed += resource.submissions.filter(
+        (submission) => submission.status === "REVIEWED",
+      ).length;
       summary.changesRequested += resource.submissions.filter(
-        (submission) => submission.status === "CHANGES_REQUESTED"
+        (submission) => submission.status === "CHANGES_REQUESTED",
       ).length;
 
       for (const submission of resource.submissions) {
@@ -258,8 +292,8 @@ export default async function CourseTrackingPage({ params }: TrackingPageProps) 
       submissions: 0,
       pending: 0,
       reviewed: 0,
-      changesRequested: 0
-    }
+      changesRequested: 0,
+    },
   );
 
   const learnerExerciseRows = Array.from(
@@ -268,8 +302,8 @@ export default async function CourseTrackingPage({ params }: TrackingPageProps) 
         resource.submissions.map((submission) => ({
           resourceTitle: resource.title,
           resourceModuleTitle: resource.moduleTitle,
-          submission
-        }))
+          submission,
+        })),
       )
       .reduce(
         (acc, entry) => {
@@ -287,7 +321,7 @@ export default async function CourseTrackingPage({ params }: TrackingPageProps) 
             scoreTotal: 0,
             latestSubmittedAt: null as Date | null,
             latestResourceTitle: null as string | null,
-            latestModuleTitle: null as string | null
+            latestModuleTitle: null as string | null,
           };
 
           current.submissionCount += 1;
@@ -313,7 +347,8 @@ export default async function CourseTrackingPage({ params }: TrackingPageProps) 
 
           if (
             !current.latestSubmittedAt ||
-            current.latestSubmittedAt.getTime() < entry.submission.submittedAt.getTime()
+            current.latestSubmittedAt.getTime() <
+              entry.submission.submittedAt.getTime()
           ) {
             current.latestSubmittedAt = entry.submission.submittedAt;
             current.latestResourceTitle = entry.resourceTitle;
@@ -341,61 +376,76 @@ export default async function CourseTrackingPage({ params }: TrackingPageProps) 
             latestResourceTitle: string | null;
             latestModuleTitle: string | null;
           }
-        >()
+        >(),
       )
-      .values()
+      .values(),
   )
     .map((row) => ({
       ...row,
       averageScore: row.scoredCount ? row.scoreTotal / row.scoredCount : null,
-      progressRow: progressRowsByUserId.get(row.userId) ?? null
+      progressRow: progressRowsByUserId.get(row.userId) ?? null,
     }))
-    .sort((left, right) =>
-      (right.latestSubmittedAt?.getTime() ?? 0) - (left.latestSubmittedAt?.getTime() ?? 0)
+    .sort(
+      (left, right) =>
+        (right.latestSubmittedAt?.getTime() ?? 0) -
+        (left.latestSubmittedAt?.getTime() ?? 0),
     );
   const learnerExerciseByUserId = new Map(
-    learnerExerciseRows.map((learnerExerciseRow) => [learnerExerciseRow.userId, learnerExerciseRow] as const)
+    learnerExerciseRows.map(
+      (learnerExerciseRow) =>
+        [learnerExerciseRow.userId, learnerExerciseRow] as const,
+    ),
   );
   const reviewQueue = exerciseResources
     .flatMap((resource) =>
       resource.submissions
         .filter(
           (submission) =>
-            submission.status === "SUBMITTED" || submission.status === "CHANGES_REQUESTED"
+            submission.status === "SUBMITTED" ||
+            submission.status === "CHANGES_REQUESTED",
         )
         .map((submission) => ({
           submission,
           resourceTitle: resource.title,
-          moduleTitle: resource.moduleTitle
-        }))
+          moduleTitle: resource.moduleTitle,
+        })),
     )
     .sort(
       (left, right) =>
-        right.submission.submittedAt.getTime() - left.submission.submittedAt.getTime()
+        right.submission.submittedAt.getTime() -
+        left.submission.submittedAt.getTime(),
     );
   const progressCoverage = progressRows.length
     ? Math.round(
-        progressRows.reduce((total, row) => total + row.completionRate, 0) / progressRows.length
+        progressRows.reduce((total, row) => total + row.completionRate, 0) /
+          progressRows.length,
       )
     : 0;
   const activeLearnerCount = progressRows.filter(
-    (row) => row.completedModules > 0 || row.lastCompletedAt
+    (row) => row.completedModules > 0 || row.lastCompletedAt,
   ).length;
   const highAttentionLearners = learnerExerciseRows.filter(
-    (row) => row.pendingCount > 0 || row.changesRequestedCount > 0
+    (row) => row.pendingCount > 0 || row.changesRequestedCount > 0,
   ).length;
-  const openReviewCases = exerciseSummary.pending + exerciseSummary.changesRequested;
+  const openReviewCases =
+    exerciseSummary.pending + exerciseSummary.changesRequested;
   const campusContentHref = buildCourseContentHref(slug);
-  const campusResourcesHref = buildCourseResourcesHref(slug, "resource-manager-top");
+  const campusResourcesHref = buildCourseResourcesHref(
+    slug,
+    "resource-manager-top",
+  );
   const forumHref = buildCourseForumHref(slug);
   const teacherFullName = user.name ?? user.email;
   const teacherInitials = getTeacherDashboardInitials(teacherFullName);
   const roleLabel = getRoleLabel(access.role);
-  const firstReviewHref = reviewQueue[0] ? `#submission-${reviewQueue[0].submission.id}` : null;
+  const firstReviewHref = reviewQueue[0]
+    ? `#submission-${reviewQueue[0].submission.id}`
+    : null;
   const resourcesWithActiveQueue = exerciseResources.filter(
-    (resource) => (resource.submissionStats?.pending ?? 0) > 0
+    (resource) => (resource.submissionStats?.pending ?? 0) > 0,
   ).length;
-  const respondedCases = exerciseSummary.reviewed + exerciseSummary.changesRequested;
+  const respondedCases =
+    exerciseSummary.reviewed + exerciseSummary.changesRequested;
 
   return (
     <div className="min-h-screen bg-[linear-gradient(180deg,#f8f6f1_0%,#f4f7fb_52%,#fbfaf8_100%)] pb-24">
@@ -405,53 +455,60 @@ export default async function CourseTrackingPage({ params }: TrackingPageProps) 
         navItems={[
           { label: "Mi cuenta", href: "/mi-cuenta" },
           { label: "Mis cursos", href: "/mis-cursos" },
-          { label: "Seguimiento", href: `/mis-cursos/${slug}/seguimiento`, active: true },
-          { label: "Foro", href: forumHref }
+          {
+            label: "Seguimiento",
+            href: `/mis-cursos/${slug}/seguimiento`,
+            active: true,
+          },
+          { label: "Foro", href: forumHref },
         ]}
         primaryAction={{
           label: reviewQueue.length ? "Revisar cola" : "Abrir recursos",
-          href: reviewQueue.length ? "#cola-revision" : campusResourcesHref
+          href: reviewQueue.length ? "#cola-revision" : campusResourcesHref,
         }}
         roleLabel="Docente"
         utilityItems={[
           {
             label: "Volver al campus",
             href: campusContentHref,
-            icon: <ChevronLeft className="h-4 w-4" />
+            icon: <ChevronLeft className="h-4 w-4" />,
           },
           {
             label: "Recursos",
             href: campusResourcesHref,
-            icon: <FolderKanban className="h-4 w-4" />
+            icon: <FolderKanban className="h-4 w-4" />,
           },
           {
             label: "Soporte",
             href: `mailto:${siteConfig.supportEmail}`,
             icon: <CircleHelp className="h-4 w-4" />,
-            external: true
-          }
+            external: true,
+          },
         ]}
       />
 
-      <main className="site-container pt-8">
+      <main className="site-container pt-6 sm:pt-8">
         <section className="grid gap-6 xl:grid-cols-[minmax(0,1.22fr)_22rem]">
-          <Card className="overflow-hidden border-[rgba(12,113,195,0.18)] bg-[linear-gradient(135deg,rgba(255,255,255,0.98),rgba(229,238,248,0.84))] p-6 lg:p-8">
+          <Card className="overflow-hidden border-[rgba(12,113,195,0.18)] bg-[linear-gradient(135deg,rgba(255,255,255,0.98),rgba(229,238,248,0.84))] p-4 sm:p-6 lg:p-8">
             <div className="flex flex-wrap items-center gap-2">
               <Badge tone="info">{roleLabel}</Badge>
               <Badge tone="outline">Seguimiento docente</Badge>
             </div>
 
-            <div className="mt-5 space-y-3">
+            <div className="mt-4 space-y-2.5 sm:mt-5 sm:space-y-3">
               <h1 className="max-w-4xl text-display-lg font-semibold text-[var(--color-ink)]">
                 {course.title}
               </h1>
-              <p className="max-w-3xl text-body-lg text-[var(--color-ink)]/82">
-                Revisa entregas, detecta casos abiertos y consulta el avance del grupo sin salir
-                del mismo contexto docente.
+              <p className="hidden max-w-3xl text-body-lg text-[var(--color-ink)]/82 sm:block">
+                Revisa entregas, detecta casos abiertos y consulta el avance del
+                grupo sin salir del mismo contexto docente.
+              </p>
+              <p className="max-w-3xl text-sm leading-6 text-[var(--color-ink)]/82 sm:hidden">
+                Revisa cola y alumnado desde un punto único.
               </p>
             </div>
 
-            <div className="mt-6 grid gap-3 sm:grid-cols-3">
+            <div className="mt-4 grid gap-2.5 sm:mt-6 sm:grid-cols-3 sm:gap-3">
               <TrackingCompactStat
                 detail="Media de avance manual registrada."
                 label="Cobertura"
@@ -469,9 +526,11 @@ export default async function CourseTrackingPage({ params }: TrackingPageProps) 
               />
             </div>
 
-            <div className="mt-6 flex flex-wrap gap-3">
+            <div className="mt-4 flex flex-wrap gap-2.5 sm:mt-6 sm:gap-3">
               <ButtonLink href={firstReviewHref ?? campusResourcesHref}>
-                {reviewQueue.length ? "Ir a la primera revision" : "Abrir recursos del campus"}
+                {reviewQueue.length
+                  ? "Ir a la primera revisión"
+                  : "Abrir recursos"}
               </ButtonLink>
               <ButtonLink href={campusContentHref} variant="secondary">
                 Volver al campus
@@ -483,35 +542,35 @@ export default async function CourseTrackingPage({ params }: TrackingPageProps) 
           </Card>
 
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-1">
-            <Card className="p-5">
+            <Card className="p-4 sm:p-5">
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--color-muted)]">
                     Cola activa
                   </p>
-                  <p className="mt-3 text-[2rem] font-semibold leading-none tracking-[-0.05em] text-[var(--color-ink)]">
+                  <p className="mt-2 text-[1.75rem] font-semibold leading-none tracking-[-0.05em] text-[var(--color-ink)] sm:mt-3 sm:text-[2rem]">
                     {openReviewCases}
                   </p>
-                  <p className="mt-2 text-sm leading-6 text-[var(--color-muted)]">
+                  <p className="mt-1.5 text-sm leading-5 text-[var(--color-muted)] sm:mt-2 sm:leading-6">
                     {exerciseSummary.pending > 0
-                      ? "Entregas esperando revision docente."
+                      ? "Entregas esperando revisión."
                       : exerciseSummary.changesRequested > 0
                         ? "Hay alumnos pendientes de responder a cambios solicitados."
-                        : "No hay bloqueos inmediatos en la cola de revision."}
+                        : "No hay bloqueos inmediatos en la cola de revisión."}
                   </p>
                 </div>
-                <div className="rounded-[var(--radius-md)] bg-[var(--color-primary-soft)] px-3 py-2 text-right">
+                <div className="rounded-[var(--radius-md)] bg-[var(--color-primary-soft)] px-2.5 py-2 text-right sm:px-3">
                   <p className="text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-[var(--color-primary)]">
                     Respondidas
                   </p>
-                  <p className="mt-2 text-lg font-semibold text-[var(--color-ink)]">
+                  <p className="mt-1.5 text-base font-semibold text-[var(--color-ink)] sm:mt-2 sm:text-lg">
                     {respondedCases}
                   </p>
                 </div>
               </div>
 
-              <div className="mt-4 grid gap-2.5 sm:grid-cols-2">
-                <div className="rounded-[var(--radius-md)] bg-[var(--color-surface)] px-4 py-3.5">
+              <div className="mt-3 grid gap-2.5 sm:mt-4 sm:grid-cols-2">
+                <div className="rounded-[var(--radius-md)] bg-[var(--color-surface)] px-3.5 py-3 sm:px-4 sm:py-3.5">
                   <p className="text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-[var(--color-muted)]">
                     Entregas totales
                   </p>
@@ -519,7 +578,7 @@ export default async function CourseTrackingPage({ params }: TrackingPageProps) 
                     {exerciseSummary.submissions}
                   </p>
                 </div>
-                <div className="rounded-[var(--radius-md)] bg-[var(--color-surface)] px-4 py-3.5">
+                <div className="rounded-[var(--radius-md)] bg-[var(--color-surface)] px-3.5 py-3 sm:px-4 sm:py-3.5">
                   <p className="text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-[var(--color-muted)]">
                     Recursos con cola
                   </p>
@@ -530,7 +589,7 @@ export default async function CourseTrackingPage({ params }: TrackingPageProps) 
               </div>
             </Card>
 
-            <Card className="p-5">
+            <Card className="hidden p-5 sm:block">
               <div className="flex items-center gap-3">
                 <FileClock className="h-5 w-5 text-[var(--color-primary)]" />
                 <h2 className="text-display-md font-semibold text-[var(--color-ink)]">
@@ -549,30 +608,34 @@ export default async function CourseTrackingPage({ params }: TrackingPageProps) 
                 </ButtonLink>
               </div>
               <p className="mt-4 text-sm leading-6 text-[var(--color-muted)]">
-                Este seguimiento mantiene el mismo punto de entrada docente que Mi cuenta y Mis
-                cursos, sin crear una pantalla aislada.
+                Este seguimiento mantiene el mismo punto de entrada docente que
+                Mi cuenta y Mis cursos, sin crear una pantalla aislada.
               </p>
             </Card>
           </div>
         </section>
 
-        <div className="mt-10 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+        <div className="mt-8 hidden gap-3 sm:grid md:grid-cols-2 xl:grid-cols-4">
           <TrackingStat
+            compactOnMobile
             detail="Personas con trazabilidad de progreso o actividad real."
             label="Alumnado con historial"
             value={`${progressRows.length}`}
           />
           <TrackingStat
+            compactOnMobile
             detail="Ejercicios visibles ahora mismo dentro del campus."
             label="Ejercicios publicados"
             value={`${exerciseSummary.exercises}`}
           />
           <TrackingStat
+            compactOnMobile
             detail={`${submissionStudentIds.size} alumnos han entregado al menos una vez.`}
             label="Entregas registradas"
             value={`${exerciseSummary.submissions}`}
           />
           <TrackingStat
+            compactOnMobile
             detail={`${exerciseSummary.pending} pendientes y ${exerciseSummary.changesRequested} con cambios solicitados.`}
             label="Casos abiertos"
             value={`${openReviewCases}`}
@@ -590,9 +653,9 @@ export default async function CourseTrackingPage({ params }: TrackingPageProps) 
                   <h2 className="text-display-md font-semibold text-[var(--color-ink)]">
                     Vision consolidada
                   </h2>
-                  <p className="mt-1.5 max-w-3xl text-sm leading-6 text-[var(--color-muted)]">
-                    Lo esencial del curso en una sola vista: entregas, nivel de avance y alumnado
-                    que requiere seguimiento cercano.
+                  <p className="mt-1.5 hidden max-w-3xl text-sm leading-6 text-[var(--color-muted)] sm:block">
+                    Lo esencial del curso en una sola vista: entregas, nivel de
+                    avance y alumnado que requiere seguimiento cercano.
                   </p>
                 </div>
                 <div className="flex flex-wrap gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-muted)]">
@@ -607,30 +670,38 @@ export default async function CourseTrackingPage({ params }: TrackingPageProps) 
               <div className="divide-y divide-[rgba(12,113,195,0.08)]">
                 {learnerExerciseRows.map((row) => (
                   <div
-                    className="grid gap-4 px-5 py-4 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,0.95fr)_220px] lg:items-center lg:px-6"
+                    className="grid gap-3 px-4 py-3.5 sm:gap-4 sm:px-5 sm:py-4 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,0.95fr)_220px] lg:items-center lg:px-6"
                     key={row.userId}
                   >
-                    <div className="space-y-2">
+                    <div className="space-y-1.5 sm:space-y-2">
                       <div className="flex flex-wrap items-center gap-2">
                         <p className="text-[1.05rem] font-semibold text-[var(--color-ink)]">
                           {row.learnerName}
                         </p>
                         {row.pendingCount ? (
-                          <Badge tone="warning">{row.pendingCount} pendientes</Badge>
+                          <Badge tone="warning">
+                            {row.pendingCount} pendientes
+                          </Badge>
                         ) : null}
                         {row.changesRequestedCount ? (
-                          <Badge tone="info">{row.changesRequestedCount} con cambios</Badge>
+                          <Badge tone="info">
+                            {row.changesRequestedCount} con cambios
+                          </Badge>
                         ) : null}
                       </div>
-                      <p className="text-sm text-[var(--color-muted)]">{row.learnerEmail}</p>
-                      <p className="text-sm leading-6 text-[var(--color-muted)]">
+                      <p className="text-sm text-[var(--color-muted)]">
+                        {row.learnerEmail}
+                      </p>
+                      <p className="text-sm leading-5 text-[var(--color-muted)] sm:leading-6">
                         {row.latestResourceTitle ? (
                           <>
-                            Ultima entrega en{" "}
+                            Última entrega en{" "}
                             <strong className="text-[var(--color-ink)]">
                               {row.latestResourceTitle}
                             </strong>
-                            {row.latestModuleTitle ? ` | ${row.latestModuleTitle}` : ""}
+                            {row.latestModuleTitle
+                              ? ` | ${row.latestModuleTitle}`
+                              : ""}
                             {row.latestSubmittedAt
                               ? ` | ${formatDateTime(row.latestSubmittedAt)}`
                               : ""}
@@ -641,8 +712,8 @@ export default async function CourseTrackingPage({ params }: TrackingPageProps) 
                       </p>
                     </div>
 
-                    <div className="grid gap-2.5 sm:grid-cols-2">
-                      <div className="rounded-[var(--radius-md)] bg-[var(--color-surface)] px-4 py-3.5">
+                    <div className="grid gap-2 sm:grid-cols-2 sm:gap-2.5">
+                      <div className="rounded-[var(--radius-md)] bg-[var(--color-surface)] px-3.5 py-3 sm:px-4 sm:py-3.5">
                         <p className="text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-[var(--color-muted)]">
                           Entregas
                         </p>
@@ -653,22 +724,24 @@ export default async function CourseTrackingPage({ params }: TrackingPageProps) 
                           {row.reviewedCount} revisadas
                         </p>
                       </div>
-                      <div className="rounded-[var(--radius-md)] bg-[var(--color-surface)] px-4 py-3.5">
+                      <div className="rounded-[var(--radius-md)] bg-[var(--color-surface)] px-3.5 py-3 sm:px-4 sm:py-3.5">
                         <p className="text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-[var(--color-muted)]">
                           Progreso
                         </p>
                         <p className="mt-2 text-xl font-semibold text-[var(--color-ink)]">
-                          {row.progressRow ? `${row.progressRow.completionRate}%` : "N/D"}
+                          {row.progressRow
+                            ? `${row.progressRow.completionRate}%`
+                            : "N/D"}
                         </p>
                         <p className="mt-1 text-xs text-[var(--color-muted)]">
                           {row.progressRow
-                            ? `${row.progressRow.completedModules}/${row.progressRow.totalModules} modulos`
+                            ? `${row.progressRow.completedModules}/${row.progressRow.totalModules} módulos`
                             : "Sin avance manual"}
                         </p>
                       </div>
                     </div>
 
-                    <div className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-white/86 px-4 py-3.5 text-sm leading-6 text-[var(--color-muted)]">
+                    <div className="hidden rounded-[var(--radius-md)] border border-[var(--color-border)] bg-white/86 px-4 py-3.5 text-sm leading-6 text-[var(--color-muted)] lg:block">
                       <p>
                         Media:{" "}
                         <strong className="text-[var(--color-ink)]">
@@ -686,7 +759,7 @@ export default async function CourseTrackingPage({ params }: TrackingPageProps) 
                       </p>
                       {row.progressRow?.lastCompletedAt ? (
                         <p className="mt-1">
-                          Ultimo modulo:{" "}
+                          Último módulo:{" "}
                           <strong className="text-[var(--color-ink)]">
                             {formatDateTime(row.progressRow.lastCompletedAt)}
                           </strong>
@@ -699,17 +772,17 @@ export default async function CourseTrackingPage({ params }: TrackingPageProps) 
             ) : (
               <div className="p-5 lg:p-6">
                 <div className="ui-empty-state px-5 py-6 text-sm leading-7 text-[var(--color-muted)]">
-                  Todavia no hay entregas suficientes para construir un seguimiento consolidado
-                  por alumno.
+                  Todavía no hay entregas suficientes para construir un
+                  seguimiento consolidado por alumno.
                 </div>
               </div>
             )}
           </Card>
 
           <div className="space-y-4">
-            <Card className="p-5" id="cola-revision">
+            <Card className="p-4 sm:p-5" id="cola-revision">
               <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[var(--color-primary)]">
-                Cola de revision
+                Cola de revisión
               </p>
               <h3 className="mt-1.5 text-display-md font-semibold text-[var(--color-ink)]">
                 Requiere respuesta docente
@@ -717,11 +790,13 @@ export default async function CourseTrackingPage({ params }: TrackingPageProps) 
               <div className="mt-4 space-y-2.5">
                 {reviewQueue.length ? (
                   reviewQueue.slice(0, 6).map((entry) => {
-                    const statusMeta = getReviewStatusMeta(entry.submission.status);
+                    const statusMeta = getReviewStatusMeta(
+                      entry.submission.status,
+                    );
 
                     return (
                       <Link
-                        className="block rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-4 transition hover:-translate-y-[1px] hover:border-[var(--color-primary)] hover:bg-white hover:shadow-[var(--shadow-medium)]"
+                        className="block rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] px-3.5 py-3.5 transition hover:-translate-y-[1px] hover:border-[var(--color-primary)] hover:bg-white hover:shadow-[var(--shadow-medium)] sm:px-4 sm:py-4"
                         href={`#submission-${entry.submission.id}`}
                         key={entry.submission.id}
                       >
@@ -734,10 +809,14 @@ export default async function CourseTrackingPage({ params }: TrackingPageProps) 
                               {statusMeta.queueLabel}
                             </p>
                           </div>
-                          <Badge tone={statusMeta.tone}>{statusMeta.shortLabel}</Badge>
+                          <Badge tone={statusMeta.tone}>
+                            {statusMeta.shortLabel}
+                          </Badge>
                         </div>
                         <p className="mt-2 text-sm leading-6 text-[var(--color-muted)]">
-                          <strong className="text-[var(--color-ink)]">{entry.resourceTitle}</strong>
+                          <strong className="text-[var(--color-ink)]">
+                            {entry.resourceTitle}
+                          </strong>
                           {entry.moduleTitle ? ` | ${entry.moduleTitle}` : ""}
                         </p>
                         <p className="mt-1.5 text-xs uppercase tracking-[0.14em] text-[var(--color-muted)]">
@@ -748,37 +827,49 @@ export default async function CourseTrackingPage({ params }: TrackingPageProps) 
                   })
                 ) : (
                   <div className="ui-empty-state px-4 py-4 text-sm leading-6 text-[var(--color-muted)]">
-                    No hay entregas esperando respuesta. El seguimiento esta estable.
+                    No hay entregas esperando respuesta. El seguimiento esta
+                    estable.
                   </div>
                 )}
               </div>
             </Card>
 
-            <Card className="p-5">
+            <Card className="hidden p-5 sm:block">
               <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[var(--color-primary)]">
-                Lectura rapida
+                Lectura rápida
               </p>
               <div className="mt-3 space-y-3 text-sm leading-6 text-[var(--color-muted)]">
                 <div className="rounded-[var(--radius-md)] bg-[var(--color-surface)] px-4 py-3.5">
                   <p>
-                    <strong className="text-[var(--color-ink)]">{exerciseSummary.exercises}</strong>{" "}
+                    <strong className="text-[var(--color-ink)]">
+                      {exerciseSummary.exercises}
+                    </strong>{" "}
                     ejercicios activos y{" "}
-                    <strong className="text-[var(--color-ink)]">{exerciseSummary.submissions}</strong>{" "}
+                    <strong className="text-[var(--color-ink)]">
+                      {exerciseSummary.submissions}
+                    </strong>{" "}
                     entregas registradas.
                   </p>
                 </div>
                 <div className="rounded-[var(--radius-md)] bg-[var(--color-surface)] px-4 py-3.5">
                   <p>
-                    <strong className="text-[var(--color-ink)]">{activeLearnerCount}</strong> alumnos
-                    con actividad y{" "}
-                    <strong className="text-[var(--color-ink)]">{highAttentionLearners}</strong>{" "}
+                    <strong className="text-[var(--color-ink)]">
+                      {activeLearnerCount}
+                    </strong>{" "}
+                    alumnos con actividad y{" "}
+                    <strong className="text-[var(--color-ink)]">
+                      {highAttentionLearners}
+                    </strong>{" "}
                     casos que conviene seguir de cerca.
                   </p>
                 </div>
                 <div className="rounded-[var(--radius-md)] bg-[var(--color-surface)] px-4 py-3.5">
                   <p>
                     El progreso medio manual del grupo se situa en{" "}
-                    <strong className="text-[var(--color-ink)]">{progressCoverage}%</strong>.
+                    <strong className="text-[var(--color-ink)]">
+                      {progressCoverage}%
+                    </strong>
+                    .
                   </p>
                 </div>
               </div>
@@ -793,11 +884,11 @@ export default async function CourseTrackingPage({ params }: TrackingPageProps) 
                 Entregas de ejercicios
               </p>
               <h2 className="mt-2 text-display-md font-semibold text-[var(--color-ink)]">
-                Revision academica
+                Revisión académica
               </h2>
-              <p className="mt-2 max-w-3xl text-sm leading-7 text-[var(--color-muted)]">
-                Cada ejercicio publicado en el campus aparece aqui con su cola de entregas,
-                adjuntos y feedback docente.
+              <p className="mt-2 hidden max-w-3xl text-sm leading-7 text-[var(--color-muted)] sm:block">
+                Cada ejercicio publicado en el campus aparece aquí con su cola
+                de entregas, adjuntos y feedback docente.
               </p>
             </div>
             <ButtonLink href={campusResourcesHref} variant="secondary">
@@ -809,20 +900,30 @@ export default async function CourseTrackingPage({ params }: TrackingPageProps) 
             exerciseResources.map((resource) => (
               <Card className="overflow-hidden p-0" key={resource.id}>
                 <div className="border-b border-[rgba(12,113,195,0.08)] px-5 py-5 lg:px-6">
-                  <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+                  <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                     <div className="space-y-3">
                       <div className="flex flex-wrap items-center gap-2">
                         <Badge tone="info">{resource.resourceTypeLabel}</Badge>
                         <Badge tone="outline">{resource.accessLabel}</Badge>
-                        {resource.moduleTitle ? <Badge tone="warning">{resource.moduleTitle}</Badge> : null}
-                        <Badge tone={resource.isPublished ? "success" : "outline"}>
-                          {resource.isPublished ? "Visible en campus" : "Oculto al alumnado"}
+                        {resource.moduleTitle ? (
+                          <Badge tone="warning">{resource.moduleTitle}</Badge>
+                        ) : null}
+                        <Badge
+                          tone={resource.isPublished ? "success" : "outline"}
+                        >
+                          {resource.isPublished
+                            ? "Visible en campus"
+                            : "Oculto al alumnado"}
                         </Badge>
                         {resource.dueAt ? (
-                          <Badge tone="warning">Entrega hasta {formatDateTime(resource.dueAt)}</Badge>
+                          <Badge tone="warning">
+                            Entrega hasta {formatDateTime(resource.dueAt)}
+                          </Badge>
                         ) : null}
                         {resource.passingScoreLabel ? (
-                          <Badge tone="brand">Aprueba con {resource.passingScoreLabel}/10</Badge>
+                          <Badge tone="brand">
+                            Aprueba con {resource.passingScoreLabel}/10
+                          </Badge>
                         ) : null}
                         {resource.submissionStats?.pending ? (
                           <Badge tone="warning">
@@ -840,14 +941,18 @@ export default async function CourseTrackingPage({ params }: TrackingPageProps) 
                       </div>
                       {resource.createdByName || resource.createdAt ? (
                         <p className="text-xs uppercase tracking-[0.14em] text-[var(--color-muted)]">
-                          {resource.createdByName ? `Publicado por ${resource.createdByName}` : "Publicado"}
-                          {resource.createdAt ? ` | ${formatDateTime(resource.createdAt)}` : ""}
+                          {resource.createdByName
+                            ? `Publicado por ${resource.createdByName}`
+                            : "Publicado"}
+                          {resource.createdAt
+                            ? ` | ${formatDateTime(resource.createdAt)}`
+                            : ""}
                         </p>
                       ) : null}
                     </div>
 
-                    <div className="grid min-w-[260px] gap-2.5 sm:grid-cols-3 lg:w-[300px] lg:grid-cols-1">
-                      <div className="rounded-[var(--radius-md)] bg-[var(--color-surface)] px-4 py-3.5">
+                    <div className="grid gap-2 sm:grid-cols-2 lg:w-[300px] lg:grid-cols-1 lg:gap-2.5">
+                      <div className="rounded-[var(--radius-md)] bg-[var(--color-surface)] px-3.5 py-3 sm:px-4 sm:py-3.5">
                         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-muted)]">
                           Entregas
                         </p>
@@ -855,7 +960,7 @@ export default async function CourseTrackingPage({ params }: TrackingPageProps) 
                           {resource.submissionStats?.total ?? 0}
                         </p>
                       </div>
-                      <div className="rounded-[var(--radius-md)] bg-[var(--color-surface)] px-4 py-3.5">
+                      <div className="rounded-[var(--radius-md)] bg-[var(--color-surface)] px-3.5 py-3 sm:px-4 sm:py-3.5">
                         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-muted)]">
                           Pendientes
                         </p>
@@ -863,11 +968,14 @@ export default async function CourseTrackingPage({ params }: TrackingPageProps) 
                           {resource.submissionStats?.pending ?? 0}
                         </p>
                       </div>
-                      <div className="rounded-[var(--radius-md)] bg-[var(--color-surface)] px-4 py-3.5 text-sm leading-6 text-[var(--color-muted)]">
+                      <div className="rounded-[var(--radius-md)] bg-[var(--color-surface)] px-3.5 py-3 text-sm leading-5 text-[var(--color-muted)] sm:col-span-2 sm:px-4 sm:py-3.5 sm:leading-6 lg:col-span-1">
                         <div className="space-y-2">
                           <Link
                             className="block font-semibold text-[var(--color-primary)]"
-                            href={buildCourseResourcesHref(slug, `resource-${resource.id}`)}
+                            href={buildCourseResourcesHref(
+                              slug,
+                              `resource-${resource.id}`,
+                            )}
                           >
                             Abrir en campus
                           </Link>
@@ -875,9 +983,13 @@ export default async function CourseTrackingPage({ params }: TrackingPageProps) 
                             <Link
                               className="block font-semibold text-[var(--color-primary)]"
                               href={resource.href}
-                              target={resource.isExternal ? "_blank" : undefined}
+                              target={
+                                resource.isExternal ? "_blank" : undefined
+                              }
                             >
-                              {resource.isExternal ? "Abrir enunciado externo" : "Descargar enunciado"}
+                              {resource.isExternal
+                                ? "Abrir enunciado externo"
+                                : "Descargar enunciado"}
                             </Link>
                           ) : (
                             <span>Ejercicio interno del campus.</span>
@@ -900,8 +1012,8 @@ export default async function CourseTrackingPage({ params }: TrackingPageProps) 
                     ))
                   ) : (
                     <div className="ui-empty-state p-4 text-sm leading-6 text-[var(--color-muted)]">
-                      Este ejercicio ya esta publicado, pero todavia ningun alumno ha registrado
-                      una entrega.
+                      Este ejercicio ya está publicado, pero todavía ningún
+                      alumno ha registrado una entrega.
                     </div>
                   )}
                 </div>
@@ -910,8 +1022,9 @@ export default async function CourseTrackingPage({ params }: TrackingPageProps) 
           ) : (
             <Card className="p-6">
               <div className="ui-empty-state px-5 py-6 text-[1rem] leading-7 text-[var(--color-muted)]">
-                Todavia no hay ejercicios publicados en el campus para este curso. Publicalos
-                desde la pestana de recursos del curso para empezar a recibir entregas reales.
+                Todavía no hay ejercicios publicados en el campus para este
+                curso. Publícalos desde la pestaña de recursos del curso para
+                empezar a recibir entregas reales.
               </div>
             </Card>
           )}
@@ -925,9 +1038,9 @@ export default async function CourseTrackingPage({ params }: TrackingPageProps) 
             <h2 className="mt-2 text-display-md font-semibold text-[var(--color-ink)]">
               Avance manual
             </h2>
-            <p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--color-muted)]">
-              Este bloque mantiene el seguimiento actual por modulos completados, independiente de
-              las entregas de ejercicios.
+            <p className="mt-2 hidden max-w-3xl text-sm leading-6 text-[var(--color-muted)] sm:block">
+              Este bloque mantiene el seguimiento actual por módulos
+              completados, independiente de las entregas de ejercicios.
             </p>
           </div>
 
@@ -939,7 +1052,7 @@ export default async function CourseTrackingPage({ params }: TrackingPageProps) 
                   ? getEnrollmentAccessState({
                       status: enrollment.status,
                       accessStartsAt: enrollment.accessStartsAt,
-                      accessUntil: enrollment.accessUntil
+                      accessUntil: enrollment.accessUntil,
                     })
                   : isDemoUserId(user.id)
                     ? "active"
@@ -947,23 +1060,29 @@ export default async function CourseTrackingPage({ params }: TrackingPageProps) 
                 const accessMeta = getAccessStateMeta(accessState);
 
                 return (
-                  <Card className="p-5" key={row.userId}>
-                    <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                  <Card className="p-4 sm:p-5" key={row.userId}>
+                    <div className="flex flex-col gap-3 sm:gap-4 lg:flex-row lg:items-center lg:justify-between">
                       <div>
                         <div className="flex flex-wrap items-center gap-2">
                           <p className="text-[1.2rem] font-semibold text-[var(--color-ink)]">
                             {row.learnerName}
                           </p>
-                          <Badge tone={accessMeta.tone}>{accessMeta.label}</Badge>
+                          <Badge tone={accessMeta.tone}>
+                            {accessMeta.label}
+                          </Badge>
                         </div>
-                        <p className="mt-1 text-sm text-[var(--color-muted)]">{row.learnerEmail}</p>
+                        <p className="mt-1 text-sm text-[var(--color-muted)]">
+                          {row.learnerEmail}
+                        </p>
                       </div>
 
-                      <div className="flex flex-wrap items-center gap-4 text-sm text-[var(--color-muted)]">
+                      <div className="flex flex-wrap items-center gap-3 text-sm text-[var(--color-muted)]">
                         <span>
-                          Ultima actividad:{" "}
+                          Última actividad:{" "}
                           <strong className="text-[var(--color-ink)]">
-                            {row.lastCompletedAt ? formatDateTime(row.lastCompletedAt) : "Sin actividad"}
+                            {row.lastCompletedAt
+                              ? formatDateTime(row.lastCompletedAt)
+                              : "Sin actividad"}
                           </strong>
                         </span>
                         {enrollment?.accessUntil ? (
@@ -977,8 +1096,8 @@ export default async function CourseTrackingPage({ params }: TrackingPageProps) 
                       </div>
                     </div>
 
-                    <div className="mt-5 grid gap-3 md:grid-cols-[200px_1fr_220px]">
-                      <div className="rounded-[var(--radius-md)] bg-[var(--color-surface)] px-4 py-3.5">
+                    <div className="mt-4 grid gap-2.5 sm:mt-5 sm:gap-3 md:grid-cols-[200px_1fr_220px]">
+                      <div className="rounded-[var(--radius-md)] bg-[var(--color-surface)] px-3.5 py-3 sm:px-4 sm:py-3.5">
                         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-muted)]">
                           Progreso
                         </p>
@@ -987,10 +1106,10 @@ export default async function CourseTrackingPage({ params }: TrackingPageProps) 
                         </p>
                       </div>
 
-                      <div className="rounded-[var(--radius-md)] bg-[var(--color-surface)] px-4 py-3.5">
+                      <div className="rounded-[var(--radius-md)] bg-[var(--color-surface)] px-3.5 py-3 sm:px-4 sm:py-3.5">
                         <div className="flex items-center justify-between gap-3">
                           <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-muted)]">
-                            Modulos completados
+                            Módulos completados
                           </p>
                           <BarChart3 className="h-4 w-4 text-[var(--color-primary)]" />
                         </div>
@@ -1002,16 +1121,18 @@ export default async function CourseTrackingPage({ params }: TrackingPageProps) 
                           />
                         </div>
                         <p className="mt-2.5 text-sm text-[var(--color-ink)]">
-                          {row.completedModules} de {row.totalModules} modulos
+                          {row.completedModules} de {row.totalModules} módulos
                         </p>
                       </div>
 
-                      <div className="rounded-[var(--radius-md)] bg-[var(--color-surface)] px-4 py-3.5 text-sm leading-6 text-[var(--color-muted)]">
+                      <div className="hidden rounded-[var(--radius-md)] bg-[var(--color-surface)] px-4 py-3.5 text-sm leading-6 text-[var(--color-muted)] md:block">
                         {(() => {
-                          const learnerExercises = learnerExerciseByUserId.get(row.userId);
+                          const learnerExercises = learnerExerciseByUserId.get(
+                            row.userId,
+                          );
 
                           if (!learnerExercises) {
-                            return "El progreso se basa en marcas manuales del alumno. Todavia no hay entregas de ejercicios registradas para este alumno.";
+                            return "El progreso se basa en marcas manuales del alumno. Todavía no hay entregas de ejercicios registradas para este alumno.";
                           }
 
                           return learnerExercises.averageScore !== null
@@ -1027,8 +1148,8 @@ export default async function CourseTrackingPage({ params }: TrackingPageProps) 
           ) : (
             <Card className="p-6">
               <div className="ui-empty-state px-5 py-6 text-[1rem] leading-7 text-[var(--color-muted)]">
-                Todavia no hay matriculas registradas o no existe progreso manual guardado para
-                este curso.
+                Todavía no hay matrículas registradas o no existe progreso
+                manual guardado para este curso.
               </div>
             </Card>
           )}

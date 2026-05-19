@@ -8,17 +8,17 @@ export function buildDemoForumSpaceHistory(courseSlug: string) {
       id: `demo-space-${courseSlug}`,
       courseSlug,
       editionNumber: 1,
-      editionLabel: "Edicion demo",
+      editionLabel: "Edición demo",
       status: "ACTIVE" as const,
       createdAt: now,
       updatedAt: now,
       archivedAt: null,
       deletedAt: null,
       categoryCount: defaultCourseCategories.length,
-      threadCount: 0
+      threadCount: 0,
     },
     archivedSpaces: [],
-    deletedSpaces: []
+    deletedSpaces: [],
   };
 }
 
@@ -33,7 +33,7 @@ export function buildDemoForumModerationDashboard(courseSlug: string) {
       closedCount: 1,
       resolvedCount: 2,
       reportCount: 1,
-      scheduledCount: 1
+      scheduledCount: 1,
     },
     openReports: [
       {
@@ -43,18 +43,18 @@ export function buildDemoForumModerationDashboard(courseSlug: string) {
         thread: {
           id: `demo-thread-${courseSlug}`,
           title: "Consulta sobre apoyos visuales en aula ordinaria",
-          categorySlug: defaultCourseCategories[0]?.slug ?? "anuncios"
+          categorySlug: defaultCourseCategories[0]?.slug ?? "anuncios",
         },
-        post: null
-      }
+        post: null,
+      },
     ],
     scheduledAnnouncements: [
       {
         id: `demo-announcement-${courseSlug}`,
         title: "Recordatorio de sesion en directo",
         categorySlug: defaultCourseCategories[0]?.slug ?? "anuncios",
-        scheduledFor: new Date("2026-05-10T09:00:00.000Z")
-      }
+        scheduledFor: new Date("2026-05-10T09:00:00.000Z"),
+      },
     ],
     recentActivity: [
       {
@@ -63,18 +63,19 @@ export function buildDemoForumModerationDashboard(courseSlug: string) {
         actorRole: "TEACHER" as const,
         createdAt: new Date("2026-05-08T07:45:00.000Z"),
         summary: "Docente Demo publico un anuncio de seguimiento semanal.",
-        linkPath: `/mis-cursos/${courseSlug}/foro`
+        linkPath: `/mis-cursos/${courseSlug}/foro`,
       },
       {
         id: `demo-activity-${courseSlug}-2`,
         action: "REPORT_CREATED" as const,
         actorRole: "STUDENT" as const,
         createdAt: new Date("2026-05-08T08:30:00.000Z"),
-        summary: "Alumno Demo marco un mensaje para revision del equipo docente.",
-        linkPath: `/mis-cursos/${courseSlug}/foro`
-      }
+        summary:
+          "Alumno Demo marco un mensaje para revision del equipo docente.",
+        linkPath: `/mis-cursos/${courseSlug}/foro`,
+      },
     ],
     deletedThreads: [],
-    deletedPosts: []
+    deletedPosts: [],
   };
 }

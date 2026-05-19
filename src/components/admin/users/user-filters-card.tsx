@@ -7,7 +7,7 @@ export function UserFiltersCard({
   q,
   role,
   status,
-  includeInactive
+  includeInactive,
 }: {
   q: string;
   role: UserRoleFilter;
@@ -15,14 +15,19 @@ export function UserFiltersCard({
   includeInactive: boolean;
 }) {
   return (
-    <Card className="rounded-[1.9rem] p-6">
+    <Card className="rounded-[1.9rem] p-5 sm:p-6">
       <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#314255]">
         Filtros
       </p>
-      <form className="mt-4 grid gap-3 md:grid-cols-3">
-        <Input defaultValue={q} name="q" placeholder="Buscar..." />
+      <form className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-[minmax(0,1.1fr)_minmax(0,0.95fr)]">
+        <Input
+          className="min-w-0 w-full"
+          defaultValue={q}
+          name="q"
+          placeholder="Buscar..."
+        />
         <select
-          className="h-12 rounded-xl border border-[var(--color-border)] bg-white px-4 text-sm"
+          className="h-12 min-w-0 w-full rounded-xl border border-[var(--color-border)] bg-white px-4 text-sm"
           defaultValue={role}
           name="role"
         >
@@ -31,17 +36,23 @@ export function UserFiltersCard({
           <option value="TEACHER">Docentes</option>
           <option value="ADMIN">Administradores</option>
         </select>
-        <div className="flex gap-3">
+        <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] md:col-span-2 xl:col-span-1 2xl:col-span-2">
           <select
-            className="h-12 flex-1 rounded-xl border border-[var(--color-border)] bg-white px-4 text-sm"
+            className="h-12 min-w-0 w-full rounded-xl border border-[var(--color-border)] bg-white px-4 text-sm"
             defaultValue={status}
             name="status"
           >
             <option value="ALL">Cualquier estado</option>
             <option value="ACTIVE">Solo activos</option>
-            {includeInactive ? <option value="INACTIVE">Solo inactivos</option> : null}
+            {includeInactive ? (
+              <option value="INACTIVE">Solo inactivos</option>
+            ) : null}
           </select>
-          <SubmitButton className="px-5" pendingLabel="Filtrando..." variant="secondary">
+          <SubmitButton
+            className="w-full sm:w-auto sm:px-5"
+            pendingLabel="Filtrando..."
+            variant="secondary"
+          >
             Aplicar
           </SubmitButton>
         </div>

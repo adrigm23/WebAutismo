@@ -1,7 +1,7 @@
 import {
   type PromotionDiscountType,
   type PromotionScope,
-  type PurchaseStatus
+  type PurchaseStatus,
 } from "@prisma/client";
 import { getDb } from "./prisma.ts";
 
@@ -55,7 +55,7 @@ export function calculatePromotionDiscount(input: {
     const boundedPercentage = Math.max(0, Math.min(input.amountInCents, 100));
     return Math.min(
       input.subtotalInCents,
-      Math.round((input.subtotalInCents * boundedPercentage) / 100)
+      Math.round((input.subtotalInCents * boundedPercentage) / 100),
     );
   }
 
@@ -71,7 +71,7 @@ export function calculatePurchaseAmounts(input: {
     ? calculatePromotionDiscount({
         subtotalInCents,
         discountType: input.promotion.discountType,
-        amountInCents: input.promotion.amountInCents
+        amountInCents: input.promotion.amountInCents,
       })
     : 0;
   const taxableBaseInCents = Math.max(subtotalInCents - discountInCents, 0);
@@ -82,7 +82,7 @@ export function calculatePurchaseAmounts(input: {
     discountInCents,
     taxableBaseInCents,
     taxInCents,
-    totalInCents: taxableBaseInCents + taxInCents
+    totalInCents: taxableBaseInCents + taxInCents,
   } satisfies PurchaseAmounts;
 }
 
@@ -98,11 +98,20 @@ export function validatePromotionForCourse(input: {
     return { ok: false, reason: "El codigo promocional no esta activo." };
   }
 
-  if (input.promotion.validFrom && input.promotion.validFrom.getTime() > now.getTime()) {
-    return { ok: false, reason: "El codigo promocional todavia no esta disponible." };
+  if (
+    input.promotion.validFrom &&
+    input.promotion.validFrom.getTime() > now.getTime()
+  ) {
+    return {
+      ok: false,
+      reason: "El código promocional todavía no está disponible.",
+    };
   }
 
-  if (input.promotion.validUntil && input.promotion.validUntil.getTime() < now.getTime()) {
+  if (
+    input.promotion.validUntil &&
+    input.promotion.validUntil.getTime() < now.getTime()
+  ) {
     return { ok: false, reason: "El codigo promocional ha caducado." };
   }
 
@@ -111,7 +120,10 @@ export function validatePromotionForCourse(input: {
     input.promotion.courseId &&
     input.promotion.courseId !== input.courseId
   ) {
-    return { ok: false, reason: "El codigo promocional no aplica a este curso." };
+    return {
+      ok: false,
+      reason: "El codigo promocional no aplica a este curso.",
+    };
   }
 
   if (
@@ -119,12 +131,15 @@ export function validatePromotionForCourse(input: {
     input.promotion.usageLimit !== undefined &&
     input.usageCount >= input.promotion.usageLimit
   ) {
-    return { ok: false, reason: "El codigo promocional ya ha alcanzado su limite de usos." };
+    return {
+      ok: false,
+      reason: "El codigo promocional ya ha alcanzado su limite de usos.",
+    };
   }
 
   return {
     ok: true,
-    promotion: input.promotion
+    promotion: input.promotion,
   };
 }
 
@@ -137,8 +152,8 @@ export async function getPromotionByCode(code: string) {
 
   return getDb().promotion.findUnique({
     where: {
-      code: normalizedCode
-    }
+      code: normalizedCode,
+    },
   });
 }
 
@@ -154,45 +169,50 @@ export async function resolvePromotionForPurchase(input: {
 
   const promotion = await getDb().promotion.findUnique({
     where: {
-      code: normalizedCode
+      code: normalizedCode,
     },
     include: {
       _count: {
         select: {
-          redemptions: true
-        }
-      }
-    }
+          redemptions: true,
+        },
+      },
+    },
   });
 
   if (!promotion) {
     return {
       promotion: null,
-      validation: { ok: false as const, reason: "El codigo promocional no existe." }
+      validation: {
+        ok: false as const,
+        reason: "El codigo promocional no existe.",
+      },
     };
   }
 
   const validation = validatePromotionForCourse({
     promotion,
     courseId: input.courseId,
-    usageCount: promotion._count.redemptions
+    usageCount: promotion._count.redemptions,
   });
 
   return {
     promotion,
-    validation
+    validation,
   };
 }
 
-export async function getSuccessfulPurchasesCountForPromotion(promotionId: string) {
+export async function getSuccessfulPurchasesCountForPromotion(
+  promotionId: string,
+) {
   return getDb().promotionRedemption.count({
     where: {
       promotionId,
       purchase: {
         status: {
-          in: ["PAID", "PENDING"] satisfies PurchaseStatus[]
-        }
-      }
-    }
+          in: ["PAID", "PENDING"] satisfies PurchaseStatus[],
+        },
+      },
+    },
   });
 }

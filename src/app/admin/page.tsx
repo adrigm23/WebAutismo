@@ -55,7 +55,7 @@ export default async function AdminDashboardPage() {
             accent="neutral"
             icon={<BookCopy className="h-6 w-6" strokeWidth={1.8} />}
             label="Cursos activos"
-            meta="Catalogo de demostracion"
+            meta="Catálogo de demostración"
             value="3"
           />
           <AdminMetricCard
@@ -70,25 +70,32 @@ export default async function AdminDashboardPage() {
         <section className="grid gap-6 xl:grid-cols-[0.92fr_1.25fr]">
           <div className="space-y-4">
             <div className="flex items-center gap-3">
-              <AlertTriangle className="h-6 w-6 text-[#c43a2f]" strokeWidth={1.9} />
+              <AlertTriangle
+                className="h-6 w-6 text-[#c43a2f]"
+                strokeWidth={1.9}
+              />
               <h2 className="text-[2.1rem] font-semibold tracking-[-0.06em] text-[var(--color-ink)]">
                 Alertas operativas
               </h2>
             </div>
 
             <Card className="rounded-[1.9rem] border-[#f3b8b2] bg-[#fff0ee] p-6 shadow-none">
-              <p className="text-lg font-semibold text-[#a72b20]">Conexion de base pendiente</p>
+              <p className="text-lg font-semibold text-[#a72b20]">
+                Conexion de base pendiente
+              </p>
               <p className="mt-2 text-base leading-7 text-[#a6473f]">
-                Esta administracion se esta mostrando con datos simulados hasta conectar la base de
-                datos definitiva.
+                Esta administracion se esta mostrando con datos simulados hasta
+                conectar la base de datos definitiva.
               </p>
             </Card>
 
             <Card className="rounded-[1.9rem] border-[#f0d098] bg-[#fff1cf] p-6 shadow-none">
-              <p className="text-lg font-semibold text-[#7c5300]">Acciones deshabilitadas</p>
+              <p className="text-lg font-semibold text-[#7c5300]">
+                Acciones deshabilitadas
+              </p>
               <p className="mt-2 text-base leading-7 text-[#805c16]">
-                En modo demo puedes recorrer la interfaz, pero las altas, cambios de rol y
-                auditorias no se guardan.
+                En modo demo puedes recorrer la interfaz, pero las altas,
+                cambios de rol y auditorias no se guardan.
               </p>
             </Card>
           </div>
@@ -112,17 +119,20 @@ export default async function AdminDashboardPage() {
                   actor: "Admin Demo",
                   action: "USER_ADMIN_GRANTED",
                   entityLabel: "admin.demo@autismo.local",
-                  createdAt: new Date("2026-05-07T09:10:00.000Z")
+                  createdAt: new Date("2026-05-07T09:10:00.000Z"),
                 },
                 {
                   id: "demo-audit-2",
                   actor: "Admin Demo",
                   action: "COURSE_CREATED",
-                  entityLabel: "Curso de demostracion",
-                  createdAt: new Date("2026-05-07T09:05:00.000Z")
-                }
+                  entityLabel: "Curso de demostración",
+                  createdAt: new Date("2026-05-07T09:05:00.000Z"),
+                },
               ].map((log) => (
-                <div className="flex flex-wrap items-start gap-5 px-7 py-6" key={log.id}>
+                <div
+                  className="flex flex-wrap items-start gap-5 px-7 py-6"
+                  key={log.id}
+                >
                   <div className="grid h-14 w-14 place-items-center rounded-full bg-[rgba(12,113,195,0.12)] text-base font-semibold text-[var(--color-primary)]">
                     AD
                   </div>
@@ -164,7 +174,7 @@ export default async function AdminDashboardPage() {
     activePromotionsCount,
     coursesWithoutTeachers,
     editionsForReview,
-    auditLogs
+    auditLogs,
   ] = await Promise.all([
     db.user.count({ where: { isActive: true } }),
     db.user.count({ where: { isActive: true, globalRole: "ADMIN" } }),
@@ -175,9 +185,9 @@ export default async function AdminDashboardPage() {
       where: {
         isActive: true,
         status: {
-          in: ["ACTIVE", "SCHEDULED"]
-        }
-      }
+          in: ["ACTIVE", "SCHEDULED"],
+        },
+      },
     }),
     db.courseEnrollment.count({ where: { status: "ACTIVE" } }),
     db.promotion.count({ where: { isActive: true } }),
@@ -185,51 +195,51 @@ export default async function AdminDashboardPage() {
       where: {
         status: "ACTIVE",
         teacherAssignments: {
-          none: {}
-        }
+          none: {},
+        },
       },
       select: {
         id: true,
         title: true,
-        slug: true
+        slug: true,
       },
       orderBy: {
-        updatedAt: "desc"
+        updatedAt: "desc",
       },
-      take: 4
+      take: 4,
     }),
     db.courseEdition.findMany({
       where: {
         isActive: true,
         status: {
-          in: ["ACTIVE", "CLOSED"]
-        }
+          in: ["ACTIVE", "CLOSED"],
+        },
       },
       include: {
         course: {
           select: {
-            title: true
-          }
-        }
+            title: true,
+          },
+        },
       },
       orderBy: {
-        updatedAt: "desc"
-      }
+        updatedAt: "desc",
+      },
     }),
     db.auditLog.findMany({
       include: {
         actor: {
           select: {
             name: true,
-            email: true
-          }
-        }
+            email: true,
+          },
+        },
       },
       orderBy: {
-        createdAt: "desc"
+        createdAt: "desc",
       },
-      take: 5
-    })
+      take: 5,
+    }),
   ]);
 
   const postAccessEditions = editionsForReview.filter((edition) => {
@@ -237,12 +247,15 @@ export default async function AdminDashboardPage() {
       startsAt: edition.startsAt,
       endsAt: edition.endsAt,
       graceAccessDays: edition.graceAccessDays,
-      accessUntil: edition.accessUntil
+      accessUntil: edition.accessUntil,
     });
 
     return (
       edition.status === "CLOSED" ||
-      (edition.endsAt !== null && edition.endsAt.getTime() <= now.getTime() && accessUntil !== null && accessUntil.getTime() > now.getTime())
+      (edition.endsAt !== null &&
+        edition.endsAt.getTime() <= now.getTime() &&
+        accessUntil !== null &&
+        accessUntil.getTime() > now.getTime())
     );
   });
 
@@ -251,10 +264,15 @@ export default async function AdminDashboardPage() {
       <AdminPageHeader
         actions={
           <>
-            <ButtonLink href="/admin/teachers#create-teacher" variant="secondary">
+            <ButtonLink
+              href="/admin/teachers#create-teacher"
+              variant="secondary"
+            >
               Crear docente
             </ButtonLink>
-            <ButtonLink href="/admin/editions#create-edition">Crear edicion</ButtonLink>
+            <ButtonLink href="/admin/editions#create-edition">
+              Crear edicion
+            </ButtonLink>
           </>
         }
         description="Metricas de plataforma, alertas operativas y trazabilidad reciente del campus."
@@ -285,7 +303,7 @@ export default async function AdminDashboardPage() {
           accent="neutral"
           icon={<BookCopy className="h-6 w-6" strokeWidth={1.8} />}
           label="Cursos activos"
-          meta="Catalogo operativo"
+          meta="Catálogo operativo"
           value={activeCoursesCount}
         />
         <AdminMetricCard
@@ -300,14 +318,19 @@ export default async function AdminDashboardPage() {
       <section className="grid gap-6 xl:grid-cols-[0.92fr_1.25fr]">
         <div className="space-y-4">
           <div className="flex items-center gap-3">
-            <AlertTriangle className="h-6 w-6 text-[#c43a2f]" strokeWidth={1.9} />
+            <AlertTriangle
+              className="h-6 w-6 text-[#c43a2f]"
+              strokeWidth={1.9}
+            />
             <h2 className="text-[2.1rem] font-semibold tracking-[-0.06em] text-[var(--color-ink)]">
               Alertas operativas
             </h2>
           </div>
 
           <Card className="rounded-[1.9rem] border-[#f3b8b2] bg-[#fff0ee] p-6 shadow-none">
-            <p className="text-lg font-semibold text-[#a72b20]">Cursos sin docentes asignados</p>
+            <p className="text-lg font-semibold text-[#a72b20]">
+              Cursos sin docentes asignados
+            </p>
             <p className="mt-2 text-base leading-7 text-[#a6473f]">
               {coursesWithoutTeachers.length === 0
                 ? "No hay cursos activos sin profesorado asignado."
@@ -316,7 +339,11 @@ export default async function AdminDashboardPage() {
             {coursesWithoutTeachers.length > 0 ? (
               <div className="mt-4 flex flex-wrap gap-2">
                 {coursesWithoutTeachers.map((course) => (
-                  <ButtonLink href={`/admin/courses?courseId=${course.id}`} key={course.id} variant="ghost">
+                  <ButtonLink
+                    href={`/admin/courses?courseId=${course.id}`}
+                    key={course.id}
+                    variant="ghost"
+                  >
                     {course.title}
                   </ButtonLink>
                 ))}
@@ -325,16 +352,22 @@ export default async function AdminDashboardPage() {
           </Card>
 
           <Card className="rounded-[1.9rem] border-[#f0d098] bg-[#fff1cf] p-6 shadow-none">
-            <p className="text-lg font-semibold text-[#7c5300]">Revision de acceso post-edicion</p>
+            <p className="text-lg font-semibold text-[#7c5300]">
+              Revision de acceso post-edicion
+            </p>
             <p className="mt-2 text-base leading-7 text-[#805c16]">
               {postAccessEditions.length === 0
-                ? "No hay ediciones cerradas con acceso de consulta todavia vigente."
+                ? "No hay ediciones cerradas con acceso de consulta todavía vigente."
                 : `${postAccessEditions.length} ediciones ya finalizaron y siguen dentro de su ventana de consulta.`}
             </p>
             {postAccessEditions.length > 0 ? (
               <div className="mt-4 flex flex-wrap gap-2">
                 {postAccessEditions.slice(0, 4).map((edition) => (
-                  <ButtonLink href={`/admin/editions?editionId=${edition.id}`} key={edition.id} variant="ghost">
+                  <ButtonLink
+                    href={`/admin/editions?editionId=${edition.id}`}
+                    key={edition.id}
+                    variant="ghost"
+                  >
                     {edition.course.title}
                   </ButtonLink>
                 ))}
@@ -363,7 +396,10 @@ export default async function AdminDashboardPage() {
               const metadata = parseAuditMetadata(log.metadataJson);
 
               return (
-                <div className="flex flex-wrap items-start gap-5 px-7 py-6" key={log.id}>
+                <div
+                  className="flex flex-wrap items-start gap-5 px-7 py-6"
+                  key={log.id}
+                >
                   <div className="grid h-14 w-14 place-items-center rounded-full bg-[rgba(12,113,195,0.12)] text-base font-semibold text-[var(--color-primary)]">
                     {(log.actor?.name ?? "SYS")
                       .split(" ")
@@ -383,7 +419,9 @@ export default async function AdminDashboardPage() {
                     </div>
                     <p className="mt-2 text-[1.02rem] leading-7 text-[#394d61]">
                       {log.entityLabel ?? log.entityType}
-                      {metadata?.nextRole ? ` · Rol destino: ${String(metadata.nextRole)}` : ""}
+                      {metadata?.nextRole
+                        ? ` · Rol destino: ${String(metadata.nextRole)}`
+                        : ""}
                       {metadata?.sourceCourseSlug
                         ? ` · Origen: ${String(metadata.sourceCourseSlug)}`
                         : ""}

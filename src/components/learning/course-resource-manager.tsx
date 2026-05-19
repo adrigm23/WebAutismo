@@ -2,7 +2,10 @@
 
 import Link from "next/link";
 import { useActionState, useState } from "react";
-import { createCourseResourceAction, type CourseResourceFormState } from "@/actions/course-resources";
+import {
+  createCourseResourceAction,
+  type CourseResourceFormState,
+} from "@/actions/course-resources";
 import { CourseExerciseReviewForm } from "@/components/learning/course-exercise-review-form";
 import { CourseExerciseSubmissionForm } from "@/components/learning/course-exercise-submission-form";
 import { CourseManagedResourceControls } from "@/components/learning/course-managed-resource-controls";
@@ -31,22 +34,33 @@ export function CourseResourceManager({
   canModerate,
   roleLabel,
   focusedResourceId = null,
-  onExitFocus
+  onExitFocus,
 }: CourseResourceManagerProps) {
-  const [state, formAction] = useActionState(createCourseResourceAction, initialState);
+  const [state, formAction] = useActionState(
+    createCourseResourceAction,
+    initialState,
+  );
   const [source, setSource] = useState<"FILE" | "LINK">("FILE");
   const [type, setType] = useState<"MATERIAL" | "EXERCISE">("MATERIAL");
   const managedResources = resources.filter((resource) => resource.isManaged);
-  const exerciseResources = managedResources.filter((resource) => resource.isExercise);
-  const materialResources = managedResources.filter((resource) => !resource.isExercise);
-  const referenceResources = resources.filter((resource) => !resource.isManaged);
+  const exerciseResources = managedResources.filter(
+    (resource) => resource.isExercise,
+  );
+  const materialResources = managedResources.filter(
+    (resource) => !resource.isExercise,
+  );
+  const referenceResources = resources.filter(
+    (resource) => !resource.isManaged,
+  );
   const managedPositionById = new Map(
-    managedResources.map((resource, index) => [resource.id, index] as const)
+    managedResources.map((resource, index) => [resource.id, index] as const),
   );
   const focusedResource = focusedResourceId
-    ? managedResources.find((resource) => resource.id === focusedResourceId) ?? null
+    ? (managedResources.find((resource) => resource.id === focusedResourceId) ??
+      null)
     : null;
-  const isFocusedTaskView = !canModerate && Boolean(focusedResource?.isExercise);
+  const isFocusedTaskView =
+    !canModerate && Boolean(focusedResource?.isExercise);
 
   function getExternalHostLabel(url: string | null) {
     if (!url) {
@@ -94,9 +108,13 @@ export function CourseResourceManager({
         <div className="flex items-start justify-between gap-4">
           <div className="space-y-3">
             <div className="flex flex-wrap items-center gap-2">
-              <Badge tone={resource.isManaged ? "teacher" : "muted"}>{resource.resourceTypeLabel}</Badge>
+              <Badge tone={resource.isManaged ? "teacher" : "muted"}>
+                {resource.resourceTypeLabel}
+              </Badge>
               <Badge tone="muted">{resource.accessLabel}</Badge>
-              {resource.moduleTitle ? <Badge tone="student">{resource.moduleTitle}</Badge> : null}
+              {resource.moduleTitle ? (
+                <Badge tone="student">{resource.moduleTitle}</Badge>
+              ) : null}
               {!canModerate ? getStudentSubmissionBadge(resource) : null}
               {canModerate && resource.isManaged ? (
                 <Badge tone={resource.isPublished ? "teacher" : "accent"}>
@@ -104,16 +122,24 @@ export function CourseResourceManager({
                 </Badge>
               ) : null}
               {resource.isExercise && resource.dueAt ? (
-                <Badge tone="accent">Entrega hasta {formatDateTime(resource.dueAt)}</Badge>
+                <Badge tone="accent">
+                  Entrega hasta {formatDateTime(resource.dueAt)}
+                </Badge>
               ) : null}
               {resource.isExercise && resource.passingScoreLabel ? (
-                <Badge tone="teacher">Aprueba con {resource.passingScoreLabel}/10</Badge>
+                <Badge tone="teacher">
+                  Aprueba con {resource.passingScoreLabel}/10
+                </Badge>
               ) : null}
             </div>
 
             <div>
-              <p className="text-lg font-semibold text-[var(--color-ink)]">{resource.title}</p>
-              <p className="mt-3 text-sm leading-7 text-[var(--color-muted)]">{resource.description}</p>
+              <p className="text-lg font-semibold text-[var(--color-ink)]">
+                {resource.title}
+              </p>
+              <p className="mt-3 text-sm leading-7 text-[var(--color-muted)]">
+                {resource.description}
+              </p>
             </div>
 
             {!canModerate && resource.isExercise ? (
@@ -121,10 +147,10 @@ export function CourseResourceManager({
                 {!resource.viewerSubmission
                   ? "Accion recomendada: abre el formulario de esta tarjeta y registra tu entrega."
                   : resource.viewerSubmission.status === "CHANGES_REQUESTED"
-                    ? "Tu docente ha pedido cambios. Revisa el feedback y vuelve a enviar la actividad desde aqui."
+                    ? "Tu docente ha pedido cambios. Revisa el feedback y vuelve a enviar la actividad desde aquí."
                     : resource.viewerSubmission.status === "SUBMITTED"
-                      ? "Tu entrega ya esta enviada y pendiente de revision docente."
-                      : "La actividad ya tiene una revision registrada. Consulta aqui mismo la nota y el feedback."}
+                      ? "Tu entrega ya está enviada y pendiente de revisión docente."
+                      : "La actividad ya tiene una revisión registrada. Consulta aquí mismo la nota y el feedback."}
               </p>
             ) : null}
 
@@ -134,14 +160,18 @@ export function CourseResourceManager({
                 <strong className="text-[var(--color-ink)]">
                   {getExternalHostLabel(resource.linkUrl) ?? "otra pestana"}
                 </strong>
-                . La entrega se registra aqui mismo, debajo de esta tarjeta.
+                . La entrega se registra aquí mismo, debajo de esta tarjeta.
               </p>
             ) : null}
 
             {resource.createdByName || resource.createdAt ? (
               <p className="text-xs uppercase tracking-[0.14em] text-[var(--color-muted)]">
-                {resource.createdByName ? `Publicado por ${resource.createdByName}` : "Publicado"}
-                {resource.createdAt ? ` | ${formatDateTime(resource.createdAt)}` : ""}
+                {resource.createdByName
+                  ? `Publicado por ${resource.createdByName}`
+                  : "Publicado"}
+                {resource.createdAt
+                  ? ` | ${formatDateTime(resource.createdAt)}`
+                  : ""}
               </p>
             ) : null}
           </div>
@@ -167,7 +197,10 @@ export function CourseResourceManager({
           <CourseManagedResourceControls
             courseSlug={course.slug}
             isFirst={(managedPositionById.get(resource.id) ?? 0) === 0}
-            isLast={(managedPositionById.get(resource.id) ?? 0) === managedResources.length - 1}
+            isLast={
+              (managedPositionById.get(resource.id) ?? 0) ===
+              managedResources.length - 1
+            }
             modules={course.modules}
             resource={resource}
           />
@@ -179,11 +212,15 @@ export function CourseResourceManager({
               <div className="rounded-2xl bg-white p-4 text-sm leading-7 text-[var(--color-muted)]">
                 <p>
                   Entregas registradas:{" "}
-                  <strong className="text-[var(--color-ink)]">{resource.submissionStats?.total ?? 0}</strong>
+                  <strong className="text-[var(--color-ink)]">
+                    {resource.submissionStats?.total ?? 0}
+                  </strong>
                 </p>
                 <p>
                   Pendientes de revision:{" "}
-                  <strong className="text-[var(--color-ink)]">{resource.submissionStats?.pending ?? 0}</strong>
+                  <strong className="text-[var(--color-ink)]">
+                    {resource.submissionStats?.pending ?? 0}
+                  </strong>
                 </p>
               </div>
 
@@ -226,7 +263,8 @@ export function CourseResourceManager({
                 Modo de entrega
               </p>
               <p className="mt-2 text-sm leading-7 text-[var(--color-muted)]">
-                Esta vista elimina el resto de tareas para que puedas centrarte en una sola entrega.
+                Esta vista elimina el resto de tareas para que puedas centrarte
+                en una sola entrega.
               </p>
             </div>
             {onExitFocus ? (
@@ -249,10 +287,13 @@ export function CourseResourceManager({
         >
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <p className="text-lg font-semibold text-[var(--color-ink)]">Publicar recurso del curso</p>
+              <p className="text-lg font-semibold text-[var(--color-ink)]">
+                Publicar recurso del curso
+              </p>
               <p className="mt-2 text-sm leading-7 text-[var(--color-muted)]">
-                Como {roleLabel.toLowerCase()} puedes subir materiales privados o enlazar ejercicios externos
-                para este curso y, si hace falta, asociarlos a un modulo concreto.
+                Como {roleLabel.toLowerCase()} puedes subir materiales privados
+                o enlazar ejercicios externos para este curso y, si hace falta,
+                asociarlos a un modulo concreto.
               </p>
             </div>
             <Badge tone="teacher">Gestion docente</Badge>
@@ -263,11 +304,15 @@ export function CourseResourceManager({
 
             <div className="grid gap-4 md:grid-cols-2">
               <label className="block space-y-2">
-                <span className="text-sm font-medium text-[var(--color-ink)]">Tipo</span>
+                <span className="text-sm font-medium text-[var(--color-ink)]">
+                  Tipo
+                </span>
                 <select
                   className="h-12 w-full rounded-xl border border-[var(--color-border)] bg-white px-4 text-sm text-[var(--color-ink)]"
                   name="type"
-                  onChange={(event) => setType(event.target.value as "MATERIAL" | "EXERCISE")}
+                  onChange={(event) =>
+                    setType(event.target.value as "MATERIAL" | "EXERCISE")
+                  }
                   value={type}
                 >
                   <option value="MATERIAL">Material</option>
@@ -276,11 +321,15 @@ export function CourseResourceManager({
               </label>
 
               <label className="block space-y-2">
-                <span className="text-sm font-medium text-[var(--color-ink)]">Origen</span>
+                <span className="text-sm font-medium text-[var(--color-ink)]">
+                  Origen
+                </span>
                 <select
                   className="h-12 w-full rounded-xl border border-[var(--color-border)] bg-white px-4 text-sm text-[var(--color-ink)]"
                   name="source"
-                  onChange={(event) => setSource(event.target.value as "FILE" | "LINK")}
+                  onChange={(event) =>
+                    setSource(event.target.value as "FILE" | "LINK")
+                  }
                   value={source}
                 >
                   <option value="FILE">Archivo privado</option>
@@ -291,16 +340,24 @@ export function CourseResourceManager({
 
             <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_260px]">
               <label className="block space-y-2">
-                <span className="text-sm font-medium text-[var(--color-ink)]">Titulo</span>
+                <span className="text-sm font-medium text-[var(--color-ink)]">
+                  Titulo
+                </span>
                 <Input
                   name="title"
-                  placeholder={type === "EXERCISE" ? "Ej.: Caso practico 1" : "Ej.: Guia de apoyo"}
+                  placeholder={
+                    type === "EXERCISE"
+                      ? "Ej.: Caso practico 1"
+                      : "Ej.: Guia de apoyo"
+                  }
                   required
                 />
               </label>
 
               <label className="block space-y-2">
-                <span className="text-sm font-medium text-[var(--color-ink)]">Modulo</span>
+                <span className="text-sm font-medium text-[var(--color-ink)]">
+                  Módulo
+                </span>
                 <select
                   className="h-12 w-full rounded-xl border border-[var(--color-border)] bg-white px-4 text-sm text-[var(--color-ink)]"
                   name="moduleId"
@@ -316,7 +373,9 @@ export function CourseResourceManager({
             </div>
 
             <label className="block space-y-2">
-              <span className="text-sm font-medium text-[var(--color-ink)]">Descripcion</span>
+              <span className="text-sm font-medium text-[var(--color-ink)]">
+                Descripcion
+              </span>
               <Textarea
                 className="min-h-24"
                 name="description"
@@ -327,26 +386,46 @@ export function CourseResourceManager({
             {type === "EXERCISE" ? (
               <div className="grid gap-4 md:grid-cols-2">
                 <label className="block space-y-2">
-                  <span className="text-sm font-medium text-[var(--color-ink)]">Fecha limite</span>
+                  <span className="text-sm font-medium text-[var(--color-ink)]">
+                    Fecha limite
+                  </span>
                   <Input name="dueAt" type="datetime-local" />
                 </label>
 
                 <label className="block space-y-2">
-                  <span className="text-sm font-medium text-[var(--color-ink)]">Nota minima para aprobar</span>
-                  <Input max="10" min="0" name="passingScore" placeholder="Ej.: 5" step="0.1" type="number" />
+                  <span className="text-sm font-medium text-[var(--color-ink)]">
+                    Nota minima para aprobar
+                  </span>
+                  <Input
+                    max="10"
+                    min="0"
+                    name="passingScore"
+                    placeholder="Ej.: 5"
+                    step="0.1"
+                    type="number"
+                  />
                 </label>
               </div>
             ) : null}
 
             {source === "FILE" ? (
               <label className="block space-y-2">
-                <span className="text-sm font-medium text-[var(--color-ink)]">Archivo</span>
+                <span className="text-sm font-medium text-[var(--color-ink)]">
+                  Archivo
+                </span>
                 <Input name="file" required type="file" />
               </label>
             ) : (
               <label className="block space-y-2">
-                <span className="text-sm font-medium text-[var(--color-ink)]">URL externa</span>
-                <Input name="linkUrl" placeholder="https://..." required type="url" />
+                <span className="text-sm font-medium text-[var(--color-ink)]">
+                  URL externa
+                </span>
+                <Input
+                  name="linkUrl"
+                  placeholder="https://..."
+                  required
+                  type="url"
+                />
               </label>
             )}
 
@@ -364,10 +443,13 @@ export function CourseResourceManager({
 
             <div className="flex flex-wrap items-center justify-between gap-3">
               <p className="text-sm leading-7 text-[var(--color-muted)]">
-                Los archivos se sirven solo a usuarios con acceso vigente al curso.
+                Los archivos se sirven solo a usuarios con acceso vigente al
+                curso.
               </p>
               <SubmitButton pendingLabel="Publicando..." variant="secondary">
-                {type === "EXERCISE" ? "Publicar ejercicio" : "Publicar recurso"}
+                {type === "EXERCISE"
+                  ? "Publicar ejercicio"
+                  : "Publicar recurso"}
               </SubmitButton>
             </div>
           </form>
@@ -375,7 +457,9 @@ export function CourseResourceManager({
       ) : null}
 
       {isFocusedTaskView && focusedResource ? (
-        <section className="space-y-4">{renderResourceCard(focusedResource)}</section>
+        <section className="space-y-4">
+          {renderResourceCard(focusedResource)}
+        </section>
       ) : exerciseResources.length ? (
         <section className="space-y-4">
           <div className="rounded-2xl border border-[rgba(12,113,195,0.14)] bg-white p-5">
@@ -384,8 +468,8 @@ export function CourseResourceManager({
             </p>
             <p className="mt-2 text-sm leading-7 text-[var(--color-muted)]">
               {canModerate
-                ? "Las actividades del alumnado se gestionan aqui, con revision y feedback dentro del propio campus."
-                : "Aqui veras primero las tareas del curso y podras entregar, actualizar o revisar tu estado desde cada tarjeta."}
+                ? "Las actividades del alumnado se gestionan aquí, con revisión y feedback dentro del propio campus."
+                : "Aquí verás primero las tareas del curso y podrás entregar, actualizar o revisar tu estado desde cada tarjeta."}
             </p>
           </div>
           {exerciseResources.map(renderResourceCard)}
@@ -399,7 +483,8 @@ export function CourseResourceManager({
               Materiales del curso
             </p>
             <p className="mt-2 text-sm leading-7 text-[var(--color-muted)]">
-              Guias, documentos y referencias de apoyo para seguir el curso con contexto.
+              Guias, documentos y referencias de apoyo para seguir el curso con
+              contexto.
             </p>
           </div>
           {materialResources.map(renderResourceCard)}

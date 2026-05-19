@@ -4,7 +4,7 @@ import type {
   CourseEnrollmentStatus,
   CourseStatus,
   PromotionDiscountType,
-  UserGlobalRole
+  UserGlobalRole,
 } from "@prisma/client";
 import { getGlobalRoleLabel } from "@/lib/course-permissions";
 import { firstValue, formatPrice } from "@/lib/utils";
@@ -17,14 +17,54 @@ export type AdminNavigationItem = {
 };
 
 export const adminNavigation: AdminNavigationItem[] = [
-  { href: "/admin", label: "Panel de control", shortLabel: "Panel", icon: "layout-dashboard" },
-  { href: "/admin/users", label: "Gestion de usuarios", shortLabel: "Usuarios", icon: "users-round" },
-  { href: "/admin/teachers", label: "Portal docente", shortLabel: "Docentes", icon: "graduation-cap" },
-  { href: "/admin/courses", label: "Catalogo de cursos", shortLabel: "Cursos", icon: "book-copy" },
-  { href: "/admin/editions", label: "Ediciones", shortLabel: "Ediciones", icon: "layers-3" },
-  { href: "/admin/promotions", label: "Promociones", shortLabel: "Promociones", icon: "tickets" },
-  { href: "/admin/audit", label: "Registro de auditoria", shortLabel: "Auditoria", icon: "scroll-text" },
-  { href: "/admin/supervision", label: "Supervision academica", shortLabel: "Supervision", icon: "chart-column-big" }
+  {
+    href: "/admin",
+    label: "Panel de control",
+    shortLabel: "Panel",
+    icon: "layout-dashboard",
+  },
+  {
+    href: "/admin/users",
+    label: "Gestion de usuarios",
+    shortLabel: "Usuarios",
+    icon: "users-round",
+  },
+  {
+    href: "/admin/teachers",
+    label: "Portal docente",
+    shortLabel: "Docentes",
+    icon: "graduation-cap",
+  },
+  {
+    href: "/admin/courses",
+    label: "Catálogo de cursos",
+    shortLabel: "Cursos",
+    icon: "book-copy",
+  },
+  {
+    href: "/admin/editions",
+    label: "Ediciones",
+    shortLabel: "Ediciones",
+    icon: "layers-3",
+  },
+  {
+    href: "/admin/promotions",
+    label: "Promociones",
+    shortLabel: "Promociones",
+    icon: "tickets",
+  },
+  {
+    href: "/admin/audit",
+    label: "Registro de auditoria",
+    shortLabel: "Auditoria",
+    icon: "scroll-text",
+  },
+  {
+    href: "/admin/supervision",
+    label: "Supervision academica",
+    shortLabel: "Supervision",
+    icon: "chart-column-big",
+  },
 ];
 
 export function isAdminRoute(pathname: string) {
@@ -138,7 +178,9 @@ export function getRoleTone(role: UserGlobalRole) {
   }
 }
 
-export function getAccessStateLabel(state: "active" | "scheduled" | "expired" | "inactive") {
+export function getAccessStateLabel(
+  state: "active" | "scheduled" | "expired" | "inactive",
+) {
   switch (state) {
     case "active":
       return "Vigente";
@@ -153,7 +195,9 @@ export function getAccessStateLabel(state: "active" | "scheduled" | "expired" | 
   }
 }
 
-export function getAccessStateTone(state: "active" | "scheduled" | "expired" | "inactive") {
+export function getAccessStateTone(
+  state: "active" | "scheduled" | "expired" | "inactive",
+) {
   switch (state) {
     case "active":
       return "primary";
@@ -190,9 +234,9 @@ export function getAuditActionLabel(action: AuditAction) {
     COURSE_TEACHER_UNASSIGNED: "Docente desasignado",
     COURSE_EDITION_TEACHER_ASSIGNED: "Docente asignado a edicion",
     COURSE_EDITION_TEACHER_UNASSIGNED: "Docente retirado de edicion",
-    EDITION_CREATED: "Edicion creada",
-    EDITION_UPDATED: "Edicion actualizada",
-    EDITION_CLOSED: "Edicion cerrada",
+    EDITION_CREATED: "Edición creada",
+    EDITION_UPDATED: "Edición actualizada",
+    EDITION_CLOSED: "Edición cerrada",
     USER_CREATED: "Usuario creado",
     USER_DEACTIVATED: "Usuario desactivado",
     USER_REACTIVATED: "Usuario reactivado",
@@ -221,18 +265,26 @@ export function getAuditActionLabel(action: AuditAction) {
     COURSE_RESOURCE_SUBMISSION_CREATED: "Entrega creada",
     COURSE_RESOURCE_SUBMISSION_UPDATED: "Entrega actualizada",
     COURSE_RESOURCE_SUBMISSION_REVIEWED: "Entrega revisada",
-    COURSE_RESOURCE_SUBMISSION_CHANGES_REQUESTED: "Cambios solicitados"
+    COURSE_RESOURCE_SUBMISSION_CHANGES_REQUESTED: "Cambios solicitados",
   };
 
   return labels[action] ?? action;
 }
 
 export function getAuditActionTone(action: AuditAction) {
-  if (action.includes("DEACTIVATED") || action.includes("REVOKED") || action === "PURCHASE_FAILED") {
+  if (
+    action.includes("DEACTIVATED") ||
+    action.includes("REVOKED") ||
+    action === "PURCHASE_FAILED"
+  ) {
     return "danger";
   }
 
-  if (action.includes("UPDATED") || action.includes("CLOSED") || action.includes("APPLIED")) {
+  if (
+    action.includes("UPDATED") ||
+    action.includes("CLOSED") ||
+    action.includes("APPLIED")
+  ) {
     return "warning";
   }
 
@@ -241,7 +293,7 @@ export function getAuditActionTone(action: AuditAction) {
 
 export function getSearchParamValue(
   value: string | string[] | undefined,
-  fallback = ""
+  fallback = "",
 ) {
   return firstValue(value)?.trim() || fallback;
 }

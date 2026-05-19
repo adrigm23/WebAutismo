@@ -6,7 +6,7 @@ import { cn, formatDate } from "@/lib/utils";
 import type { TeacherSummary } from "./types";
 
 export function DemoTeacherDetailCard({
-  selectedTeacher
+  selectedTeacher,
 }: {
   selectedTeacher: TeacherSummary;
 }) {
@@ -21,11 +21,21 @@ export function DemoTeacherDetailCard({
             <h2 className="text-[2rem] font-semibold leading-none tracking-[-0.06em] text-[var(--color-ink)]">
               {selectedTeacher.name}
             </h2>
-            <p className="mt-2 truncate text-sm text-[#5b6d80]">{selectedTeacher.email}</p>
+            <p className="mt-2 truncate text-sm text-[#5b6d80]">
+              {selectedTeacher.email}
+            </p>
             <div className="mt-4 flex flex-wrap gap-2">
-              <AdminStatusBadge tone="warning">Docente titular</AdminStatusBadge>
-              <AdminStatusBadge tone={selectedTeacher.activeStudents >= 75 ? "danger" : "primary"}>
-                {selectedTeacher.activeStudents >= 75 ? "Carga alta" : "Carga estable"}
+              <AdminStatusBadge tone="warning">
+                Docente titular
+              </AdminStatusBadge>
+              <AdminStatusBadge
+                tone={
+                  selectedTeacher.activeStudents >= 75 ? "danger" : "primary"
+                }
+              >
+                {selectedTeacher.activeStudents >= 75
+                  ? "Carga alta"
+                  : "Carga estable"}
               </AdminStatusBadge>
             </div>
           </div>
@@ -33,8 +43,14 @@ export function DemoTeacherDetailCard({
 
         <div className="mt-6 grid gap-3 sm:grid-cols-3">
           <StatBox label="Alta" value={formatDate(selectedTeacher.createdAt)} />
-          <StatBox label="Cursos" value={`${selectedTeacher.courseAssignments.length} asignados`} />
-          <StatBox label="Revision" value={formatDate(selectedTeacher.updatedAt)} />
+          <StatBox
+            label="Cursos"
+            value={`${selectedTeacher.courseAssignments.length} asignados`}
+          />
+          <StatBox
+            label="Revision"
+            value={formatDate(selectedTeacher.updatedAt)}
+          />
         </div>
       </div>
 
@@ -44,7 +60,7 @@ export function DemoTeacherDetailCard({
             "rounded-[1.5rem] border px-5 py-4 text-sm leading-7",
             selectedTeacher.activeStudents >= 75
               ? "border-[#f3b3ac] bg-[#fff2f0] text-[#a03329]"
-              : "border-[#dbe6ef] bg-[#f7fafc] text-[#44586d]"
+              : "border-[#dbe6ef] bg-[#f7fafc] text-[#44586d]",
           )}
         >
           <div className="flex items-center gap-3 font-semibold">
@@ -54,8 +70,8 @@ export function DemoTeacherDetailCard({
               : "Seguimiento operativo estable"}
           </div>
           <p className="mt-2">
-            Esta cuenta se muestra en modo demostracion. Los cambios reales en asignaciones siguen
-            deshabilitados hasta conectar la base de datos.
+            Esta cuenta se muestra en modo demostración. Los cambios reales en
+            asignaciones siguen deshabilitados hasta conectar la base de datos.
           </p>
         </div>
 
@@ -69,7 +85,9 @@ export function DemoTeacherDetailCard({
                 className="rounded-[1.2rem] border border-[#d9e1e8] bg-[#fbfcfd] px-4 py-4 text-sm text-[#33475b]"
                 key={assignment.courseId}
               >
-                <div className="font-medium text-[var(--color-ink)]">{assignment.course.title}</div>
+                <div className="font-medium text-[var(--color-ink)]">
+                  {assignment.course.title}
+                </div>
                 <div className="mt-1 text-xs uppercase tracking-[0.14em] text-[#6a7b8d]">
                   /cursos/{assignment.course.slug}
                 </div>
@@ -82,17 +100,15 @@ export function DemoTeacherDetailCard({
   );
 }
 
-function StatBox({
-  label,
-  value
-}: {
-  label: string;
-  value: string;
-}) {
+function StatBox({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-[1.4rem] bg-[#f6fafc] px-4 py-4">
-      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#5a6c80]">{label}</p>
-      <p className="mt-2 text-base font-semibold text-[var(--color-ink)]">{value}</p>
+      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#5a6c80]">
+        {label}
+      </p>
+      <p className="mt-2 text-base font-semibold text-[var(--color-ink)]">
+        {value}
+      </p>
     </div>
   );
 }

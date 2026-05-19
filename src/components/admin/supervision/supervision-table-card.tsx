@@ -1,16 +1,13 @@
 import Link from "next/link";
 import { AdminStatusBadge } from "@/components/admin/admin-status-badge";
 import { Card } from "@/components/ui/card";
-import {
-  getAccessStateLabel,
-  getAccessStateTone
-} from "@/lib/admin-console";
+import { getAccessStateLabel, getAccessStateTone } from "@/lib/admin-console";
 import { formatDateTime } from "@/lib/utils";
 import type { SupervisionTableRow } from "./types";
 
 export function SupervisionTableCard({
   rows,
-  countLabel
+  countLabel,
 }: {
   rows: SupervisionTableRow[];
   countLabel?: string;
@@ -21,7 +18,9 @@ export function SupervisionTableCard({
         <h2 className="text-[2rem] font-semibold tracking-[-0.06em] text-[var(--color-ink)]">
           Seguimiento de matriculas
         </h2>
-        {countLabel ? <p className="mt-2 text-sm text-[#52667b]">{countLabel}</p> : null}
+        {countLabel ? (
+          <p className="mt-2 text-sm text-[#52667b]">{countLabel}</p>
+        ) : null}
       </div>
       <div className="overflow-x-auto">
         <table className="min-w-full text-left">
@@ -42,18 +41,25 @@ export function SupervisionTableCard({
                     <span className="block text-[1.1rem] font-semibold text-[var(--color-ink)]">
                       {row.studentName}
                     </span>
-                    <span className="mt-1 block text-sm text-[#647487]">{row.studentEmail}</span>
+                    <span className="mt-1 block text-sm text-[#647487]">
+                      {row.studentEmail}
+                    </span>
                   </Link>
                 </td>
                 <td className="px-4 py-5 text-[#34485c]">
                   <div>{row.courseTitle}</div>
-                  <div className="mt-1 text-sm text-[#617386]">{row.editionLabel}</div>
+                  <div className="mt-1 text-sm text-[#617386]">
+                    {row.editionLabel}
+                  </div>
                 </td>
                 <td className="px-4 py-5 text-[#34485c]">
-                  {row.completionRate}% - {row.completedModules}/{row.totalModules} modulos
+                  {row.completionRate}% - {row.completedModules}/
+                  {row.totalModules} módulos
                 </td>
                 <td className="px-4 py-5 text-[#34485c]">
-                  {row.lastCompletedAt ? formatDateTime(row.lastCompletedAt) : "Sin actividad"}
+                  {row.lastCompletedAt
+                    ? formatDateTime(row.lastCompletedAt)
+                    : "Sin actividad"}
                 </td>
                 <td className="px-7 py-5">
                   <AdminStatusBadge tone={getAccessStateTone(row.accessState)}>

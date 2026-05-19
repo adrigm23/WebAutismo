@@ -1,11 +1,27 @@
-import { buildLegacyCourseWhere, getCourseIdentityBySlug } from "@/lib/course-identity";
+import {
+  buildLegacyCourseWhere,
+  getCourseIdentityBySlug,
+} from "@/lib/course-identity";
 import type { CourseRole } from "@/lib/course-roles";
-import { createDefaultForumCategoriesForSpace, ensureActiveForumSpace } from "@/lib/course-community";
+import {
+  createDefaultForumCategoriesForSpace,
+  ensureActiveForumSpace,
+} from "@/lib/course-community";
 import { removeStoredForumAttachment } from "@/lib/forum-attachment-storage";
 import { writeForumAuditLog } from "@/lib/forum-audit";
-import { getAttachmentContext, getPostContext, getThreadContext, toPostContext, toThreadContext } from "@/lib/forum-context";
+import {
+  getAttachmentContext,
+  getPostContext,
+  getThreadContext,
+  toPostContext,
+  toThreadContext,
+} from "@/lib/forum-context";
 import { getForumCategory } from "@/lib/forum-categories";
-import { notifyAnnouncementRecipients, notifyReplyRecipients, publishDueAnnouncementsForCourse } from "@/lib/forum-notifications";
+import {
+  notifyAnnouncementRecipients,
+  notifyReplyRecipients,
+  publishDueAnnouncementsForCourse,
+} from "@/lib/forum-notifications";
 import { canEditForumContent } from "@/lib/forum-permissions";
 import { normalizeScheduledFor } from "@/lib/forum-query";
 import { getDb } from "@/lib/prisma";
@@ -21,28 +37,29 @@ export async function archiveCurrentForumSpace(input: {
   const courseIdentity = await getCourseIdentityBySlug(input.courseSlug);
   const editionNumberRecord = (await db.forumSpace.findFirst({
     where: {
-      ...buildLegacyCourseWhere(courseIdentity ?? { slug: input.courseSlug })
+      ...buildLegacyCourseWhere(courseIdentity ?? { slug: input.courseSlug }),
     },
     orderBy: {
-      editionNumber: "desc"
+      editionNumber: "desc",
     },
     select: {
-      editionNumber: true
-    }
+      editionNumber: true,
+    },
   })) as { editionNumber: number } | null;
-  const nextEditionNumber = (editionNumberRecord?.editionNumber ?? activeSpace.editionNumber) + 1;
+  const nextEditionNumber =
+    (editionNumberRecord?.editionNumber ?? activeSpace.editionNumber) + 1;
   const archivedAt = new Date();
 
   const newActiveSpace = await db.$transaction(async (tx) => {
     await tx.forumSpace.update({
       where: {
-        id: activeSpace.id
+        id: activeSpace.id,
       },
       data: {
         status: "ARCHIVED",
         archivedAt,
-        archivedById: input.actorId
-      }
+        archivedById: input.actorId,
+      },
     });
 
     return tx.forumSpace.create({
@@ -50,15 +67,15 @@ export async function archiveCurrentForumSpace(input: {
         courseId: courseIdentity?.id ?? null,
         courseSlug: input.courseSlug,
         editionNumber: nextEditionNumber,
-        editionLabel: `Edicion ${nextEditionNumber}`,
-        status: "ACTIVE"
-      }
+        editionLabel: `Edición ${nextEditionNumber}`,
+        status: "ACTIVE",
+      },
     });
   });
 
   await createDefaultForumCategoriesForSpace({
     courseSlug: input.courseSlug,
-    forumSpaceId: newActiveSpace.id
+    forumSpaceId: newActiveSpace.id,
   });
 
   await writeForumAuditLog({
@@ -68,8 +85,8 @@ export async function archiveCurrentForumSpace(input: {
     actorRole: input.actorRole,
     action: "SPACE_ARCHIVED",
     metadata: {
-      editionLabel: activeSpace.editionLabel
-    }
+      editionLabel: activeSpace.editionLabel,
+    },
   });
 
   return newActiveSpace;
@@ -88,18 +105,18 @@ export async function restoreArchivedForumSpace(input: {
       where: {
         id: input.forumSpaceId,
         ...buildLegacyCourseWhere(courseIdentity ?? { slug: input.courseSlug }),
-        status: "ARCHIVED"
-      }
+        status: "ARCHIVED",
+      },
     }),
     db.forumSpace.findFirst({
       where: {
         ...buildLegacyCourseWhere(courseIdentity ?? { slug: input.courseSlug }),
-        status: "ACTIVE"
+        status: "ACTIVE",
       },
       orderBy: {
-        editionNumber: "desc"
-      }
-    })
+        editionNumber: "desc",
+      },
+    }),
   ]);
 
   if (!targetSpace || !currentActiveSpace) {
@@ -111,24 +128,24 @@ export async function restoreArchivedForumSpace(input: {
   await db.$transaction(async (tx) => {
     await tx.forumSpace.update({
       where: {
-        id: currentActiveSpace.id
+        id: currentActiveSpace.id,
       },
       data: {
         status: "ARCHIVED",
         archivedAt,
-        archivedById: input.actorId
-      }
+        archivedById: input.actorId,
+      },
     });
 
     await tx.forumSpace.update({
       where: {
-        id: targetSpace.id
+        id: targetSpace.id,
       },
       data: {
         status: "ACTIVE",
         archivedAt: null,
-        archivedById: null
-      }
+        archivedById: null,
+      },
     });
   });
 
@@ -139,8 +156,8 @@ export async function restoreArchivedForumSpace(input: {
     actorRole: input.actorRole,
     action: "SPACE_ARCHIVED",
     metadata: {
-      editionLabel: currentActiveSpace.editionLabel
-    }
+      editionLabel: currentActiveSpace.editionLabel,
+    },
   });
 
   await writeForumAuditLog({
@@ -150,8 +167,8 @@ export async function restoreArchivedForumSpace(input: {
     actorRole: input.actorRole,
     action: "SPACE_RESTORED",
     metadata: {
-      editionLabel: targetSpace.editionLabel
-    }
+      editionLabel: targetSpace.editionLabel,
+    },
   });
 
   return targetSpace;
@@ -168,14 +185,12 @@ export async function deleteArchivedForumSpace(input: {
     where: {
       id: input.forumSpaceId,
       ...buildLegacyCourseWhere(courseIdentity ?? { slug: input.courseSlug }),
-      status: "ARCHIVED"
-    }
-  })) as
-    | {
-        id: string;
-        editionLabel: string;
-      }
-    | null;
+      status: "ARCHIVED",
+    },
+  })) as {
+    id: string;
+    editionLabel: string;
+  } | null;
 
   if (!archivedSpace) {
     throw new Error("La edicion archivada no existe.");
@@ -183,13 +198,13 @@ export async function deleteArchivedForumSpace(input: {
 
   const deletedSpace = await getDb().forumSpace.update({
     where: {
-      id: archivedSpace.id
+      id: archivedSpace.id,
     },
     data: {
       status: "DELETED",
       deletedAt: new Date(),
-      deletedById: input.actorId
-    }
+      deletedById: input.actorId,
+    },
   });
 
   await writeForumAuditLog({
@@ -199,8 +214,8 @@ export async function deleteArchivedForumSpace(input: {
     actorRole: input.actorRole,
     action: "SPACE_DELETED",
     metadata: {
-      editionLabel: archivedSpace.editionLabel
-    }
+      editionLabel: archivedSpace.editionLabel,
+    },
   });
 
   return deletedSpace;
@@ -226,7 +241,8 @@ export async function createForumThread(input: {
   }
 
   const type = input.type ?? "DISCUSSION";
-  const scheduledFor = type === "ANNOUNCEMENT" ? normalizeScheduledFor(input.scheduledFor) : null;
+  const scheduledFor =
+    type === "ANNOUNCEMENT" ? normalizeScheduledFor(input.scheduledFor) : null;
   const publishedAt = scheduledFor ? null : new Date();
 
   const thread = await getDb().forumThread.create({
@@ -240,8 +256,8 @@ export async function createForumThread(input: {
       isPinned: Boolean(input.isPinned),
       isReadOnly: Boolean(input.isReadOnly && type === "ANNOUNCEMENT"),
       scheduledFor,
-      publishedAt
-    }
+      publishedAt,
+    },
   });
 
   await writeForumAuditLog({
@@ -257,8 +273,8 @@ export async function createForumThread(input: {
       threadTitle: input.title,
       threadType: type,
       isPinned: Boolean(input.isPinned),
-      scheduledFor: scheduledFor?.toISOString() ?? null
-    }
+      scheduledFor: scheduledFor?.toISOString() ?? null,
+    },
   });
 
   if (type === "ANNOUNCEMENT" && publishedAt) {
@@ -269,7 +285,7 @@ export async function createForumThread(input: {
       threadId: thread.id,
       threadTitle: input.title,
       actorId: input.authorId,
-      actorName: input.authorName
+      actorName: input.authorName,
     });
   }
 
@@ -295,17 +311,17 @@ export async function createForumReply(input: {
       threadId: input.threadId,
       authorId: input.authorId,
       authorRole: input.authorRole,
-      body: input.body
-    }
+      body: input.body,
+    },
   });
 
   await getDb().forumThread.update({
     where: {
-      id: input.threadId
+      id: input.threadId,
     },
     data: {
-      lastActivityAt: new Date()
-    }
+      lastActivityAt: new Date(),
+    },
   });
 
   await writeForumAuditLog({
@@ -318,14 +334,14 @@ export async function createForumReply(input: {
     action: "POST_CREATED",
     metadata: {
       categorySlug: threadContext.categorySlug,
-      threadTitle: threadContext.threadTitle
-    }
+      threadTitle: threadContext.threadTitle,
+    },
   });
 
   await notifyReplyRecipients({
     threadId: input.threadId,
     actorId: input.authorId,
-    actorName: input.authorName
+    actorName: input.authorName,
   });
 
   return post;
@@ -352,7 +368,7 @@ export async function updateForumThread(input: {
   const threadContext = toThreadContext(threadContextRecord);
   const currentThread = await getDb().forumThread.findUnique({
     where: {
-      id: input.threadId
+      id: input.threadId,
     },
     select: {
       type: true,
@@ -360,8 +376,8 @@ export async function updateForumThread(input: {
       isReadOnly: true,
       scheduledFor: true,
       publishedAt: true,
-      createdAt: true
-    }
+      createdAt: true,
+    },
   });
 
   if (!currentThread) {
@@ -369,33 +385,35 @@ export async function updateForumThread(input: {
   }
   const nextType = input.type ?? currentThread.type;
   const scheduledFor =
-    nextType === "ANNOUNCEMENT" ? normalizeScheduledFor(input.scheduledFor) : null;
+    nextType === "ANNOUNCEMENT"
+      ? normalizeScheduledFor(input.scheduledFor)
+      : null;
   const nextPublishedAt =
     nextType === "ANNOUNCEMENT"
       ? scheduledFor
         ? null
-        : currentThread.publishedAt ?? new Date()
-      : currentThread.publishedAt ?? currentThread.createdAt;
+        : (currentThread.publishedAt ?? new Date())
+      : (currentThread.publishedAt ?? currentThread.createdAt);
 
   const thread = await getDb().forumThread.update({
     where: {
-      id: input.threadId
+      id: input.threadId,
     },
     data: {
       title: input.title,
       body: input.body,
       type: nextType,
       isPinned:
-        typeof input.isPinned === "boolean" ? input.isPinned : currentThread.isPinned,
+        typeof input.isPinned === "boolean"
+          ? input.isPinned
+          : currentThread.isPinned,
       isReadOnly:
-        nextType === "ANNOUNCEMENT"
-          ? Boolean(input.isReadOnly)
-          : false,
+        nextType === "ANNOUNCEMENT" ? Boolean(input.isReadOnly) : false,
       scheduledFor,
       publishedAt: nextPublishedAt,
       editedAt: new Date(),
-      lastActivityAt: new Date()
-    }
+      lastActivityAt: new Date(),
+    },
   });
 
   await writeForumAuditLog({
@@ -410,8 +428,8 @@ export async function updateForumThread(input: {
       threadTitle: input.title,
       threadType: nextType,
       isPinned: thread.isPinned,
-      scheduledFor: scheduledFor?.toISOString() ?? null
-    }
+      scheduledFor: scheduledFor?.toISOString() ?? null,
+    },
   });
 
   if (
@@ -426,7 +444,7 @@ export async function updateForumThread(input: {
       threadId: threadContext.threadId,
       threadTitle: input.title,
       actorId: input.editorId,
-      actorName: input.editorName
+      actorName: input.editorName,
     });
   }
 
@@ -448,21 +466,21 @@ export async function updateForumPost(input: {
   const postContext = toPostContext(postContextRecord);
   const post = await getDb().forumPost.update({
     where: {
-      id: input.postId
+      id: input.postId,
     },
     data: {
       body: input.body,
-      editedAt: new Date()
-    }
+      editedAt: new Date(),
+    },
   });
 
   await getDb().forumThread.update({
     where: {
-      id: postContext.threadId
+      id: postContext.threadId,
     },
     data: {
-      lastActivityAt: new Date()
-    }
+      lastActivityAt: new Date(),
+    },
   });
 
   await writeForumAuditLog({
@@ -475,8 +493,8 @@ export async function updateForumPost(input: {
     action: "POST_UPDATED",
     metadata: {
       categorySlug: postContext.categorySlug,
-      threadTitle: postContext.threadTitle
-    }
+      threadTitle: postContext.threadTitle,
+    },
   });
 
   return post;
@@ -505,7 +523,7 @@ export async function deleteForumAttachment(input: {
         forumSpaceId: attachmentContext.thread.category.forumSpaceId,
         threadId: attachmentContext.thread.id,
         threadTitle: attachmentContext.thread.title,
-        postId: null as string | null
+        postId: null as string | null,
       }
     : attachmentContext.post
       ? {
@@ -519,7 +537,7 @@ export async function deleteForumAttachment(input: {
           forumSpaceId: attachmentContext.post.thread.category.forumSpaceId,
           threadId: attachmentContext.post.thread.id,
           threadTitle: attachmentContext.post.thread.title,
-          postId: attachmentContext.post.id
+          postId: attachmentContext.post.id,
         }
       : null;
 
@@ -536,7 +554,7 @@ export async function deleteForumAttachment(input: {
       currentUserId: input.actorId,
       authorId: parentContext.authorId,
       role: input.actorRole,
-      createdAt: parentContext.createdAt
+      createdAt: parentContext.createdAt,
     })
   ) {
     throw new Error("Ya no tienes permiso para modificar este adjunto.");
@@ -544,8 +562,8 @@ export async function deleteForumAttachment(input: {
 
   const deletedAttachment = await getDb().forumAttachment.delete({
     where: {
-      id: input.attachmentId
-    }
+      id: input.attachmentId,
+    },
   });
 
   if (deletedAttachment.storageKey) {
@@ -568,8 +586,8 @@ export async function deleteForumAttachment(input: {
       categorySlug: parentContext.categorySlug,
       threadTitle: parentContext.threadTitle,
       attachmentLabel: attachmentContext.label,
-      attachmentRemoved: true
-    }
+      attachmentRemoved: true,
+    },
   });
 
   return deletedAttachment;

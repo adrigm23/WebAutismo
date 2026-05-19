@@ -1,5 +1,12 @@
 import type { AuditAction, AuditEntityType } from "@prisma/client";
-import { CalendarRange, Download, Filter, Search, ShieldCheck, UserRoundSearch } from "lucide-react";
+import {
+  CalendarRange,
+  Download,
+  Filter,
+  Search,
+  ShieldCheck,
+  UserRoundSearch,
+} from "lucide-react";
 import { AuditDetailCard } from "@/components/admin/audit/audit-detail-card";
 import { AuditLogTableCard } from "@/components/admin/audit/audit-log-table-card";
 import { FilterSelect } from "@/components/admin/audit/filter-select";
@@ -9,10 +16,7 @@ import { ButtonLink } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { SubmitButton } from "@/components/ui/submit-button";
-import {
-  getAuditActionLabel,
-  getSearchParamValue
-} from "@/lib/admin-console";
+import { getAuditActionLabel, getSearchParamValue } from "@/lib/admin-console";
 import { requireAdminConsoleUser } from "@/lib/admin-console-server";
 import { parseAuditMetadata } from "@/lib/audit";
 import { demoAdminAuditLogs } from "@/lib/admin-demo";
@@ -63,7 +67,7 @@ const actionOptions: AuditAction[] = [
   "COURSE_RESOURCE_SUBMISSION_CREATED",
   "COURSE_RESOURCE_SUBMISSION_UPDATED",
   "COURSE_RESOURCE_SUBMISSION_REVIEWED",
-  "COURSE_RESOURCE_SUBMISSION_CHANGES_REQUESTED"
+  "COURSE_RESOURCE_SUBMISSION_CHANGES_REQUESTED",
 ];
 
 const entityOptions: AuditEntityType[] = [
@@ -75,7 +79,7 @@ const entityOptions: AuditEntityType[] = [
   "COURSE_RESOURCE_SUBMISSION",
   "PROMOTION",
   "PURCHASE",
-  "NOTIFICATION_PREFERENCE"
+  "NOTIFICATION_PREFERENCE",
 ];
 
 export default async function AdminAuditPage({ searchParams }: AuditPageProps) {
@@ -99,7 +103,8 @@ export default async function AdminAuditPage({ searchParams }: AuditPageProps) {
 
       return matchesQ && matchesAction && matchesEntity;
     });
-    const selectedDemoLog = demoLogs.find((entry) => entry.id === logId) ?? demoLogs[0] ?? null;
+    const selectedDemoLog =
+      demoLogs.find((entry) => entry.id === logId) ?? demoLogs[0] ?? null;
     const demoLogRows = demoLogs.map((log) => ({
       id: log.id,
       createdAt: log.createdAt,
@@ -109,7 +114,7 @@ export default async function AdminAuditPage({ searchParams }: AuditPageProps) {
       actorName: log.actor.name,
       actorEmail: log.actor.email,
       href: "",
-      isSelected: selectedDemoLog?.id === log.id
+      isSelected: selectedDemoLog?.id === log.id,
     }));
     const selectedDemoLogDetail = selectedDemoLog
       ? {
@@ -120,7 +125,7 @@ export default async function AdminAuditPage({ searchParams }: AuditPageProps) {
           entityId: selectedDemoLog.entityId,
           createdAt: selectedDemoLog.createdAt,
           actorName: selectedDemoLog.actor.name,
-          actorEmail: selectedDemoLog.actor.email
+          actorEmail: selectedDemoLog.actor.email,
         }
       : null;
 
@@ -136,13 +141,17 @@ export default async function AdminAuditPage({ searchParams }: AuditPageProps) {
     };
     const resolvedDemoLogRows = demoLogRows.map((log) => ({
       ...log,
-      href: buildDemoQuery(log.id)
+      href: buildDemoQuery(log.id),
     }));
 
     return (
       <div className="space-y-8">
         <AdminPageHeader
-          actions={<ButtonLink href="/admin" variant="secondary">Volver al panel</ButtonLink>}
+          actions={
+            <ButtonLink href="/admin" variant="secondary">
+              Volver al panel
+            </ButtonLink>
+          }
           description="Registro demo para validar la experiencia visual de la auditoria mientras la base real sigue desconectada."
           title="Registro de auditoria"
         />
@@ -150,37 +159,74 @@ export default async function AdminAuditPage({ searchParams }: AuditPageProps) {
         <Card className="rounded-[2rem] p-6">
           <form className="grid gap-4 xl:grid-cols-[minmax(0,1.3fr)_220px_220px_220px_220px]">
             <div className="space-y-2">
-              <label className="text-xs font-semibold uppercase tracking-[0.16em] text-[#506174]">Buscar</label>
+              <label className="text-xs font-semibold uppercase tracking-[0.16em] text-[#506174]">
+                Buscar
+              </label>
               <div className="relative">
-                <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#607185]" strokeWidth={1.8} />
-                <Input className="pl-10" defaultValue={q} name="q" placeholder="Buscar registros..." />
+                <Search
+                  className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#607185]"
+                  strokeWidth={1.8}
+                />
+                <Input
+                  className="pl-10"
+                  defaultValue={q}
+                  name="q"
+                  placeholder="Buscar registros..."
+                />
               </div>
             </div>
-            <FilterSelect defaultValue={range} icon={<CalendarRange className="h-4 w-4" strokeWidth={1.8} />} label="Rango" name="range">
+            <FilterSelect
+              defaultValue={range}
+              icon={<CalendarRange className="h-4 w-4" strokeWidth={1.8} />}
+              label="Rango"
+              name="range"
+            >
               <option value="7d">Ultimos 7 dias</option>
               <option value="30d">Ultimos 30 dias</option>
               <option value="ALL">Todo el historico</option>
             </FilterSelect>
-            <FilterSelect defaultValue={actorId} icon={<UserRoundSearch className="h-4 w-4" strokeWidth={1.8} />} label="Actor" name="actorId">
+            <FilterSelect
+              defaultValue={actorId}
+              icon={<UserRoundSearch className="h-4 w-4" strokeWidth={1.8} />}
+              label="Actor"
+              name="actorId"
+            >
               <option value="ALL">Todos los actores</option>
               <option value="demo-admin">Admin Demo</option>
             </FilterSelect>
-            <FilterSelect defaultValue={action} icon={<ShieldCheck className="h-4 w-4" strokeWidth={1.8} />} label="Accion" name="action">
+            <FilterSelect
+              defaultValue={action}
+              icon={<ShieldCheck className="h-4 w-4" strokeWidth={1.8} />}
+              label="Accion"
+              name="action"
+            >
               <option value="ALL">Todas las acciones</option>
               {actionOptions.map((option) => (
-                <option key={option} value={option}>{getAuditActionLabel(option)}</option>
+                <option key={option} value={option}>
+                  {getAuditActionLabel(option)}
+                </option>
               ))}
             </FilterSelect>
             <div className="space-y-2">
-              <label className="text-xs font-semibold uppercase tracking-[0.16em] text-[#506174]">Entidad</label>
+              <label className="text-xs font-semibold uppercase tracking-[0.16em] text-[#506174]">
+                Entidad
+              </label>
               <div className="flex gap-3">
-                <select className="h-12 flex-1 rounded-xl border border-[var(--color-border)] bg-white px-4 text-sm text-[var(--color-ink)]" defaultValue={entity} name="entity">
+                <select
+                  className="h-12 flex-1 rounded-xl border border-[var(--color-border)] bg-white px-4 text-sm text-[var(--color-ink)]"
+                  defaultValue={entity}
+                  name="entity"
+                >
                   <option value="ALL">Todas las entidades</option>
                   {entityOptions.map((option) => (
-                    <option key={option} value={option}>{getEntityTypeLabel(option)}</option>
+                    <option key={option} value={option}>
+                      {getEntityTypeLabel(option)}
+                    </option>
                   ))}
                 </select>
-                <SubmitButton pendingLabel="Filtrando..." variant="secondary">Filtrar</SubmitButton>
+                <SubmitButton pendingLabel="Filtrando..." variant="secondary">
+                  Filtrar
+                </SubmitButton>
               </div>
             </div>
           </form>
@@ -188,7 +234,7 @@ export default async function AdminAuditPage({ searchParams }: AuditPageProps) {
 
         <section className="grid gap-6 2xl:grid-cols-[minmax(0,1.25fr)_420px]">
           <AuditLogTableCard
-            countLabel={`${demoLogs.length} registros visibles de demostracion`}
+            countLabel={`${demoLogs.length} registros visibles de demostración`}
             logs={resolvedDemoLogRows}
           />
 
@@ -216,16 +262,16 @@ export default async function AdminAuditPage({ searchParams }: AuditPageProps) {
     db.user.findMany({
       where: {
         auditLogs: {
-          some: {}
-        }
+          some: {},
+        },
       },
       select: {
         id: true,
-        name: true
+        name: true,
       },
       orderBy: {
-        name: "asc"
-      }
+        name: "asc",
+      },
     }),
     db.auditLog.findMany({
       where: {
@@ -234,38 +280,41 @@ export default async function AdminAuditPage({ searchParams }: AuditPageProps) {
               OR: [
                 { entityLabel: { contains: q } },
                 { entityId: { contains: q } },
-                { actor: { name: { contains: q } } }
-              ]
+                { actor: { name: { contains: q } } },
+              ],
             }
           : {}),
         ...(rangeStart
           ? {
               createdAt: {
-                gte: rangeStart
-              }
+                gte: rangeStart,
+              },
             }
           : {}),
         ...(actorId !== "ALL" ? { actorId } : {}),
         ...(action !== "ALL" ? { action: action as AuditAction } : {}),
-        ...(entity !== "ALL" ? { entityType: entity as AuditEntityType } : {})
+        ...(entity !== "ALL" ? { entityType: entity as AuditEntityType } : {}),
       },
       include: {
         actor: {
           select: {
             name: true,
-            email: true
-          }
-        }
+            email: true,
+          },
+        },
       },
       orderBy: {
-        createdAt: "desc"
+        createdAt: "desc",
       },
-      take: 50
-    })
+      take: 50,
+    }),
   ]);
 
-  const selectedLog = logs.find((entry) => entry.id === logId) ?? logs[0] ?? null;
-  const selectedMetadata = parseAuditMetadata(selectedLog?.metadataJson ?? null);
+  const selectedLog =
+    logs.find((entry) => entry.id === logId) ?? logs[0] ?? null;
+  const selectedMetadata = parseAuditMetadata(
+    selectedLog?.metadataJson ?? null,
+  );
 
   const buildAuditQuery = (nextLogId?: string) => {
     const qs = new URLSearchParams();
@@ -305,7 +354,7 @@ export default async function AdminAuditPage({ searchParams }: AuditPageProps) {
     actorName: log.actor?.name ?? "Sistema",
     actorEmail: log.actor?.email ?? "Proceso interno",
     href: buildAuditQuery(log.id),
-    isSelected: selectedLog?.id === log.id
+    isSelected: selectedLog?.id === log.id,
   }));
   const selectedLogDetail = selectedLog
     ? {
@@ -316,7 +365,7 @@ export default async function AdminAuditPage({ searchParams }: AuditPageProps) {
         entityId: selectedLog.entityId,
         createdAt: selectedLog.createdAt,
         actorName: selectedLog.actor?.name ?? "Sistema",
-        actorEmail: selectedLog.actor?.email ?? "Proceso interno"
+        actorEmail: selectedLog.actor?.email ?? "Proceso interno",
       }
     : null;
 
@@ -343,8 +392,16 @@ export default async function AdminAuditPage({ searchParams }: AuditPageProps) {
               Buscar
             </label>
             <div className="relative">
-              <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#607185]" strokeWidth={1.8} />
-              <Input className="pl-10" defaultValue={q} name="q" placeholder="Buscar registros..." />
+              <Search
+                className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#607185]"
+                strokeWidth={1.8}
+              />
+              <Input
+                className="pl-10"
+                defaultValue={q}
+                name="q"
+                placeholder="Buscar registros..."
+              />
             </div>
           </div>
 
@@ -393,7 +450,10 @@ export default async function AdminAuditPage({ searchParams }: AuditPageProps) {
             </label>
             <div className="flex gap-3">
               <div className="relative flex-1">
-                <Filter className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#607185]" strokeWidth={1.8} />
+                <Filter
+                  className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#607185]"
+                  strokeWidth={1.8}
+                />
                 <select
                   className="h-12 w-full rounded-xl border border-[var(--color-border)] bg-white pl-10 pr-4 text-sm text-[var(--color-ink)]"
                   defaultValue={entity}
@@ -420,7 +480,11 @@ export default async function AdminAuditPage({ searchParams }: AuditPageProps) {
           countLabel={`${logs.length} registros visibles en el rango seleccionado`}
           logs={logRows}
           rangeLabel={
-            range === "ALL" ? "Historico completo" : range === "30d" ? "Ventana 30 dias" : "Ventana 7 dias"
+            range === "ALL"
+              ? "Historico completo"
+              : range === "30d"
+                ? "Ventana 30 dias"
+                : "Ventana 7 dias"
           }
         />
 

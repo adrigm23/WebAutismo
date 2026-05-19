@@ -16,7 +16,8 @@ export function CreateTeacherCard() {
             Alta de docente
           </h2>
           <p className="mt-2 text-sm leading-7 text-[#52667b]">
-            Crea una cuenta activa con acceso inmediato al campus y al seguimiento academico.
+            Crea una cuenta activa con acceso inmediato al campus y al
+            seguimiento academico.
           </p>
         </div>
       </div>
@@ -24,10 +25,22 @@ export function CreateTeacherCard() {
       <form action={createTeacherAction} className="mt-6 space-y-4">
         <input name="returnTo" type="hidden" value="/admin/teachers" />
         <Input name="name" placeholder="Nombre y apellidos" required />
-        <Input name="email" placeholder="correo@dominio.com" required type="email" />
-        <Input minLength={8} name="password" placeholder="Contrasena temporal" required type="password" />
+        <Input
+          name="email"
+          placeholder="correo@dominio.com"
+          required
+          type="email"
+        />
+        <Input
+          minLength={8}
+          name="password"
+          placeholder="Contrasena temporal"
+          required
+          type="password"
+        />
         <div className="rounded-[1.4rem] border border-[#d8e0e8] bg-[#f7fafc] px-4 py-4 text-sm leading-7 text-[#4c6074]">
-          La cuenta se crea como docente, activa y con preferencias basicas de notificacion.
+          La cuenta se crea como docente, activa y con preferencias básicas de
+          notificación.
         </div>
         <SubmitButton className="w-full" pendingLabel="Creando docente...">
           Crear docente

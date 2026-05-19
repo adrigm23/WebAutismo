@@ -11,7 +11,7 @@ import type {
   CourseFilterStatus,
   CourseTableRow,
   DemoCourseDetail,
-  EditableCourseDetail
+  EditableCourseDetail,
 } from "@/components/admin/courses/types";
 import { ButtonLink } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -55,11 +55,16 @@ function buildCourseHref(input: {
   return `/admin/courses?${qs.toString()}#course-detail`;
 }
 
-export default async function AdminCoursesPage({ searchParams }: CoursesPageProps) {
+export default async function AdminCoursesPage({
+  searchParams,
+}: CoursesPageProps) {
   const currentUser = await requireAdminConsoleUser("/admin/courses");
   const params = await searchParams;
   const q = getSearchParamValue(params.q);
-  const status = getSearchParamValue(params.status, "ALL") as CourseFilterStatus;
+  const status = getSearchParamValue(
+    params.status,
+    "ALL",
+  ) as CourseFilterStatus;
   const courseId = getSearchParamValue(params.courseId);
   const create = getSearchParamValue(params.create);
 
@@ -69,21 +74,30 @@ export default async function AdminCoursesPage({ searchParams }: CoursesPageProp
         !q ||
         course.title.toLowerCase().includes(q.toLowerCase()) ||
         course.slug.toLowerCase().includes(q.toLowerCase()) ||
-        course.teachers.some((teacher) => teacher.toLowerCase().includes(q.toLowerCase()));
+        course.teachers.some((teacher) =>
+          teacher.toLowerCase().includes(q.toLowerCase()),
+        );
       const matchesStatus = status === "ALL" || course.status === status;
       return matchesQ && matchesStatus;
     });
     const selectedDemoCourse =
-      visibleCourses.find((course) => course.id === courseId) ?? visibleCourses[0] ?? null;
-    const activeEditions = demoAdminCourses.reduce((sum, course) => sum + course.activeEditions, 0);
-    const inactiveCourses = demoAdminCourses.filter((course) => course.status === "INACTIVE").length;
+      visibleCourses.find((course) => course.id === courseId) ??
+      visibleCourses[0] ??
+      null;
+    const activeEditions = demoAdminCourses.reduce(
+      (sum, course) => sum + course.activeEditions,
+      0,
+    );
+    const inactiveCourses = demoAdminCourses.filter(
+      (course) => course.status === "INACTIVE",
+    ).length;
     const demoRows: CourseTableRow[] = visibleCourses.map((course) => ({
       id: course.id,
       href: buildCourseHref({
         q,
         status,
         courseId: course.id,
-        create
+        create,
       }),
       isSelected: course.id === selectedDemoCourse?.id,
       title: course.title,
@@ -92,7 +106,7 @@ export default async function AdminCoursesPage({ searchParams }: CoursesPageProp
       priceInCents: course.priceInCents,
       modulesCount: course.modules,
       editionsCount: course.editions,
-      teachersCount: course.teachers.length
+      teachersCount: course.teachers.length,
     }));
     const demoDetail: DemoCourseDetail | null = selectedDemoCourse
       ? {
@@ -100,7 +114,7 @@ export default async function AdminCoursesPage({ searchParams }: CoursesPageProp
           slug: selectedDemoCourse.slug,
           shortDescription: selectedDemoCourse.shortDescription,
           status: selectedDemoCourse.status as "ACTIVE" | "INACTIVE",
-          teachers: selectedDemoCourse.teachers
+          teachers: selectedDemoCourse.teachers,
         }
       : null;
 
@@ -112,8 +126,8 @@ export default async function AdminCoursesPage({ searchParams }: CoursesPageProp
               Ir a promociones
             </ButtonLink>
           }
-          description="Catalogo demo para validar estructura, estados y panel de gestion sin dependencia de la base de datos."
-          title="Catalogo de cursos"
+          description="Catálogo demo para validar estructura, estados y panel de gestión sin dependencia de la base de datos."
+          title="Catálogo de cursos"
         />
 
         <section className="grid gap-5 xl:grid-cols-3">
@@ -162,67 +176,72 @@ export default async function AdminCoursesPage({ searchParams }: CoursesPageProp
                     some: {
                       user: {
                         name: {
-                          contains: q
-                        }
-                      }
-                    }
-                  }
-                }
-              ]
+                          contains: q,
+                        },
+                      },
+                    },
+                  },
+                },
+              ],
             }
           : {}),
         ...(status !== "ALL"
           ? {
-              status: status === "ACTIVE" ? "ACTIVE" : "INACTIVE"
+              status: status === "ACTIVE" ? "ACTIVE" : "INACTIVE",
             }
-          : {})
+          : {}),
       },
       include: {
         modules: {
           orderBy: {
-            position: "asc"
-          }
+            position: "asc",
+          },
         },
         editions: {
           orderBy: {
-            editionNumber: "desc"
-          }
+            editionNumber: "desc",
+          },
         },
         teacherAssignments: {
           include: {
-            user: true
-          }
-        }
+            user: true,
+          },
+        },
       },
       orderBy: {
-        createdAt: "desc"
-      }
+        createdAt: "desc",
+      },
     }),
     db.user.findMany({
       where: {
         globalRole: {
-          in: ["TEACHER", "ADMIN"]
-        }
+          in: ["TEACHER", "ADMIN"],
+        },
       },
       orderBy: {
-        name: "asc"
-      }
-    })
+        name: "asc",
+      },
+    }),
   ]);
 
-  const selectedCourse = courses.find((course) => course.id === courseId) ?? courses[0] ?? null;
+  const selectedCourse =
+    courses.find((course) => course.id === courseId) ?? courses[0] ?? null;
   const activeEditions = courses.reduce(
-    (sum, course) => sum + course.editions.filter((edition) => edition.status === "ACTIVE").length,
-    0
+    (sum, course) =>
+      sum +
+      course.editions.filter((edition) => edition.status === "ACTIVE").length,
+    0,
   );
-  const draftCourses = courses.filter((course) => course.status === "INACTIVE").length;
+  const draftCourses = courses.filter(
+    (course) => course.status === "INACTIVE",
+  ).length;
   const tableRows: CourseTableRow[] = courses.map((course) => ({
     id: course.id,
     href: buildCourseHref({
       q,
       status,
       courseId: course.id,
-      create
+      create,
     }),
     isSelected: course.id === selectedCourse?.id,
     title: course.title,
@@ -231,7 +250,7 @@ export default async function AdminCoursesPage({ searchParams }: CoursesPageProp
     priceInCents: course.priceInCents,
     modulesCount: course.modules.length,
     editionsCount: course.editions.length,
-    teachersCount: course.teacherAssignments.length
+    teachersCount: course.teacherAssignments.length,
   }));
   const editableDetail: EditableCourseDetail | null = selectedCourse
     ? {
@@ -241,22 +260,24 @@ export default async function AdminCoursesPage({ searchParams }: CoursesPageProp
         shortDescription: selectedCourse.shortDescription,
         status: selectedCourse.status,
         priceInCents: selectedCourse.priceInCents,
-        teacherAssignments: selectedCourse.teacherAssignments.map((assignment) => ({
-          id: assignment.id,
-          userId: assignment.user.id,
-          name: assignment.user.name,
-          email: assignment.user.email
-        })),
+        teacherAssignments: selectedCourse.teacherAssignments.map(
+          (assignment) => ({
+            id: assignment.id,
+            userId: assignment.user.id,
+            name: assignment.user.name,
+            email: assignment.user.email,
+          }),
+        ),
         teacherCandidates: teacherCandidates.map((teacher) => ({
           id: teacher.id,
           name: teacher.name,
-          email: teacher.email
+          email: teacher.email,
         })),
         editions: selectedCourse.editions.map((edition) => ({
           id: edition.id,
           label: edition.label,
-          status: edition.status
-        }))
+          status: edition.status,
+        })),
       }
     : null;
 
@@ -272,7 +293,7 @@ export default async function AdminCoursesPage({ searchParams }: CoursesPageProp
           </>
         }
         description="Gestiona curriculum, estado del catalogo, docentes asignados y clonado de cursos para acelerar nuevas ediciones."
-        title="Catalogo de cursos"
+        title="Catálogo de cursos"
       />
 
       <section className="grid gap-5 xl:grid-cols-3">
@@ -316,8 +337,8 @@ export default async function AdminCoursesPage({ searchParams }: CoursesPageProp
                 Crear edicion
               </h2>
               <p className="mt-3 text-sm leading-7 text-[#5f7083]">
-                Selecciona un curso en la tabla y pulsa en gestionar curso para preparar su
-                siguiente edicion desde este mismo lateral.
+                Selecciona un curso en la tabla y pulsa en gestionar curso para
+                preparar su siguiente edicion desde este mismo lateral.
               </p>
             </Card>
           )}

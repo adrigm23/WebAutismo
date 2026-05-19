@@ -4,25 +4,23 @@ import { startTransition, useEffect, useMemo, useState } from "react";
 import { CampusOnboarding } from "@/components/campus/campus-onboarding";
 import {
   CompactLessonHeader,
-  CourseLearningAside,
   CourseLearningContentTab,
-  CourseLearningHero,
   CourseLearningResourcesTab,
   CourseLearningSupportTab,
-  FocusedTaskIntro
+  FocusedTaskIntro,
 } from "@/components/learning/course-learning-shell/course-learning-panels";
 import { CourseLearningHeader } from "@/components/learning/course-learning-shell/course-learning-header";
 import type {
   LearningShellProps,
-  SidebarTab
+  SidebarTab,
 } from "@/components/learning/course-learning-shell/types";
 import type { CampusResourceItem } from "@/lib/course-resources";
 import { buildCourseResourcesHref } from "@/lib/course-navigation";
-import { cn } from "@/lib/utils";
 
-export type { LearningShellProps, SidebarTab } from "@/components/learning/course-learning-shell/types";
-
-const CAMPUS_SIMPLE_VIEW_STORAGE_KEY = "webautismo:campus-simple-view";
+export type {
+  LearningShellProps,
+  SidebarTab,
+} from "@/components/learning/course-learning-shell/types";
 
 export function CourseLearningShell({
   course,
@@ -32,38 +30,37 @@ export function CourseLearningShell({
   roleLabel,
   canModerate,
   editionLabel,
-  accessUntil,
   initialActiveTab,
   initialFocusedResourceId = null,
   initialModuleIndex = 0,
-  showOnboarding = false
+  showOnboarding = false,
 }: LearningShellProps) {
-  const [selectedModuleIndex, setSelectedModuleIndex] = useState(initialModuleIndex);
-  const [pendingActiveTab, setPendingActiveTab] = useState<SidebarTab | null>(null);
-  const [simpleMode, setSimpleMode] = useState(false);
-  const [focusedResourceId, setFocusedResourceId] = useState<string | null>(() => {
-    if (initialFocusedResourceId) {
-      return initialFocusedResourceId;
-    }
-
-    if (typeof window === "undefined") {
-      return null;
-    }
-
-    return window.location.hash.startsWith("#resource-")
-      ? window.location.hash.slice("#resource-".length)
-      : null;
-  });
-  const activeTab = pendingActiveTab ?? initialActiveTab;
-  const effectiveSimpleMode = canModerate ? simpleMode : true;
-  const currentModule = progress.modules[selectedModuleIndex] ?? progress.modules[0] ?? null;
-  const nextPendingModule = useMemo(
-    () => progress.modules.find((module) => !module.isCompleted) ?? progress.modules[0] ?? null,
-    [progress.modules]
+  const [selectedModuleIndex, setSelectedModuleIndex] =
+    useState(initialModuleIndex);
+  const [pendingActiveTab, setPendingActiveTab] = useState<SidebarTab | null>(
+    null,
   );
+  const [focusedResourceId, setFocusedResourceId] = useState<string | null>(
+    () => {
+      if (initialFocusedResourceId) {
+        return initialFocusedResourceId;
+      }
+
+      if (typeof window === "undefined") {
+        return null;
+      }
+
+      return window.location.hash.startsWith("#resource-")
+        ? window.location.hash.slice("#resource-".length)
+        : null;
+    },
+  );
+  const activeTab = pendingActiveTab ?? initialActiveTab;
+  const currentModule =
+    progress.modules[selectedModuleIndex] ?? progress.modules[0] ?? null;
   const managedResources = useMemo(
     () => resources.filter((resource) => resource.isManaged),
-    [resources]
+    [resources],
   );
   const managedResourcesByModuleId = useMemo(() => {
     const groups = new Map<string, CampusResourceItem[]>();
@@ -80,36 +77,18 @@ export function CourseLearningShell({
 
     return groups;
   }, [managedResources]);
-  const managedMaterials = useMemo(
-    () => managedResources.filter((resource) => !resource.isExercise),
-    [managedResources]
-  );
   const managedExercises = useMemo(
     () => managedResources.filter((resource) => resource.isExercise),
-    [managedResources]
+    [managedResources],
   );
   const studentOpenExercises = useMemo(
     () =>
       managedExercises.filter(
         (resource) =>
-          !resource.viewerSubmission || resource.viewerSubmission.status === "CHANGES_REQUESTED"
+          !resource.viewerSubmission ||
+          resource.viewerSubmission.status === "CHANGES_REQUESTED",
       ),
-    [managedExercises]
-  );
-  const studentUnderReviewExercises = useMemo(
-    () =>
-      managedExercises.filter((resource) => resource.viewerSubmission?.status === "SUBMITTED"),
-    [managedExercises]
-  );
-  const teacherPendingReviews = useMemo(
-    () =>
-      managedExercises.reduce((total, resource) => total + (resource.submissionStats?.pending ?? 0), 0),
-    [managedExercises]
-  );
-  const teacherSubmissionCount = useMemo(
-    () =>
-      managedExercises.reduce((total, resource) => total + (resource.submissionStats?.total ?? 0), 0),
-    [managedExercises]
+    [managedExercises],
   );
   const nextReviewSubmissionId = useMemo(() => {
     if (!canModerate) {
@@ -119,7 +98,8 @@ export function CourseLearningShell({
     for (const resource of managedExercises) {
       const nextSubmission = resource.submissions.find(
         (submission) =>
-          submission.status === "SUBMITTED" || submission.status === "CHANGES_REQUESTED"
+          submission.status === "SUBMITTED" ||
+          submission.status === "CHANGES_REQUESTED",
       );
 
       if (nextSubmission) {
@@ -136,7 +116,7 @@ export function CourseLearningShell({
 
     return (
       managedExercises.find(
-        (resource) => resource.id === focusedResourceId && resource.isExercise
+        (resource) => resource.id === focusedResourceId && resource.isExercise,
       ) ?? null
     );
   }, [activeTab, canModerate, focusedResourceId, managedExercises]);
@@ -150,11 +130,11 @@ export function CourseLearningShell({
   }, [currentModule, managedResourcesByModuleId]);
   const currentModuleMaterials = useMemo(
     () => currentModuleResources.filter((resource) => !resource.isExercise),
-    [currentModuleResources]
+    [currentModuleResources],
   );
   const currentModuleExercises = useMemo(
     () => currentModuleResources.filter((resource) => resource.isExercise),
-    [currentModuleResources]
+    [currentModuleResources],
   );
   const currentModulePrimaryMaterial = currentModuleMaterials[0] ?? null;
 
@@ -178,7 +158,9 @@ export function CourseLearningShell({
     if (input.tab === "resources") {
       return buildCourseResourcesHref(
         course.slug,
-        input.resourceId ? `resource-${input.resourceId}` : input.targetId ?? "resources-panel"
+        input.resourceId
+          ? `resource-${input.resourceId}`
+          : (input.targetId ?? "resources-panel"),
       );
     }
 
@@ -217,7 +199,7 @@ export function CourseLearningShell({
     window.history.replaceState(
       window.history.state,
       "",
-      `/mis-cursos/${course.slug}${query ? `?${query}` : ""}${hash}`
+      `/mis-cursos/${course.slug}${query ? `?${query}` : ""}${hash}`,
     );
   }
 
@@ -231,7 +213,11 @@ export function CourseLearningShell({
     });
 
     if (typeof window !== "undefined") {
-      window.history.replaceState(window.history.state, "", buildTabHref(nextTab));
+      window.history.replaceState(
+        window.history.state,
+        "",
+        buildTabHref(nextTab),
+      );
     }
   }
 
@@ -250,7 +236,7 @@ export function CourseLearningShell({
         const nextUrl = buildWorkspaceHref({
           tab: "resources",
           targetId: nextTargetId,
-          resourceId: nextFocusedResourceId
+          resourceId: nextFocusedResourceId,
         });
         window.history.replaceState(window.history.state, "", nextUrl);
       }
@@ -265,7 +251,7 @@ export function CourseLearningShell({
       const nextUrl = buildWorkspaceHref({
         tab: "resources",
         targetId: nextTargetId,
-        resourceId: nextFocusedResourceId
+        resourceId: nextFocusedResourceId,
       });
       window.history.replaceState(window.history.state, "", nextUrl);
     }
@@ -345,7 +331,7 @@ export function CourseLearningShell({
     if (typeof window !== "undefined") {
       const nextUrl = buildWorkspaceHref({
         tab: "resources",
-        targetId: "resources-panel"
+        targetId: "resources-panel",
       });
       window.history.replaceState(window.history.state, "", nextUrl);
     }
@@ -353,81 +339,8 @@ export function CourseLearningShell({
     scrollToCampusTarget("resources-panel");
   }
 
-  const primarySummary = canModerate
-    ? {
-        title: "Centro operativo del curso",
-        body: "Gestiona materiales, ejercicios y revision docente desde un unico espacio. El foro queda como canal de anuncios, dudas y acompanamiento, no como sustituto del flujo academico."
-      }
-    : {
-        title: "Tu espacio de aprendizaje",
-        body: "Todo el recorrido del curso vive aqui: revisas modulos, localizas tareas y registras entregas sin salir del campus. El foro queda reservado para dudas y comunicacion con el equipo docente."
-      };
-  const heroMetrics = canModerate
-    ? [
-        {
-          label: "Ejercicios activos",
-          value: `${managedExercises.length}`,
-          detail: "Actividades visibles y abiertas para el alumnado."
-        },
-        {
-          label: "Pendientes de revision",
-          value: `${teacherPendingReviews}`,
-          detail: `${teacherSubmissionCount} entregas registradas en total.`
-        },
-        {
-          label: "Recursos publicados",
-          value: `${managedResources.length}`,
-          detail: "Materiales, enlaces y referencias del campus."
-        }
-      ]
-    : [
-        {
-          label: "Siguiente modulo",
-          value: nextPendingModule ? `Modulo ${nextPendingModule.index + 1}` : "Sin contenido",
-          detail: nextPendingModule
-            ? nextPendingModule.title
-            : "Todavia no hay modulos configurados en este curso."
-        },
-        {
-          label: "Tareas por hacer",
-          value: `${studentOpenExercises.length}`,
-          detail: "Actividades pendientes o con cambios solicitados."
-        },
-        {
-          label: "En revision",
-          value: `${studentUnderReviewExercises.length}`,
-          detail: "Entregas ya enviadas y esperando respuesta docente."
-        }
-      ];
-  const showCompactContentHeader = activeTab === "content" && !isFocusedTaskWorkspace;
-
-  useEffect(() => {
-    if (typeof window === "undefined") {
-      return;
-    }
-
-    const storedPreference = window.localStorage.getItem(CAMPUS_SIMPLE_VIEW_STORAGE_KEY);
-    const nextSimpleMode = storedPreference === "true";
-    const syncSimpleMode = window.setTimeout(() => {
-      setSimpleMode(nextSimpleMode);
-    }, 0);
-
-    return () => {
-      window.clearTimeout(syncSimpleMode);
-    };
-  }, []);
-
-  function toggleSimpleMode() {
-    setSimpleMode((currentValue) => {
-      const nextValue = !currentValue;
-
-      if (typeof window !== "undefined") {
-        window.localStorage.setItem(CAMPUS_SIMPLE_VIEW_STORAGE_KEY, String(nextValue));
-      }
-
-      return nextValue;
-    });
-  }
+  const showCompactContentHeader =
+    activeTab === "content" && !isFocusedTaskWorkspace;
 
   return (
     <div className="campus-calm-bg min-h-screen">
@@ -437,28 +350,27 @@ export function CourseLearningShell({
         courseSlug={course.slug}
         courseTitle={course.title}
         onResourcesClick={() =>
-          isFocusedTaskWorkspace ? clearFocusedTaskWorkspace() : handleTabChange("resources")
+          isFocusedTaskWorkspace
+            ? clearFocusedTaskWorkspace()
+            : handleTabChange("resources")
         }
-        onSimpleModeChange={toggleSimpleMode}
         onTabChange={handleTabChange}
         roleLabel={roleLabel}
-        simpleMode={effectiveSimpleMode}
       />
 
-      <div className="site-container py-7 xl:py-9">
-        <CampusOnboarding courseSlug={course.slug} showInitially={showOnboarding} />
-        <div
-          className={cn(
-            "mt-6 grid gap-6",
-            isFocusedTaskWorkspace || effectiveSimpleMode
-              ? "xl:grid-cols-1"
-              : "xl:grid-cols-[minmax(0,1fr)_19.5rem] 2xl:grid-cols-[minmax(0,1fr)_21rem]"
-          )}
-        >
-          <div className="space-y-5">
+      <div className="site-container py-5 xl:py-6">
+        <CampusOnboarding
+          courseSlug={course.slug}
+          showInitially={showOnboarding}
+        />
+        <div className="mt-4 grid gap-5 xl:grid-cols-1">
+          <div className="space-y-4">
             {isFocusedTaskWorkspace ? (
-              <FocusedTaskIntro courseSlug={course.slug} onClearFocus={clearFocusedTaskWorkspace} />
-            ) : !canModerate && showCompactContentHeader ? (
+              <FocusedTaskIntro
+                courseSlug={course.slug}
+                onClearFocus={clearFocusedTaskWorkspace}
+              />
+            ) : showCompactContentHeader ? (
               <CompactLessonHeader
                 canModerate={canModerate}
                 course={course}
@@ -467,55 +379,20 @@ export function CourseLearningShell({
                 currentModuleMaterials={currentModuleMaterials}
                 currentModulePrimaryMaterial={currentModulePrimaryMaterial}
                 editionLabel={editionLabel}
-                onOpenCurrentExercise={() => {
-                  if (currentModuleExercises[0]) {
-                    handleResourceWorkspaceOpen(`resource-${currentModuleExercises[0].id}`);
-                  }
-                }}
-                onOpenCurrentLesson={() => openWorkspaceTarget("content", "content-current-module")}
-                roleLabel={roleLabel}
-              />
-            ) : canModerate && showCompactContentHeader ? (
-              <CompactLessonHeader
-                canModerate={canModerate}
-                course={course}
-                currentModule={currentModule}
-                currentModuleExercises={currentModuleExercises}
-                currentModuleMaterials={currentModuleMaterials}
-                currentModulePrimaryMaterial={currentModulePrimaryMaterial}
-                editionLabel={editionLabel}
-                onOpenCurrentExercise={() => {
-                  if (currentModuleExercises[0]) {
-                    handleResourceWorkspaceOpen(`resource-${currentModuleExercises[0].id}`);
-                  }
-                }}
-                onOpenCurrentLesson={() => openWorkspaceTarget("content", "content-current-module")}
-                roleLabel={roleLabel}
-              />
-            ) : canModerate ? (
-              <CourseLearningHero
-                accessUntil={accessUntil}
-                canModerate={canModerate}
-                course={course}
-                currentModule={currentModule}
-                currentModuleExercises={currentModuleExercises}
-                currentModuleMaterials={currentModuleMaterials}
-                currentModulePrimaryMaterial={currentModulePrimaryMaterial}
-                editionLabel={editionLabel}
-                heroMetrics={heroMetrics}
-                nextPendingModule={nextPendingModule}
                 nextReviewSubmissionId={nextReviewSubmissionId}
                 onOpenCurrentExercise={() => {
                   if (currentModuleExercises[0]) {
-                    handleResourceWorkspaceOpen(`resource-${currentModuleExercises[0].id}`);
+                    handleResourceWorkspaceOpen(
+                      `resource-${currentModuleExercises[0].id}`,
+                    );
                   }
                 }}
-                onOpenCurrentLesson={() => openWorkspaceTarget("content", "content-current-module")}
+                onOpenCurrentLesson={() =>
+                  openWorkspaceTarget("content", "content-current-module")
+                }
                 onOpenResources={() => handleResourceWorkspaceOpen()}
-                primarySummary={primarySummary}
-                progress={progress}
+                onOpenSupport={() => handleTabChange("support")}
                 roleLabel={roleLabel}
-                simpleMode={effectiveSimpleMode}
               />
             ) : null}
 
@@ -527,18 +404,11 @@ export function CourseLearningShell({
                 currentModuleExercises={currentModuleExercises}
                 currentModuleMaterials={currentModuleMaterials}
                 currentModulePrimaryMaterial={currentModulePrimaryMaterial}
-                managedExercisesCount={managedExercises.length}
                 managedResourcesByModuleId={managedResourcesByModuleId}
-                nextPendingModule={nextPendingModule}
                 onOpenResourceWorkspace={handleResourceWorkspaceOpen}
-                onOpenWorkspaceTarget={openWorkspaceTarget}
                 onSelectModule={selectModule}
                 progress={progress}
                 selectedModuleIndex={selectedModuleIndex}
-                simpleMode={effectiveSimpleMode}
-                studentOpenExercisesCount={studentOpenExercises.length}
-                studentUnderReviewExercisesCount={studentUnderReviewExercises.length}
-                teacherPendingReviews={teacherPendingReviews}
               />
             ) : null}
 
@@ -548,40 +418,19 @@ export function CourseLearningShell({
                 course={course}
                 focusedStudentExerciseId={focusedStudentExercise?.id ?? null}
                 isFocusedTaskWorkspace={isFocusedTaskWorkspace}
-                managedExercisesCount={managedExercises.length}
-                managedMaterialsCount={managedMaterials.length}
                 onExitFocus={clearFocusedTaskWorkspace}
                 resources={resources}
                 roleLabel={roleLabel}
-                simpleMode={effectiveSimpleMode}
-                studentUnderReviewExercisesCount={studentUnderReviewExercises.length}
-                teacherPendingReviews={teacherPendingReviews}
               />
             ) : null}
 
             {activeTab === "support" ? (
               <CourseLearningSupportTab
-                canModerate={canModerate}
                 courseSlug={course.slug}
                 forumCategories={forumCategories}
-                simpleMode={effectiveSimpleMode}
               />
             ) : null}
           </div>
-
-          {!isFocusedTaskWorkspace && !effectiveSimpleMode ? (
-            <CourseLearningAside
-              canModerate={canModerate}
-              courseSlug={course.slug}
-              currentModule={currentModule}
-              managedExercisesCount={managedExercises.length}
-              onOpenWorkspaceTarget={openWorkspaceTarget}
-              primaryResourceTargetId={primaryResourceTargetId}
-              studentOpenExercisesCount={studentOpenExercises.length}
-              studentUnderReviewExercisesCount={studentUnderReviewExercises.length}
-              teacherPendingReviews={teacherPendingReviews}
-            />
-          ) : null}
         </div>
       </div>
     </div>

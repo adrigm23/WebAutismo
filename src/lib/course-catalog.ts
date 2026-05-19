@@ -1,9 +1,17 @@
 import { cache } from "react";
 import { Prisma } from "@prisma/client";
-import type { Course as LegacyCourse, CourseFaq, CourseModule, CourseTeacher } from "../data/courses.ts";
+import type {
+  Course as LegacyCourse,
+  CourseFaq,
+  CourseModule,
+  CourseTeacher,
+} from "../data/courses.ts";
 import { courses as legacyCourses } from "../data/courses.ts";
 import { isLegacyCatalogFallbackEnabled, isProductionEnv } from "./env.ts";
-import { resolveEditionAccessUntil, isEditionVisible } from "./course-editions.ts";
+import {
+  resolveEditionAccessUntil,
+  isEditionVisible,
+} from "./course-editions.ts";
 import { captureOperationalWarning } from "./monitoring.ts";
 import { getDb } from "./prisma.ts";
 
@@ -52,11 +60,14 @@ function parseFaqField(value: unknown) {
       }
 
       const candidate = item as Record<string, unknown>;
-      return typeof candidate.question === "string" && typeof candidate.answer === "string";
+      return (
+        typeof candidate.question === "string" &&
+        typeof candidate.answer === "string"
+      );
     })
     .map((item) => ({
       question: item.question,
-      answer: item.answer
+      answer: item.answer,
     }));
 }
 
@@ -77,7 +88,7 @@ function toCatalogTeachers(input: {
       bio:
         user.globalRole === "ADMIN"
           ? "Cuenta con permisos globales de administracion y seguimiento academico."
-          : "Docente asignado a este curso dentro del campus."
+          : "Docente asignado a este curso dentro del campus.",
     }));
   }
 
@@ -88,8 +99,8 @@ function pickActiveEdition(editions: CatalogCourseEdition[]) {
   const visible = editions.filter((edition) =>
     isEditionVisible({
       status: edition.status,
-      isActive: edition.isActive
-    })
+      isActive: edition.isActive,
+    }),
   );
 
   const active = visible.find((edition) => edition.status === "ACTIVE");
@@ -102,56 +113,55 @@ function pickActiveEdition(editions: CatalogCourseEdition[]) {
   return scheduled ?? visible[0] ?? null;
 }
 
-function toCatalogCourse(
-  record: {
+function toCatalogCourse(record: {
+  id: string;
+  slug: string;
+  title: string;
+  shortDescription: string;
+  description: string;
+  priceInCents: number;
+  duration: string;
+  format: string;
+  level: string;
+  accentFrom: string;
+  accentTo: string;
+  category: string;
+  audienceJson: unknown;
+  outcomesJson: unknown;
+  methodologyJson: unknown;
+  faqJson: unknown;
+  seoTitle: string;
+  seoDescription: string;
+  modules: Array<{
     id: string;
-    slug: string;
+    moduleKey: string;
     title: string;
-    shortDescription: string;
     description: string;
-    priceInCents: number;
-    duration: string;
-    format: string;
-    level: string;
-    accentFrom: string;
-    accentTo: string;
-    category: string;
-    audienceJson: unknown;
-    outcomesJson: unknown;
-    methodologyJson: unknown;
-    faqJson: unknown;
-    seoTitle: string;
-    seoDescription: string;
-    modules: Array<{
+    estimatedTime: string;
+    resourcesSummary: string;
+    position: number;
+  }>;
+  editions: Array<{
+    id: string;
+    label: string;
+    editionNumber: number;
+    status: "ACTIVE" | "SCHEDULED" | "CLOSED" | "CANCELLED";
+    startsAt: Date | null;
+    endsAt: Date | null;
+    graceAccessDays: number;
+    accessUntil: Date | null;
+    isActive: boolean;
+  }>;
+  teacherAssignments: Array<{
+    user: {
       id: string;
-      moduleKey: string;
-      title: string;
-      description: string;
-      estimatedTime: string;
-      resourcesSummary: string;
-      position: number;
-    }>;
-    editions: Array<{
-      id: string;
-      label: string;
-      editionNumber: number;
-      status: "ACTIVE" | "SCHEDULED" | "CLOSED" | "CANCELLED";
-      startsAt: Date | null;
-      endsAt: Date | null;
-      graceAccessDays: number;
-      accessUntil: Date | null;
-      isActive: boolean;
-    }>;
-    teacherAssignments: Array<{
-      user: {
-        id: string;
-        name: string;
-        globalRole: "STUDENT" | "TEACHER" | "ADMIN";
-      };
-    }>;
-  }
-): CatalogCourse {
-  const legacyCourse = legacyCourses.find((course) => course.slug === record.slug) ?? null;
+      name: string;
+      globalRole: "STUDENT" | "TEACHER" | "ADMIN";
+    };
+  }>;
+}): CatalogCourse {
+  const legacyCourse =
+    legacyCourses.find((course) => course.slug === record.slug) ?? null;
   const editions = record.editions
     .map((edition) => ({
       id: edition.id,
@@ -167,9 +177,9 @@ function toCatalogCourse(
           startsAt: edition.startsAt,
           endsAt: edition.endsAt,
           graceAccessDays: edition.graceAccessDays,
-          accessUntil: edition.accessUntil
+          accessUntil: edition.accessUntil,
         }),
-      isActive: edition.isActive
+      isActive: edition.isActive,
     }))
     .sort((left, right) => left.editionNumber - right.editionNumber);
 
@@ -197,20 +207,20 @@ function toCatalogCourse(
           title: module.title,
           description: module.description,
           estimatedTime: module.estimatedTime,
-          resourcesSummary: module.resourcesSummary
-        })
+          resourcesSummary: module.resourcesSummary,
+        }),
       ),
     methodology: parseArrayField<string>(record.methodologyJson),
     faq: parseFaqField(record.faqJson),
     teachers: toCatalogTeachers({
       assignments: record.teacherAssignments,
-      legacyCourse
+      legacyCourse,
     }),
     seoTitle: record.seoTitle,
     seoDescription: record.seoDescription,
     editions,
     activeEdition: pickActiveEdition(editions),
-    source: "database"
+    source: "database",
   };
 }
 
@@ -221,7 +231,7 @@ function toLegacyCatalogCourse(course: LegacyCourse): CatalogCourse {
     teachers: [course.teacher],
     editions: [],
     activeEdition: null,
-    source: "legacy"
+    source: "legacy",
   };
 }
 
@@ -244,7 +254,7 @@ function toLegacyCourseCreateData(course: LegacyCourse) {
     faqJson: course.faq,
     seoTitle: course.seoTitle,
     seoDescription: course.seoDescription,
-    status: "ACTIVE" as const
+    status: "ACTIVE" as const,
   };
 }
 
@@ -265,13 +275,16 @@ function isDatabaseConnectionError(error: unknown) {
 }
 
 function shouldUseLegacyCatalogFallback(error: unknown) {
-  return !isProductionEnv() && (isLegacyCatalogFallbackEnabled() || isDatabaseConnectionError(error));
+  return (
+    !isProductionEnv() &&
+    (isLegacyCatalogFallbackEnabled() || isDatabaseConnectionError(error))
+  );
 }
 
 function logCatalogFallback(operation: string, error: unknown) {
   captureOperationalWarning("Catalog fallback activated.", {
     operation,
-    error: error instanceof Error ? error : new Error(String(error))
+    error: error instanceof Error ? error : new Error(String(error)),
   });
 }
 
@@ -295,21 +308,21 @@ export async function bootstrapCatalogFromLegacyIfNeeded() {
               description: module.description,
               estimatedTime: module.estimatedTime,
               resourcesSummary: module.resourcesSummary,
-              position: moduleIndex
-            }))
+              position: moduleIndex,
+            })),
           },
           editions: {
             create: {
-              label: "Edicion abierta",
+              label: "Edición abierta",
               editionNumber: index + 1,
               status: "ACTIVE",
               isActive: true,
-              graceAccessDays: 0
-            }
-          }
-        }
-      })
-    )
+              graceAccessDays: 0,
+            },
+          },
+        },
+      }),
+    ),
   );
 }
 
@@ -325,15 +338,15 @@ async function fetchCatalogCoursesFromDb(where: Prisma.CourseWhereInput) {
             select: {
               id: true,
               name: true,
-              globalRole: true
-            }
-          }
-        }
-      }
+              globalRole: true,
+            },
+          },
+        },
+      },
     },
     orderBy: {
-      createdAt: "asc"
-    }
+      createdAt: "asc",
+    },
   });
 
   return records.map((record) => toCatalogCourse(record));
@@ -341,7 +354,9 @@ async function fetchCatalogCoursesFromDb(where: Prisma.CourseWhereInput) {
 
 export const getCatalogCourses = cache(async (includeInactive = false) => {
   try {
-    return await fetchCatalogCoursesFromDb(includeInactive ? {} : { status: "ACTIVE" });
+    return await fetchCatalogCoursesFromDb(
+      includeInactive ? {} : { status: "ACTIVE" },
+    );
   } catch (error) {
     if (!shouldUseLegacyCatalogFallback(error)) {
       throw error;
@@ -352,29 +367,31 @@ export const getCatalogCourses = cache(async (includeInactive = false) => {
   }
 });
 
-export const getCatalogCoursesByIds = cache(async (courseIds: string[], includeInactive = true) => {
-  const uniqueCourseIds = Array.from(new Set(courseIds)).filter(Boolean);
+export const getCatalogCoursesByIds = cache(
+  async (courseIds: string[], includeInactive = true) => {
+    const uniqueCourseIds = Array.from(new Set(courseIds)).filter(Boolean);
 
-  if (uniqueCourseIds.length === 0) {
-    return [] as CatalogCourse[];
-  }
-
-  try {
-    return await fetchCatalogCoursesFromDb({
-      id: {
-        in: uniqueCourseIds
-      },
-      ...(includeInactive ? {} : { status: "ACTIVE" })
-    });
-  } catch (error) {
-    if (!shouldUseLegacyCatalogFallback(error)) {
-      throw error;
+    if (uniqueCourseIds.length === 0) {
+      return [] as CatalogCourse[];
     }
 
-    logCatalogFallback("getCatalogCoursesByIds", error);
-    return [];
-  }
-});
+    try {
+      return await fetchCatalogCoursesFromDb({
+        id: {
+          in: uniqueCourseIds,
+        },
+        ...(includeInactive ? {} : { status: "ACTIVE" }),
+      });
+    } catch (error) {
+      if (!shouldUseLegacyCatalogFallback(error)) {
+        throw error;
+      }
+
+      logCatalogFallback("getCatalogCoursesByIds", error);
+      return [];
+    }
+  },
+);
 
 export const getCatalogCourseBySlug = cache(async (slug: string) => {
   try {
@@ -389,12 +406,12 @@ export const getCatalogCourseBySlug = cache(async (slug: string) => {
               select: {
                 id: true,
                 name: true,
-                globalRole: true
-              }
-            }
-          }
-        }
-      }
+                globalRole: true,
+              },
+            },
+          },
+        },
+      },
     });
 
     return record ? toCatalogCourse(record) : null;

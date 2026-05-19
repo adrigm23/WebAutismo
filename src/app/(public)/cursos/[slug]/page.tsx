@@ -3,7 +3,10 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { ArrowUpRight, ChevronRight } from "lucide-react";
 import { PurchaseCard } from "@/components/purchase-card";
-import { getCatalogCourseBySlug, getCatalogCourses } from "@/lib/course-catalog";
+import {
+  getCatalogCourseBySlug,
+  getCatalogCourses,
+} from "@/lib/course-catalog";
 import { absoluteUrl } from "@/lib/site";
 import { getStripe } from "@/lib/stripe";
 
@@ -20,31 +23,31 @@ export async function generateStaticParams() {
 }
 
 export async function generateMetadata({
-  params
+  params,
 }: CoursePageProps): Promise<Metadata> {
   const { slug } = await params;
   const course = await getCatalogCourseBySlug(slug);
 
   if (!course) {
     return {
-      title: "Curso no encontrado"
+      title: "Curso no encontrado",
     };
   }
 
   return {
     title: {
-      absolute: course.seoTitle
+      absolute: course.seoTitle,
     },
     description: course.seoDescription,
     alternates: {
-      canonical: absoluteUrl(`/cursos/${course.slug}`)
+      canonical: absoluteUrl(`/cursos/${course.slug}`),
     },
     openGraph: {
       title: course.title,
       description: course.seoDescription,
       url: absoluteUrl(`/cursos/${course.slug}`),
-      type: "article"
-    }
+      type: "article",
+    },
   };
 }
 
@@ -82,7 +85,10 @@ function EditorialDividerList(input: {
   return (
     <div className="divide-y divide-[rgba(12,113,195,0.12)] border-y border-[rgba(12,113,195,0.12)]">
       {input.items.map((item) => (
-        <article className="py-6 first:pt-0 last:pb-0" key={`${item.title}-${item.meta ?? ""}`}>
+        <article
+          className="py-6 first:pt-0 last:pb-0"
+          key={`${item.title}-${item.meta ?? ""}`}
+        >
           <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between lg:gap-8">
             <div className="min-w-0">
               <h3 className="text-[1.45rem] font-semibold leading-tight tracking-[-0.04em] text-[var(--color-ink)]">
@@ -137,8 +143,8 @@ export default async function CoursePage({ params }: CoursePageProps) {
         provider: {
           "@type": "Organization",
           name: "Autismo Cordoba",
-          url: absoluteUrl("/")
-        }
+          url: absoluteUrl("/"),
+        },
       },
       {
         "@type": "Product",
@@ -149,8 +155,8 @@ export default async function CoursePage({ params }: CoursePageProps) {
           availability: "https://schema.org/InStock",
           priceCurrency: "EUR",
           price: course.priceInCents / 100,
-          url: absoluteUrl(`/checkout/${course.slug}`)
-        }
+          url: absoluteUrl(`/checkout/${course.slug}`),
+        },
       },
       {
         "@type": "BreadcrumbList",
@@ -159,23 +165,23 @@ export default async function CoursePage({ params }: CoursePageProps) {
             "@type": "ListItem",
             position: 1,
             name: "Inicio",
-            item: absoluteUrl("/")
+            item: absoluteUrl("/"),
           },
           {
             "@type": "ListItem",
             position: 2,
             name: "Cursos",
-            item: absoluteUrl("/cursos")
+            item: absoluteUrl("/cursos"),
           },
           {
             "@type": "ListItem",
             position: 3,
             name: course.title,
-            item: absoluteUrl(`/cursos/${course.slug}`)
-          }
-        ]
-      }
-    ]
+            item: absoluteUrl(`/cursos/${course.slug}`),
+          },
+        ],
+      },
+    ],
   };
 
   return (
@@ -189,7 +195,7 @@ export default async function CoursePage({ params }: CoursePageProps) {
         aria-hidden="true"
         className="pointer-events-none absolute inset-x-0 top-0 h-[38rem] opacity-80"
         style={{
-          background: `radial-gradient(circle at top left, ${course.accentFrom}16 0%, transparent 32%), radial-gradient(circle at 82% 12%, ${course.accentTo}18 0%, transparent 22%), linear-gradient(180deg, rgba(255,255,255,0.36), transparent 78%)`
+          background: `radial-gradient(circle at top left, ${course.accentFrom}16 0%, transparent 32%), radial-gradient(circle at 82% 12%, ${course.accentTo}18 0%, transparent 22%), linear-gradient(180deg, rgba(255,255,255,0.36), transparent 78%)`,
         }}
       />
 
@@ -198,12 +204,18 @@ export default async function CoursePage({ params }: CoursePageProps) {
           aria-label="Ruta de navegacion del curso"
           className="flex flex-wrap items-center gap-2 text-sm font-medium text-[var(--color-muted)]"
         >
-          <Link className="transition hover:text-[var(--color-primary)]" href="/">
+          <Link
+            className="transition hover:text-[var(--color-primary)]"
+            href="/"
+          >
             Inicio
           </Link>
           <ChevronRight className="h-4 w-4 text-[var(--color-border)]" />
-          <Link className="transition hover:text-[var(--color-primary)]" href="/cursos">
-            Catalogo de cursos
+          <Link
+            className="transition hover:text-[var(--color-primary)]"
+            href="/cursos"
+          >
+            Catálogo de cursos
           </Link>
           <ChevronRight className="h-4 w-4 text-[var(--color-border)]" />
           <span className="text-[var(--color-ink)]">{course.title}</span>
@@ -232,7 +244,9 @@ export default async function CoursePage({ params }: CoursePageProps) {
             </p>
 
             <p className="mt-6 max-w-3xl text-sm leading-7 text-[var(--color-muted)]">
-              <span className="font-semibold text-[var(--color-ink)]">Ideal para </span>
+              <span className="font-semibold text-[var(--color-ink)]">
+                Ideal para{" "}
+              </span>
               {course.audience.join(", ").toLowerCase()}.
               <span className="hidden sm:inline">
                 {" "}
@@ -279,12 +293,15 @@ export default async function CoursePage({ params }: CoursePageProps) {
               detail:
                 index === 0
                   ? "La propuesta del curso prioriza aplicacion real, criterio y continuidad en la practica profesional."
-                  : undefined
+                  : undefined,
             }))}
           />
         </section>
 
-        <section aria-labelledby="course-program-heading" className="mt-20 lg:mt-24">
+        <section
+          aria-labelledby="course-program-heading"
+          className="mt-20 lg:mt-24"
+        >
           <SectionHeading
             description="El programa se presenta como un recorrido claro y escaneable antes de comprar."
             eyebrow="Programa"
@@ -355,7 +372,10 @@ export default async function CoursePage({ params }: CoursePageProps) {
           </div>
         </section>
 
-        <section aria-labelledby="course-teachers-heading" className="mt-20 lg:mt-24">
+        <section
+          aria-labelledby="course-teachers-heading"
+          className="mt-20 lg:mt-24"
+        >
           <SectionHeading
             description="La presentacion docente debe aportar solvencia sin convertir el tramo final en otro bloque pesado."
             eyebrow="Equipo docente"

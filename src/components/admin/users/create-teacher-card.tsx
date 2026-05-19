@@ -16,7 +16,7 @@ export function CreateTeacherCard() {
             Crear docente
           </h2>
           <p className="mt-1 text-sm leading-6 text-[#52667b]">
-            Alta controlada. Solo administracion puede crear profesorado.
+            Alta controlada. Solo administración puede crear profesorado.
           </p>
         </div>
       </div>
@@ -24,16 +24,22 @@ export function CreateTeacherCard() {
       <form action={createTeacherAction} className="mt-6 space-y-4">
         <input name="returnTo" type="hidden" value="/admin/users" />
         <Input name="name" placeholder="Nombre y apellidos" required />
-        <Input name="email" placeholder="correo@dominio.com" required type="email" />
+        <Input
+          name="email"
+          placeholder="correo@dominio.com"
+          required
+          type="email"
+        />
         <Input
           minLength={8}
           name="password"
-          placeholder="Contrasena temporal"
+          placeholder="Contraseña temporal"
           required
           type="password"
         />
         <div className="rounded-2xl border border-[#d8e0e8] bg-[#f7fafc] px-4 py-4 text-sm leading-7 text-[#4c6074]">
-          La cuenta se crea activa, con rol global docente y preferencias basicas de notificacion.
+          La cuenta se crea activa, con rol global docente y preferencias
+          básicas de notificación.
         </div>
         <SubmitButton className="w-full" pendingLabel="Creando docente...">
           Crear docente

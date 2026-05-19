@@ -5,17 +5,17 @@ import {
   BookOpen,
   GraduationCap,
   Settings2,
-  ShieldCheck
+  ShieldCheck,
 } from "lucide-react";
 import {
   cancelEnrollmentAction,
   markAllUserNotificationsReadAction,
   markUserNotificationReadAction,
-  updateNotificationPreferencesAction
+  updateNotificationPreferencesAction,
 } from "@/actions/account";
 import {
   markAllForumNotificationsReadAction,
-  markForumNotificationReadAction
+  markForumNotificationReadAction,
 } from "@/actions/forum";
 import { StudentAccountDashboard } from "@/components/account/student-account-dashboard";
 import { TeacherAccountDashboard } from "@/components/account/teacher-account-dashboard";
@@ -28,19 +28,19 @@ import { requireUser } from "@/lib/auth";
 import {
   getDashboardNotificationSnapshot,
   getStudentDashboardPendingSources,
-  getTeacherDashboardCourseSummaries
+  getTeacherDashboardCourseSummaries,
 } from "@/lib/account-dashboard";
 import {
   buildCourseContentHref,
   buildCourseForumHref,
   buildCourseResourcesHref,
   buildCourseTrackingHref,
-  resolvePlatformNotificationHref
+  resolvePlatformNotificationHref,
 } from "@/lib/course-navigation";
 import {
   getCourseProgressDetailsMapForUser,
   getLearnerProgressSummariesForCatalogCourses,
-  getCourseProgressSummariesForUser
+  getCourseProgressSummariesForUser,
 } from "@/lib/course-progress";
 import { getRoleLabel, getUserCourseSpaces } from "@/lib/course-community";
 import { isStaffCourseRole } from "@/lib/course-roles";
@@ -50,8 +50,8 @@ export const metadata: Metadata = {
   title: "Mi cuenta",
   robots: {
     index: false,
-    follow: false
-  }
+    follow: false,
+  },
 };
 
 export default async function AccountPage() {
@@ -66,30 +66,35 @@ export default async function AccountPage() {
     userId: user.id,
     email: user.email,
     userGlobalRole: user.globalRole,
-    userIsActive: user.isActive
+    userIsActive: user.isActive,
   });
   const firstName = user.name.split(" ")[0] || user.name;
   const staffSpaces = spaces.filter((space) => isStaffCourseRole(space.role));
-  const studentSpaces = spaces.filter((space) => !isStaffCourseRole(space.role));
+  const studentSpaces = spaces.filter(
+    (space) => !isStaffCourseRole(space.role),
+  );
   const notificationSnapshotPromise = getDashboardNotificationSnapshot({
     userId: user.id,
-    courseSlugs: spaces.map((space) => space.course.slug)
+    courseSlugs: spaces.map((space) => space.course.slug),
   });
 
   if (staffSpaces.length > 0 || user.globalRole === "TEACHER") {
-    const learnerSummariesByCourse = await getLearnerProgressSummariesForCatalogCourses(
-      staffSpaces.map((space) => space.course)
-    );
+    const learnerSummariesByCourse =
+      await getLearnerProgressSummariesForCatalogCourses(
+        staffSpaces.map((space) => space.course),
+      );
     const teacherCourses = await getTeacherDashboardCourseSummaries({
       spaces: staffSpaces,
-      learnerSummariesByCourse
+      learnerSummariesByCourse,
     });
 
     return (
       <TeacherAccountDashboard
         firstName={firstName}
         fullName={user.name}
-        hasTeacherRoleWithoutCourses={user.globalRole === "TEACHER" && staffSpaces.length === 0}
+        hasTeacherRoleWithoutCourses={
+          user.globalRole === "TEACHER" && staffSpaces.length === 0
+        }
         isDemoUser={isDemoUser}
         notificationSnapshotPromise={notificationSnapshotPromise}
         teacherCourses={teacherCourses}
@@ -101,16 +106,16 @@ export default async function AccountPage() {
     const [progressByCourse, pendingSources] = await Promise.all([
       getCourseProgressDetailsMapForUser({
         userId: user.id,
-        courses: studentSpaces.map((space) => space.course)
+        courses: studentSpaces.map((space) => space.course),
       }),
       getStudentDashboardPendingSources({
         spaces: studentSpaces,
-        userId: user.id
-      })
+        userId: user.id,
+      }),
     ]);
     const studentCourses = studentSpaces.map((space) => ({
       space,
-      progress: progressByCourse.get(space.course.slug)
+      progress: progressByCourse.get(space.course.slug),
     }));
 
     return (
@@ -120,10 +125,12 @@ export default async function AccountPage() {
         isDemoUser={isDemoUser}
         notificationSnapshotPromise={notificationSnapshotPromise}
         pendingSources={pendingSources}
-        studentCourses={studentCourses.filter((course) => Boolean(course.progress)).map((course) => ({
-          ...course,
-          progress: course.progress!
-        }))}
+        studentCourses={studentCourses
+          .filter((course) => Boolean(course.progress))
+          .map((course) => ({
+            ...course,
+            progress: course.progress!,
+          }))}
       />
     );
   }
@@ -135,7 +142,7 @@ export default async function AccountPage() {
 
   const progressByCourse = await getCourseProgressSummariesForUser({
     userId: user.id,
-    courseSlugs: studentSpaces.map((space) => space.course.slug)
+    courseSlugs: studentSpaces.map((space) => space.course.slug),
   });
 
   return (
@@ -200,10 +207,15 @@ export default async function AccountPage() {
             <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
               {spaces.map((space) => {
                 const isStaff = isStaffCourseRole(space.role);
-                const progress = isStaff ? null : progressByCourse.get(space.course.slug);
+                const progress = isStaff
+                  ? null
+                  : progressByCourse.get(space.course.slug);
 
                 return (
-                  <Card className="p-6" key={`quick-${space.course.slug}-${space.role}`}>
+                  <Card
+                    className="p-6"
+                    key={`quick-${space.course.slug}-${space.role}`}
+                  >
                     <div className="flex flex-wrap items-center gap-3">
                       <Badge tone={isStaff ? "teacher" : "student"}>
                         {isStaff ? getRoleLabel(space.role) : "Alumno"}
@@ -219,17 +231,21 @@ export default async function AccountPage() {
                       {isStaff
                         ? "Abre el campus del curso o entra al seguimiento del alumnado desde tu espacio docente."
                         : progress
-                          ? `${progress.completedModules} de ${progress.totalModules} modulos marcados como revisados.`
+                          ? `${progress.completedModules} de ${progress.totalModules} módulos marcados como revisados.`
                           : "Accede al contenido, recursos y foro privado del curso."}
                     </p>
 
                     <div className="mt-6 flex flex-wrap gap-3">
-                      <ButtonLink href={buildCourseContentHref(space.course.slug)}>
+                      <ButtonLink
+                        href={buildCourseContentHref(space.course.slug)}
+                      >
                         {isStaff ? "Entrar al campus" : "Abrir curso"}
                       </ButtonLink>
                       {isStaff ? (
                         <ButtonLink
-                          href={buildCourseTrackingHref({ courseSlug: space.course.slug })}
+                          href={buildCourseTrackingHref({
+                            courseSlug: space.course.slug,
+                          })}
                           variant="secondary"
                         >
                           Ver seguimiento
@@ -250,8 +266,9 @@ export default async function AccountPage() {
           ) : (
             <Card className="p-8">
               <p className="text-[1.04rem] leading-8 text-[var(--color-ink)]/84">
-                Todavia no tienes cursos asociados. Cuando completes una compra o te asignen un
-                curso, apareceran aqui con su estado de acceso real.
+                Todavía no tienes cursos asociados. Cuando completes una compra
+                o te asignen un curso, aparecerán aquí con su estado de acceso
+                real.
               </p>
               <ButtonLink className="mt-6" href="/cursos">
                 Explorar cursos
@@ -263,10 +280,13 @@ export default async function AccountPage() {
         <section className="mt-16" id="avisos-plataforma">
           {isDemoUser ? (
             <Card className="mb-8 border-[#f0d098] bg-[#fff1cf] p-6">
-              <p className="text-lg font-semibold text-[#7c5300]">Modo demo activo</p>
+              <p className="text-lg font-semibold text-[#7c5300]">
+                Modo demo activo
+              </p>
               <p className="mt-2 text-base leading-7 text-[#805c16]">
-                Estas navegando con una cuenta de prueba sin base de datos. Puedes revisar las
-                vistas por rol, pero los cambios no se guardan.
+                Estas navegando con una cuenta de prueba sin base de datos.
+                Puedes revisar las vistas por rol, pero los cambios no se
+                guardan.
               </p>
             </Card>
           ) : null}
@@ -317,7 +337,7 @@ export default async function AccountPage() {
                       href={resolvePlatformNotificationHref({
                         category: notification.category,
                         linkPath: notification.linkPath,
-                        metadataJson: notification.metadataJson
+                        metadataJson: notification.metadataJson,
                       })}
                       variant="secondary"
                     >
@@ -325,8 +345,16 @@ export default async function AccountPage() {
                     </ButtonLink>
                     {!notification.readAt ? (
                       <form action={markUserNotificationReadAction}>
-                        <input name="notificationId" type="hidden" value={notification.id} />
-                        <input name="nextPath" type="hidden" value="/mi-cuenta" />
+                        <input
+                          name="notificationId"
+                          type="hidden"
+                          value={notification.id}
+                        />
+                        <input
+                          name="nextPath"
+                          type="hidden"
+                          value="/mi-cuenta"
+                        />
                         <Button type="submit" variant="ghost">
                           Marcar leida
                         </Button>
@@ -388,13 +416,24 @@ export default async function AccountPage() {
                   </div>
 
                   <div className="flex flex-wrap items-center gap-3">
-                    <ButtonLink href={notification.linkPath} variant="secondary">
+                    <ButtonLink
+                      href={notification.linkPath}
+                      variant="secondary"
+                    >
                       Abrir
                     </ButtonLink>
                     {!notification.readAt ? (
                       <form action={markForumNotificationReadAction}>
-                        <input name="notificationId" type="hidden" value={notification.id} />
-                        <input name="nextPath" type="hidden" value="/mi-cuenta" />
+                        <input
+                          name="notificationId"
+                          type="hidden"
+                          value={notification.id}
+                        />
+                        <input
+                          name="nextPath"
+                          type="hidden"
+                          value="/mi-cuenta"
+                        />
                         <Button type="submit" variant="ghost">
                           Marcar leida
                         </Button>
@@ -407,8 +446,8 @@ export default async function AccountPage() {
           ) : (
             <Card className="p-8">
               <p className="text-[1.04rem] leading-8 text-[var(--color-ink)]/84">
-                Todavia no tienes avisos del foro. Cuando haya respuestas, anuncios docentes
-                o acciones relevantes apareceran aqui.
+                Todavía no tienes avisos del foro. Cuando haya respuestas,
+                anuncios docentes o acciones relevantes aparecerán aquí.
               </p>
             </Card>
           )}
@@ -426,23 +465,32 @@ export default async function AccountPage() {
             <div className="grid gap-6 xl:grid-cols-3">
               {spaces.map((space) => {
                 const isStaff = isStaffCourseRole(space.role);
-                const progress = isStaff ? null : progressByCourse.get(space.course.slug);
+                const progress = isStaff
+                  ? null
+                  : progressByCourse.get(space.course.slug);
 
                 return (
-                  <Card className="overflow-hidden p-0" key={`${space.course.slug}-${space.role}`}>
+                  <Card
+                    className="overflow-hidden p-0"
+                    key={`${space.course.slug}-${space.role}`}
+                  >
                     <div className="relative">
                       <CourseArtwork
                         className="h-44 w-full rounded-none border-0"
                         course={space.course}
                       />
                       <div className="absolute right-4 top-4 rounded-full bg-white px-3 py-1 text-xs font-semibold text-[var(--color-primary)] shadow-sm">
-                        {isStaff ? getRoleLabel(space.role) : `Acceso ${space.accessState}`}
+                        {isStaff
+                          ? getRoleLabel(space.role)
+                          : `Acceso ${space.accessState}`}
                       </div>
                     </div>
 
                     <div className="p-6">
                       <Badge tone={isStaff ? "teacher" : "student"}>
-                        {isStaff ? "Espacio de coordinacion" : "Curso disponible"}
+                        {isStaff
+                          ? "Espacio de coordinación"
+                          : "Curso disponible"}
                       </Badge>
 
                       <h3 className="mt-4 text-[2rem] font-semibold leading-tight tracking-[-0.05em] text-[var(--color-ink)]">
@@ -464,18 +512,19 @@ export default async function AccountPage() {
                         ) : null}
                         <p className="mt-2 text-sm leading-7 text-[var(--color-ink)]">
                           {isStaff
-                            ? "Este espacio corresponde a tu rol de coordinacion. Desde aqui puedes abrir el campus y, si procede, el panel de seguimiento del alumnado."
+                            ? "Este espacio corresponde a tu rol de coordinación. Desde aquí puedes abrir el campus y, si procede, el panel de seguimiento del alumnado."
                             : progress
                               ? progress.isCompleted
-                                ? `Has marcado ${progress.completedModules} de ${progress.totalModules} modulos. Curso completado en tu seguimiento manual.`
+                                ? `Has marcado ${progress.completedModules} de ${progress.totalModules} módulos. Curso completado en tu seguimiento manual.`
                                 : progress.hasStarted
-                                  ? `Has marcado ${progress.completedModules} de ${progress.totalModules} modulos. Quedan ${progress.pendingModules} pendientes por revisar.`
-                                  : `Aun no has marcado modulos como revisados. Tienes ${progress.totalModules} modulos disponibles en el campus.`
-                              : "Todavia no hay seguimiento registrado para este curso."}
+                                  ? `Has marcado ${progress.completedModules} de ${progress.totalModules} módulos. Quedan ${progress.pendingModules} pendientes por revisar.`
+                                  : `Aún no has marcado módulos como revisados. Tienes ${progress.totalModules} módulos disponibles en el campus.`
+                              : "Todavía no hay seguimiento registrado para este curso."}
                         </p>
                         {space.enrollment?.accessUntil ? (
                           <p className="mt-2 text-xs uppercase tracking-[0.16em] text-[var(--color-muted)]">
-                            Acceso hasta {formatDate(space.enrollment.accessUntil)}
+                            Acceso hasta{" "}
+                            {formatDate(space.enrollment.accessUntil)}
                           </p>
                         ) : null}
                         {!isStaff && progress?.lastCompletedAt ? (
@@ -500,7 +549,9 @@ export default async function AccountPage() {
                               Ir al foro
                             </ButtonLink>
                           ) : null}
-                          <ButtonLink href={buildCourseContentHref(space.course.slug)}>
+                          <ButtonLink
+                            href={buildCourseContentHref(space.course.slug)}
+                          >
                             {isStaff ? "Entrar al campus" : "Abrir curso"}
                           </ButtonLink>
                         </div>
@@ -508,7 +559,11 @@ export default async function AccountPage() {
 
                       {!isStaff && space.enrollment ? (
                         <form action={cancelEnrollmentAction} className="mt-4">
-                          <input name="enrollmentId" type="hidden" value={space.enrollment.id} />
+                          <input
+                            name="enrollmentId"
+                            type="hidden"
+                            value={space.enrollment.id}
+                          />
                           <Button type="submit" variant="ghost">
                             Dar de baja esta matricula
                           </Button>
@@ -522,8 +577,9 @@ export default async function AccountPage() {
           ) : (
             <Card className="p-8">
               <p className="text-[1.04rem] leading-8 text-[var(--color-ink)]/84">
-                Todavia no tienes cursos asociados. Cuando completes una compra o te asignen un
-                curso, apareceran aqui con su estado de acceso real.
+                Todavía no tienes cursos asociados. Cuando completes una compra
+                o te asignen un curso, aparecerán aquí con su estado de acceso
+                real.
               </p>
               <ButtonLink className="mt-6" href="/cursos">
                 Explorar cursos
@@ -562,10 +618,17 @@ export default async function AccountPage() {
                   </div>
 
                   <div className="flex flex-wrap gap-3">
-                    <ButtonLink href={buildCourseContentHref(space.course.slug)} variant="secondary">
+                    <ButtonLink
+                      href={buildCourseContentHref(space.course.slug)}
+                      variant="secondary"
+                    >
                       Abrir espacio
                     </ButtonLink>
-                    <ButtonLink href={buildCourseTrackingHref({ courseSlug: space.course.slug })}>
+                    <ButtonLink
+                      href={buildCourseTrackingHref({
+                        courseSlug: space.course.slug,
+                      })}
+                    >
                       Ver progreso
                     </ButtonLink>
                   </div>
@@ -575,7 +638,8 @@ export default async function AccountPage() {
           ) : (
             <Card className="p-8">
               <p className="text-[1.04rem] leading-8 text-[var(--color-ink)]/84">
-                No tienes roles de docencia o administracion asignados en este momento.
+                No tienes roles de docencia o administracion asignados en este
+                momento.
               </p>
             </Card>
           )}
@@ -591,7 +655,8 @@ export default async function AccountPage() {
 
           <Card className="p-8">
             <p className="text-[1.04rem] leading-8 text-[var(--color-ink)]/84">
-              Configura como quieres recibir avisos de compra, acceso, campus y foro.
+              Configura como quieres recibir avisos de compra, acceso, campus y
+              foro.
             </p>
 
             <div className="mt-6 grid gap-4 md:grid-cols-3">
@@ -599,25 +664,28 @@ export default async function AccountPage() {
                 {
                   title: "Solo email",
                   emailEnabled: true,
-                  webEnabled: false
+                  webEnabled: false,
                 },
                 {
                   title: "Solo web",
                   emailEnabled: false,
-                  webEnabled: true
+                  webEnabled: true,
                 },
                 {
                   title: "Email y web",
                   emailEnabled: true,
-                  webEnabled: true
-                }
+                  webEnabled: true,
+                },
               ].map((option) => {
                 const isSelected =
                   preference.emailEnabled === option.emailEnabled &&
                   preference.webEnabled === option.webEnabled;
 
                 return (
-                  <form action={updateNotificationPreferencesAction} key={option.title}>
+                  <form
+                    action={updateNotificationPreferencesAction}
+                    key={option.title}
+                  >
                     <input
                       name="emailEnabled"
                       type="hidden"
@@ -628,7 +696,11 @@ export default async function AccountPage() {
                       type="hidden"
                       value={option.webEnabled ? "true" : "false"}
                     />
-                    <Button className="w-full" type="submit" variant={isSelected ? "primary" : "secondary"}>
+                    <Button
+                      className="w-full"
+                      type="submit"
+                      variant={isSelected ? "primary" : "secondary"}
+                    >
                       {option.title}
                     </Button>
                   </form>
@@ -648,9 +720,9 @@ export default async function AccountPage() {
             </div>
             <Card className="p-8">
               <p className="text-[1.04rem] leading-8 text-[var(--color-ink)]/84">
-                El campus ya permite marcar modulos revisados de forma manual y guardar ese
-                seguimiento en tu cuenta. No se infiere visionado, tiempo de estudio ni
-                certificados automaticamente.
+                El campus ya permite marcar módulos revisados de forma manual y
+                guardar ese seguimiento en tu cuenta. No se infiere visionado,
+                tiempo de estudio ni certificados automaticamente.
               </p>
             </Card>
           </section>

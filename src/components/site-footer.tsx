@@ -10,9 +10,9 @@ export function SiteFooter() {
             {siteConfig.shortName}
           </p>
           <p className="max-w-md text-base leading-8 text-[var(--color-muted)]">
-            Formacion digital especializada en autismo para familias, profesionales y
-            entidades. Compra online, campus privado por curso y acceso segun matricula y
-            edicion.
+            Formación digital especializada en autismo para familias,
+            profesionales y entidades. Compra online, campus privado por curso y
+            acceso segun matricula y edicion.
           </p>
         </div>
 
@@ -24,10 +24,16 @@ export function SiteFooter() {
             <Link className="block hover:text-[var(--color-primary)]" href="/">
               Inicio
             </Link>
-            <Link className="block hover:text-[var(--color-primary)]" href="/plataforma">
+            <Link
+              className="block hover:text-[var(--color-primary)]"
+              href="/plataforma"
+            >
               Plataforma
             </Link>
-            <Link className="block hover:text-[var(--color-primary)]" href="/cursos">
+            <Link
+              className="block hover:text-[var(--color-primary)]"
+              href="/cursos"
+            >
               Cursos
             </Link>
           </div>

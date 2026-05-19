@@ -6,7 +6,7 @@ import {
   moveCourseResourceAction,
   toggleCourseResourcePublicationAction,
   updateCourseResourceAction,
-  type CourseResourceFormState
+  type CourseResourceFormState,
 } from "@/actions/course-resources";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -29,7 +29,9 @@ function toDateTimeLocalValue(value: Date | string | null) {
     return "";
   }
 
-  const localDate = new Date(date.getTime() - date.getTimezoneOffset() * 60_000);
+  const localDate = new Date(
+    date.getTime() - date.getTimezoneOffset() * 60_000,
+  );
   return localDate.toISOString().slice(0, 16);
 }
 
@@ -46,9 +48,12 @@ export function CourseManagedResourceControls({
   modules,
   resource,
   isFirst,
-  isLast
+  isLast,
 }: CourseManagedResourceControlsProps) {
-  const [state, formAction] = useActionState(updateCourseResourceAction, initialState);
+  const [state, formAction] = useActionState(
+    updateCourseResourceAction,
+    initialState,
+  );
   const [isEditorOpen, setIsEditorOpen] = useState(false);
 
   return (
@@ -83,7 +88,11 @@ export function CourseManagedResourceControls({
           <form action={toggleCourseResourcePublicationAction}>
             <input name="courseSlug" type="hidden" value={courseSlug} />
             <input name="resourceId" type="hidden" value={resource.id} />
-            <input name="publish" type="hidden" value={resource.isPublished ? "false" : "true"} />
+            <input
+              name="publish"
+              type="hidden"
+              value={resource.isPublished ? "false" : "true"}
+            />
             <Button type="submit" variant="ghost">
               {resource.isPublished ? "Ocultar" : "Publicar"}
             </Button>
@@ -101,7 +110,9 @@ export function CourseManagedResourceControls({
 
       <details
         className="rounded-2xl bg-[var(--color-surface)] p-4"
-        onToggle={(event) => setIsEditorOpen((event.currentTarget as HTMLDetailsElement).open)}
+        onToggle={(event) =>
+          setIsEditorOpen((event.currentTarget as HTMLDetailsElement).open)
+        }
       >
         <summary className="cursor-pointer list-none text-sm font-semibold text-[var(--color-primary)]">
           Editar recurso
@@ -114,12 +125,16 @@ export function CourseManagedResourceControls({
 
             <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_260px]">
               <label className="block space-y-2">
-                <span className="text-sm font-medium text-[var(--color-ink)]">Titulo</span>
+                <span className="text-sm font-medium text-[var(--color-ink)]">
+                  Titulo
+                </span>
                 <Input defaultValue={resource.title} name="title" required />
               </label>
 
               <label className="block space-y-2">
-                <span className="text-sm font-medium text-[var(--color-ink)]">Modulo</span>
+                <span className="text-sm font-medium text-[var(--color-ink)]">
+                  Módulo
+                </span>
                 <select
                   className="h-12 w-full rounded-xl border border-[var(--color-border)] bg-white px-4 text-sm text-[var(--color-ink)]"
                   defaultValue={resource.moduleId ?? ""}
@@ -136,7 +151,9 @@ export function CourseManagedResourceControls({
             </div>
 
             <label className="block space-y-2">
-              <span className="text-sm font-medium text-[var(--color-ink)]">Descripcion</span>
+              <span className="text-sm font-medium text-[var(--color-ink)]">
+                Descripcion
+              </span>
               <Textarea
                 className="min-h-24"
                 defaultValue={resource.description}
@@ -147,14 +164,23 @@ export function CourseManagedResourceControls({
 
             {resource.source === "LINK" ? (
               <label className="block space-y-2">
-                <span className="text-sm font-medium text-[var(--color-ink)]">URL externa</span>
-                <Input defaultValue={resource.linkUrl ?? ""} name="linkUrl" required type="url" />
+                <span className="text-sm font-medium text-[var(--color-ink)]">
+                  URL externa
+                </span>
+                <Input
+                  defaultValue={resource.linkUrl ?? ""}
+                  name="linkUrl"
+                  required
+                  type="url"
+                />
               </label>
             ) : null}
 
             {resource.source === "FILE" ? (
               <label className="block space-y-2">
-                <span className="text-sm font-medium text-[var(--color-ink)]">Sustituir archivo</span>
+                <span className="text-sm font-medium text-[var(--color-ink)]">
+                  Sustituir archivo
+                </span>
                 <Input name="file" type="file" />
                 <span className="text-xs leading-6 text-[var(--color-muted)]">
                   Si no adjuntas un archivo nuevo, se mantiene el actual.
@@ -165,15 +191,23 @@ export function CourseManagedResourceControls({
             {resource.isExercise ? (
               <div className="grid gap-4 md:grid-cols-2">
                 <label className="block space-y-2">
-                  <span className="text-sm font-medium text-[var(--color-ink)]">Fecha limite</span>
-                  <Input defaultValue={toDateTimeLocalValue(resource.dueAt)} name="dueAt" type="datetime-local" />
+                  <span className="text-sm font-medium text-[var(--color-ink)]">
+                    Fecha limite
+                  </span>
+                  <Input
+                    defaultValue={toDateTimeLocalValue(resource.dueAt)}
+                    name="dueAt"
+                    type="datetime-local"
+                  />
                   <span className="text-xs leading-6 text-[var(--color-muted)]">
                     Dejalo vacio si el ejercicio no tiene cierre automatico.
                   </span>
                 </label>
 
                 <label className="block space-y-2">
-                  <span className="text-sm font-medium text-[var(--color-ink)]">Nota minima para aprobar</span>
+                  <span className="text-sm font-medium text-[var(--color-ink)]">
+                    Nota minima para aprobar
+                  </span>
                   <Input
                     defaultValue={resource.passingScoreLabel ?? ""}
                     max="10"
@@ -184,7 +218,8 @@ export function CourseManagedResourceControls({
                     type="number"
                   />
                   <span className="text-xs leading-6 text-[var(--color-muted)]">
-                    Dejalo vacio si quieres usar solo nota numerica sin corte automatico.
+                    Dejalo vacio si quieres usar solo nota numerica sin corte
+                    automatico.
                   </span>
                 </label>
               </div>

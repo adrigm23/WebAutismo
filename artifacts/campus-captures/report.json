@@ -1,0 +1,64 @@
+[
+  {
+    "role": "student",
+    "viewport": "desktop",
+    "coursePath": "/mis-cursos/curso-prueba-flujo-campus-mayo-2026",
+    "screenshotPath": "C:\\Users\\adria\\Documents\\WepAplication-Autismo\\artifacts\\campus-captures\\student-desktop.png",
+    "contentUrl": "http://127.0.0.1:3003/mis-cursos/curso-prueba-flujo-campus-mayo-2026",
+    "resourcesUrl": "http://127.0.0.1:3003/mis-cursos/curso-prueba-flujo-campus-mayo-2026?tab=resources",
+    "supportUrl": "http://127.0.0.1:3003/mis-cursos/curso-prueba-flujo-campus-mayo-2026?tab=support",
+    "resourceHash": {
+      "resourceId": "resource-cmp40skot0009i804x5gy4dgf",
+      "url": "http://127.0.0.1:3003/mis-cursos/curso-prueba-flujo-campus-mayo-2026?tab=resources#resource-cmp40skot0009i804x5gy4dgf"
+    },
+    "noOverflowOnContent": true,
+    "noOverflowOnResources": true,
+    "noOverflowOnSupport": true,
+    "title": "Mi curso | Curso de prueba para validar campus y seguimiento | Campus Autismo Cordoba"
+  },
+  {
+    "role": "student",
+    "viewport": "mobile",
+    "coursePath": "/mis-cursos/curso-prueba-flujo-campus-mayo-2026",
+    "screenshotPath": "C:\\Users\\adria\\Documents\\WepAplication-Autismo\\artifacts\\campus-captures\\student-mobile.png",
+    "contentUrl": "http://127.0.0.1:3003/mis-cursos/curso-prueba-flujo-campus-mayo-2026",
+    "resourcesUrl": "http://127.0.0.1:3003/mis-cursos/curso-prueba-flujo-campus-mayo-2026?tab=resources",
+    "supportUrl": "http://127.0.0.1:3003/mis-cursos/curso-prueba-flujo-campus-mayo-2026?tab=support",
+    "resourceHash": {
+      "resourceId": "resource-cmp40skot0009i804x5gy4dgf",
+      "url": "http://127.0.0.1:3003/mis-cursos/curso-prueba-flujo-campus-mayo-2026?tab=resources#resource-cmp40skot0009i804x5gy4dgf"
+    },
+    "noOverflowOnContent": true,
+    "noOverflowOnResources": true,
+    "noOverflowOnSupport": true,
+    "title": "Mi curso | Curso de prueba para validar campus y seguimiento | Campus Autismo Cordoba"
+  },
+  {
+    "role": "teacher",
+    "viewport": "desktop",
+    "coursePath": "/mis-cursos/curso-prueba-flujo-campus-mayo-2026",
+    "screenshotPath": "C:\\Users\\adria\\Documents\\WepAplication-Autismo\\artifacts\\campus-captures\\teacher-desktop.png",
+    "contentUrl": "http://127.0.0.1:3003/mis-cursos/curso-prueba-flujo-campus-mayo-2026",
+    "resourcesUrl": "http://127.0.0.1:3003/mis-cursos/curso-prueba-flujo-campus-mayo-2026?tab=resources",
+    "supportUrl": "http://127.0.0.1:3003/mis-cursos/curso-prueba-flujo-campus-mayo-2026?tab=support",
+    "resourceHash": null,
+    "noOverflowOnContent": true,
+    "noOverflowOnResources": true,
+    "noOverflowOnSupport": true,
+    "title": "Mi curso | Curso de prueba para validar campus y seguimiento | Campus Autismo Cordoba"
+  },
+  {
+    "role": "teacher",
+    "viewport": "mobile",
+    "coursePath": "/mis-cursos/curso-prueba-flujo-campus-mayo-2026",
+    "screenshotPath": "C:\\Users\\adria\\Documents\\WepAplication-Autismo\\artifacts\\campus-captures\\teacher-mobile.png",
+    "contentUrl": "http://127.0.0.1:3003/mis-cursos/curso-prueba-flujo-campus-mayo-2026",
+    "resourcesUrl": "http://127.0.0.1:3003/mis-cursos/curso-prueba-flujo-campus-mayo-2026?tab=resources",
+    "supportUrl": "http://127.0.0.1:3003/mis-cursos/curso-prueba-flujo-campus-mayo-2026?tab=support",
+    "resourceHash": null,
+    "noOverflowOnContent": true,
+    "noOverflowOnResources": true,
+    "noOverflowOnSupport": true,
+    "title": "Mi curso | Curso de prueba para validar campus y seguimiento | Campus Autismo Cordoba"
+  }
+]

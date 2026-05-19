@@ -1,7 +1,7 @@
 import type { CatalogCourse } from "@/lib/course-catalog";
 import type {
   CourseModuleProgressState,
-  CourseProgressDetails
+  CourseProgressDetails,
 } from "@/lib/course-progress";
 import type { CampusResourceItem } from "@/lib/course-resources";
 
@@ -31,11 +31,5 @@ export type LearningShellProps = {
 };
 
 export type SidebarTab = "content" | "resources" | "support";
-
-export type HeroMetric = {
-  label: string;
-  value: string;
-  detail: string;
-};
 
 export type LearningShellModule = CourseModuleProgressState;

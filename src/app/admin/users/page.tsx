@@ -5,13 +5,14 @@ import { AdminPageHeader } from "@/components/admin/admin-page-header";
 import { CreateTeacherCard } from "@/components/admin/users/create-teacher-card";
 import { DemoAccessCard } from "@/components/admin/users/demo-access-card";
 import { DemoUserDirectoryCard } from "@/components/admin/users/demo-user-directory-card";
-import type { UserRoleFilter, UserStatusFilter } from "@/components/admin/users/types";
+import type {
+  UserRoleFilter,
+  UserStatusFilter,
+} from "@/components/admin/users/types";
 import { UserDirectoryCard } from "@/components/admin/users/user-directory-card";
 import { UserFiltersCard } from "@/components/admin/users/user-filters-card";
 import { ButtonLink } from "@/components/ui/button";
-import {
-  getSearchParamValue
-} from "@/lib/admin-console";
+import { getSearchParamValue } from "@/lib/admin-console";
 import { requireAdminConsoleUser } from "@/lib/admin-console-server";
 import { getDemoUsers, isDemoUserId } from "@/lib/demo-auth";
 import { getDb } from "@/lib/prisma";
@@ -51,7 +52,7 @@ export default async function AdminUsersPage({ searchParams }: UsersPageProps) {
               Volver al dashboard
             </ButtonLink>
           }
-          description="Directorio de demostracion. Estas cuentas solo existen para revisar la interfaz mientras la base de datos sigue pendiente."
+          description="Directorio de demostración. Estas cuentas solo existen para revisar la interfaz mientras la base de datos sigue pendiente."
           title="Usuarios"
         />
 
@@ -70,7 +71,12 @@ export default async function AdminUsersPage({ searchParams }: UsersPageProps) {
             meta="Credenciales de prueba"
             value="1"
           />
-          <UserFiltersCard includeInactive={false} q={q} role={role} status={status} />
+          <UserFiltersCard
+            includeInactive={false}
+            q={q}
+            role={role}
+            status={status}
+          />
         </section>
 
         <section className="grid gap-6 xl:grid-cols-[1.55fr_0.9fr]">
@@ -88,22 +94,19 @@ export default async function AdminUsersPage({ searchParams }: UsersPageProps) {
       where: {
         ...(q
           ? {
-              OR: [
-                { name: { contains: q } },
-                { email: { contains: q } }
-              ]
+              OR: [{ name: { contains: q } }, { email: { contains: q } }],
             }
           : {}),
         ...(role !== "ALL"
           ? {
-              globalRole: role as UserGlobalRole
+              globalRole: role as UserGlobalRole,
             }
           : {}),
         ...(status === "ACTIVE"
           ? { isActive: true }
           : status === "INACTIVE"
             ? { isActive: false }
-            : {})
+            : {}),
       },
       include: {
         notificationPreference: true,
@@ -111,22 +114,22 @@ export default async function AdminUsersPage({ searchParams }: UsersPageProps) {
           select: {
             enrollments: true,
             purchases: true,
-            courseAssignments: true
-          }
-        }
+            courseAssignments: true,
+          },
+        },
       },
       orderBy: [
         {
-          isActive: "desc"
+          isActive: "desc",
         },
         {
-          createdAt: "desc"
-        }
-      ]
+          createdAt: "desc",
+        },
+      ],
     }),
     db.user.count(),
     db.user.count({ where: { isActive: true } }),
-    db.user.count({ where: { globalRole: "ADMIN", isActive: true } })
+    db.user.count({ where: { globalRole: "ADMIN", isActive: true } }),
   ]);
 
   return (
@@ -137,11 +140,11 @@ export default async function AdminUsersPage({ searchParams }: UsersPageProps) {
             Crear docente
           </ButtonLink>
         }
-        description="Gestion de cuentas, roles globales, estado de acceso y altas de profesorado. El administrador acumula capacidades de docente, pero solo aqui puede gestionar permisos globales."
+        description="Gestión de cuentas, roles globales, estado de acceso y altas de profesorado. El administrador acumula capacidades de docente, pero solo aquí puede gestionar permisos globales."
         title="Usuarios"
       />
 
-      <section className="grid gap-5 xl:grid-cols-[1.2fr_1fr_1fr]">
+      <section className="grid gap-5 xl:grid-cols-2 2xl:grid-cols-[1.2fr_1fr_1fr]">
         <AdminMetricCard
           accent="primary"
           icon={<UsersRound className="h-6 w-6" strokeWidth={1.8} />}
@@ -156,7 +159,9 @@ export default async function AdminUsersPage({ searchParams }: UsersPageProps) {
           meta="El admin mantiene tambien acceso docente"
           value={adminUsers}
         />
-        <UserFiltersCard includeInactive q={q} role={role} status={status} />
+        <div className="xl:col-span-2 2xl:col-span-1">
+          <UserFiltersCard includeInactive q={q} role={role} status={status} />
+        </div>
       </section>
 
       <section className="grid gap-6 xl:grid-cols-[1.55fr_0.9fr]">
