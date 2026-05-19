@@ -56,7 +56,7 @@ export async function GET(
     return NextResponse.json({ error: "Submission attachment access denied." }, { status: 403 });
   }
 
-  const downloadRateLimit = consumeRateLimit({
+  const downloadRateLimit = await consumeRateLimit({
     bucket: "course-submission-download",
     key: buildRequestFingerprint(request.headers, [user.id, submissionId]),
     limit: 30,

@@ -1,5 +1,6 @@
 "use server";
 
+import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
@@ -35,6 +36,8 @@ import {
   updateForumThread,
   unmarkResolvedPost
 } from "@/lib/forum";
+import { buildRequestFingerprint } from "@/lib/request-client";
+import { consumeRateLimit } from "@/lib/rate-limit";
 import { getSafeRedirect } from "@/lib/redirect";
 
 export type ForumFormState = {
@@ -217,6 +220,26 @@ function forumUnavailableErrorState() {
   } satisfies ForumFormState;
 }
 
+async function getForumRateLimitError(input: {
+  bucket: string;
+  userId: string;
+  courseSlug: string;
+}) {
+  const requestHeaders = await headers();
+  const rateLimit = await consumeRateLimit({
+    bucket: input.bucket,
+    key: buildRequestFingerprint(requestHeaders, [input.userId, input.courseSlug]),
+    limit: 20,
+    windowMs: 5 * 60 * 1_000
+  });
+
+  if (rateLimit.allowed) {
+    return null;
+  }
+
+  return `Has alcanzado el limite temporal de publicaciones. Espera ${rateLimit.retryAfterSeconds} segundos antes de volver a intentarlo.`;
+}
+
 export async function createForumThreadAction(
   _: ForumFormState,
   formData: FormData
@@ -237,6 +260,17 @@ export async function createForumThreadAction(
   }
 
   const { user, role } = await requireCourseRole(parsed.data.courseSlug);
+  const rateLimitError = await getForumRateLimitError({
+    bucket: "forum:create-thread",
+    userId: user.id,
+    courseSlug: parsed.data.courseSlug
+  });
+
+  if (rateLimitError) {
+    return {
+      error: rateLimitError
+    };
+  }
 
   if (parsed.data.threadType === "ANNOUNCEMENT" && !canModerateCourse(role)) {
     return { error: "Solo el profesorado o la administracion pueden publicar anuncios." };
@@ -309,6 +343,17 @@ export async function createForumReplyAction(
   }
 
   const { user, role } = await requireCourseRole(parsed.data.courseSlug);
+  const rateLimitError = await getForumRateLimitError({
+    bucket: "forum:create-reply",
+    userId: user.id,
+    courseSlug: parsed.data.courseSlug
+  });
+
+  if (rateLimitError) {
+    return {
+      error: rateLimitError
+    };
+  }
   const threadRecord = await getForumThreadById({
     courseSlug: parsed.data.courseSlug,
     categorySlug: parsed.data.categorySlug,
@@ -632,6 +677,15 @@ export async function reportThreadAction(formData: FormData) {
   }
 
   const { user, role } = await requireCourseRole(parsed.data.courseSlug);
+  const rateLimitError = await getForumRateLimitError({
+    bucket: "forum:report-thread",
+    userId: user.id,
+    courseSlug: parsed.data.courseSlug
+  });
+
+  if (rateLimitError) {
+    redirect(getSafeRedirect(parsed.data.nextPath, `/mis-cursos/${parsed.data.courseSlug}`));
+  }
 
   await createThreadReport({
     threadId: parsed.data.threadId,
@@ -659,6 +713,15 @@ export async function reportPostAction(formData: FormData) {
   }
 
   const { user, role } = await requireCourseRole(parsed.data.courseSlug);
+  const rateLimitError = await getForumRateLimitError({
+    bucket: "forum:report-post",
+    userId: user.id,
+    courseSlug: parsed.data.courseSlug
+  });
+
+  if (rateLimitError) {
+    redirect(getSafeRedirect(parsed.data.nextPath, `/mis-cursos/${parsed.data.courseSlug}`));
+  }
 
   await createPostReport({
     postId: parsed.data.postId,

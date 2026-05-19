@@ -734,7 +734,7 @@ export async function getLearnerProgressRowsForCatalogCourse(
     });
   } catch (error) {
     if (isDatabaseConnectionError(error)) {
-      return buildDemoLearnerProgressRowsForCourse(course);
+      throw error;
     }
 
     throw error;
@@ -882,20 +882,7 @@ export async function getLearnerProgressSummariesForCatalogCourses(
     );
   } catch (error) {
     if (isDatabaseConnectionError(error)) {
-      return new Map(
-        uniqueCourses.map((course) => {
-          const demoRows = buildDemoLearnerProgressRowsForCourse(course);
-
-          return [
-            course.slug,
-            {
-              learnerIds: demoRows.map((row) => row.userId),
-              learnerCount: demoRows.length,
-              averageCompletionRate: demoRows.length ? demoRows[0].completionRate : 0
-            } satisfies CourseLearnerProgressSummary
-          ];
-        })
-      );
+      throw error;
     }
 
     throw error;

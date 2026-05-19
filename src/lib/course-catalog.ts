@@ -7,7 +7,7 @@ import type {
   CourseTeacher,
 } from "../data/courses.ts";
 import { courses as legacyCourses } from "../data/courses.ts";
-import { isLegacyCatalogFallbackEnabled, isProductionEnv } from "./env.ts";
+import { isLegacyCatalogFallbackEnabled } from "./env.ts";
 import {
   resolveEditionAccessUntil,
   isEditionVisible,
@@ -275,10 +275,7 @@ function isDatabaseConnectionError(error: unknown) {
 }
 
 function shouldUseLegacyCatalogFallback(error: unknown) {
-  return (
-    !isProductionEnv() &&
-    (isLegacyCatalogFallbackEnabled() || isDatabaseConnectionError(error))
-  );
+  return isLegacyCatalogFallbackEnabled() && isDatabaseConnectionError(error);
 }
 
 function logCatalogFallback(operation: string, error: unknown) {

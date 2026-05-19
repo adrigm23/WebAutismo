@@ -447,6 +447,12 @@ export async function GET(request: Request) {
       throw error;
     }
 
-    return buildCsvResponse(getDatasetFilename(dataset), []);
+    return NextResponse.json(
+      {
+        error:
+          "Supervision export is temporarily unavailable because the database connection failed."
+      },
+      { status: 503 }
+    );
   }
 }

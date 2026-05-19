@@ -32,17 +32,28 @@ export function isHostedDeploymentEnv() {
   return process.env.VERCEL === "1" || Boolean(process.env.VERCEL_ENV?.trim());
 }
 
+export function isLocalDevelopmentEnv() {
+  return !isProductionEnv() && !isHostedDeploymentEnv();
+}
+
 export function isDemoAuthEnabled() {
   return (
-    !isProductionEnv() &&
-    !isHostedDeploymentEnv() &&
+    isLocalDevelopmentEnv() &&
     getBooleanEnv("DEMO_AUTH_ENABLED", false) &&
     getBooleanEnv("ALLOW_DEMO_AUTH", false)
   );
 }
 
 export function isLegacyCatalogFallbackEnabled() {
-  return !isProductionEnv() && getBooleanEnv("LEGACY_CATALOG_FALLBACK_ENABLED", false);
+  return isLocalDevelopmentEnv() && getBooleanEnv("LEGACY_CATALOG_FALLBACK_ENABLED", false);
+}
+
+export function isForumDemoFallbackEnabled() {
+  return isLocalDevelopmentEnv() && getBooleanEnv("FORUM_DEMO_FALLBACK_ENABLED", false);
+}
+
+export function isDevelopmentDemoPurchaseEnabled() {
+  return isLocalDevelopmentEnv() && getBooleanEnv("ALLOW_DEVELOPMENT_DEMO_PURCHASES", true);
 }
 
 export function getObjectStorageProviderEnv() {
@@ -57,6 +68,20 @@ export function getObjectStorageProviderEnv() {
 
 export function isDatabaseStorageFallbackAllowed() {
   return getBooleanEnv("ALLOW_DATABASE_STORAGE_FALLBACK", false);
+}
+
+export function getRateLimitBackendEnv() {
+  const backend = process.env.RATE_LIMIT_BACKEND?.trim().toLowerCase();
+
+  if (backend === "database" || backend === "memory") {
+    return backend;
+  }
+
+  return null;
+}
+
+export function canUseMemoryRateLimitFallback() {
+  return isLocalDevelopmentEnv() && getBooleanEnv("ALLOW_MEMORY_RATE_LIMIT_FALLBACK", false);
 }
 
 function getPositiveIntegerEnv(name: string, fallback: number) {
@@ -80,6 +105,10 @@ export function getPasswordResetTokenTtlMinutes() {
 
 export function getEmailVerificationTokenTtlHours() {
   return getPositiveIntegerEnv("EMAIL_VERIFICATION_TOKEN_TTL_HOURS", 48);
+}
+
+export function getSessionTtlDays() {
+  return getPositiveIntegerEnv("SESSION_TTL_DAYS", 30);
 }
 
 export function getSiteUrl() {

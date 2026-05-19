@@ -5,7 +5,13 @@ import { z } from "zod";
 import { writeAuditLog } from "@/lib/audit";
 import { hashPassword } from "@/lib/auth";
 import { getDb } from "@/lib/prisma";
-import { ensureNotLastAdmin, requireAdminUser, revalidateAdminViews } from "./shared";
+import { revokeUserSessions } from "@/lib/user-sessions";
+import {
+  enforceAdminMutationRateLimit,
+  ensureNotLastAdmin,
+  requireAdminUser,
+  revalidateAdminViews
+} from "./shared";
 
 const createTeacherSchema = z.object({
   name: z.string().min(2),
@@ -16,6 +22,11 @@ const createTeacherSchema = z.object({
 export async function createTeacherAction(formData: FormData) {
   const admin = await requireAdminUser();
   const returnTo = String(formData.get("returnTo") ?? "").trim() || "/admin";
+  await enforceAdminMutationRateLimit({
+    action: "create-teacher",
+    actorId: admin.id,
+    redirectTo: returnTo
+  });
   const withError = (code: string) =>
     `${returnTo}${returnTo.includes("?") ? "&" : "?"}error=${encodeURIComponent(code)}`;
   const parsed = createTeacherSchema.safeParse({
@@ -71,6 +82,10 @@ export async function createTeacherAction(formData: FormData) {
 
 export async function updateUserRoleAction(formData: FormData) {
   const admin = await requireAdminUser();
+  await enforceAdminMutationRateLimit({
+    action: "update-user-role",
+    actorId: admin.id
+  });
   const userId = String(formData.get("userId") ?? "");
   const nextRole = String(formData.get("globalRole") ?? "");
 
@@ -91,6 +106,12 @@ export async function updateUserRoleAction(formData: FormData) {
       globalRole: nextRole as "STUDENT" | "TEACHER" | "ADMIN"
     }
   });
+
+  if (!active) {
+    await revokeUserSessions({
+      userId: updatedUser.id
+    });
+  }
 
   await writeAuditLog({
     actorId: admin.id,
@@ -114,6 +135,10 @@ export async function updateUserRoleAction(formData: FormData) {
 
 export async function toggleUserActiveAction(formData: FormData) {
   const admin = await requireAdminUser();
+  await enforceAdminMutationRateLimit({
+    action: "toggle-user-active",
+    actorId: admin.id
+  });
   const userId = String(formData.get("userId") ?? "");
   const active = String(formData.get("active") ?? "") === "true";
 
@@ -151,6 +176,10 @@ export async function toggleUserActiveAction(formData: FormData) {
 
 export async function assignTeacherToCourseAction(formData: FormData) {
   const admin = await requireAdminUser();
+  await enforceAdminMutationRateLimit({
+    action: "assign-teacher-course",
+    actorId: admin.id
+  });
   const courseId = String(formData.get("courseId") ?? "");
   const teacherUserId = String(formData.get("teacherUserId") ?? "");
 
@@ -218,6 +247,10 @@ export async function assignTeacherToCourseAction(formData: FormData) {
 
 export async function unassignTeacherFromCourseAction(formData: FormData) {
   const admin = await requireAdminUser();
+  await enforceAdminMutationRateLimit({
+    action: "unassign-teacher-course",
+    actorId: admin.id
+  });
   const courseId = String(formData.get("courseId") ?? "");
   const teacherUserId = String(formData.get("teacherUserId") ?? "");
 
@@ -248,6 +281,11 @@ export async function unassignTeacherFromCourseAction(formData: FormData) {
 
 export async function syncTeacherCourseAssignmentsAction(formData: FormData) {
   const admin = await requireAdminUser();
+  await enforceAdminMutationRateLimit({
+    action: "sync-teacher-course-assignments",
+    actorId: admin.id,
+    redirectTo: "/admin/teachers"
+  });
   const teacherUserId = String(formData.get("teacherUserId") ?? "");
   const selectedCourseIds = formData
     .getAll("courseIds")
@@ -338,6 +376,11 @@ export async function syncTeacherCourseAssignmentsAction(formData: FormData) {
 
 export async function syncTeacherEditionAssignmentsAction(formData: FormData) {
   const admin = await requireAdminUser();
+  await enforceAdminMutationRateLimit({
+    action: "sync-teacher-edition-assignments",
+    actorId: admin.id,
+    redirectTo: "/admin/teachers"
+  });
   const teacherUserId = String(formData.get("teacherUserId") ?? "");
   const requestedEditionIds = formData
     .getAll("editionIds")

@@ -39,6 +39,7 @@ model User {
   auditLogs             AuditLog[]                   @relation("AuditActor")
   passwordResetTokens   UserPasswordResetToken[]
   emailVerificationTokens UserEmailVerificationToken[]
+  sessions              UserSession[]
   deactivatedBy         User?                        @relation("UserDeactivatedBy", fields: [deactivatedById], references: [id], onDelete: SetNull)
   deactivatedUsers      User[]                       @relation("UserDeactivatedBy")
 }
@@ -372,6 +373,35 @@ model UserEmailVerificationToken {
   user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, expiresAt])
+}
+
+model UserSession {
+  id         String   @id @default(cuid())
+  userId     String
+  expiresAt  DateTime
+  revokedAt  DateTime?
+  lastSeenAt DateTime?
+  userAgent  String?
+  ipAddress  String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, revokedAt, expiresAt])
+  @@index([expiresAt])
+}
+
+model RateLimitBucket {
+  id        String   @id @default(cuid())
+  bucket    String
+  keyHash   String
+  hitCount  Int      @default(0)
+  resetAt   DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([bucket, keyHash])
+  @@index([resetAt])
 }
 
 model CourseMembership {

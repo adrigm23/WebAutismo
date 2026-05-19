@@ -10,6 +10,7 @@ import {
 import { clearSession, getCurrentUser } from "@/lib/auth";
 import { canSendEmailMessage, sendEmailVerificationEmail, sendPasswordResetEmail } from "@/lib/email";
 import { getDb } from "@/lib/prisma";
+import { revokeUserSessions } from "@/lib/user-sessions";
 
 export type AccountSecurityFormState = {
   error?: string;
@@ -110,6 +111,9 @@ export async function resetPasswordAction(
     };
   }
 
+  await revokeUserSessions({
+    userId: user.id
+  });
   await clearSession();
   redirect("/acceder?reset=1");
 }

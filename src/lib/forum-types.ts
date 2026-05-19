@@ -1,7 +1,7 @@
 import type { ForumAuditAction, ForumNotificationType } from "@prisma/client";
 import type { CourseRole } from "@/lib/course-roles";
 import { isDatabaseConnectionError } from "@/lib/db-errors";
-import { isProductionEnv } from "@/lib/env";
+import { isForumDemoFallbackEnabled } from "@/lib/env";
 import { isSafeHttpUrl } from "@/lib/file-security";
 import { captureOperationalWarning } from "@/lib/monitoring";
 
@@ -173,7 +173,7 @@ export type ForumNotificationListItem = {
 };
 
 export function canUseForumFallback(error: unknown) {
-  return !isProductionEnv() && isDatabaseConnectionError(error);
+  return isForumDemoFallbackEnabled() && isDatabaseConnectionError(error);
 }
 
 export function logForumFallback(operation: string, courseSlug: string, error: unknown) {

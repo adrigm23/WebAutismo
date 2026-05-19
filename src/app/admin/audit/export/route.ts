@@ -134,6 +134,11 @@ export async function GET(request: Request) {
       throw error;
     }
 
-    return buildCsvResponse([headerRow]);
+    return NextResponse.json(
+      {
+        error: "Audit export is temporarily unavailable because the database connection failed."
+      },
+      { status: 503 }
+    );
   }
 }

@@ -46,7 +46,7 @@ export async function GET(
     return NextResponse.json({ error: "Resource access denied." }, { status: 403 });
   }
 
-  const downloadRateLimit = consumeRateLimit({
+  const downloadRateLimit = await consumeRateLimit({
     bucket: "course-resource-download",
     key: buildRequestFingerprint(request.headers, [user.id, resourceId]),
     limit: 30,

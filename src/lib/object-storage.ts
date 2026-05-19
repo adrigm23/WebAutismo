@@ -8,6 +8,11 @@ import {
 } from "@/lib/legacy-stored-assets";
 import { getBooleanEnv, isHostedDeploymentEnv } from "@/lib/env";
 import { captureOperationalWarning } from "@/lib/monitoring";
+import {
+  getSafeRelativeSegments,
+  resolveObjectStoragePath,
+  resolveProjectRelativeRoot
+} from "@/lib/project-paths";
 
 export type ObjectStorageProvider = "vercel-blob" | "filesystem" | "database";
 
@@ -44,26 +49,26 @@ export function isDatabaseStorageFallbackAllowed() {
 
 function getFilesystemRoot() {
   const configuredRoot = process.env.OBJECT_STORAGE_FILESYSTEM_ROOT?.trim();
-  return path.resolve(/* turbopackIgnore: true */ process.cwd(), configuredRoot || "storage/objects");
+
+  if (configuredRoot) {
+    return resolveProjectRelativeRoot(configuredRoot);
+  }
+
+  return path.join(/*turbopackIgnore: true*/ process.cwd(), "storage", "objects");
 }
 
 function isBlobPath(value: string) {
   return value.startsWith("http://") || value.startsWith("https://");
 }
 
-function assertPathWithinRoot(resolvedPath: string, rootDirectory: string) {
-  const relativePath = path.relative(rootDirectory, resolvedPath);
-
-  if (relativePath.startsWith("..") || path.isAbsolute(relativePath)) {
-    throw new Error("Storage key resolved outside of the configured object storage root.");
-  }
-}
-
 function resolveFilesystemPath(storageKey: string) {
-  const rootDirectory = getFilesystemRoot();
-  const resolvedPath = path.resolve(rootDirectory, storageKey);
-  assertPathWithinRoot(resolvedPath, rootDirectory);
-  return resolvedPath;
+  const configuredRoot = process.env.OBJECT_STORAGE_FILESYSTEM_ROOT?.trim();
+
+  if (!configuredRoot) {
+    return resolveObjectStoragePath(storageKey);
+  }
+
+  return path.join(getFilesystemRoot(), ...getSafeRelativeSegments(storageKey));
 }
 
 async function readPrivateBlob(storageKey: string) {

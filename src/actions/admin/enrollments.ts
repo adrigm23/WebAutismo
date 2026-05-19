@@ -3,10 +3,20 @@
 import { redirect } from "next/navigation";
 import { writeAuditLog } from "@/lib/audit";
 import { getDb } from "@/lib/prisma";
-import { parseOptionalDate, requireAdminUser, revalidateAdminViews } from "./shared";
+import {
+  enforceAdminMutationRateLimit,
+  parseOptionalDate,
+  requireAdminUser,
+  revalidateAdminViews
+} from "./shared";
 
 export async function updateEnrollmentAccessAction(formData: FormData) {
   const admin = await requireAdminUser();
+  await enforceAdminMutationRateLimit({
+    action: "update-enrollment-access",
+    actorId: admin.id,
+    redirectTo: "/admin/supervision"
+  });
   const enrollmentId = String(formData.get("enrollmentId") ?? "");
   const status = String(formData.get("status") ?? "ACTIVE");
   const notes = String(formData.get("notes") ?? "").trim();

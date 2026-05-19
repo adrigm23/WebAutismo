@@ -4,7 +4,12 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { getCurrentUser } from "@/lib/auth";
 import { getCatalogCourseBySlug } from "@/lib/course-catalog";
-import { captureServerException } from "@/lib/monitoring";
+import {
+  captureOperationalInfo,
+  captureOperationalWarning,
+  captureServerException
+} from "@/lib/monitoring";
+import { getPurchaseRuntimeMode } from "@/lib/purchase-runtime";
 import { createPendingPurchase, grantCourseAccess, userOwnsCourse } from "@/lib/purchases";
 import { getDb } from "@/lib/prisma";
 import { absoluteUrl } from "@/lib/site";
@@ -68,7 +73,8 @@ export async function startPurchaseAction(
       courseEditionId: parsed.data.courseEditionId,
       promotionCode: parsed.data.promotionCode
     });
-    const stripe = getStripe();
+    const purchaseMode = getPurchaseRuntimeMode();
+    const stripe = purchaseMode === "live" ? getStripe() : null;
 
     if (stripe) {
       const session = await stripe.checkout.sessions.create({
@@ -114,6 +120,27 @@ export async function startPurchaseAction(
 
       redirect(session.url);
     }
+
+    if (purchaseMode === "disabled") {
+      captureOperationalWarning("Blocked purchase because Stripe is not configured for this environment.", {
+        action: "startPurchaseAction",
+        courseSlug: course.slug,
+        userId: user.id,
+        purchaseId: pendingPurchase.id
+      });
+
+      return {
+        error:
+          "La compra no esta disponible en este entorno porque la pasarela de pago no esta configurada."
+      };
+    }
+
+    captureOperationalInfo("Using development demo purchase flow without Stripe.", {
+      action: "startPurchaseAction",
+      courseSlug: course.slug,
+      userId: user.id,
+      purchaseId: pendingPurchase.id
+    });
 
     await grantCourseAccess({
       userId: user.id,

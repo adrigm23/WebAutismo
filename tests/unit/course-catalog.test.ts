@@ -1,14 +1,12 @@
 const getDbMock = vi.fn();
 const isLegacyCatalogFallbackEnabledMock = vi.fn(() => false);
-const isProductionEnvMock = vi.fn(() => false);
 
 vi.mock("@/lib/prisma", () => ({
   getDb: getDbMock
 }));
 
 vi.mock("@/lib/env", () => ({
-  isLegacyCatalogFallbackEnabled: isLegacyCatalogFallbackEnabledMock,
-  isProductionEnv: isProductionEnvMock
+  isLegacyCatalogFallbackEnabled: isLegacyCatalogFallbackEnabledMock
 }));
 
 describe("course catalog fallback", () => {
@@ -16,10 +14,9 @@ describe("course catalog fallback", () => {
     vi.resetModules();
     vi.clearAllMocks();
     isLegacyCatalogFallbackEnabledMock.mockReturnValue(false);
-    isProductionEnvMock.mockReturnValue(false);
   });
 
-  test("falls back to legacy catalog when the database connection is unavailable", async () => {
+  test("falls back to legacy catalog only when the explicit fallback flag is enabled", async () => {
     const connectionError = Object.assign(new Error("Can't reach database server at `db:3306`"), {
       name: "PrismaClientInitializationError"
     });
@@ -31,6 +28,8 @@ describe("course catalog fallback", () => {
         })
       }
     });
+
+    isLegacyCatalogFallbackEnabledMock.mockReturnValue(true);
 
     const { getCatalogCourses } = await import("@/lib/course-catalog");
     const courses = await getCatalogCourses();

@@ -1,7 +1,5 @@
 import { compare, hash } from "bcryptjs";
 import type { UserGlobalRole } from "@prisma/client";
-import { SignJWT, jwtVerify } from "jose";
-import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { cache } from "react";
 import { getDemoUserById, isDemoUserId } from "@/lib/demo-auth";
@@ -12,13 +10,14 @@ import {
 import {
   getRequiredEnv,
   isDemoAuthEnabled,
-  isEmailVerificationRequired,
-  isProductionEnv
+  isEmailVerificationRequired
 } from "@/lib/env";
 import { getDb } from "@/lib/prisma";
-
-const SESSION_COOKIE = "academy_session";
-const SESSION_DURATION_SECONDS = 60 * 60 * 24 * 30;
+import {
+  clearCurrentUserSession,
+  createUserSession,
+  getCurrentSessionUserId
+} from "@/lib/user-sessions";
 
 function normalizeEmailSet(raw: string) {
   return new Set(
@@ -33,10 +32,6 @@ function getBootstrapAdminEmails() {
   return normalizeEmailSet(process.env.BOOTSTRAP_ADMIN_EMAILS || process.env.ADMIN_EMAILS || "");
 }
 
-function getSessionSecret() {
-  return new TextEncoder().encode(getRequiredEnv("SESSION_SECRET"));
-}
-
 export async function hashPassword(password: string) {
   return hash(password, 12);
 }
@@ -45,30 +40,12 @@ export async function verifyPassword(password: string, passwordHash: string) {
   return compare(password, passwordHash);
 }
 
-async function signSession(userId: string) {
-  return new SignJWT({ sub: userId })
-    .setProtectedHeader({ alg: "HS256" })
-    .setIssuedAt()
-    .setExpirationTime(`${SESSION_DURATION_SECONDS}s`)
-    .sign(getSessionSecret());
-}
-
 export async function createSession(userId: string) {
-  const token = await signSession(userId);
-  const cookieStore = await cookies();
-
-  cookieStore.set(SESSION_COOKIE, token, {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: isProductionEnv(),
-    path: "/",
-    maxAge: SESSION_DURATION_SECONDS
-  });
+  await createUserSession(userId);
 }
 
 export async function clearSession() {
-  const cookieStore = await cookies();
-  cookieStore.delete(SESSION_COOKIE);
+  await clearCurrentUserSession();
 }
 
 async function getUserEmailVerificationDate(userId: string) {
@@ -93,19 +70,7 @@ async function getUserEmailVerificationDate(userId: string) {
 }
 
 export async function getSessionUserId() {
-  const cookieStore = await cookies();
-  const token = cookieStore.get(SESSION_COOKIE)?.value;
-
-  if (!token) {
-    return null;
-  }
-
-  try {
-    const verified = await jwtVerify(token, getSessionSecret());
-    return typeof verified.payload.sub === "string" ? verified.payload.sub : null;
-  } catch {
-    return null;
-  }
+  return getCurrentSessionUserId();
 }
 
 export async function ensureBootstrapAdmin(input: {
@@ -195,7 +160,7 @@ export const getCurrentUser = cache(async () => {
     };
   } catch (error) {
     if (isDatabaseConnectionError(error)) {
-      return null;
+      throw error;
     }
 
     throw error;

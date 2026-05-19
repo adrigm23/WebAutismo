@@ -3,10 +3,20 @@
 import { redirect } from "next/navigation";
 import { writeAuditLog } from "@/lib/audit";
 import { getDb } from "@/lib/prisma";
-import { parseOptionalDate, requireAdminUser, revalidateAdminViews } from "./shared";
+import {
+  enforceAdminMutationRateLimit,
+  parseOptionalDate,
+  requireAdminUser,
+  revalidateAdminViews
+} from "./shared";
 
 export async function createPromotionAction(formData: FormData) {
   const admin = await requireAdminUser();
+  await enforceAdminMutationRateLimit({
+    action: "create-promotion",
+    actorId: admin.id,
+    redirectTo: "/admin/promotions"
+  });
   const code = String(formData.get("code") ?? "").trim().toUpperCase();
   const description = String(formData.get("description") ?? "").trim();
   const amountInCents = Number(formData.get("amountInCents") ?? 0);
@@ -52,6 +62,11 @@ export async function createPromotionAction(formData: FormData) {
 
 export async function togglePromotionAction(formData: FormData) {
   const admin = await requireAdminUser();
+  await enforceAdminMutationRateLimit({
+    action: "toggle-promotion",
+    actorId: admin.id,
+    redirectTo: "/admin/promotions"
+  });
   const promotionId = String(formData.get("promotionId") ?? "");
   const isActive = String(formData.get("isActive") ?? "") === "true";
 
@@ -83,6 +98,11 @@ export async function togglePromotionAction(formData: FormData) {
 
 export async function updatePromotionAction(formData: FormData) {
   const admin = await requireAdminUser();
+  await enforceAdminMutationRateLimit({
+    action: "update-promotion",
+    actorId: admin.id,
+    redirectTo: "/admin/promotions"
+  });
   const promotionId = String(formData.get("promotionId") ?? "");
   const code = String(formData.get("code") ?? "").trim().toUpperCase();
   const description = String(formData.get("description") ?? "").trim();

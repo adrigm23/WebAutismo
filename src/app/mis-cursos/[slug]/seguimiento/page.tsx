@@ -243,10 +243,7 @@ export default async function CourseTrackingPage({
       throw error;
     }
 
-    [progressRows, exerciseResources] = await Promise.all([
-      getLearnerProgressRowsForCatalogCourse(course),
-      exerciseResourcesPromise,
-    ]);
+    throw error;
   }
 
   const progressRowsByUserId = new Map(

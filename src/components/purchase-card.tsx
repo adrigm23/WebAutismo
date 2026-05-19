@@ -2,15 +2,17 @@ import { Clock3, Lock, MonitorPlay } from "lucide-react";
 import { CourseArtwork } from "@/components/course-artwork";
 import { ButtonLink } from "@/components/ui/button";
 import type { CatalogCourse } from "@/lib/course-catalog";
+import type { PurchaseRuntimeMode } from "@/lib/purchase-runtime";
 import { formatPrice } from "@/lib/utils";
 
 type PurchaseCardProps = {
   course: CatalogCourse;
-  purchaseMode: "live" | "demo";
+  purchaseMode: PurchaseRuntimeMode;
 };
 
 export function PurchaseCard({ course, purchaseMode }: PurchaseCardProps) {
   const isLiveMode = purchaseMode === "live";
+  const isDemoMode = purchaseMode === "demo";
   const leadTeacher = course.teachers[0] ?? null;
   const editionLabel = course.activeEdition?.label ?? null;
 
@@ -33,7 +35,7 @@ export function PurchaseCard({ course, purchaseMode }: PurchaseCardProps) {
         </div>
         <div className="inline-flex items-center gap-2 rounded-full bg-[var(--color-surface)] px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-[var(--color-muted)]">
           <Lock className="h-3.5 w-3.5" />
-          {isLiveMode ? "Pago real" : "Modo demo"}
+          {isLiveMode ? "Pago real" : isDemoMode ? "Modo demo" : "Compra desactivada"}
         </div>
       </div>
 
@@ -47,7 +49,11 @@ export function PurchaseCard({ course, purchaseMode }: PurchaseCardProps) {
 
       <div className="mt-6">
         <ButtonLink className="w-full" href={`/checkout/${course.slug}`} variant="accent">
-          {isLiveMode ? "Continuar con la compra" : "Revisar acceso demo"}
+          {isLiveMode
+            ? "Continuar con la compra"
+            : isDemoMode
+              ? "Revisar acceso demo"
+              : "Ver disponibilidad del checkout"}
         </ButtonLink>
       </div>
 
@@ -88,7 +94,9 @@ export function PurchaseCard({ course, purchaseMode }: PurchaseCardProps) {
       <p className="mt-5 text-sm leading-7 text-[var(--color-muted)]">
         {isLiveMode
           ? "El cobro se realiza fuera de esta pagina, en la pasarela segura de Stripe."
-          : "Este entorno activa acceso local de prueba y no procesa ningun cobro real."}
+          : isDemoMode
+            ? "Este entorno activa acceso local de prueba y no procesa ningun cobro real."
+            : "Este entorno no tiene una pasarela de pago configurada y no permite activar acceso automatico."}
       </p>
     </div>
   );

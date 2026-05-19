@@ -6,8 +6,8 @@ import { PurchaseForm } from "@/components/purchase-form";
 import { ButtonLink } from "@/components/ui/button";
 import { getCurrentUser } from "@/lib/auth";
 import { getCatalogCourseBySlug } from "@/lib/course-catalog";
+import { getPurchaseRuntimeMode } from "@/lib/purchase-runtime";
 import { userOwnsCourse } from "@/lib/purchases";
-import { getStripe } from "@/lib/stripe";
 import { formatPrice } from "@/lib/utils";
 
 type CheckoutPageProps = {
@@ -38,7 +38,9 @@ export default async function CheckoutPage({ params }: CheckoutPageProps) {
   }
 
   const user = await getCurrentUser();
-  const isStripeReady = Boolean(getStripe());
+  const purchaseMode = getPurchaseRuntimeMode();
+  const isStripeReady = purchaseMode === "live";
+  const isDemoMode = purchaseMode === "demo";
 
   if (user && (await userOwnsCourse(user.id, course.slug))) {
     redirect(`/mis-cursos/${course.slug}`);
@@ -56,7 +58,11 @@ export default async function CheckoutPage({ params }: CheckoutPageProps) {
           </p>
           <div className="flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.14em] text-[var(--color-muted)]">
             <Lock className="h-4 w-4" />
-            {isStripeReady ? "Pago real con Stripe" : "Modo demo local"}
+            {isStripeReady
+              ? "Pago real con Stripe"
+              : isDemoMode
+                ? "Modo demo local"
+                : "Checkout desactivado"}
           </div>
         </div>
       </header>
@@ -70,7 +76,9 @@ export default async function CheckoutPage({ params }: CheckoutPageProps) {
             <p className="mt-4 max-w-3xl text-[1.16rem] leading-9 text-[var(--color-ink)]/84">
               {isStripeReady
                 ? "Vas a pasar a una pasarela segura para completar el pago y activar el curso en tu cuenta."
-                : "Estas en un flujo de validacion. El boton final no cobra: activa acceso local de prueba para revisar el producto end to end."}
+                : isDemoMode
+                  ? "Estas en un flujo de validacion. El boton final no cobra: activa acceso local de prueba para revisar el producto end to end."
+                  : "La pasarela de pago no esta disponible en este entorno, por lo que no se puede completar la inscripcion automatica."}
             </p>
 
             <div
@@ -82,7 +90,9 @@ export default async function CheckoutPage({ params }: CheckoutPageProps) {
             >
               {isStripeReady
                 ? "El pago se procesa fuera de la app mediante Stripe. El acceso se concede automaticamente cuando la compra queda confirmada por webhook."
-                : "Stripe no esta configurado en este entorno. La app dejara constancia de una activacion demo y te llevara al campus sin cobro real."}
+                : isDemoMode
+                  ? "Stripe no esta configurado en este entorno. La app dejara constancia de una activacion demo y te llevara al campus sin cobro real."
+                  : "Stripe no esta configurado en este entorno y la inscripcion automatica queda bloqueada hasta habilitar una pasarela real."}
             </div>
 
             {course.activeEdition ? (
@@ -107,12 +117,18 @@ export default async function CheckoutPage({ params }: CheckoutPageProps) {
                   Paso 2
                 </p>
                 <p className="mt-3 text-lg font-semibold text-[var(--color-ink)]">
-                  {isStripeReady ? "Pago seguro" : "Activacion demo"}
+                  {isStripeReady
+                    ? "Pago seguro"
+                    : isDemoMode
+                      ? "Activacion demo"
+                      : "Pago no disponible"}
                 </p>
                 <p className="mt-2 text-sm leading-7 text-[var(--color-muted)]">
                   {isStripeReady
                     ? "Puedes introducir un cupon y el importe final se genera en servidor."
-                    : "No se solicitan datos de pago porque no existe cobro real en este entorno."}
+                    : isDemoMode
+                      ? "No se solicitan datos de pago porque no existe cobro real en este entorno."
+                      : "No se inicia ningun cobro ni activacion automatica mientras no haya pasarela configurada."}
                 </p>
               </div>
               <div className="rounded-2xl border border-[var(--color-border)] bg-white p-5">
@@ -161,7 +177,9 @@ export default async function CheckoutPage({ params }: CheckoutPageProps) {
                     <p className="mt-3 text-[1.04rem] leading-8 text-[var(--color-ink)]/84">
                       {isStripeReady
                         ? "Al pulsar el boton final saldras de esta pantalla y Stripe gestionara el pago."
-                        : "Al pulsar el boton final la app registrara una activacion local y te enviara al flujo de exito demo."}
+                        : isDemoMode
+                          ? "Al pulsar el boton final la app registrara una activacion local y te enviara al flujo de exito demo."
+                          : "El boton final mostrara un bloqueo controlado hasta que este entorno disponga de una pasarela de pago real."}
                     </p>
                   </div>
                 </div>
@@ -202,7 +220,9 @@ export default async function CheckoutPage({ params }: CheckoutPageProps) {
                   <p>
                     {isStripeReady
                       ? "Compra real con confirmacion automatica y acceso privado por cuenta."
-                      : "Activacion demo local sin procesamiento de pago ni solicitud de tarjeta."}
+                      : isDemoMode
+                        ? "Activacion demo local sin procesamiento de pago ni solicitud de tarjeta."
+                        : "Compra bloqueada hasta disponer de un proveedor de pago configurado."}
                   </p>
                 </div>
               </div>
@@ -235,10 +255,22 @@ export default async function CheckoutPage({ params }: CheckoutPageProps) {
               <div className="mt-8">
                 {user ? (
                   <PurchaseForm
-                    buttonLabel={isStripeReady ? "Ir a Stripe" : "Activar acceso demo"}
+                    buttonLabel={
+                      isStripeReady
+                        ? "Ir a Stripe"
+                        : isDemoMode
+                          ? "Activar acceso demo"
+                          : "Intentar compra"
+                    }
                     courseSlug={course.slug}
                     courseEditionId={course.activeEdition?.id ?? null}
-                    pendingLabel={isStripeReady ? "Redirigiendo a Stripe..." : "Activando acceso local..."}
+                    pendingLabel={
+                      isStripeReady
+                        ? "Redirigiendo a Stripe..."
+                        : isDemoMode
+                          ? "Activando acceso local..."
+                          : "Verificando pasarela..."
+                    }
                   />
                 ) : (
                   <ButtonLink className="w-full" href={`/registro?next=/checkout/${course.slug}`}>
@@ -250,7 +282,9 @@ export default async function CheckoutPage({ params }: CheckoutPageProps) {
               <p className="mt-6 text-center text-sm leading-6 text-[var(--color-muted)]">
                 {isStripeReady
                   ? "El cobro se realiza fuera de esta pagina, en la pasarela segura de Stripe."
-                  : "Este entorno esta configurado para validar el flujo sin cobro real."}
+                  : isDemoMode
+                    ? "Este entorno esta configurado para validar el flujo sin cobro real."
+                    : "Este entorno no permite cobro ni activacion automatica hasta configurar Stripe."}
               </p>
             </div>
           </aside>

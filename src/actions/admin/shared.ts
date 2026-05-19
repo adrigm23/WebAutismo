@@ -1,8 +1,11 @@
+import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/auth";
 import { canManageUsers } from "@/lib/course-permissions";
 import { getDb } from "@/lib/prisma";
+import { buildRequestFingerprint } from "@/lib/request-client";
+import { consumeRateLimit } from "@/lib/rate-limit";
 
 export function parseOptionalDate(value: FormDataEntryValue | null) {
   if (typeof value !== "string" || !value.trim()) {
@@ -21,6 +24,24 @@ export async function requireAdminUser() {
   }
 
   return user;
+}
+
+export async function enforceAdminMutationRateLimit(input: {
+  action: string;
+  actorId: string;
+  redirectTo?: string;
+}) {
+  const requestHeaders = await headers();
+  const rateLimit = await consumeRateLimit({
+    bucket: `admin:${input.action}`,
+    key: buildRequestFingerprint(requestHeaders, [input.actorId]),
+    limit: 30,
+    windowMs: 5 * 60 * 1_000
+  });
+
+  if (!rateLimit.allowed) {
+    redirect(`${input.redirectTo ?? "/admin"}${(input.redirectTo ?? "/admin").includes("?") ? "&" : "?"}error=rate-limit`);
+  }
 }
 
 export async function ensureNotLastAdmin(input: {

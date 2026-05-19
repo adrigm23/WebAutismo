@@ -5,10 +5,20 @@ import { writeAuditLog } from "@/lib/audit";
 import { getCatalogCourseBySlug } from "@/lib/course-catalog";
 import { buildClonedCourseInput } from "@/lib/course-cloning";
 import { getDb } from "@/lib/prisma";
-import { parseOptionalDate, requireAdminUser, revalidateAdminViews } from "./shared";
+import {
+  enforceAdminMutationRateLimit,
+  parseOptionalDate,
+  requireAdminUser,
+  revalidateAdminViews
+} from "./shared";
 
 export async function createCourseAction(formData: FormData) {
   const admin = await requireAdminUser();
+  await enforceAdminMutationRateLimit({
+    action: "create-course",
+    actorId: admin.id,
+    redirectTo: "/admin/courses"
+  });
   const slug = String(formData.get("slug") ?? "").trim();
   const title = String(formData.get("title") ?? "").trim();
   const shortDescription = String(formData.get("shortDescription") ?? "").trim();
@@ -67,6 +77,11 @@ export async function createCourseAction(formData: FormData) {
 
 export async function updateCourseAction(formData: FormData) {
   const admin = await requireAdminUser();
+  await enforceAdminMutationRateLimit({
+    action: "update-course",
+    actorId: admin.id,
+    redirectTo: "/admin/courses"
+  });
   const courseId = String(formData.get("courseId") ?? "");
   const title = String(formData.get("title") ?? "").trim();
   const shortDescription = String(formData.get("shortDescription") ?? "").trim();
@@ -103,6 +118,11 @@ export async function updateCourseAction(formData: FormData) {
 
 export async function cloneCourseAction(formData: FormData) {
   const admin = await requireAdminUser();
+  await enforceAdminMutationRateLimit({
+    action: "clone-course",
+    actorId: admin.id,
+    redirectTo: "/admin/courses"
+  });
   const sourceSlug = String(formData.get("sourceSlug") ?? "");
   const slug = String(formData.get("slug") ?? "").trim();
   const title = String(formData.get("title") ?? "").trim();
@@ -164,6 +184,11 @@ export async function cloneCourseAction(formData: FormData) {
 
 export async function createCourseEditionAction(formData: FormData) {
   const admin = await requireAdminUser();
+  await enforceAdminMutationRateLimit({
+    action: "create-course-edition",
+    actorId: admin.id,
+    redirectTo: "/admin/editions"
+  });
   const courseId = String(formData.get("courseId") ?? "");
   const label = String(formData.get("label") ?? "").trim();
   const status = String(formData.get("status") ?? "ACTIVE");
@@ -216,6 +241,11 @@ export async function createCourseEditionAction(formData: FormData) {
 
 export async function updateCourseEditionAction(formData: FormData) {
   const admin = await requireAdminUser();
+  await enforceAdminMutationRateLimit({
+    action: "update-course-edition",
+    actorId: admin.id,
+    redirectTo: "/admin/editions"
+  });
   const editionId = String(formData.get("editionId") ?? "");
   const label = String(formData.get("label") ?? "").trim();
   const status = String(formData.get("status") ?? "ACTIVE");

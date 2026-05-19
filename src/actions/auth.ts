@@ -164,6 +164,20 @@ export async function registerAction(
       }
     }
 
+    const requestHeaders = await headers();
+    const registerRateLimit = await consumeRateLimit({
+      bucket: "register",
+      key: buildRequestFingerprint(requestHeaders, [parsed.data.email]),
+      limit: 5,
+      windowMs: 10 * 60 * 1_000
+    });
+
+    if (!registerRateLimit.allowed) {
+      return {
+        error: `Demasiados intentos de registro. Espera ${registerRateLimit.retryAfterSeconds} segundos antes de volver a intentarlo.`
+      };
+    }
+
     const db = getDb();
     const normalizedEmail = parsed.data.email.toLowerCase();
     const existingUser = await db.user.findUnique({
@@ -250,7 +264,7 @@ export async function loginAction(
     }
 
     const requestHeaders = await headers();
-    const loginRateLimit = consumeRateLimit({
+    const loginRateLimit = await consumeRateLimit({
       bucket: "login",
       key: buildRequestFingerprint(requestHeaders, [parsed.data.email]),
       limit: 5,

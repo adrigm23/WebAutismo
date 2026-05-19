@@ -7,8 +7,8 @@ import {
   getCatalogCourseBySlug,
   getCatalogCourses,
 } from "@/lib/course-catalog";
+import { getPurchaseRuntimeMode } from "@/lib/purchase-runtime";
 import { absoluteUrl } from "@/lib/site";
-import { getStripe } from "@/lib/stripe";
 
 type CoursePageProps = {
   params: Promise<{ slug: string }>;
@@ -131,7 +131,7 @@ export default async function CoursePage({ params }: CoursePageProps) {
     notFound();
   }
 
-  const purchaseMode = getStripe() ? "live" : "demo";
+  const purchaseMode = getPurchaseRuntimeMode();
 
   const structuredData = {
     "@context": "https://schema.org",
@@ -225,7 +225,11 @@ export default async function CoursePage({ params }: CoursePageProps) {
           <div className="max-w-4xl">
             <div className="flex flex-wrap items-center gap-3">
               <span className="inline-flex items-center rounded-full bg-[var(--color-surface)] px-4 py-2 text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-[var(--color-muted)]">
-                {purchaseMode === "live" ? "Compra online" : "Modo demo"}
+                {purchaseMode === "live"
+                  ? "Compra online"
+                  : purchaseMode === "demo"
+                    ? "Modo demo"
+                    : "Compra no disponible"}
               </span>
               <span className="inline-flex items-center rounded-full border border-[rgba(12,113,195,0.16)] px-4 py-2 text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-[var(--color-muted)]">
                 {course.category}

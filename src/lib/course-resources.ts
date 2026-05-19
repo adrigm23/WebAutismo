@@ -358,7 +358,7 @@ export async function getCampusResources(input: {
       throw error;
     }
 
-    return staticResources;
+    throw error;
   }
 }
 
