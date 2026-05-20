@@ -1,5 +1,7 @@
 "use server";
 
+import { headers } from "next/headers";
+import { isRedirectError } from "next/dist/client/components/redirect-error";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { getCurrentUser } from "@/lib/auth";
@@ -9,6 +11,7 @@ import {
   captureOperationalWarning,
   captureServerException
 } from "@/lib/monitoring";
+import { createRequestLogger, getRequestIdFromHeaders } from "@/lib/logger";
 import { getPurchaseRuntimeMode } from "@/lib/purchase-runtime";
 import { createPendingPurchase, grantCourseAccess, userOwnsCourse } from "@/lib/purchases";
 import { getDb } from "@/lib/prisma";
@@ -38,6 +41,13 @@ export async function startPurchaseAction(
   _: PurchaseFormState,
   formData: FormData
 ): Promise<PurchaseFormState> {
+  const requestHeaders = await headers();
+  const purchaseLogger = createRequestLogger({
+    requestId: getRequestIdFromHeaders(requestHeaders),
+    action: "startPurchaseAction",
+    route: "/checkout/[slug]"
+  });
+  const startedAt = Date.now();
   const parsed = purchaseSchema.safeParse({
     courseSlug: formData.get("courseSlug"),
     courseEditionId: formData.get("courseEditionId"),
@@ -118,6 +128,14 @@ export async function startPurchaseAction(
         return { error: "No se ha podido iniciar el pago en Stripe." };
       }
 
+      purchaseLogger.info("Stripe checkout session created.", {
+        userId: user.id,
+        courseSlug: course.slug,
+        purchaseId: pendingPurchase.id,
+        result: "redirect-stripe",
+        durationMs: Date.now() - startedAt
+      });
+
       redirect(session.url);
     }
 
@@ -127,6 +145,13 @@ export async function startPurchaseAction(
         courseSlug: course.slug,
         userId: user.id,
         purchaseId: pendingPurchase.id
+      });
+      purchaseLogger.warn("Purchase blocked because Stripe is unavailable.", {
+        userId: user.id,
+        courseSlug: course.slug,
+        purchaseId: pendingPurchase.id,
+        result: "blocked",
+        durationMs: Date.now() - startedAt
       });
 
       return {
@@ -147,15 +172,34 @@ export async function startPurchaseAction(
       courseSlug: course.slug,
       courseEditionId: pendingPurchase.courseEditionId,
       purchaseId: pendingPurchase.id,
-      promotionCode: pendingPurchase.promotionCode
+      grantSource: "development-demo"
+    });
+
+    purchaseLogger.info("Development demo purchase granted.", {
+      userId: user.id,
+      courseSlug: course.slug,
+      purchaseId: pendingPurchase.id,
+      result: "granted-demo",
+      durationMs: Date.now() - startedAt
     });
 
     redirect(`/checkout/exito?course=${course.slug}&demo=1`);
   } catch (error) {
+    if (isRedirectError(error)) {
+      throw error;
+    }
+
     captureServerException(error, {
       action: "startPurchaseAction",
       courseSlug: course.slug,
       userId: user.id
+    });
+    purchaseLogger.error("Failed to start purchase flow.", {
+      userId: user.id,
+      courseSlug: course.slug,
+      result: "error",
+      durationMs: Date.now() - startedAt,
+      error: error instanceof Error ? error : new Error(String(error))
     });
 
     return {

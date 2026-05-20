@@ -107,12 +107,6 @@ export async function updateUserRoleAction(formData: FormData) {
     }
   });
 
-  if (!active) {
-    await revokeUserSessions({
-      userId: updatedUser.id
-    });
-  }
-
   await writeAuditLog({
     actorId: admin.id,
     action:
@@ -161,6 +155,12 @@ export async function toggleUserActiveAction(formData: FormData) {
       deactivatedById: active ? null : admin.id
     }
   });
+
+  if (!active) {
+    await revokeUserSessions({
+      userId: updatedUser.id
+    });
+  }
 
   await writeAuditLog({
     actorId: admin.id,
