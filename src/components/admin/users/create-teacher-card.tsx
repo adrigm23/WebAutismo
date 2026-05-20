@@ -6,12 +6,12 @@ import { SubmitButton } from "@/components/ui/submit-button";
 
 export function CreateTeacherCard() {
   return (
-    <Card className="rounded-[2rem] p-7" id="create-teacher">
-      <div className="flex items-center gap-3">
+    <Card className="rounded-[2rem] p-5 sm:p-7" id="create-teacher">
+      <div className="flex items-start gap-3">
         <div className="grid h-12 w-12 place-items-center rounded-2xl bg-[rgba(12,113,195,0.1)] text-[var(--color-primary)]">
           <UserPlus className="h-5 w-5" strokeWidth={1.8} />
         </div>
-        <div>
+        <div className="min-w-0">
           <h2 className="text-[1.8rem] font-semibold tracking-[-0.05em] text-[var(--color-ink)]">
             Crear docente
           </h2>

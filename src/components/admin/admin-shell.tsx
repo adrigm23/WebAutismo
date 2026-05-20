@@ -158,7 +158,7 @@ export function AdminShell({ user, children }: AdminShellProps) {
                   className={cn(
                     "flex items-center gap-4 rounded-2xl px-4 py-3 text-[1.05rem] font-medium text-[#243444] transition hover:bg-white hover:text-[var(--color-primary)]",
                     isActive &&
-                      "bg-[var(--color-primary)] text-white shadow-[0_14px_26px_rgba(12,113,195,0.18)] hover:bg-[var(--color-primary)] hover:text-white"
+                      "ui-inverse-text bg-[var(--color-primary)] shadow-[0_14px_26px_rgba(12,113,195,0.18)] hover:bg-[var(--color-primary)]"
                   )}
                   href={item.href}
                   key={item.href}
@@ -241,7 +241,7 @@ export function AdminShell({ user, children }: AdminShellProps) {
                   <Settings className="h-5 w-5" strokeWidth={1.9} />
                 </Link>
                 <Link
-                  className="grid h-12 w-12 place-items-center rounded-full bg-[var(--color-primary)] text-sm font-semibold text-white shadow-[0_10px_22px_rgba(12,113,195,0.18)]"
+                  className="ui-inverse-text grid h-12 w-12 place-items-center rounded-full bg-[var(--color-primary)] text-sm font-semibold shadow-[0_10px_22px_rgba(12,113,195,0.18)]"
                   href="/mi-cuenta"
                 >
                   {getUserInitials(user.name)}

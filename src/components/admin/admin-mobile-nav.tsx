@@ -40,7 +40,7 @@ export function AdminMobileNav() {
                 className={cn(
                   "rounded-xl px-4 py-3 text-sm font-medium transition",
                   isActive
-                    ? "bg-[var(--color-primary)] text-white"
+                    ? "ui-inverse-text bg-[var(--color-primary)]"
                     : "text-[var(--color-ink)] hover:bg-[var(--color-surface)]"
                 )}
                 href={item.href}

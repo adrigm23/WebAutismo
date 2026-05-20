@@ -40,7 +40,7 @@ export function UserDirectoryCard({
 }) {
   return (
     <Card className="overflow-hidden rounded-[2rem]">
-      <div className="border-b border-[#dce3eb] px-7 py-6">
+      <div className="border-b border-[#dce3eb] px-4 py-5 sm:px-7 sm:py-6">
         <h2 className="text-[2rem] font-semibold tracking-[-0.06em] text-[var(--color-ink)]">
           Directorio de usuarios
         </h2>
@@ -51,17 +51,17 @@ export function UserDirectoryCard({
 
       <div className="divide-y divide-[#dde5ed]">
         {users.map((account) => (
-          <div className="space-y-5 px-7 py-6" key={account.id}>
-            <div className="flex flex-wrap items-start justify-between gap-4">
-              <div className="flex items-center gap-4">
+          <div className="space-y-5 px-4 py-5 sm:px-7 sm:py-6" key={account.id}>
+            <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between">
+              <div className="flex min-w-0 items-center gap-4">
                 <div className="grid h-14 w-14 place-items-center rounded-full bg-[rgba(12,113,195,0.12)] text-base font-semibold text-[var(--color-primary)]">
                   {getUserInitials(account.name)}
                 </div>
-                <div>
+                <div className="min-w-0">
                   <p className="text-[1.2rem] font-semibold text-[var(--color-ink)]">
                     {account.name}
                   </p>
-                  <p className="text-sm text-[#5d6d7d]">{account.email}</p>
+                  <p className="break-all text-sm text-[#5d6d7d]">{account.email}</p>
                 </div>
               </div>
 
@@ -75,7 +75,7 @@ export function UserDirectoryCard({
               </div>
             </div>
 
-            <div className="grid gap-4 text-sm text-[#425467] md:grid-cols-4">
+            <div className="grid gap-4 text-sm text-[#425467] sm:grid-cols-2 xl:grid-cols-4">
               <div>
                 <p className="font-semibold text-[#28394b]">Alta</p>
                 <p className="mt-1">{formatDate(account.createdAt)}</p>
@@ -96,11 +96,14 @@ export function UserDirectoryCard({
               </div>
             </div>
 
-            <div className="grid gap-4 xl:grid-cols-[1.2fr_1fr]">
-              <form action={updateUserRoleAction} className="grid gap-3 md:grid-cols-[1fr_auto]">
+            <div className="grid gap-4 2xl:grid-cols-[1.2fr_1fr]">
+              <form
+                action={updateUserRoleAction}
+                className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto]"
+              >
                 <input name="userId" type="hidden" value={account.id} />
                 <select
-                  className="h-12 rounded-xl border border-[var(--color-border)] bg-white px-4 text-sm"
+                  className="h-12 min-w-0 rounded-xl border border-[var(--color-border)] bg-white px-4 text-sm"
                   defaultValue={account.globalRole}
                   name="globalRole"
                 >
@@ -108,20 +111,24 @@ export function UserDirectoryCard({
                   <option value="TEACHER">Docente</option>
                   <option value="ADMIN">Administrador</option>
                 </select>
-                <SubmitButton pendingLabel="Guardando..." variant="secondary">
+                <SubmitButton className="w-full sm:w-auto" pendingLabel="Guardando..." variant="secondary">
                   Guardar rol
                 </SubmitButton>
               </form>
 
-              <form action={toggleUserActiveAction} className="grid gap-3 md:grid-cols-[1fr_auto]">
+              <form
+                action={toggleUserActiveAction}
+                className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto]"
+              >
                 <input name="userId" type="hidden" value={account.id} />
                 <input name="active" type="hidden" value={account.isActive ? "false" : "true"} />
-                <div className="rounded-xl border border-[#d5dee7] bg-[#f7fafc] px-4 py-3 text-sm text-[#415467]">
+                <div className="rounded-xl border border-[#d5dee7] bg-[#f7fafc] px-4 py-3 text-sm leading-6 text-[#415467]">
                   {account.isActive
                     ? "Baja logica con historico y auditoria."
                     : "Reactivacion inmediata de la cuenta."}
                 </div>
                 <SubmitButton
+                  className="w-full sm:w-auto"
                   pendingLabel="Actualizando..."
                   variant={account.isActive ? "ghost" : "primary"}
                 >

@@ -458,8 +458,8 @@ export function ForumShell({
               </div>
 
               {categories.length ? (
-                <div className="-mx-1 mt-3 overflow-x-auto pb-1">
-                  <div className="flex w-max gap-2 px-1">
+                <div className="mt-3">
+                  <div className="flex flex-wrap gap-2">
                     {categories.map((category) => {
                       const preset = getForumCategoryPreset(category.slug);
                       const Icon = preset.icon;
@@ -469,7 +469,7 @@ export function ForumShell({
                       return (
                         <Link
                           className={cn(
-                            "inline-flex max-w-[15rem] items-center gap-2 rounded-[var(--radius-pill)] border px-3 py-2 text-sm font-medium transition",
+                            "inline-flex max-w-full min-w-0 items-center gap-2 rounded-[var(--radius-pill)] border px-3 py-2 text-sm font-medium transition sm:max-w-[15rem]",
                             isActive
                               ? "border-[var(--color-primary)] bg-white text-[var(--color-primary)]"
                               : "border-[var(--color-border)] bg-[#faf8f4] text-[var(--color-ink)]"
