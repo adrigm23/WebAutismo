@@ -144,9 +144,9 @@ export function TeacherAccountDashboard({
         fullName={fullName}
         initials={initials}
         navItems={navItems}
-        primaryAction={primaryAction}
+        contextAction={primaryAction}
         roleLabel="Docente"
-        utilityItems={[
+        contextItems={[
           {
             label: "Avisos",
             href: "#actividad-docente",

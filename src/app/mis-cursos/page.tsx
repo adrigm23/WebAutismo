@@ -133,9 +133,9 @@ export default async function MyCoursesPage() {
         fullName={user.name}
         initials={initials}
         navItems={navItems}
-        primaryAction={primaryAction}
+        contextAction={primaryAction}
         roleLabel={roleLabel}
-        utilityItems={[
+        contextItems={[
           {
             label: "Actividad",
             href: activityHref,

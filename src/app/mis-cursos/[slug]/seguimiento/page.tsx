@@ -2,10 +2,7 @@ import type { Metadata } from "next";
 import type { CourseEnrollmentStatus } from "@prisma/client";
 import {
   BarChart3,
-  ChevronLeft,
-  CircleHelp,
   FileClock,
-  FolderKanban,
 } from "lucide-react";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
@@ -34,7 +31,6 @@ import { canViewCourseProgress } from "@/lib/course-permissions";
 import { getLearnerProgressRowsForCatalogCourse } from "@/lib/course-progress";
 import { getCampusResources } from "@/lib/course-resources";
 import { getDb } from "@/lib/prisma";
-import { siteConfig } from "@/lib/site";
 import { formatDate, formatDateTime } from "@/lib/utils";
 
 type TrackingPageProps = {
@@ -452,6 +448,7 @@ export default async function CourseTrackingPage({
         navItems={[
           { label: "Mi cuenta", href: "/mi-cuenta" },
           { label: "Mis cursos", href: "/mis-cursos" },
+          { label: "Campus", href: campusContentHref },
           {
             label: "Seguimiento",
             href: `/mis-cursos/${slug}/seguimiento`,
@@ -459,29 +456,7 @@ export default async function CourseTrackingPage({
           },
           { label: "Foro", href: forumHref },
         ]}
-        primaryAction={{
-          label: reviewQueue.length ? "Revisar cola" : "Abrir recursos",
-          href: reviewQueue.length ? "#cola-revision" : campusResourcesHref,
-        }}
-        roleLabel="Docente"
-        utilityItems={[
-          {
-            label: "Volver al campus",
-            href: campusContentHref,
-            icon: <ChevronLeft className="h-4 w-4" />,
-          },
-          {
-            label: "Recursos",
-            href: campusResourcesHref,
-            icon: <FolderKanban className="h-4 w-4" />,
-          },
-          {
-            label: "Soporte",
-            href: `mailto:${siteConfig.supportEmail}`,
-            icon: <CircleHelp className="h-4 w-4" />,
-            external: true,
-          },
-        ]}
+        roleLabel={roleLabel}
       />
 
       <main className="site-container pt-6 sm:pt-8">
@@ -524,17 +499,18 @@ export default async function CourseTrackingPage({
             </div>
 
             <div className="mt-4 flex flex-wrap gap-2.5 sm:mt-6 sm:gap-3">
-              <ButtonLink href={firstReviewHref ?? campusResourcesHref}>
-                {reviewQueue.length
-                  ? "Ir a la primera revisión"
-                  : "Abrir recursos"}
-              </ButtonLink>
+              <ButtonLink href={campusResourcesHref}>Abrir recursos</ButtonLink>
               <ButtonLink href={campusContentHref} variant="secondary">
                 Volver al campus
               </ButtonLink>
               <ButtonLink href={forumHref} variant="ghost">
                 Abrir foro
               </ButtonLink>
+              {firstReviewHref ? (
+                <ButtonLink href={firstReviewHref} variant="ghost">
+                  Revisar cola
+                </ButtonLink>
+              ) : null}
             </div>
           </Card>
 
@@ -584,6 +560,11 @@ export default async function CourseTrackingPage({
                   </p>
                 </div>
               </div>
+              {firstReviewHref ? (
+                <ButtonLink className="mt-4" href={firstReviewHref} variant="secondary">
+                  Ir a la primera revisión
+                </ButtonLink>
+              ) : null}
             </Card>
 
             <Card className="hidden p-5 sm:block">

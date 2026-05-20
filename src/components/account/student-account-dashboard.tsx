@@ -96,7 +96,7 @@ export function StudentAccountDashboard({
         fullName={fullName}
         initials={initials}
         navItems={navItems}
-        primaryAction={
+        contextAction={
           primaryCourse
             ? {
                 label: "Continuar lección",
@@ -105,7 +105,7 @@ export function StudentAccountDashboard({
             : null
         }
         roleLabel="Alumno"
-        utilityItems={[
+        contextItems={[
           {
             label: "Avisos",
             href: "#actividad-reciente",
