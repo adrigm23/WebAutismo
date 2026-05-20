@@ -21,8 +21,13 @@ import {
   COURSE_SUBMISSION_UPLOAD_POLICY,
   validateFileUpload
 } from "@/lib/file-security";
+import { createLogger } from "@/lib/logger";
 import { getDb } from "@/lib/prisma";
 import { upsertStoredAsset } from "@/lib/stored-assets";
+
+const courseResourceLogger = createLogger({
+  route: "course-resources"
+});
 
 export type CampusResourceSubmissionItem = {
   id: string;
@@ -407,6 +412,16 @@ export async function createCourseResource(input: {
       content: new Uint8Array(await input.file.arrayBuffer()),
       contentType: mimeType
     });
+
+    courseResourceLogger.info("Course resource file stored.", {
+      action: "createCourseResource",
+      userId: input.createdById,
+      courseId: input.courseId,
+      storageKey,
+      mimeType,
+      sizeInBytes,
+      result: "stored"
+    });
   }
 
   return getDb().courseResource.create({
@@ -495,6 +510,16 @@ export async function updateCourseResource(input: {
       storageKey,
       content: new Uint8Array(await input.file.arrayBuffer()),
       contentType: mimeType
+    });
+
+    courseResourceLogger.info("Course resource file replaced.", {
+      action: "updateCourseResource",
+      courseId: existing.courseId,
+      resourceId: input.resourceId,
+      storageKey,
+      mimeType,
+      sizeInBytes,
+      result: "stored"
     });
   }
 
@@ -645,6 +670,16 @@ export async function upsertCourseResourceSubmission(input: {
       storageKey,
       content: new Uint8Array(await input.file.arrayBuffer()),
       contentType: mimeType
+    });
+
+    courseResourceLogger.info("Course resource submission attachment stored.", {
+      action: "upsertCourseResourceSubmission",
+      userId: input.studentId,
+      resourceId: input.resourceId,
+      storageKey,
+      mimeType,
+      sizeInBytes,
+      result: "stored"
     });
   }
 

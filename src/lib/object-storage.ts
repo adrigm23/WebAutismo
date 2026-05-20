@@ -6,7 +6,10 @@ import {
   getLegacyDatabaseStoredAssetContent,
   upsertLegacyDatabaseStoredAsset
 } from "@/lib/legacy-stored-assets";
-import { getBooleanEnv, isHostedDeploymentEnv } from "@/lib/env";
+import {
+  getObjectStorageProviderEnv,
+  isDatabaseStorageFallbackAllowed
+} from "@/lib/env";
 import { captureOperationalWarning } from "@/lib/monitoring";
 import {
   getSafeRelativeSegments,
@@ -17,34 +20,23 @@ import {
 export type ObjectStorageProvider = "vercel-blob" | "filesystem" | "database";
 
 function getConfiguredObjectStorageProvider(): ObjectStorageProvider {
-  const configuredProvider = process.env.OBJECT_STORAGE_PROVIDER?.trim().toLowerCase();
+  const configuredProvider = getObjectStorageProviderEnv();
 
-  if (configuredProvider === "vercel-blob") {
-    return "vercel-blob";
-  }
-
-  if (configuredProvider === "database") {
-    return "database";
-  }
-
-  if (configuredProvider === "filesystem") {
-    return "filesystem";
+  if (configuredProvider) {
+    return configuredProvider;
   }
 
   if (process.env.BLOB_READ_WRITE_TOKEN?.trim()) {
     return "vercel-blob";
   }
 
-  // Hosted deployments should never rely on ephemeral local filesystem storage for course files.
-  return isHostedDeploymentEnv() ? "database" : "filesystem";
+  // Default to MySQL-backed storage so existing StoredAsset blobs keep working unless
+  // a different backend is selected explicitly.
+  return "database";
 }
 
 export function getObjectStorageProvider() {
   return getConfiguredObjectStorageProvider();
-}
-
-export function isDatabaseStorageFallbackAllowed() {
-  return getBooleanEnv("ALLOW_DATABASE_STORAGE_FALLBACK", false);
 }
 
 function getFilesystemRoot() {
@@ -124,6 +116,11 @@ async function deleteFromFilesystem(storageKey: string) {
   }
 }
 
+async function readFromDatabase(storageKey: string) {
+  const assetContent = await getLegacyDatabaseStoredAssetContent(storageKey);
+  return assetContent ? Buffer.from(assetContent) : null;
+}
+
 export async function writeStoredObject(input: {
   storageKey: string;
   content: Uint8Array;
@@ -184,15 +181,14 @@ export async function readStoredObjectContent(storageKey: string) {
 
   if (provider === "vercel-blob" || isBlobPath(storageKey)) {
     readOperations.push(() => readPrivateBlob(storageKey));
+  } else if (provider === "filesystem") {
+    readOperations.push(() => readFromFilesystem(storageKey));
+  } else {
+    readOperations.push(() => readFromDatabase(storageKey));
   }
 
-  readOperations.push(() => readFromFilesystem(storageKey));
-
-  if (provider === "database" || isDatabaseStorageFallbackAllowed()) {
-    readOperations.push(async () => {
-      const assetContent = await getLegacyDatabaseStoredAssetContent(storageKey);
-      return assetContent ? Buffer.from(assetContent) : null;
-    });
+  if (provider !== "database" && isDatabaseStorageFallbackAllowed()) {
+    readOperations.push(() => readFromDatabase(storageKey));
   }
 
   for (const readOperation of readOperations) {
@@ -228,7 +224,7 @@ export async function deleteStoredObject(storageKey: string) {
 }
 
 export async function resolveStoredObjectFilePath(storageKey: string) {
-  if (isBlobPath(storageKey) || getObjectStorageProvider() === "vercel-blob") {
+  if (isBlobPath(storageKey) || getObjectStorageProvider() !== "filesystem") {
     return null;
   }
 

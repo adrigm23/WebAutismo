@@ -1,4 +1,5 @@
 import { access, readFile } from "fs/promises";
+import { getObjectStorageProvider } from "@/lib/object-storage";
 import { resolvePublicUploadsPath, resolveStoragePath } from "@/lib/project-paths";
 import { deleteStoredAsset, getStoredAssetContent } from "@/lib/stored-assets";
 
@@ -21,8 +22,15 @@ export async function readStoredForumAttachmentContent(storageKey: string) {
   } catch {
     const legacyStorageKey = storageKey.startsWith("forum/") ? storageKey : `forum/${storageKey}`;
     const legacyPath = resolvePublicUploadsPath(legacyStorageKey);
-    await access(legacyPath);
-    return readFile(legacyPath);
+
+    try {
+      await access(legacyPath);
+      return readFile(legacyPath);
+    } catch {
+      throw new Error(
+        `Stored forum attachment "${storageKey}" was not found in provider "${getObjectStorageProvider()}" or in legacy disk storage.`
+      );
+    }
   }
 }
 

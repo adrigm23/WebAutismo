@@ -6,10 +6,14 @@ import {
   FORUM_ATTACHMENT_UPLOAD_POLICY,
   validateFileUpload
 } from "@/lib/file-security";
+import { createLogger } from "@/lib/logger";
 import { getDb } from "@/lib/prisma";
 import { upsertStoredAsset } from "@/lib/stored-assets";
 
 const MAX_ATTACHMENT_COUNT = 6;
+const forumAttachmentLogger = createLogger({
+  route: "forum-attachments"
+});
 
 type UploadAttachmentDraft = {
   source: "upload";
@@ -142,6 +146,18 @@ export async function persistForumAttachments(input: {
       storageKey,
       content: new Uint8Array(await attachment.file.arrayBuffer()),
       contentType: attachment.mimeType
+    });
+
+    forumAttachmentLogger.info("Forum attachment stored.", {
+      action: "persistForumAttachment",
+      userId: input.createdById,
+      courseSlug: input.courseSlug,
+      parentType: input.parentType,
+      parentId: input.parentId,
+      storageKey,
+      mimeType: attachment.mimeType,
+      sizeInBytes: attachment.sizeInBytes,
+      result: "stored"
     });
 
     const attachmentRecord = await getDb().forumAttachment.create({
