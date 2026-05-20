@@ -16,7 +16,7 @@ import { getPurchaseRuntimeMode } from "@/lib/purchase-runtime";
 import { createPendingPurchase, grantCourseAccess, userOwnsCourse } from "@/lib/purchases";
 import { getDb } from "@/lib/prisma";
 import { absoluteUrl } from "@/lib/site";
-import { getStripe } from "@/lib/stripe";
+import { getStripe, getStripeRuntimeState } from "@/lib/stripe";
 
 export type PurchaseFormState = {
   error?: string;
@@ -77,6 +77,29 @@ export async function startPurchaseAction(
   }
 
   try {
+    const stripeState = getStripeRuntimeState();
+
+    if (stripeState.mode === "misconfigured") {
+      captureOperationalWarning("Blocked purchase because Stripe runtime configuration is incomplete.", {
+        action: "startPurchaseAction",
+        courseSlug: course.slug,
+        userId: user.id,
+        stripeConfigured: stripeState.hasSecretKey,
+        webhookConfigured: stripeState.hasWebhookSecret
+      });
+      purchaseLogger.error("Purchase blocked because Stripe webhook configuration is incomplete.", {
+        userId: user.id,
+        courseSlug: course.slug,
+        result: "blocked-misconfigured",
+        durationMs: Date.now() - startedAt
+      });
+
+      return {
+        error:
+          "La compra esta bloqueada porque Stripe no tiene la configuracion completa de webhook en este entorno."
+      };
+    }
+
     const pendingPurchase = await createPendingPurchase({
       userId: user.id,
       courseSlug: course.slug,

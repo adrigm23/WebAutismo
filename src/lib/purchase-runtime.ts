@@ -1,11 +1,17 @@
 import { isDevelopmentDemoPurchaseEnabled, isProductionRuntime } from "@/lib/env";
-import { getStripe } from "@/lib/stripe";
+import { getStripeRuntimeState } from "@/lib/stripe";
 
 export type PurchaseRuntimeMode = "live" | "demo" | "disabled";
 
 export function getPurchaseRuntimeMode(): PurchaseRuntimeMode {
-  if (getStripe()) {
+  const stripeState = getStripeRuntimeState();
+
+  if (stripeState.mode === "live") {
     return "live";
+  }
+
+  if (stripeState.mode === "misconfigured") {
+    return "disabled";
   }
 
   if (isProductionRuntime()) {

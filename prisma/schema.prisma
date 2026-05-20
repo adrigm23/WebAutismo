@@ -243,6 +243,10 @@ model PaymentWebhookEvent {
   type          String
   payloadHash   String
   status        PaymentWebhookEventStatus
+  attemptCount  Int                       @default(0)
+  processingStartedAt DateTime?
+  lastAttemptAt DateTime?
+  lastError     String?                   @db.LongText
   processedAt   DateTime?
   createdAt     DateTime                  @default(now())
   updatedAt     DateTime                  @updatedAt
@@ -270,6 +274,7 @@ model CourseEnrollment {
   courseEdition   CourseEdition?         @relation(fields: [courseEditionId], references: [id], onDelete: SetNull)
   purchase        Purchase?              @relation(fields: [purchaseId], references: [id], onDelete: SetNull)
 
+  @@unique([userId, courseId])
   @@index([userId, status])
   @@index([courseId, status])
   @@index([courseEditionId, status])

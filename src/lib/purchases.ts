@@ -1,4 +1,4 @@
-import { PurchaseStatus } from "@prisma/client";
+import { Prisma, PurchaseStatus } from "@prisma/client";
 import type Stripe from "stripe";
 import { writeAuditLog } from "@/lib/audit";
 import { getCatalogCourseBySlug, getCatalogCourses } from "@/lib/course-catalog";
@@ -240,6 +240,7 @@ export async function markPurchaseFailedByStripeSessionId(stripeCheckoutSessionI
 }
 
 async function createOrUpdateEnrollment(input: {
+  db: Prisma.TransactionClient;
   userId: string;
   courseId: string;
   courseSlug: string;
@@ -248,7 +249,7 @@ async function createOrUpdateEnrollment(input: {
   purchaseId: string;
 }) {
   const edition = input.courseEditionId
-    ? await getDb().courseEdition.findUnique({
+    ? await input.db.courseEdition.findUnique({
         where: {
           id: input.courseEditionId
         },
@@ -272,17 +273,32 @@ async function createOrUpdateEnrollment(input: {
       })
     : null;
 
-  const existing = await getDb().courseEnrollment.findUnique({
+  const existing = await input.db.courseEnrollment.findUnique({
     where: {
-      purchaseId: input.purchaseId
+      userId_courseId: {
+        userId: input.userId,
+        courseId: input.courseId
+      }
+    },
+    select: {
+      id: true,
+      purchaseId: true,
+      status: true,
+      accessStartsAt: true,
+      accessUntil: true
     }
   });
 
-  const enrollment = await getDb().courseEnrollment.upsert({
+  const enrollment = await input.db.courseEnrollment.upsert({
     where: {
-      purchaseId: input.purchaseId
+      userId_courseId: {
+        userId: input.userId,
+        courseId: input.courseId
+      }
     },
     update: {
+      courseEditionId: input.courseEditionId,
+      purchaseId: input.purchaseId,
       status: "ACTIVE",
       accessStartsAt,
       accessUntil,
@@ -300,20 +316,20 @@ async function createOrUpdateEnrollment(input: {
     }
   });
 
-  await writeAuditLog({
-    actorId: input.userId,
-    action: existing ? "ENROLLMENT_REACTIVATED" : "ENROLLMENT_CREATED",
-    entityType: "COURSE_ENROLLMENT",
-    entityId: enrollment.id,
-    entityLabel: input.courseTitle,
-    metadata: {
-      courseSlug: input.courseSlug,
-      courseEditionId: input.courseEditionId,
-      accessUntil: accessUntil?.toISOString() ?? null
-    }
-  });
+  const enrollmentChanged =
+    !existing ||
+    existing.purchaseId !== input.purchaseId ||
+    existing.status !== "ACTIVE" ||
+    existing.accessStartsAt.getTime() !== accessStartsAt.getTime() ||
+    (existing.accessUntil?.getTime() ?? null) !== (accessUntil?.getTime() ?? null);
 
-  return enrollment;
+  return {
+    enrollment,
+    existing,
+    enrollmentChanged,
+    shouldWriteCreatedAudit: !existing,
+    shouldWriteReactivatedAudit: Boolean(existing) && enrollmentChanged
+  };
 }
 
 export async function grantCourseAccess(input: GrantCourseAccessInput) {
@@ -355,70 +371,104 @@ export async function grantCourseAccess(input: GrantCourseAccessInput) {
   }
 
   const purchaseWasAlreadyPaid = existingPurchase.status === PurchaseStatus.PAID;
-  const hadEnrollment = await getDb().courseEnrollment.findUnique({
-    where: {
-      purchaseId: existingPurchase.id
-    },
-    select: {
-      id: true
-    }
-  });
-
-  const purchase = await getDb().purchase.update({
-    where: {
-      id: existingPurchase.id
-    },
-    data: {
-      status: PurchaseStatus.PAID,
-      courseId: course.id,
-      courseEditionId: edition?.id ?? null,
-      stripeCheckoutSessionId: input.stripeCheckoutSessionId ?? existingPurchase.stripeCheckoutSessionId,
-      stripePaymentIntentId: input.stripePaymentIntentId ?? existingPurchase.stripePaymentIntentId,
-      courseSlugSnapshot: course.slug,
-      courseTitleSnapshot: course.title
-    }
-  });
-
-  const enrollment = await createOrUpdateEnrollment({
-    userId: input.userId,
-    courseId: course.id,
-    courseSlug: course.slug,
-    courseTitle: course.title,
-    courseEditionId: edition?.id ?? null,
-    purchaseId: purchase.id
-  });
-
-  if (purchase.promotionId && purchase.discountInCents > 0) {
-    await getDb().promotionRedemption.upsert({
+  const persistedGrant = await getDb().$transaction(async (db) => {
+    const purchase = await db.purchase.update({
       where: {
-        purchaseId: purchase.id
+        id: existingPurchase.id
       },
-      update: {
-        discountInCents: purchase.discountInCents
-      },
-      create: {
-        promotionId: purchase.promotionId,
-        purchaseId: purchase.id,
-        userId: input.userId,
+      data: {
+        status: PurchaseStatus.PAID,
         courseId: course.id,
-        discountInCents: purchase.discountInCents
+        courseEditionId: edition?.id ?? null,
+        stripeCheckoutSessionId:
+          input.stripeCheckoutSessionId ?? existingPurchase.stripeCheckoutSessionId,
+        stripePaymentIntentId:
+          input.stripePaymentIntentId ?? existingPurchase.stripePaymentIntentId,
+        courseSlugSnapshot: course.slug,
+        courseTitleSnapshot: course.title
       }
     });
 
-    if (!purchaseWasAlreadyPaid) {
-      await writeAuditLog({
-        actorId: input.userId,
-        action: "PROMOTION_APPLIED",
-        entityType: "PROMOTION",
-        entityId: purchase.promotionId,
-        entityLabel: purchase.promotionCode,
-        metadata: {
+    const enrollmentState = await createOrUpdateEnrollment({
+      db,
+      userId: input.userId,
+      courseId: course.id,
+      courseSlug: course.slug,
+      courseTitle: course.title,
+      courseEditionId: edition?.id ?? null,
+      purchaseId: purchase.id
+    });
+
+    if (purchase.promotionId && purchase.discountInCents > 0) {
+      await db.promotionRedemption.upsert({
+        where: {
+          purchaseId: purchase.id
+        },
+        update: {
+          discountInCents: purchase.discountInCents
+        },
+        create: {
+          promotionId: purchase.promotionId,
           purchaseId: purchase.id,
-          courseSlug: course.slug,
+          userId: input.userId,
+          courseId: course.id,
           discountInCents: purchase.discountInCents
         }
       });
     }
+
+    return {
+      purchase,
+      enrollmentState
+    };
+  });
+
+  const purchase = persistedGrant.purchase;
+  const { enrollment } = persistedGrant.enrollmentState;
+  const hadEnrollment = Boolean(persistedGrant.enrollmentState.existing);
+
+  if (persistedGrant.enrollmentState.shouldWriteCreatedAudit) {
+    await writeAuditLog({
+      actorId: input.userId,
+      action: "ENROLLMENT_CREATED",
+      entityType: "COURSE_ENROLLMENT",
+      entityId: enrollment.id,
+      entityLabel: course.title,
+      metadata: {
+        courseSlug: course.slug,
+        courseEditionId: edition?.id ?? null,
+        accessUntil: enrollment.accessUntil?.toISOString() ?? null
+      }
+    });
+  } else if (persistedGrant.enrollmentState.shouldWriteReactivatedAudit) {
+    await writeAuditLog({
+      actorId: input.userId,
+      action: "ENROLLMENT_REACTIVATED",
+      entityType: "COURSE_ENROLLMENT",
+      entityId: enrollment.id,
+      entityLabel: course.title,
+      metadata: {
+        courseSlug: course.slug,
+        courseEditionId: edition?.id ?? null,
+        accessUntil: enrollment.accessUntil?.toISOString() ?? null,
+        purchaseId: purchase.id
+      }
+    });
+  }
+
+  if (purchase.promotionId && purchase.discountInCents > 0 && !purchaseWasAlreadyPaid) {
+    await writeAuditLog({
+      actorId: input.userId,
+      action: "PROMOTION_APPLIED",
+      entityType: "PROMOTION",
+      entityId: purchase.promotionId,
+      entityLabel: purchase.promotionCode,
+      metadata: {
+        purchaseId: purchase.id,
+        courseSlug: course.slug,
+        discountInCents: purchase.discountInCents
+      }
+    });
   }
 
   if (!purchaseWasAlreadyPaid) {
@@ -438,7 +488,7 @@ export async function grantCourseAccess(input: GrantCourseAccessInput) {
     });
   }
 
-  if (!purchaseWasAlreadyPaid || !hadEnrollment) {
+  if (!purchaseWasAlreadyPaid || persistedGrant.enrollmentState.enrollmentChanged || !hadEnrollment) {
     await sendPlatformNotification({
       userId: input.userId,
       category: "PURCHASE",
@@ -466,7 +516,10 @@ export async function grantCourseAccess(input: GrantCourseAccessInput) {
     courseSlug: course.slug,
     courseEditionId: edition?.id ?? null,
     grantSource: input.grantSource,
-    result: purchaseWasAlreadyPaid && hadEnrollment ? "already-granted" : "granted",
+    result:
+      purchaseWasAlreadyPaid && !persistedGrant.enrollmentState.enrollmentChanged
+        ? "already-granted"
+        : "granted",
     durationMs: Date.now() - startedAt
   });
 

@@ -12,7 +12,7 @@ import {
   validateStripeCheckoutSessionAgainstPurchase
 } from "@/lib/purchases";
 import { createRequestLogger, getRequestIdFromHeaders } from "@/lib/logger";
-import { getStripe } from "@/lib/stripe";
+import { getStripe, getStripeRuntimeState } from "@/lib/stripe";
 
 export async function POST(request: Request) {
   const requestHeaders = await headers();
@@ -22,8 +22,25 @@ export async function POST(request: Request) {
     action: "stripeWebhook"
   });
   const startedAt = Date.now();
+  const stripeState = getStripeRuntimeState();
   const stripe = getStripe();
-  const secret = process.env.STRIPE_WEBHOOK_SECRET;
+  const secret = stripeState.mode === "live" ? stripeState.webhookSecret : null;
+
+  if (stripeState.mode === "misconfigured") {
+    webhookLogger.error("Stripe webhook blocked because the runtime is misconfigured.", {
+      result: "misconfigured",
+      stripeConfigured: stripeState.hasSecretKey,
+      webhookConfigured: stripeState.hasWebhookSecret,
+      durationMs: Date.now() - startedAt
+    });
+    return NextResponse.json(
+      {
+        error:
+          "Stripe webhook is blocked because STRIPE_SECRET_KEY is configured without STRIPE_WEBHOOK_SECRET."
+      },
+      { status: 503 }
+    );
+  }
 
   if (!stripe || !secret) {
     webhookLogger.warn("Stripe webhook called without configuration.", {
@@ -72,10 +89,28 @@ export async function POST(request: Request) {
   });
 
   if (eventLease.duplicate) {
+    if (eventLease.exhausted) {
+      webhookLogger.error("Stripe webhook replay blocked because retry attempts are exhausted.", {
+        stripeEventId: event.id,
+        stripeEventType: event.type,
+        webhookStatus: eventLease.record.status,
+        attemptCount: eventLease.record.attemptCount,
+        result: "attempts-exhausted",
+        durationMs: Date.now() - startedAt
+      });
+
+      return NextResponse.json({
+        received: true,
+        duplicate: true,
+        exhausted: true
+      });
+    }
+
     webhookLogger.info("Stripe webhook replay ignored.", {
       stripeEventId: event.id,
       stripeEventType: event.type,
       webhookStatus: eventLease.record.status,
+      attemptCount: eventLease.record.attemptCount,
       result: "duplicate",
       durationMs: Date.now() - startedAt
     });
@@ -112,7 +147,8 @@ export async function POST(request: Request) {
 
       await finishPaymentWebhookEventProcessing({
         stripeEventId: event.id,
-        status: "REJECTED"
+        status: "REJECTED",
+        lastError: "Stripe checkout session metadata is incomplete."
       });
 
       webhookLogger.warn("Stripe webhook rejected because metadata is incomplete.", {
@@ -144,7 +180,8 @@ export async function POST(request: Request) {
     if (!purchase) {
       await finishPaymentWebhookEventProcessing({
         stripeEventId: event.id,
-        status: "REJECTED"
+        status: "REJECTED",
+        lastError: "Purchase not found for Stripe session."
       });
 
       webhookLogger.warn("Stripe webhook rejected because the purchase does not exist.", {
@@ -167,7 +204,8 @@ export async function POST(request: Request) {
       await markPurchaseFailedByStripeSessionId(session.id);
       await finishPaymentWebhookEventProcessing({
         stripeEventId: event.id,
-        status: "REJECTED"
+        status: "REJECTED",
+        lastError: validation.reason
       });
 
       webhookLogger.warn("Stripe webhook rejected because purchase validation failed.", {
@@ -201,7 +239,8 @@ export async function POST(request: Request) {
     await finishPaymentWebhookEventProcessing({
       stripeEventId: event.id,
       status: "PROCESSED",
-      processedAt: new Date()
+      processedAt: new Date(),
+      lastError: null
     });
 
     webhookLogger.info("Stripe webhook processed successfully.", {
@@ -209,6 +248,8 @@ export async function POST(request: Request) {
       stripeEventType: event.type,
       purchaseId,
       userId,
+      attemptCount: eventLease.record.attemptCount,
+      resumedProcessing: eventLease.resumed,
       result: "processed",
       durationMs: Date.now() - startedAt
     });
@@ -217,12 +258,15 @@ export async function POST(request: Request) {
   } catch (error) {
     await finishPaymentWebhookEventProcessing({
       stripeEventId: event.id,
-      status: "FAILED"
+      status: "FAILED",
+      lastError: error instanceof Error ? error.message : String(error)
     });
 
     webhookLogger.error("Stripe webhook processing failed.", {
       stripeEventId: event.id,
       stripeEventType: event.type,
+      attemptCount: eventLease.record.attemptCount,
+      resumedProcessing: eventLease.resumed,
       result: "failed",
       durationMs: Date.now() - startedAt,
       error: error instanceof Error ? error : new Error(String(error))

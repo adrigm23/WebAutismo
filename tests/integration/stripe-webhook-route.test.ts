@@ -4,6 +4,7 @@ const grantCourseAccessMock = vi.fn();
 const markPurchaseFailedByStripeSessionIdMock = vi.fn();
 const validateStripeCheckoutSessionAgainstPurchaseMock = vi.fn();
 const getStripeMock = vi.fn();
+const getStripeRuntimeStateMock = vi.fn();
 const beginPaymentWebhookEventProcessingMock = vi.fn();
 const finishPaymentWebhookEventProcessingMock = vi.fn();
 
@@ -27,7 +28,8 @@ vi.mock("@/lib/purchases", () => ({
 }));
 
 vi.mock("@/lib/stripe", () => ({
-  getStripe: getStripeMock
+  getStripe: getStripeMock,
+  getStripeRuntimeState: getStripeRuntimeStateMock
 }));
 
 vi.mock("@/lib/payment-webhook-events", () => ({
@@ -45,6 +47,14 @@ describe("stripe webhook route", () => {
       ...originalEnv,
       STRIPE_WEBHOOK_SECRET: "whsec_test"
     };
+    getStripeRuntimeStateMock.mockReturnValue({
+      mode: "live",
+      hasSecretKey: true,
+      hasWebhookSecret: true,
+      reason: null,
+      secretKey: "sk_test",
+      webhookSecret: "whsec_test"
+    });
   });
 
   afterAll(() => {
@@ -83,8 +93,11 @@ describe("stripe webhook route", () => {
     getStripeMock.mockReturnValue(stripe);
     beginPaymentWebhookEventProcessingMock.mockResolvedValue({
       duplicate: false,
+      exhausted: false,
+      resumed: false,
       record: {
-        status: "PROCESSING"
+        status: "PROCESSING",
+        attemptCount: 1
       }
     });
 
@@ -112,7 +125,84 @@ describe("stripe webhook route", () => {
     expect(grantCourseAccessMock).not.toHaveBeenCalled();
     expect(finishPaymentWebhookEventProcessingMock).toHaveBeenCalledWith({
       stripeEventId: "evt_test_1",
-      status: "REJECTED"
+      status: "REJECTED",
+      lastError: "Stripe session amount does not match the stored purchase total."
     });
+  });
+
+  test("blocks the webhook when Stripe is misconfigured", async () => {
+    headersMock.mockResolvedValue(new Headers());
+    getStripeMock.mockReturnValue(null);
+    getStripeRuntimeStateMock.mockReturnValue({
+      mode: "misconfigured",
+      hasSecretKey: true,
+      hasWebhookSecret: false,
+      reason: "missing-webhook-secret"
+    });
+
+    const { POST } = await import("@/app/api/stripe/webhook/route");
+    const response = await POST(
+      new Request("http://localhost/api/stripe/webhook", {
+        method: "POST",
+        body: "{}"
+      })
+    );
+
+    expect(response.status).toBe(503);
+    await expect(response.json()).resolves.toEqual({
+      error:
+        "Stripe webhook is blocked because STRIPE_SECRET_KEY is configured without STRIPE_WEBHOOK_SECRET."
+    });
+    expect(beginPaymentWebhookEventProcessingMock).not.toHaveBeenCalled();
+  });
+
+  test("ignores a duplicate webhook replay without granting access twice", async () => {
+    headersMock.mockResolvedValue(
+      new Headers({
+        "stripe-signature": "sig_test"
+      })
+    );
+    getStripeMock.mockReturnValue({
+      webhooks: {
+        constructEvent: vi.fn(() => ({
+          id: "evt_duplicate",
+          type: "checkout.session.completed",
+          data: {
+            object: {
+              id: "cs_duplicate",
+              metadata: {
+                purchaseId: "purchase-1",
+                userId: "user-1",
+                courseSlug: "curso-demo"
+              }
+            }
+          }
+        }))
+      }
+    });
+    beginPaymentWebhookEventProcessingMock.mockResolvedValue({
+      duplicate: true,
+      exhausted: false,
+      resumed: false,
+      record: {
+        status: "PROCESSED",
+        attemptCount: 1
+      }
+    });
+
+    const { POST } = await import("@/app/api/stripe/webhook/route");
+    const response = await POST(
+      new Request("http://localhost/api/stripe/webhook", {
+        method: "POST",
+        body: "{}"
+      })
+    );
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toEqual({
+      received: true,
+      duplicate: true
+    });
+    expect(grantCourseAccessMock).not.toHaveBeenCalled();
   });
 });
