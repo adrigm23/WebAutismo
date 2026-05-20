@@ -2,6 +2,7 @@
 
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { isRedirectError } from "next/dist/client/components/redirect-error";
 import { z } from "zod";
 import { issueEmailVerificationToken } from "@/lib/account-security";
 import { writeAuditLog } from "@/lib/audit";
@@ -14,6 +15,7 @@ import {
 } from "@/lib/db-errors";
 import { canSendEmailMessage, sendEmailVerificationEmail } from "@/lib/email";
 import { isEmailVerificationRequired } from "@/lib/env";
+import { createRequestLogger, getRequestIdFromHeaders } from "@/lib/logger";
 import { getDb } from "@/lib/prisma";
 import { buildRequestFingerprint } from "@/lib/request-client";
 import { getSafeRedirect } from "@/lib/redirect";
@@ -26,19 +28,19 @@ export type AuthFormState = {
 const registerSchema = z
   .object({
     name: z.string().min(2, "Introduce tu nombre."),
-    email: z.string().email("Introduce un email válido."),
-    password: z.string().min(8, "La contraseña debe tener al menos 8 caracteres."),
-    confirmPassword: z.string().min(8, "Confirma la contraseña."),
+    email: z.string().email("Introduce un email valido."),
+    password: z.string().min(8, "La contrasena debe tener al menos 8 caracteres."),
+    confirmPassword: z.string().min(8, "Confirma la contrasena."),
     next: z.string().optional()
   })
   .refine((data) => data.password === data.confirmPassword, {
-    message: "Las contraseñas no coinciden.",
+    message: "Las contrasenas no coinciden.",
     path: ["confirmPassword"]
   });
 
 const loginSchema = z.object({
-  email: z.string().email("Introduce un email válido."),
-  password: z.string().min(8, "La contraseña debe tener al menos 8 caracteres."),
+  email: z.string().email("Introduce un email valido."),
+  password: z.string().min(8, "La contrasena debe tener al menos 8 caracteres."),
   next: z.string().optional()
 });
 
@@ -52,6 +54,23 @@ function getOptionalString(formData: FormData, key: string) {
 
 function getDefaultPrivateRedirect(globalRole: "STUDENT" | "TEACHER" | "ADMIN") {
   return globalRole === "ADMIN" ? "/admin" : "/mi-cuenta";
+}
+
+function createAuthLogger(input: {
+  requestHeaders: Headers;
+  action: "register" | "login";
+  userId?: string | null;
+}) {
+  return createRequestLogger({
+    requestId: getRequestIdFromHeaders(input.requestHeaders),
+    route: "auth",
+    action: input.action,
+    userId: input.userId ?? null
+  });
+}
+
+function isRedirectSignal(error: unknown) {
+  return isRedirectError(error) || (error instanceof Error && error.message.startsWith("REDIRECT:"));
 }
 
 async function createUserWithOptionalEmailVerification(input: {
@@ -86,7 +105,7 @@ async function createUserWithOptionalEmailVerification(input: {
 
     if (verificationRequired) {
       throw new Error(
-        "La verificación por correo requiere aplicar la migración pendiente de la base de datos."
+        "La verificacion por correo requiere aplicar la migracion pendiente de la base de datos."
       );
     }
 
@@ -142,11 +161,22 @@ export async function registerAction(
   _: AuthFormState,
   formData: FormData
 ): Promise<AuthFormState> {
+  const requestHeaders = await headers();
+  const authLogger = createAuthLogger({
+    requestHeaders,
+    action: "register"
+  });
+  const startedAt = Date.now();
+
   try {
     if (isEmailVerificationRequired() && !canSendEmailMessage()) {
+      authLogger.warn("Registration blocked because email delivery is not configured.", {
+        result: "email-config-missing",
+        durationMs: Date.now() - startedAt
+      });
       return {
         error:
-          "La verificación obligatoria por email está activada, pero el envío de correo no está configurado."
+          "La verificacion obligatoria por email esta activada, pero el envio de correo no esta configurado."
       };
     }
 
@@ -159,12 +189,16 @@ export async function registerAction(
     });
 
     if (!parsed.success) {
+      authLogger.warn("Registration rejected because form validation failed.", {
+        result: "invalid-form",
+        durationMs: Date.now() - startedAt
+      });
       return {
         error: parsed.error.issues[0]?.message || "Revisa los datos del formulario."
-      }
+      };
     }
 
-    const requestHeaders = await headers();
+    const normalizedEmail = parsed.data.email.toLowerCase();
     const registerRateLimit = await consumeRateLimit({
       bucket: "register",
       key: buildRequestFingerprint(requestHeaders, [parsed.data.email]),
@@ -173,18 +207,27 @@ export async function registerAction(
     });
 
     if (!registerRateLimit.allowed) {
+      authLogger.warn("Registration rate limited.", {
+        email: normalizedEmail,
+        result: "rate-limited",
+        durationMs: Date.now() - startedAt
+      });
       return {
         error: `Demasiados intentos de registro. Espera ${registerRateLimit.retryAfterSeconds} segundos antes de volver a intentarlo.`
       };
     }
 
     const db = getDb();
-    const normalizedEmail = parsed.data.email.toLowerCase();
     const existingUser = await db.user.findUnique({
       where: { email: normalizedEmail }
     });
 
     if (existingUser) {
+      authLogger.warn("Registration rejected because the email already exists.", {
+        email: normalizedEmail,
+        result: "duplicate-email",
+        durationMs: Date.now() - startedAt
+      });
       return { error: "Ya existe una cuenta con ese correo." };
     }
 
@@ -223,25 +266,59 @@ export async function registerAction(
         expiresAt: verificationToken.expiresAt
       });
 
+      authLogger.info("Registration completed and email verification was requested.", {
+        userId: user.id,
+        email: user.email,
+        globalRole,
+        result: "verification-pending",
+        durationMs: Date.now() - startedAt
+      });
+
       redirect("/acceder?verify=1");
     }
 
     await createSession(user.id);
+    authLogger.info("Registration completed and session created.", {
+      userId: user.id,
+      email: user.email,
+      globalRole,
+      result: "registered",
+      durationMs: Date.now() - startedAt
+    });
     redirect(getSafeRedirect(parsed.data.next, getDefaultPrivateRedirect(globalRole)));
   } catch (error) {
+    if (isRedirectSignal(error)) {
+      throw error;
+    }
+
     if (isDatabaseConnectionError(error)) {
+      authLogger.error("Registration failed because the database is unavailable.", {
+        result: "database-unavailable",
+        durationMs: Date.now() - startedAt,
+        error: error instanceof Error ? error : new Error(String(error))
+      });
       return {
         error: "No se puede conectar con la base de datos en este momento. Revisa DATABASE_URL en Vercel."
       };
     }
 
     if (isDatabaseSchemaDriftError(error)) {
+      authLogger.error("Registration failed because the database schema is outdated.", {
+        result: "schema-drift",
+        durationMs: Date.now() - startedAt,
+        error: error instanceof Error ? error : new Error(String(error))
+      });
       return {
         error:
-          "La aplicación necesita aplicar la migración pendiente de la base de datos antes de completar esta operación."
+          "La aplicacion necesita aplicar la migracion pendiente de la base de datos antes de completar esta operacion."
       };
     }
 
+    authLogger.error("Registration failed unexpectedly.", {
+      result: "failed",
+      durationMs: Date.now() - startedAt,
+      error: error instanceof Error ? error : new Error(String(error))
+    });
     throw error;
   }
 }
@@ -250,6 +327,13 @@ export async function loginAction(
   _: AuthFormState,
   formData: FormData
 ): Promise<AuthFormState> {
+  const requestHeaders = await headers();
+  const authLogger = createAuthLogger({
+    requestHeaders,
+    action: "login"
+  });
+  const startedAt = Date.now();
+
   try {
     const parsed = loginSchema.safeParse({
       email: formData.get("email"),
@@ -258,12 +342,16 @@ export async function loginAction(
     });
 
     if (!parsed.success) {
+      authLogger.warn("Login rejected because form validation failed.", {
+        result: "invalid-form",
+        durationMs: Date.now() - startedAt
+      });
       return {
         error: parsed.error.issues[0]?.message || "Revisa los datos del formulario."
       };
     }
 
-    const requestHeaders = await headers();
+    const normalizedEmail = parsed.data.email.toLowerCase();
     const loginRateLimit = await consumeRateLimit({
       bucket: "login",
       key: buildRequestFingerprint(requestHeaders, [parsed.data.email]),
@@ -272,6 +360,11 @@ export async function loginAction(
     });
 
     if (!loginRateLimit.allowed) {
+      authLogger.warn("Login rate limited.", {
+        email: normalizedEmail,
+        result: "rate-limited",
+        durationMs: Date.now() - startedAt
+      });
       return {
         error: `Demasiados intentos de acceso. Espera ${loginRateLimit.retryAfterSeconds} segundos antes de volver a intentarlo.`
       };
@@ -281,45 +374,85 @@ export async function loginAction(
 
     if (demoUser) {
       if (!isValidDemoPassword(parsed.data.password)) {
+        authLogger.warn("Demo login rejected because the password is invalid.", {
+          email: normalizedEmail,
+          result: "invalid-demo-password",
+          durationMs: Date.now() - startedAt
+        });
         return { error: INVALID_LOGIN_MESSAGE };
       }
 
       await createSession(demoUser.id);
+      authLogger.info("Demo login granted.", {
+        userId: demoUser.id,
+        email: demoUser.email,
+        globalRole: demoUser.globalRole,
+        result: "logged-in-demo",
+        durationMs: Date.now() - startedAt
+      });
       redirect(
         getSafeRedirect(parsed.data.next, getDefaultPrivateRedirect(demoUser.globalRole))
       );
     }
 
-    const user = await getUserForLogin(parsed.data.email.toLowerCase());
-
+    const user = await getUserForLogin(normalizedEmail);
     const passwordHash = user?.passwordHash ?? DUMMY_PASSWORD_HASH;
     const isValidPassword = await verifyPassword(parsed.data.password, passwordHash);
 
     if (!user) {
+      authLogger.warn("Login rejected because the account does not exist.", {
+        email: normalizedEmail,
+        result: "missing-user",
+        durationMs: Date.now() - startedAt
+      });
       return { error: INVALID_LOGIN_MESSAGE };
     }
 
     if (!isValidPassword) {
+      authLogger.warn("Login rejected because the password is invalid.", {
+        userId: user.id,
+        email: user.email,
+        result: "invalid-password",
+        durationMs: Date.now() - startedAt
+      });
       return { error: INVALID_LOGIN_MESSAGE };
     }
 
     if (!user.isActive) {
-      return { error: "Tu cuenta está desactivada. Contacta con administración." };
+      authLogger.warn("Login rejected because the account is inactive.", {
+        userId: user.id,
+        email: user.email,
+        result: "inactive-account",
+        durationMs: Date.now() - startedAt
+      });
+      return { error: "Tu cuenta esta desactivada. Contacta con administracion." };
     }
 
     if (isEmailVerificationRequired()) {
       const verificationState = await getEmailVerificationStateForLogin(user.id);
 
       if (!verificationState.schemaReady) {
+        authLogger.warn("Login rejected because email verification schema is missing.", {
+          userId: user.id,
+          email: user.email,
+          result: "verification-schema-missing",
+          durationMs: Date.now() - startedAt
+        });
         return {
           error:
-            "El acceso con verificación de correo todavía no está disponible en este entorno. Aplica la migración pendiente de la base de datos."
+            "El acceso con verificacion de correo todavia no esta disponible en este entorno. Aplica la migracion pendiente de la base de datos."
         };
       }
 
       if (!verificationState.emailVerifiedAt) {
+        authLogger.warn("Login rejected because the email is not verified.", {
+          userId: user.id,
+          email: user.email,
+          result: "email-not-verified",
+          durationMs: Date.now() - startedAt
+        });
         return {
-          error: "Debes verificar tu correo electrónico antes de acceder al campus."
+          error: "Debes verificar tu correo electronico antes de acceder al campus."
         };
       }
     }
@@ -332,21 +465,47 @@ export async function loginAction(
       })) ?? user.globalRole;
 
     await createSession(user.id);
+    authLogger.info("Login completed and session created.", {
+      userId: user.id,
+      email: user.email,
+      globalRole,
+      result: "logged-in",
+      durationMs: Date.now() - startedAt
+    });
     redirect(getSafeRedirect(parsed.data.next, getDefaultPrivateRedirect(globalRole)));
   } catch (error) {
+    if (isRedirectSignal(error)) {
+      throw error;
+    }
+
     if (isDatabaseConnectionError(error)) {
+      authLogger.error("Login failed because the database is unavailable.", {
+        result: "database-unavailable",
+        durationMs: Date.now() - startedAt,
+        error: error instanceof Error ? error : new Error(String(error))
+      });
       return {
         error: "No se puede conectar con la base de datos en este momento. Revisa DATABASE_URL en Vercel."
       };
     }
 
     if (isDatabaseSchemaDriftError(error)) {
+      authLogger.error("Login failed because the database schema is outdated.", {
+        result: "schema-drift",
+        durationMs: Date.now() - startedAt,
+        error: error instanceof Error ? error : new Error(String(error))
+      });
       return {
         error:
-          "La aplicación necesita aplicar la migración pendiente de la base de datos antes de completar esta operación."
+          "La aplicacion necesita aplicar la migracion pendiente de la base de datos antes de completar esta operacion."
       };
     }
 
+    authLogger.error("Login failed unexpectedly.", {
+      result: "failed",
+      durationMs: Date.now() - startedAt,
+      error: error instanceof Error ? error : new Error(String(error))
+    });
     throw error;
   }
 }

@@ -3,6 +3,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/auth";
 import { canManageUsers } from "@/lib/course-permissions";
+import { createRequestLogger, getRequestIdFromHeaders } from "@/lib/logger";
 import { getDb } from "@/lib/prisma";
 import { buildRequestFingerprint } from "@/lib/request-client";
 import { consumeRateLimit } from "@/lib/rate-limit";
@@ -17,12 +18,27 @@ export function parseOptionalDate(value: FormDataEntryValue | null) {
 }
 
 export async function requireAdminUser() {
+  const requestHeaders = await headers();
   const user = await requireUser("/admin");
+  const adminLogger = createRequestLogger({
+    requestId: getRequestIdFromHeaders(requestHeaders),
+    route: "admin",
+    action: "requireAdminUser",
+    userId: user.id
+  });
 
   if (!canManageUsers(user.globalRole)) {
+    adminLogger.warn("Admin route access denied because the user does not have admin permissions.", {
+      globalRole: user.globalRole,
+      result: "forbidden"
+    });
     redirect("/mi-cuenta");
   }
 
+  adminLogger.info("Admin route access granted.", {
+    globalRole: user.globalRole,
+    result: "granted"
+  });
   return user;
 }
 
@@ -32,6 +48,12 @@ export async function enforceAdminMutationRateLimit(input: {
   redirectTo?: string;
 }) {
   const requestHeaders = await headers();
+  const adminLogger = createRequestLogger({
+    requestId: getRequestIdFromHeaders(requestHeaders),
+    route: "admin",
+    action: input.action,
+    userId: input.actorId
+  });
   const rateLimit = await consumeRateLimit({
     bucket: `admin:${input.action}`,
     key: buildRequestFingerprint(requestHeaders, [input.actorId]),
@@ -40,8 +62,16 @@ export async function enforceAdminMutationRateLimit(input: {
   });
 
   if (!rateLimit.allowed) {
+    adminLogger.warn("Admin mutation rate limited.", {
+      result: "rate-limited",
+      redirectTo: input.redirectTo ?? "/admin"
+    });
     redirect(`${input.redirectTo ?? "/admin"}${(input.redirectTo ?? "/admin").includes("?") ? "&" : "?"}error=rate-limit`);
   }
+
+  adminLogger.info("Admin mutation rate limit check passed.", {
+    result: "allowed"
+  });
 }
 
 export async function ensureNotLastAdmin(input: {

@@ -1,7 +1,13 @@
 import type { ForumAuditAction } from "@prisma/client";
 import { getCourseIdentityBySlug } from "@/lib/course-identity";
 import type { CourseRole } from "@/lib/course-roles";
+import { createLogger } from "@/lib/logger";
 import { getDb } from "@/lib/prisma";
+
+const forumAuditLogger = createLogger({
+  route: "forum-audit",
+  action: "writeForumAuditLog"
+});
 
 export function safeParseMetadata(metadataJson: string | null) {
   if (!metadataJson) {
@@ -100,5 +106,15 @@ export async function writeForumAuditLog(input: {
       action: input.action,
       metadataJson: input.metadata ? JSON.stringify(input.metadata) : null
     }
+  });
+
+  forumAuditLogger.info("Forum audit log written.", {
+    userId: input.actorId,
+    result: "written",
+    courseSlug: input.courseSlug,
+    forumAuditAction: input.action,
+    forumSpaceId: input.forumSpaceId ?? null,
+    threadId: input.threadId ?? null,
+    postId: input.postId ?? null
   });
 }

@@ -4,6 +4,8 @@ const grantCourseAccessMock = vi.fn();
 const markPurchaseFailedByStripeSessionIdMock = vi.fn();
 const validateStripeCheckoutSessionAgainstPurchaseMock = vi.fn();
 const getStripeMock = vi.fn();
+const beginPaymentWebhookEventProcessingMock = vi.fn();
+const finishPaymentWebhookEventProcessingMock = vi.fn();
 
 vi.mock("next/headers", () => ({
   headers: headersMock
@@ -26,6 +28,11 @@ vi.mock("@/lib/purchases", () => ({
 
 vi.mock("@/lib/stripe", () => ({
   getStripe: getStripeMock
+}));
+
+vi.mock("@/lib/payment-webhook-events", () => ({
+  beginPaymentWebhookEventProcessing: beginPaymentWebhookEventProcessingMock,
+  finishPaymentWebhookEventProcessing: finishPaymentWebhookEventProcessingMock
 }));
 
 describe("stripe webhook route", () => {
@@ -64,6 +71,7 @@ describe("stripe webhook route", () => {
     const stripe = {
       webhooks: {
         constructEvent: vi.fn(() => ({
+          id: "evt_test_1",
           type: "checkout.session.completed",
           data: {
             object: stripeSession
@@ -73,6 +81,12 @@ describe("stripe webhook route", () => {
     };
 
     getStripeMock.mockReturnValue(stripe);
+    beginPaymentWebhookEventProcessingMock.mockResolvedValue({
+      duplicate: false,
+      record: {
+        status: "PROCESSING"
+      }
+    });
 
     findPurchaseMock.mockResolvedValue({
       id: "purchase-1",
@@ -96,5 +110,9 @@ describe("stripe webhook route", () => {
     expect(response.status).toBe(400);
     expect(markPurchaseFailedByStripeSessionIdMock).toHaveBeenCalledWith("cs_test_1");
     expect(grantCourseAccessMock).not.toHaveBeenCalled();
+    expect(finishPaymentWebhookEventProcessingMock).toHaveBeenCalledWith({
+      stripeEventId: "evt_test_1",
+      status: "REJECTED"
+    });
   });
 });

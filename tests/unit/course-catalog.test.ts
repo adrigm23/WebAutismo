@@ -1,12 +1,14 @@
 const getDbMock = vi.fn();
 const isLegacyCatalogFallbackEnabledMock = vi.fn(() => false);
+const isDevelopmentRuntimeMock = vi.fn(() => true);
 
 vi.mock("@/lib/prisma", () => ({
   getDb: getDbMock
 }));
 
 vi.mock("@/lib/env", () => ({
-  isLegacyCatalogFallbackEnabled: isLegacyCatalogFallbackEnabledMock
+  isLegacyCatalogFallbackEnabled: isLegacyCatalogFallbackEnabledMock,
+  isDevelopmentRuntime: isDevelopmentRuntimeMock
 }));
 
 describe("course catalog fallback", () => {
@@ -14,6 +16,7 @@ describe("course catalog fallback", () => {
     vi.resetModules();
     vi.clearAllMocks();
     isLegacyCatalogFallbackEnabledMock.mockReturnValue(false);
+    isDevelopmentRuntimeMock.mockReturnValue(true);
   });
 
   test("falls back to legacy catalog only when the explicit fallback flag is enabled", async () => {

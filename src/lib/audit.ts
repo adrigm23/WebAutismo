@@ -1,4 +1,5 @@
 import { type AuditAction, type AuditEntityType } from "@prisma/client";
+import { createLogger } from "@/lib/logger";
 import { captureOperationalWarning } from "@/lib/monitoring";
 import { getDb } from "@/lib/prisma";
 
@@ -10,6 +11,11 @@ type WriteAuditLogInput = {
   entityLabel?: string | null;
   metadata?: Record<string, unknown> | null;
 };
+
+const auditLogger = createLogger({
+  route: "audit",
+  action: "writeAuditLog"
+});
 
 export async function writeAuditLog(input: WriteAuditLogInput) {
   try {
@@ -23,6 +29,13 @@ export async function writeAuditLog(input: WriteAuditLogInput) {
         metadataJson: input.metadata ? JSON.stringify(input.metadata) : null
       }
     });
+    auditLogger.info("Audit log written.", {
+      userId: input.actorId ?? null,
+      result: "written",
+      auditAction: input.action,
+      entityType: input.entityType,
+      entityId: input.entityId
+    });
   } catch (error) {
     if (
       error instanceof Error &&
@@ -32,9 +45,24 @@ export async function writeAuditLog(input: WriteAuditLogInput) {
       captureOperationalWarning("Audit schema drift detected while writing audit log.", {
         error: error.message
       });
+      auditLogger.warn("Audit log skipped because of schema drift.", {
+        userId: input.actorId ?? null,
+        result: "schema-drift",
+        auditAction: input.action,
+        entityType: input.entityType,
+        entityId: input.entityId
+      });
       return;
     }
 
+    auditLogger.error("Audit log write failed.", {
+      userId: input.actorId ?? null,
+      result: "failed",
+      auditAction: input.action,
+      entityType: input.entityType,
+      entityId: input.entityId,
+      error: error instanceof Error ? error : new Error(String(error))
+    });
     throw error;
   }
 }

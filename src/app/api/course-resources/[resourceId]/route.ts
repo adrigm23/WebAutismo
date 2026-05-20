@@ -3,6 +3,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { canAccessCourseCommunity } from "@/lib/course-community";
 import { readStoredCourseResourceContent } from "@/lib/course-resource-storage";
 import { buildPrivateFileHeaders } from "@/lib/download-response";
+import { createRequestLogger, getRequestIdFromHeaders } from "@/lib/logger";
 import { getDb } from "@/lib/prisma";
 import { buildRequestFingerprint } from "@/lib/request-client";
 import { consumeRateLimit } from "@/lib/rate-limit";
@@ -13,9 +14,20 @@ export async function GET(
 ) {
   const inline = new URL(request.url).searchParams.get("inline") === "1";
   const { resourceId } = await params;
+  const downloadLogger = createRequestLogger({
+    requestId: getRequestIdFromHeaders(request.headers),
+    route: "/api/course-resources/[resourceId]",
+    action: "downloadCourseResource"
+  });
+  const startedAt = Date.now();
   const user = await getCurrentUser();
 
   if (!user) {
+    downloadLogger.warn("Course resource download rejected because user is not authenticated.", {
+      resourceId,
+      result: "unauthenticated",
+      durationMs: Date.now() - startedAt
+    });
     return NextResponse.json({ error: "Authentication required." }, { status: 401 });
   }
 
@@ -33,6 +45,12 @@ export async function GET(
   });
 
   if (!resource || !resource.storageKey) {
+    downloadLogger.warn("Course resource download failed because the resource was not found.", {
+      userId: user.id,
+      resourceId,
+      result: "missing-resource",
+      durationMs: Date.now() - startedAt
+    });
     return NextResponse.json({ error: "Resource not found." }, { status: 404 });
   }
 
@@ -43,6 +61,13 @@ export async function GET(
   });
 
   if (!accessResult.allowed) {
+    downloadLogger.warn("Course resource download denied by course access policy.", {
+      userId: user.id,
+      resourceId,
+      courseSlug: resource.course.slug,
+      result: "forbidden",
+      durationMs: Date.now() - startedAt
+    });
     return NextResponse.json({ error: "Resource access denied." }, { status: 403 });
   }
 
@@ -54,6 +79,13 @@ export async function GET(
   });
 
   if (!downloadRateLimit.allowed) {
+    downloadLogger.warn("Course resource download rate limited.", {
+      userId: user.id,
+      resourceId,
+      courseSlug: resource.course.slug,
+      result: "rate-limited",
+      durationMs: Date.now() - startedAt
+    });
     return NextResponse.json(
       { error: "Too many download requests." },
       {
@@ -73,11 +105,33 @@ export async function GET(
       mimeType: resource.mimeType
     });
 
+    downloadLogger.info("Course resource downloaded.", {
+      userId: user.id,
+      resourceId,
+      courseSlug: resource.course.slug,
+      result: "downloaded",
+      durationMs: Date.now() - startedAt
+    });
+
     return new NextResponse(fileBuffer, {
       status: 200,
       headers
     });
-  } catch {
-    return NextResponse.json({ error: "Stored resource file not found." }, { status: 404 });
+  } catch (error) {
+    downloadLogger.error("Course resource download failed while reading storage.", {
+      userId: user.id,
+      resourceId,
+      courseSlug: resource.course.slug,
+      result: "storage-miss",
+      durationMs: Date.now() - startedAt,
+      error: error instanceof Error ? error : new Error(String(error))
+    });
+    return NextResponse.json(
+      {
+        error:
+          error instanceof Error ? error.message : "Stored resource file not found."
+      },
+      { status: 404 }
+    );
   }
 }

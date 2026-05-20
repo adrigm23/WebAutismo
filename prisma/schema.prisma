@@ -237,6 +237,20 @@ model Purchase {
   @@index([courseEditionId, status])
 }
 
+model PaymentWebhookEvent {
+  id            String                    @id @default(cuid())
+  stripeEventId String                    @unique
+  type          String
+  payloadHash   String
+  status        PaymentWebhookEventStatus
+  processedAt   DateTime?
+  createdAt     DateTime                  @default(now())
+  updatedAt     DateTime                  @updatedAt
+
+  @@index([status, createdAt])
+  @@map("payment_webhook_events")
+}
+
 model CourseEnrollment {
   id              String                 @id @default(cuid())
   userId          String
@@ -799,4 +813,12 @@ enum PurchaseStatus {
   FAILED
   REFUNDED
   CANCELLED
+}
+
+enum PaymentWebhookEventStatus {
+  PROCESSING
+  PROCESSED
+  REJECTED
+  FAILED
+  IGNORED
 }

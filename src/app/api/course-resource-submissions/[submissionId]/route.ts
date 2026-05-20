@@ -3,6 +3,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { canAccessCourseCommunity, canModerateCourse } from "@/lib/course-community";
 import { readStoredCourseResourceSubmissionContent } from "@/lib/course-resource-submission-storage";
 import { buildPrivateFileHeaders } from "@/lib/download-response";
+import { createRequestLogger, getRequestIdFromHeaders } from "@/lib/logger";
 import { getDb } from "@/lib/prisma";
 import { buildRequestFingerprint } from "@/lib/request-client";
 import { consumeRateLimit } from "@/lib/rate-limit";
@@ -12,9 +13,20 @@ export async function GET(
   { params }: { params: Promise<{ submissionId: string }> }
 ) {
   const { submissionId } = await params;
+  const downloadLogger = createRequestLogger({
+    requestId: getRequestIdFromHeaders(request.headers),
+    route: "/api/course-resource-submissions/[submissionId]",
+    action: "downloadCourseResourceSubmission"
+  });
+  const startedAt = Date.now();
   const user = await getCurrentUser();
 
   if (!user) {
+    downloadLogger.warn("Submission attachment download rejected because user is not authenticated.", {
+      submissionId,
+      result: "unauthenticated",
+      durationMs: Date.now() - startedAt
+    });
     return NextResponse.json({ error: "Authentication required." }, { status: 401 });
   }
 
@@ -36,6 +48,12 @@ export async function GET(
   });
 
   if (!submission || !submission.storageKey) {
+    downloadLogger.warn("Submission attachment download failed because the submission was not found.", {
+      userId: user.id,
+      submissionId,
+      result: "missing-submission",
+      durationMs: Date.now() - startedAt
+    });
     return NextResponse.json({ error: "Submission attachment not found." }, { status: 404 });
   }
 
@@ -46,6 +64,13 @@ export async function GET(
   });
 
   if (!accessResult.allowed) {
+    downloadLogger.warn("Submission attachment download denied by course access policy.", {
+      userId: user.id,
+      submissionId,
+      courseSlug: submission.resource.course.slug,
+      result: "forbidden",
+      durationMs: Date.now() - startedAt
+    });
     return NextResponse.json({ error: "Submission attachment access denied." }, { status: 403 });
   }
 
@@ -53,6 +78,13 @@ export async function GET(
   const canDownloadAsStaff = canModerateCourse(accessResult.role);
 
   if (!canDownloadOwn && !canDownloadAsStaff) {
+    downloadLogger.warn("Submission attachment download denied by ownership policy.", {
+      userId: user.id,
+      submissionId,
+      courseSlug: submission.resource.course.slug,
+      result: "ownership-denied",
+      durationMs: Date.now() - startedAt
+    });
     return NextResponse.json({ error: "Submission attachment access denied." }, { status: 403 });
   }
 
@@ -64,6 +96,13 @@ export async function GET(
   });
 
   if (!downloadRateLimit.allowed) {
+    downloadLogger.warn("Submission attachment download rate limited.", {
+      userId: user.id,
+      submissionId,
+      courseSlug: submission.resource.course.slug,
+      result: "rate-limited",
+      durationMs: Date.now() - startedAt
+    });
     return NextResponse.json(
       { error: "Too many download requests." },
       {
@@ -82,11 +121,35 @@ export async function GET(
       mimeType: submission.mimeType
     });
 
+    downloadLogger.info("Submission attachment downloaded.", {
+      userId: user.id,
+      submissionId,
+      courseSlug: submission.resource.course.slug,
+      result: "downloaded",
+      durationMs: Date.now() - startedAt
+    });
+
     return new NextResponse(fileBuffer, {
       status: 200,
       headers
     });
-  } catch {
-    return NextResponse.json({ error: "Stored submission attachment file not found." }, { status: 404 });
+  } catch (error) {
+    downloadLogger.error("Submission attachment download failed while reading storage.", {
+      userId: user.id,
+      submissionId,
+      courseSlug: submission.resource.course.slug,
+      result: "storage-miss",
+      durationMs: Date.now() - startedAt,
+      error: error instanceof Error ? error : new Error(String(error))
+    });
+    return NextResponse.json(
+      {
+        error:
+          error instanceof Error
+            ? error.message
+            : "Stored submission attachment file not found."
+      },
+      { status: 404 }
+    );
   }
 }

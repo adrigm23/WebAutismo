@@ -1,3 +1,6 @@
+import { randomUUID } from "crypto";
+import { isDevelopmentRuntime } from "@/lib/env";
+
 type LogLevel = "debug" | "info" | "warn" | "error";
 
 type LogValue =
@@ -12,6 +15,7 @@ type LogValue =
   | { [key: string]: LogValue };
 
 export type LogContext = Record<string, LogValue>;
+type HeaderReader = Pick<Headers, "get">;
 
 const LOG_LEVEL_PRIORITY: Record<LogLevel, number> = {
   debug: 10,
@@ -27,7 +31,7 @@ function resolveLogLevel(): LogLevel {
     return rawValue;
   }
 
-  return process.env.NODE_ENV === "development" ? "debug" : "info";
+  return isDevelopmentRuntime() ? "debug" : "info";
 }
 
 function normalizeLogValue(value: LogValue): unknown {
@@ -117,3 +121,25 @@ export function createLogger(baseContext?: LogContext) {
 }
 
 export const logger = createLogger();
+
+export function getRequestIdFromHeaders(headers: HeaderReader) {
+  return (
+    headers.get("x-request-id")?.trim() ||
+    headers.get("x-vercel-id")?.trim() ||
+    randomUUID()
+  );
+}
+
+export function createRequestLogger(input: {
+  requestId?: string | null;
+  route?: string | null;
+  action?: string | null;
+  userId?: string | null;
+}) {
+  return logger.child({
+    requestId: input.requestId ?? null,
+    route: input.route ?? null,
+    action: input.action ?? null,
+    userId: input.userId ?? null
+  });
+}

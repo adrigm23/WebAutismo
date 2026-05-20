@@ -1,4 +1,5 @@
 import { PrismaClient } from "@prisma/client";
+import { isDevelopmentRuntime } from "@/lib/env";
 
 declare global {
   var prisma: PrismaClient | undefined;
@@ -14,10 +15,10 @@ export function getDb() {
   prismaClient =
     globalThis.prisma ??
     new PrismaClient({
-      log: process.env.NODE_ENV === "development" ? ["warn", "error"] : ["error"]
+      log: isDevelopmentRuntime() ? ["warn", "error"] : ["error"]
     });
 
-  if (process.env.NODE_ENV !== "production") {
+  if (isDevelopmentRuntime()) {
     globalThis.prisma = prismaClient;
   }
 

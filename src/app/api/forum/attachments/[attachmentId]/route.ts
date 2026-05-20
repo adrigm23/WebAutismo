@@ -3,6 +3,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { canAccessCourseCommunity } from "@/lib/course-community";
 import { buildPrivateFileHeaders } from "@/lib/download-response";
 import { readStoredForumAttachmentContent } from "@/lib/forum-attachment-storage";
+import { createRequestLogger, getRequestIdFromHeaders } from "@/lib/logger";
 import { getDb } from "@/lib/prisma";
 import { buildRequestFingerprint } from "@/lib/request-client";
 import { consumeRateLimit } from "@/lib/rate-limit";
@@ -40,9 +41,20 @@ export async function GET(
   { params }: { params: Promise<{ attachmentId: string }> }
 ) {
   const { attachmentId } = await params;
+  const downloadLogger = createRequestLogger({
+    requestId: getRequestIdFromHeaders(request.headers),
+    route: "/api/forum/attachments/[attachmentId]",
+    action: "downloadForumAttachment"
+  });
+  const startedAt = Date.now();
   const user = await getCurrentUser();
 
   if (!user) {
+    downloadLogger.warn("Forum attachment download rejected because user is not authenticated.", {
+      attachmentId,
+      result: "unauthenticated",
+      durationMs: Date.now() - startedAt
+    });
     return NextResponse.json({ error: "Authentication required." }, { status: 401 });
   }
 
@@ -77,12 +89,24 @@ export async function GET(
   })) as AttachmentContext | null;
 
   if (!attachment || !attachment.storageKey) {
+    downloadLogger.warn("Forum attachment download failed because the attachment was not found.", {
+      userId: user.id,
+      attachmentId,
+      result: "missing-attachment",
+      durationMs: Date.now() - startedAt
+    });
     return NextResponse.json({ error: "Attachment not found." }, { status: 404 });
   }
 
   const courseSlug = getAttachmentCourseSlug(attachment);
 
   if (!courseSlug) {
+    downloadLogger.warn("Forum attachment download failed because the attachment is detached from a course.", {
+      userId: user.id,
+      attachmentId,
+      result: "missing-course",
+      durationMs: Date.now() - startedAt
+    });
     return NextResponse.json({ error: "Attachment is not linked to a course." }, { status: 404 });
   }
 
@@ -93,6 +117,13 @@ export async function GET(
   });
 
   if (!accessResult.allowed) {
+    downloadLogger.warn("Forum attachment download denied by course access policy.", {
+      userId: user.id,
+      attachmentId,
+      courseSlug,
+      result: "forbidden",
+      durationMs: Date.now() - startedAt
+    });
     return NextResponse.json({ error: "Attachment access denied." }, { status: 403 });
   }
 
@@ -104,6 +135,13 @@ export async function GET(
   });
 
   if (!downloadRateLimit.allowed) {
+    downloadLogger.warn("Forum attachment download rate limited.", {
+      userId: user.id,
+      attachmentId,
+      courseSlug,
+      result: "rate-limited",
+      durationMs: Date.now() - startedAt
+    });
     return NextResponse.json(
       { error: "Too many download requests." },
       {
@@ -124,11 +162,33 @@ export async function GET(
       mimeType: attachment.mimeType
     });
 
+    downloadLogger.info("Forum attachment downloaded.", {
+      userId: user.id,
+      attachmentId,
+      courseSlug,
+      result: "downloaded",
+      durationMs: Date.now() - startedAt
+    });
+
     return new NextResponse(fileBuffer, {
       status: 200,
       headers
     });
-  } catch {
-    return NextResponse.json({ error: "Stored attachment file not found." }, { status: 404 });
+  } catch (error) {
+    downloadLogger.error("Forum attachment download failed while reading storage.", {
+      userId: user.id,
+      attachmentId,
+      courseSlug,
+      result: "storage-miss",
+      durationMs: Date.now() - startedAt,
+      error: error instanceof Error ? error : new Error(String(error))
+    });
+    return NextResponse.json(
+      {
+        error:
+          error instanceof Error ? error.message : "Stored attachment file not found."
+      },
+      { status: 404 }
+    );
   }
 }

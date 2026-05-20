@@ -8,10 +8,11 @@ import {
   isMissingDatabaseFieldError
 } from "@/lib/db-errors";
 import {
-  getRequiredEnv,
+  isBootstrapAdminByEmailEnabled,
   isDemoAuthEnabled,
   isEmailVerificationRequired
 } from "@/lib/env";
+import { createRequestLogger } from "@/lib/logger";
 import { getDb } from "@/lib/prisma";
 import {
   clearCurrentUserSession,
@@ -29,6 +30,10 @@ function normalizeEmailSet(raw: string) {
 }
 
 function getBootstrapAdminEmails() {
+  if (!isBootstrapAdminByEmailEnabled()) {
+    return new Set<string>();
+  }
+
   return normalizeEmailSet(process.env.BOOTSTRAP_ADMIN_EMAILS || process.env.ADMIN_EMAILS || "");
 }
 
@@ -78,6 +83,10 @@ export async function ensureBootstrapAdmin(input: {
   email: string;
   currentRole?: UserGlobalRole;
 }) {
+  const authLogger = createRequestLogger({
+    action: "ensureBootstrapAdmin",
+    userId: input.userId
+  });
   const normalizedEmail = input.email.trim().toLowerCase();
 
   if (!getBootstrapAdminEmails().has(normalizedEmail)) {
@@ -107,6 +116,11 @@ export async function ensureBootstrapAdmin(input: {
       globalRole: "ADMIN",
       isActive: true
     }
+  });
+
+  authLogger.warn("Granted bootstrap admin access from explicit email allowlist.", {
+    email: normalizedEmail,
+    result: "admin-granted"
   });
 
   return "ADMIN" as const;

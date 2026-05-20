@@ -24,7 +24,7 @@ export function getBooleanEnv(name: string, fallback = false) {
   return TRUE_VALUES.has(value);
 }
 
-export function isProductionEnv() {
+export function isProductionRuntime() {
   return process.env.NODE_ENV === "production";
 }
 
@@ -32,28 +32,40 @@ export function isHostedDeploymentEnv() {
   return process.env.VERCEL === "1" || Boolean(process.env.VERCEL_ENV?.trim());
 }
 
+export function isDevelopmentRuntime() {
+  return !isProductionRuntime() && !isHostedDeploymentEnv();
+}
+
+export function isDemoRuntimeEnabled(flagName: string) {
+  return isDevelopmentRuntime() && getBooleanEnv(flagName, false);
+}
+
+export function isProductionEnv() {
+  return isProductionRuntime();
+}
+
 export function isLocalDevelopmentEnv() {
-  return !isProductionEnv() && !isHostedDeploymentEnv();
+  return isDevelopmentRuntime();
 }
 
 export function isDemoAuthEnabled() {
-  return (
-    isLocalDevelopmentEnv() &&
-    getBooleanEnv("DEMO_AUTH_ENABLED", false) &&
-    getBooleanEnv("ALLOW_DEMO_AUTH", false)
-  );
+  return isDemoRuntimeEnabled("DEMO_AUTH_ENABLED") && getBooleanEnv("ALLOW_DEMO_AUTH", false);
 }
 
 export function isLegacyCatalogFallbackEnabled() {
-  return isLocalDevelopmentEnv() && getBooleanEnv("LEGACY_CATALOG_FALLBACK_ENABLED", false);
+  return isDemoRuntimeEnabled("LEGACY_CATALOG_FALLBACK_ENABLED");
 }
 
 export function isForumDemoFallbackEnabled() {
-  return isLocalDevelopmentEnv() && getBooleanEnv("FORUM_DEMO_FALLBACK_ENABLED", false);
+  return isDemoRuntimeEnabled("FORUM_DEMO_FALLBACK_ENABLED");
 }
 
 export function isDevelopmentDemoPurchaseEnabled() {
-  return isLocalDevelopmentEnv() && getBooleanEnv("ALLOW_DEVELOPMENT_DEMO_PURCHASES", true);
+  return isDemoRuntimeEnabled("ALLOW_DEVELOPMENT_DEMO_PURCHASES");
+}
+
+export function isBootstrapAdminByEmailEnabled() {
+  return getBooleanEnv("ALLOW_BOOTSTRAP_ADMIN_BY_EMAIL", false);
 }
 
 export function getObjectStorageProviderEnv() {
@@ -67,7 +79,7 @@ export function getObjectStorageProviderEnv() {
 }
 
 export function isDatabaseStorageFallbackAllowed() {
-  return getBooleanEnv("ALLOW_DATABASE_STORAGE_FALLBACK", false);
+  return isDemoRuntimeEnabled("ALLOW_DATABASE_STORAGE_FALLBACK");
 }
 
 export function getRateLimitBackendEnv() {
@@ -81,7 +93,7 @@ export function getRateLimitBackendEnv() {
 }
 
 export function canUseMemoryRateLimitFallback() {
-  return isLocalDevelopmentEnv() && getBooleanEnv("ALLOW_MEMORY_RATE_LIMIT_FALLBACK", false);
+  return isDemoRuntimeEnabled("ALLOW_MEMORY_RATE_LIMIT_FALLBACK");
 }
 
 function getPositiveIntegerEnv(name: string, fallback: number) {
@@ -115,7 +127,7 @@ export function getSiteUrl() {
   const value = process.env.NEXT_PUBLIC_SITE_URL?.trim();
 
   if (!value) {
-    if (isProductionEnv()) {
+    if (isProductionRuntime()) {
       throw new Error("NEXT_PUBLIC_SITE_URL is required in production.");
     }
 

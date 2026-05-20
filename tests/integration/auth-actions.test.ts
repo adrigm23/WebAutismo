@@ -42,7 +42,8 @@ describe("auth server actions", () => {
     process.env = {
       ...originalEnv,
       NODE_ENV: "test",
-      SESSION_SECRET: "test-session-secret"
+      SESSION_SECRET: "test-session-secret",
+      RATE_LIMIT_BACKEND: "memory"
     };
 
     const { resetRateLimitStore } = await import("@/lib/rate-limit");
