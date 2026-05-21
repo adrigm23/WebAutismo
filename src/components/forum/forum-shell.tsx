@@ -131,7 +131,7 @@ export function ForumShell({
                 {topNavItems.map((item) => (
                   <Link
                     className={cn(
-                      "inline-flex min-h-11 items-center justify-center rounded-[var(--radius-pill)] px-3.5 py-2 text-sm font-semibold transition",
+                      "inline-flex min-h-11 items-center justify-center rounded-[var(--radius-pill)] px-3.5 py-2 text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-surface-canvas)]",
                       item.active
                         ? "border border-[rgba(22,60,88,0.18)] bg-white text-[var(--color-primary)] shadow-[var(--shadow-inset-soft)]"
                         : "text-[var(--color-ink-soft)] hover:bg-white hover:text-[var(--color-primary)]"
@@ -166,7 +166,7 @@ export function ForumShell({
                 </ButtonLink>
 
                 <details className="relative">
-                  <summary className="flex h-11 cursor-pointer list-none items-center justify-center rounded-[var(--radius-pill)] border border-[rgba(22,60,88,0.12)] bg-white px-4 text-[var(--color-ink)] shadow-[var(--shadow-inset-soft)] transition hover:border-[var(--color-primary)]">
+                  <summary className="flex h-11 cursor-pointer list-none items-center justify-center rounded-[var(--radius-pill)] border border-[rgba(22,60,88,0.12)] bg-white px-4 text-[var(--color-ink)] shadow-[var(--shadow-inset-soft)] transition hover:border-[var(--color-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-surface-canvas)]">
                     <Bell className="h-5 w-5" />
                     {forumNotifications.unreadCount ? (
                       <span className="ml-2 inline-flex min-w-5 items-center justify-center rounded-full bg-[var(--color-primary)] px-1.5 py-0.5 text-[10px] font-semibold text-white">
@@ -189,7 +189,7 @@ export function ForumShell({
                         <form action={markAllForumNotificationsReadAction}>
                           <input name="nextPath" type="hidden" value={nextPath} />
                           <button
-                            className="text-sm font-medium text-[var(--color-primary)] transition hover:text-[var(--color-primary-strong)]"
+                            className="text-sm font-medium text-[var(--color-primary)] transition hover:text-[var(--color-primary-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-white"
                             type="submit"
                           >
                             Marcar todas
@@ -226,7 +226,7 @@ export function ForumShell({
                             </p>
                             <div className="mt-3 flex flex-wrap items-center gap-3">
                               <Link
-                                className="text-sm font-medium text-[var(--color-primary)] hover:text-[var(--color-primary-strong)]"
+                                className="text-sm font-medium text-[var(--color-primary)] hover:text-[var(--color-primary-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-white"
                                 href={notification.linkPath}
                               >
                                 Abrir
@@ -236,7 +236,7 @@ export function ForumShell({
                                   <input name="nextPath" type="hidden" value={nextPath} />
                                   <input name="notificationId" type="hidden" value={notification.id} />
                                   <button
-                                    className="text-sm font-medium text-[var(--color-muted)] transition hover:text-[var(--color-ink)]"
+                                    className="text-sm font-medium text-[var(--color-muted)] transition hover:text-[var(--color-ink)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-white"
                                     type="submit"
                                   >
                                     Marcar leída
