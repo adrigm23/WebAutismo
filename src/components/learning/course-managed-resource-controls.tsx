@@ -11,12 +11,15 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { StateBanner } from "@/components/ui/state-banner";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { Textarea } from "@/components/ui/textarea";
 import type { CatalogCourse } from "@/lib/course-catalog";
 import type { CampusResourceItem } from "@/lib/course-resources";
 
 const initialState: CourseResourceFormState = {};
+const selectClassName =
+  "ui-control-base h-[var(--control-height-md)] px-4 text-sm";
 
 function toDateTimeLocalValue(value: Date | string | null) {
   if (!value) {
@@ -57,7 +60,7 @@ export function CourseManagedResourceControls({
   const [isEditorOpen, setIsEditorOpen] = useState(false);
 
   return (
-    <div className="mt-5 space-y-4 rounded-2xl border border-[rgba(12,113,195,0.16)] bg-white p-4">
+    <div className="mt-5 space-y-4 rounded-[var(--radius-lg)] border border-[var(--color-border-subtle)] bg-[color:var(--color-bg-subtle)] p-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-2">
           <Badge tone="teacher">Gestion docente</Badge>
@@ -71,7 +74,7 @@ export function CourseManagedResourceControls({
             <input name="courseSlug" type="hidden" value={courseSlug} />
             <input name="resourceId" type="hidden" value={resource.id} />
             <input name="direction" type="hidden" value="up" />
-            <Button disabled={isFirst} type="submit" variant="ghost">
+            <Button disabled={isFirst} size="sm" type="submit" variant="subtle">
               Subir
             </Button>
           </form>
@@ -80,7 +83,7 @@ export function CourseManagedResourceControls({
             <input name="courseSlug" type="hidden" value={courseSlug} />
             <input name="resourceId" type="hidden" value={resource.id} />
             <input name="direction" type="hidden" value="down" />
-            <Button disabled={isLast} type="submit" variant="ghost">
+            <Button disabled={isLast} size="sm" type="submit" variant="subtle">
               Bajar
             </Button>
           </form>
@@ -93,7 +96,7 @@ export function CourseManagedResourceControls({
               type="hidden"
               value={resource.isPublished ? "false" : "true"}
             />
-            <Button type="submit" variant="ghost">
+            <Button size="sm" type="submit" variant="subtle">
               {resource.isPublished ? "Ocultar" : "Publicar"}
             </Button>
           </form>
@@ -101,7 +104,7 @@ export function CourseManagedResourceControls({
           <form action={deleteCourseResourceAction}>
             <input name="courseSlug" type="hidden" value={courseSlug} />
             <input name="resourceId" type="hidden" value={resource.id} />
-            <Button type="submit" variant="ghost">
+            <Button size="sm" type="submit" variant="subtle">
               Eliminar
             </Button>
           </form>
@@ -109,7 +112,7 @@ export function CourseManagedResourceControls({
       </div>
 
       <details
-        className="rounded-2xl bg-[var(--color-surface)] p-4"
+        className="rounded-[var(--radius-lg)] border border-[var(--color-border-subtle)] bg-[color:var(--color-surface)] p-4"
         onToggle={(event) =>
           setIsEditorOpen((event.currentTarget as HTMLDetailsElement).open)
         }
@@ -133,10 +136,10 @@ export function CourseManagedResourceControls({
 
               <label className="block space-y-2">
                 <span className="text-sm font-medium text-[var(--color-ink)]">
-                  Módulo
+                  Modulo
                 </span>
                 <select
-                  className="h-12 w-full rounded-xl border border-[var(--color-border)] bg-white px-4 text-sm text-[var(--color-ink)]"
+                  className={selectClassName}
                   defaultValue={resource.moduleId ?? ""}
                   name="moduleId"
                 >
@@ -225,17 +228,9 @@ export function CourseManagedResourceControls({
               </div>
             ) : null}
 
-            {state.error ? (
-              <p className="rounded-2xl border border-[#efb3a6] bg-[#fff1ec] px-4 py-3 text-sm text-[#9b4128]">
-                {state.error}
-              </p>
-            ) : null}
+            {state.error ? <StateBanner description={state.error} tone="danger" /> : null}
 
-            {state.success ? (
-              <p className="rounded-2xl border border-[#b9dfc2] bg-[#eff9f1] px-4 py-3 text-sm text-[#1d6b35]">
-                {state.success}
-              </p>
-            ) : null}
+            {state.success ? <StateBanner description={state.success} tone="success" /> : null}
 
             <div className="flex justify-end">
               <SubmitButton pendingLabel="Guardando..." variant="secondary">

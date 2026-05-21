@@ -5,6 +5,7 @@ import { CourseProgressToggleForm } from "@/components/learning/course-progress-
 import { CourseResourceManager } from "@/components/learning/course-resource-manager";
 import { Badge } from "@/components/ui/badge";
 import { Button, ButtonLink } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
 import {
   buildCourseContentHref,
   buildCourseTrackingHref,
@@ -403,9 +404,12 @@ export function CourseLearningContentTab({
                 ))}
 
                 {!currentModuleMaterials.length && !currentModuleExercises.length ? (
-                  <div className="ui-empty-state p-4 text-sm leading-6 text-[var(--color-muted)]">
-                    Este modulo todavia no tiene materiales ni tareas ligados de forma explicita.
-                  </div>
+                  <EmptyState
+                    className="px-5 py-6"
+                    description="Cuando se publiquen recursos o actividades para este modulo, apareceran aqui dentro de la misma secuencia."
+                    title="Este modulo todavia no tiene materiales ni tareas ligados de forma explicita."
+                    tone="subtle"
+                  />
                 ) : null}
               </div>
             </div>
@@ -489,9 +493,12 @@ export function CourseLearningContentTab({
             })}
           </div>
         ) : (
-          <div className="ui-empty-state p-4 text-sm leading-6 text-[var(--color-muted)]">
-            Este curso todavia no tiene modulos configurados.
-          </div>
+          <EmptyState
+            className="px-5 py-6"
+            description="Cuando el curso tenga modulos configurados, podras recorrerlos y marcarlos desde aqui."
+            title="Este curso todavia no tiene modulos configurados."
+            tone="subtle"
+          />
         )}
       </SurfaceCard>
     </>
@@ -566,9 +573,12 @@ export function CourseLearningSupportTab({
               </Link>
             ))
           ) : (
-            <div className="ui-empty-state p-5 text-sm leading-7 text-[var(--color-muted)]">
-              Aun no hay categorias activas en el foro del curso.
-            </div>
+            <EmptyState
+              className="px-5 py-6"
+              description="Cuando el espacio de comunidad tenga categorias activas, apareceran aqui integradas con el campus."
+              title="Aun no hay categorias activas en el foro del curso."
+              tone="subtle"
+            />
           )}
         </div>
       </SurfaceCard>

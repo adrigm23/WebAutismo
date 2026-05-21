@@ -24,7 +24,7 @@ import { SurfaceCard } from "@/components/ui/surface-card";
 import { buildCourseResourcesHref, buildCourseTrackingHref } from "@/lib/course-navigation";
 import { getForumCategoryPreset } from "@/lib/forum-presentation";
 import { siteConfig } from "@/lib/site";
-import { cn, formatRelativeTime } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 
 type ForumShellProps = {
   course: {
@@ -54,7 +54,7 @@ type ForumShellProps = {
       body: string;
       linkPath: string;
       readAt: Date | null;
-      createdAt: Date;
+      createdRelativeLabel?: string;
     }>;
   };
   children: ReactNode;
@@ -215,7 +215,7 @@ export function ForumShell({
                                 )}
                               />
                               <span className="text-xs uppercase tracking-[0.14em] text-[var(--color-muted)]">
-                                {formatRelativeTime(notification.createdAt)}
+                                {notification.createdRelativeLabel ?? ""}
                               </span>
                             </div>
                             <p className="mt-3 text-sm font-semibold leading-6 text-[var(--color-ink)]">

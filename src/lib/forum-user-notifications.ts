@@ -1,19 +1,10 @@
+import type { ForumNotificationListItem } from "@/lib/forum-types";
 import { buildLegacyCourseInWhere, getCourseIdentitiesBySlugs } from "@/lib/course-identity";
 import { isDatabaseSchemaDriftError } from "@/lib/db-errors";
 import { isDemoUserId } from "@/lib/demo-auth";
 import { publishDueAnnouncementsForCourse } from "@/lib/forum-notifications";
 import { getDb } from "@/lib/prisma";
-
-type ForumNotificationListItem = {
-  id: string;
-  courseSlug: string;
-  type: import("@prisma/client").ForumNotificationType;
-  title: string;
-  body: string;
-  linkPath: string;
-  readAt: Date | null;
-  createdAt: Date;
-};
+import { formatRelativeTime } from "@/lib/utils";
 
 export async function getUserForumNotifications(input: {
   userId: string;
@@ -77,7 +68,10 @@ export async function getUserForumNotifications(input: {
     ]);
 
     return {
-      notifications,
+      notifications: notifications.map((notification) => ({
+        ...notification,
+        createdRelativeLabel: formatRelativeTime(notification.createdAt)
+      })),
       unreadCount
     };
   } catch (error) {
@@ -115,7 +109,10 @@ export async function getUserForumNotifications(input: {
       ]);
 
       return {
-        notifications,
+        notifications: notifications.map((notification) => ({
+          ...notification,
+          createdRelativeLabel: formatRelativeTime(notification.createdAt)
+        })),
         unreadCount
       };
     }

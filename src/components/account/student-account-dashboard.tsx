@@ -28,6 +28,7 @@ import { Card } from "@/components/ui/card";
 import { ListRow } from "@/components/ui/list-row";
 import { MetricPanel } from "@/components/ui/metric-panel";
 import { SectionHeader } from "@/components/ui/section-header";
+import { StateBanner } from "@/components/ui/state-banner";
 import type {
   DashboardNotificationSnapshot,
   StudentDashboardPendingSource,
@@ -136,13 +137,12 @@ export function StudentAccountDashboard({
 
       <main className="site-container pt-8">
         {isDemoUser ? (
-          <Card className="mb-8 border-[#f0d098] bg-[#fff1cf] p-6">
-            <p className="text-lg font-semibold text-[#7c5300]">Modo demo activo</p>
-            <p className="mt-2 text-base leading-7 text-[#805c16]">
-              Estas navegando con una cuenta de prueba sin base de datos. Puedes revisar la
-              experiencia del alumno, pero los cambios no se guardan.
-            </p>
-          </Card>
+          <StateBanner
+            className="mb-8"
+            description="Estas navegando con una cuenta de prueba sin base de datos. Puedes revisar la experiencia del alumno, pero los cambios no se guardan."
+            title="Modo demo activo"
+            tone="warning"
+          />
         ) : null}
 
         <section className="grid gap-8 xl:grid-cols-[minmax(0,1.28fr)_minmax(19rem,0.72fr)]">

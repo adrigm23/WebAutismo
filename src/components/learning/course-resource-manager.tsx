@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useActionState, useState } from "react";
 import {
   createCourseResourceAction,
@@ -10,7 +9,11 @@ import { CourseExerciseReviewForm } from "@/components/learning/course-exercise-
 import { CourseExerciseSubmissionForm } from "@/components/learning/course-exercise-submission-form";
 import { CourseManagedResourceControls } from "@/components/learning/course-managed-resource-controls";
 import { Badge } from "@/components/ui/badge";
+import { Button, ButtonLink } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
+import { SectionHeader } from "@/components/ui/section-header";
+import { StateBanner } from "@/components/ui/state-banner";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { Textarea } from "@/components/ui/textarea";
 import type { CatalogCourse } from "@/lib/course-catalog";
@@ -18,6 +21,8 @@ import type { CampusResourceItem } from "@/lib/course-resources";
 import { formatDateTime } from "@/lib/utils";
 
 const initialState: CourseResourceFormState = {};
+const selectClassName =
+  "ui-control-base h-[var(--control-height-md)] px-4 text-sm";
 
 type CourseResourceManagerProps = {
   course: CatalogCourse;
@@ -101,7 +106,7 @@ export function CourseResourceManager({
   function renderResourceCard(resource: CampusResourceItem) {
     return (
       <div
-        className="scroll-mt-36 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5"
+        className="scroll-mt-36 rounded-[var(--radius-lg)] border border-[var(--color-border-subtle)] bg-[color:var(--color-surface-elevated)] p-5"
         id={`resource-${resource.id}`}
         key={resource.id}
       >
@@ -147,10 +152,10 @@ export function CourseResourceManager({
                 {!resource.viewerSubmission
                   ? "Accion recomendada: abre el formulario de esta tarjeta y registra tu entrega."
                   : resource.viewerSubmission.status === "CHANGES_REQUESTED"
-                    ? "Tu docente ha pedido cambios. Revisa el feedback y vuelve a enviar la actividad desde aquí."
+                    ? "Tu docente ha pedido cambios. Revisa el feedback y vuelve a enviar la actividad desde aqui."
                     : resource.viewerSubmission.status === "SUBMITTED"
-                      ? "Tu entrega ya está enviada y pendiente de revisión docente."
-                      : "La actividad ya tiene una revisión registrada. Consulta aquí mismo la nota y el feedback."}
+                      ? "Tu entrega ya esta enviada y pendiente de revision docente."
+                      : "La actividad ya tiene una revision registrada. Consulta aqui mismo la nota y el feedback."}
               </p>
             ) : null}
 
@@ -160,7 +165,7 @@ export function CourseResourceManager({
                 <strong className="text-[var(--color-ink)]">
                   {getExternalHostLabel(resource.linkUrl) ?? "otra pestana"}
                 </strong>
-                . La entrega se registra aquí mismo, debajo de esta tarjeta.
+                . La entrega se registra aqui mismo, debajo de esta tarjeta.
               </p>
             ) : null}
 
@@ -178,17 +183,17 @@ export function CourseResourceManager({
 
           <div className="flex shrink-0 flex-col items-end gap-3">
             {resource.href ? (
-              <Link
-                className="inline-flex items-center rounded-xl border border-[var(--color-primary)] px-4 py-3 text-sm font-semibold text-[var(--color-primary)] transition hover:bg-[var(--color-primary-soft)]"
+              <ButtonLink
                 href={resource.href}
                 target={resource.isExternal ? "_blank" : undefined}
+                variant="secondary"
               >
                 {resource.isExternal
                   ? resource.isExercise
                     ? "Abrir enunciado"
                     : "Abrir enlace"
                   : "Descargar"}
-              </Link>
+              </ButtonLink>
             ) : null}
           </div>
         </div>
@@ -209,7 +214,7 @@ export function CourseResourceManager({
         {resource.isExercise && resource.isManaged ? (
           canModerate ? (
             <div className="mt-5 space-y-4">
-              <div className="rounded-2xl bg-white p-4 text-sm leading-7 text-[var(--color-muted)]">
+              <div className="rounded-[var(--radius-lg)] border border-[var(--color-border-subtle)] bg-[color:var(--color-bg-subtle)] p-4 text-sm leading-7 text-[var(--color-muted)]">
                 <p>
                   Entregas registradas:{" "}
                   <strong className="text-[var(--color-ink)]">
@@ -234,9 +239,12 @@ export function CourseResourceManager({
                   />
                 ))
               ) : (
-                <div className="rounded-2xl border border-dashed border-[rgba(12,113,195,0.18)] bg-white p-5 text-sm leading-7 text-[var(--color-muted)]">
-                  Todavia no hay entregas registradas para este ejercicio.
-                </div>
+                <EmptyState
+                  className="border-dashed bg-white px-5 py-6"
+                  description="Las nuevas entregas apareceran aqui para revision cuando el alumnado responda."
+                  title="Todavia no hay entregas registradas para este ejercicio."
+                  tone="subtle"
+                />
               )}
             </div>
           ) : (
@@ -256,48 +264,28 @@ export function CourseResourceManager({
   return (
     <div className="space-y-4">
       {isFocusedTaskView && focusedResource ? (
-        <div className="rounded-2xl border border-[rgba(12,113,195,0.14)] bg-[var(--color-primary-soft)] p-5">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[var(--color-primary)]">
-                Modo de entrega
-              </p>
-              <p className="mt-2 text-sm leading-7 text-[var(--color-muted)]">
-                Esta vista elimina el resto de tareas para que puedas centrarte
-                en una sola entrega.
-              </p>
-            </div>
-            {onExitFocus ? (
-              <button
-                className="inline-flex items-center rounded-xl border border-[var(--color-border)] bg-white px-4 py-3 text-sm font-semibold text-[var(--color-ink)] transition hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]"
-                onClick={onExitFocus}
-                type="button"
-              >
+        <StateBanner
+          actions={
+            onExitFocus ? (
+              <Button onClick={onExitFocus} size="sm" type="button" variant="secondary">
                 Ver todas las tareas
-              </button>
-            ) : null}
-          </div>
-        </div>
+              </Button>
+            ) : null
+          }
+          description="Esta vista elimina el resto de tareas para que puedas centrarte en una sola entrega."
+          title="Modo de entrega"
+          tone="info"
+        />
       ) : null}
 
       {canModerate ? (
-        <div
-          className="scroll-mt-36 rounded-2xl border border-[rgba(12,113,195,0.16)] bg-white p-5 shadow-[0_16px_32px_rgba(12,113,195,0.06)]"
-          id="resource-manager-top"
-        >
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <p className="text-lg font-semibold text-[var(--color-ink)]">
-                Publicar recurso del curso
-              </p>
-              <p className="mt-2 text-sm leading-7 text-[var(--color-muted)]">
-                Como {roleLabel.toLowerCase()} puedes subir materiales privados
-                o enlazar ejercicios externos para este curso y, si hace falta,
-                asociarlos a un modulo concreto.
-              </p>
-            </div>
-            <Badge tone="teacher">Gestion docente</Badge>
-          </div>
+        <div className="ui-state-panel scroll-mt-36 p-5" id="resource-manager-top">
+          <SectionHeader
+            actions={<Badge tone="teacher">Gestion docente</Badge>}
+            description={`Como ${roleLabel.toLowerCase()} puedes subir materiales privados o enlazar ejercicios externos para este curso y, si hace falta, asociarlos a un modulo concreto.`}
+            size="md"
+            title="Publicar recurso del curso"
+          />
 
           <form action={formAction} className="mt-5 space-y-4">
             <input name="courseSlug" type="hidden" value={course.slug} />
@@ -308,7 +296,7 @@ export function CourseResourceManager({
                   Tipo
                 </span>
                 <select
-                  className="h-12 w-full rounded-xl border border-[var(--color-border)] bg-white px-4 text-sm text-[var(--color-ink)]"
+                  className={selectClassName}
                   name="type"
                   onChange={(event) =>
                     setType(event.target.value as "MATERIAL" | "EXERCISE")
@@ -325,7 +313,7 @@ export function CourseResourceManager({
                   Origen
                 </span>
                 <select
-                  className="h-12 w-full rounded-xl border border-[var(--color-border)] bg-white px-4 text-sm text-[var(--color-ink)]"
+                  className={selectClassName}
                   name="source"
                   onChange={(event) =>
                     setSource(event.target.value as "FILE" | "LINK")
@@ -356,12 +344,9 @@ export function CourseResourceManager({
 
               <label className="block space-y-2">
                 <span className="text-sm font-medium text-[var(--color-ink)]">
-                  Módulo
+                  Modulo
                 </span>
-                <select
-                  className="h-12 w-full rounded-xl border border-[var(--color-border)] bg-white px-4 text-sm text-[var(--color-ink)]"
-                  name="moduleId"
-                >
+                <select className={selectClassName} name="moduleId">
                   <option value="">Todo el curso</option>
                   {course.modules.map((module) => (
                     <option key={module.id} value={module.id}>
@@ -429,17 +414,9 @@ export function CourseResourceManager({
               </label>
             )}
 
-            {state.error ? (
-              <p className="rounded-2xl border border-[#efb3a6] bg-[#fff1ec] px-4 py-3 text-sm text-[#9b4128]">
-                {state.error}
-              </p>
-            ) : null}
+            {state.error ? <StateBanner description={state.error} tone="danger" /> : null}
 
-            {state.success ? (
-              <p className="rounded-2xl border border-[#b9dfc2] bg-[#eff9f1] px-4 py-3 text-sm text-[#1d6b35]">
-                {state.success}
-              </p>
-            ) : null}
+            {state.success ? <StateBanner description={state.success} tone="success" /> : null}
 
             <div className="flex flex-wrap items-center justify-between gap-3">
               <p className="text-sm leading-7 text-[var(--color-muted)]">
@@ -462,59 +439,60 @@ export function CourseResourceManager({
         </section>
       ) : exerciseResources.length ? (
         <section className="space-y-4">
-          <div className="rounded-2xl border border-[rgba(12,113,195,0.14)] bg-white p-5">
-            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[var(--color-primary)]">
-              Ejercicios y entregas
-            </p>
-            <p className="mt-2 text-sm leading-7 text-[var(--color-muted)]">
-              {canModerate
-                ? "Las actividades del alumnado se gestionan aquí, con revisión y feedback dentro del propio campus."
-                : "Aquí verás primero las tareas del curso y podrás entregar, actualizar o revisar tu estado desde cada tarjeta."}
-            </p>
-          </div>
+          <SectionHeader
+            description={
+              canModerate
+                ? "Las actividades del alumnado se gestionan aqui, con revision y feedback dentro del propio campus."
+                : "Aqui veras primero las tareas del curso y podras entregar, actualizar o revisar tu estado desde cada tarjeta."
+            }
+            eyebrow="Recorrido"
+            size="md"
+            title="Ejercicios y entregas"
+          />
           {exerciseResources.map(renderResourceCard)}
         </section>
       ) : null}
 
       {!isFocusedTaskView && materialResources.length ? (
         <section className="space-y-4">
-          <div className="rounded-2xl border border-[rgba(12,113,195,0.14)] bg-white p-5">
-            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[var(--color-primary)]">
-              Materiales del curso
-            </p>
-            <p className="mt-2 text-sm leading-7 text-[var(--color-muted)]">
-              Guias, documentos y referencias de apoyo para seguir el curso con
-              contexto.
-            </p>
-          </div>
+          <SectionHeader
+            description="Guias, documentos y referencias de apoyo para seguir el curso con contexto."
+            eyebrow="Recorrido"
+            size="md"
+            title="Materiales del curso"
+          />
           {materialResources.map(renderResourceCard)}
         </section>
       ) : null}
 
       {!isFocusedTaskView && referenceResources.length ? (
         <section className="space-y-4">
-          <div className="rounded-2xl border border-[rgba(12,113,195,0.14)] bg-white p-5">
-            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[var(--color-primary)]">
-              Referencias del campus
-            </p>
-            <p className="mt-2 text-sm leading-7 text-[var(--color-muted)]">
-              Informacion general del curso y del equipo docente.
-            </p>
-          </div>
+          <SectionHeader
+            description="Informacion general del curso y del equipo docente."
+            eyebrow="Contexto"
+            size="md"
+            title="Referencias del campus"
+          />
           {referenceResources.map(renderResourceCard)}
         </section>
       ) : null}
 
       {!isFocusedTaskView && canModerate && managedResources.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-[rgba(12,113,195,0.18)] bg-white p-5 text-sm leading-7 text-[var(--color-muted)]">
-          Todavia no hay materiales ni ejercicios creados para este curso.
-        </div>
+        <EmptyState
+          className="border-dashed bg-white px-5 py-6"
+          description="Cuando publiques el primer material o ejercicio, aparecera aqui dentro del mismo recorrido del campus."
+          title="Todavia no hay materiales ni ejercicios creados para este curso."
+          tone="subtle"
+        />
       ) : null}
 
       {!isFocusedTaskView && !canModerate && managedResources.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-[rgba(12,113,195,0.18)] bg-white p-5 text-sm leading-7 text-[var(--color-muted)]">
-          Todavia no hay tareas ni materiales publicados para este curso.
-        </div>
+        <EmptyState
+          className="border-dashed bg-white px-5 py-6"
+          description="Cuando el equipo publique materiales o tareas, apareceran aqui sin que tengas que salir del campus."
+          title="Todavia no hay tareas ni materiales publicados para este curso."
+          tone="subtle"
+        />
       ) : null}
     </div>
   );

@@ -1,8 +1,8 @@
 "use client";
 
-import Link from "next/link";
 import { FolderOpen, LayoutPanelTop, MessageSquareText } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { ButtonLink } from "@/components/ui/button";
 import {
   buildCourseForumHref,
   buildCourseTrackingHref,
@@ -50,32 +50,24 @@ export function CourseLearningHeader({
             </div>
 
             <div className="flex flex-wrap items-center gap-1.5 xl:justify-end">
-              <Link
-                className="inline-flex min-h-10 items-center justify-center rounded-[var(--radius-pill)] border border-[var(--color-border-subtle)] bg-white px-3 py-1.5 text-sm font-semibold text-[var(--color-ink)] shadow-[var(--shadow-inset-soft)] transition hover:border-[var(--color-border-strong)]"
-                href={`/mis-cursos/${courseSlug}`}
-              >
+              <ButtonLink href={`/mis-cursos/${courseSlug}`} size="sm" variant="neutral">
                 Campus
-              </Link>
+              </ButtonLink>
               {canModerate ? (
-                <Link
-                  className="inline-flex min-h-10 items-center justify-center rounded-[var(--radius-pill)] px-3 py-1.5 text-sm font-semibold text-[var(--color-ink-soft)] transition hover:bg-white hover:text-[var(--color-ink)]"
+                <ButtonLink
                   href={buildCourseTrackingHref({ courseSlug })}
+                  size="sm"
+                  variant="subtle"
                 >
                   Seguimiento
-                </Link>
+                </ButtonLink>
               ) : null}
-              <Link
-                className="inline-flex min-h-10 items-center justify-center rounded-[var(--radius-pill)] px-3 py-1.5 text-sm font-semibold text-[var(--color-ink-soft)] transition hover:bg-white hover:text-[var(--color-ink)]"
-                href={buildCourseForumHref(courseSlug)}
-              >
+              <ButtonLink href={buildCourseForumHref(courseSlug)} size="sm" variant="subtle">
                 Foro
-              </Link>
-              <Link
-                className="inline-flex min-h-10 items-center justify-center rounded-[var(--radius-pill)] px-3 py-1.5 text-sm font-semibold text-[var(--color-ink-soft)] transition hover:bg-white hover:text-[var(--color-ink)]"
-                href="/mi-cuenta"
-              >
+              </ButtonLink>
+              <ButtonLink href="/mi-cuenta" size="sm" variant="subtle">
                 Mi cuenta
-              </Link>
+              </ButtonLink>
             </div>
           </div>
 

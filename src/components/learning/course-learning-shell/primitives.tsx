@@ -1,9 +1,10 @@
 "use client";
 
-import Link from "next/link";
 import type { ReactNode } from "react";
 import { ArrowRight } from "lucide-react";
 import { Badge, type BadgeTone } from "@/components/ui/badge";
+import { Button, ButtonLink } from "@/components/ui/button";
+import { SurfaceCard as UiSurfaceCard } from "@/components/ui/surface-card";
 import { cn } from "@/lib/utils";
 
 export function SurfaceCard(input: {
@@ -14,27 +15,18 @@ export function SurfaceCard(input: {
   children: ReactNode;
 }) {
   return (
-    <section
-      id={input.id}
+    <UiSurfaceCard
       className={cn(
-        "ui-card-base rounded-[var(--radius-xl)] bg-[color:var(--color-surface-elevated)]/96 p-5 lg:p-6",
+        "rounded-[var(--radius-xl)] bg-[color:var(--color-surface-elevated)]/96",
         input.className,
       )}
+      description={input.description}
+      id={input.id}
+      padding="md"
+      title={input.title}
     >
-      {input.title ? (
-        <div className="mb-4">
-          <h2 className="font-premium text-display-md font-semibold text-[var(--color-ink)]">
-            {input.title}
-          </h2>
-          {input.description ? (
-            <p className="mt-2 max-w-3xl text-body-sm text-[var(--color-muted)]">
-              {input.description}
-            </p>
-          ) : null}
-        </div>
-      ) : null}
       {input.children}
-    </section>
+    </UiSurfaceCard>
   );
 }
 
@@ -141,24 +133,28 @@ export function InfoPanel(input: {
       <p className="text-heading-md font-semibold text-[var(--color-ink)]">{input.title}</p>
       <p className="mt-2 text-body-sm text-[var(--color-muted)]">{input.body}</p>
       {input.onAction && input.ctaLabel ? (
-        <button
-          className="mt-4 inline-flex items-center text-sm font-semibold text-[var(--color-primary)]"
+        <Button
+          className="mt-4 px-0"
           onClick={input.onAction}
+          size="sm"
           type="button"
+          variant="subtle"
         >
           {input.ctaLabel}
           <ArrowRight className="ml-2 h-4 w-4" />
-        </button>
+        </Button>
       ) : null}
       {input.ctaHref && input.ctaLabel ? (
-        <Link
-          className="mt-4 inline-flex items-center text-sm font-semibold text-[var(--color-primary)]"
+        <ButtonLink
+          className="mt-4 px-0"
           href={input.ctaHref}
           prefetch
+          size="sm"
+          variant="subtle"
         >
           {input.ctaLabel}
           <ArrowRight className="ml-2 h-4 w-4" />
-        </Link>
+        </ButtonLink>
       ) : null}
     </div>
   );

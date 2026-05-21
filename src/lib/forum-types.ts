@@ -170,6 +170,7 @@ export type ForumNotificationListItem = {
   linkPath: string;
   readAt: Date | null;
   createdAt: Date;
+  createdRelativeLabel?: string;
 };
 
 export function canUseForumFallback(error: unknown) {
