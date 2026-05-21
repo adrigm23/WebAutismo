@@ -8,9 +8,12 @@ import { AdminMetricCard } from "@/components/admin/admin-metric-card";
 import { AdminPageHeader } from "@/components/admin/admin-page-header";
 import { AdminStatusBadge } from "@/components/admin/admin-status-badge";
 import { ButtonLink } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
+import { ListRow } from "@/components/ui/list-row";
+import { SectionHeader } from "@/components/ui/section-header";
 import { SubmitButton } from "@/components/ui/submit-button";
+import { SurfaceCard } from "@/components/ui/surface-card";
 import {
   getEditionStatusLabel,
   getEditionStatusTone,
@@ -18,8 +21,8 @@ import {
 } from "@/lib/admin-console";
 import { requireAdminConsoleUser } from "@/lib/admin-console-server";
 import { demoAdminEditions } from "@/lib/admin-demo";
-import { isDemoUserId } from "@/lib/demo-auth";
 import { resolveEditionAccessUntil } from "@/lib/course-editions";
+import { isDemoUserId } from "@/lib/demo-auth";
 import { getDb } from "@/lib/prisma";
 import { formatDate } from "@/lib/utils";
 
@@ -31,6 +34,46 @@ type EditionsPageProps = {
     create?: string | string[];
   }>;
 };
+
+const selectClassName =
+  "h-12 w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface-elevated)] px-4 text-sm text-[var(--color-ink)] outline-none transition focus:border-[var(--color-primary)] focus:ring-2 focus:ring-[var(--color-primary)] focus:ring-offset-2 focus:ring-offset-[var(--color-surface-canvas)]";
+
+function EditionLifecycleGuide() {
+  return (
+    <SurfaceCard padding="md">
+      <SectionHeader
+        description="Referencia rapida para interpretar el estado operativo y la ventana de consulta de cada cohorte."
+        eyebrow="Acceso"
+        size="md"
+        title={
+          <span className="inline-flex items-center gap-3">
+            <Info className="h-5 w-5 text-[var(--color-primary)]" strokeWidth={1.8} />
+            <span>Ciclo de acceso</span>
+          </span>
+        }
+      />
+      <div className="mt-5 space-y-3">
+        <ListRow
+          description="La edicion esta activa y el alumnado interactua con el contenido."
+          emphasis="muted"
+          eyebrow="Abierta"
+          title="Edicion en curso"
+        />
+        <ListRow
+          description="Las fechas oficiales terminaron, pero sigue la ventana de consulta."
+          eyebrow="Finalizada con acceso"
+          title="Consulta todavia permitida"
+        />
+        <ListRow
+          description="Expira la ventana posterior y el material queda bloqueado."
+          emphasis="muted"
+          eyebrow="Cerrada"
+          title="Acceso finalizado"
+        />
+      </div>
+    </SurfaceCard>
+  );
+}
 
 export default async function AdminEditionsPage({ searchParams }: EditionsPageProps) {
   const currentUser = await requireAdminConsoleUser("/admin/editions");
@@ -57,54 +100,97 @@ export default async function AdminEditionsPage({ searchParams }: EditionsPagePr
     return (
       <div className="space-y-9">
         <AdminPageHeader
-          actions={<ButtonLink href="/admin/courses" variant="secondary">Volver a cursos</ButtonLink>}
+          actions={
+            <ButtonLink href="/admin/courses" variant="neutral">
+              Volver a cursos
+            </ButtonLink>
+          }
           description="Vista demo del calendario de cohortes y ventanas de acceso posteriores."
           title="Ediciones"
         />
+
         <section className="grid gap-5 xl:grid-cols-[1.1fr_1fr_1fr]">
-          <Card className="rounded-[2rem] p-6">
-            <div className="flex items-center gap-3">
-              <Info className="h-5 w-5 text-[var(--color-primary)]" strokeWidth={1.8} />
-              <h2 className="text-[1.8rem] font-semibold tracking-[-0.05em] text-[var(--color-ink)]">Ciclo de acceso</h2>
-            </div>
-            <div className="mt-5 space-y-3">
-              <div className="rounded-[1.2rem] bg-[#f6fafc] px-4 py-4 text-sm leading-7 text-[#394d61]"><strong>Abierta:</strong> la edicion esta activa y el alumnado interactua con el contenido.</div>
-              <div className="rounded-[1.2rem] border border-[#f0d098] bg-[#fff1cf] px-4 py-4 text-sm leading-7 text-[#7d5a14]"><strong>Finalizada con acceso:</strong> la convocatoria termino, pero la consulta sigue abierta.</div>
-              <div className="rounded-[1.2rem] bg-[#f1f4f7] px-4 py-4 text-sm leading-7 text-[#4a5d71]"><strong>Cerrada:</strong> ya no se puede acceder al material.</div>
-            </div>
-          </Card>
-          <AdminMetricCard accent="primary" icon={<UsersRound className="h-6 w-6" strokeWidth={1.8} />} label="Alumnado en ediciones" meta="Datos simulados" value={activeStudents} />
-          <AdminMetricCard accent="neutral" icon={<Layers3 className="h-6 w-6" strokeWidth={1.8} />} label="Ediciones activas" meta="Seguimiento demo" value={activeEditionsCount} />
+          <EditionLifecycleGuide />
+          <AdminMetricCard
+            accent="primary"
+            icon={<UsersRound className="h-6 w-6" strokeWidth={1.8} />}
+            label="Alumnado en ediciones"
+            meta="Datos simulados"
+            value={activeStudents}
+          />
+          <AdminMetricCard
+            accent="neutral"
+            icon={<Layers3 className="h-6 w-6" strokeWidth={1.8} />}
+            label="Ediciones activas"
+            meta="Seguimiento demo"
+            value={activeEditionsCount}
+          />
         </section>
+
         <section className="grid gap-6 2xl:grid-cols-[1.15fr_0.85fr]">
           <div className="grid gap-5 xl:grid-cols-2">
-            {visibleEditions.map((edition) => (
-              <Link className="block rounded-[2rem] border border-[#d5dee7] bg-white p-6 text-left shadow-[0_16px_36px_rgba(15,44,76,0.05)]" href={`/admin/editions?editionId=${edition.id}`} key={edition.id}>
-                <div className="flex items-center justify-between gap-3">
-                  <AdminStatusBadge tone={getEditionStatusTone(edition.status as never)}>{getEditionStatusLabel(edition.status as never)}</AdminStatusBadge>
-                  <span className="text-xs font-semibold uppercase tracking-[0.18em] text-[#68798b]">{edition.label}</span>
-                </div>
-                <h3 className="mt-5 text-[1.65rem] font-semibold tracking-[-0.05em] text-[var(--color-ink)]">{edition.courseTitle}</h3>
-                <div className="mt-4 grid gap-4 text-sm leading-7 text-[#46586c] md:grid-cols-2">
-                  <div><p className="font-semibold text-[#25384b]">Calendario</p><p className="mt-1">{formatDate(edition.startsAt)} - {formatDate(edition.endsAt)}</p></div>
-                  <div><p className="font-semibold text-[#25384b]">Consulta posterior</p><p className="mt-1">{formatDate(edition.accessUntil)}</p></div>
-                </div>
-                <p className="mt-5 text-sm text-[#5f7083]">{edition.enrollments} alumnos</p>
-              </Link>
-            ))}
-          </div>
-          {selectedDemoEdition ? (
-            <Card className="rounded-[2rem] p-7">
-              <h2 className="text-[1.8rem] font-semibold tracking-[-0.05em] text-[var(--color-ink)]">Detalle de edicion</h2>
-              <p className="mt-2 text-sm leading-7 text-[#5a6d80]">{selectedDemoEdition.courseTitle} - {selectedDemoEdition.label}</p>
-              <div className="mt-5 space-y-4 rounded-[1.4rem] border border-[#d9e1e8] bg-[#fbfcfd] p-5 text-sm leading-7 text-[#44586d]">
-                <div><strong>Estado:</strong> {getEditionStatusLabel(selectedDemoEdition.status as never)}</div>
-                <div><strong>Inicio:</strong> {formatDate(selectedDemoEdition.startsAt)}</div>
-                <div><strong>Fin:</strong> {formatDate(selectedDemoEdition.endsAt)}</div>
-                <div><strong>Acceso hasta:</strong> {formatDate(selectedDemoEdition.accessUntil)}</div>
-                <div><strong>Alumnado:</strong> {selectedDemoEdition.enrollments}</div>
+            {visibleEditions.length ? (
+              visibleEditions.map((edition) => (
+                <Link
+                  className="ui-card-base ui-card-interactive block p-6 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-surface-canvas)]"
+                  href={`/admin/editions?editionId=${edition.id}`}
+                  key={edition.id}
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <AdminStatusBadge tone={getEditionStatusTone(edition.status as never)}>
+                      {getEditionStatusLabel(edition.status as never)}
+                    </AdminStatusBadge>
+                    <span className="text-meta-xs font-semibold text-[var(--color-muted)]">
+                      {edition.label}
+                    </span>
+                  </div>
+                  <h3 className="mt-5 text-[1.65rem] font-semibold tracking-[-0.05em] text-[var(--color-ink)]">
+                    {edition.courseTitle}
+                  </h3>
+                  <div className="mt-4 grid gap-4 text-sm leading-7 text-[var(--color-ink-soft)] md:grid-cols-2">
+                    <div>
+                      <p className="font-semibold text-[var(--color-ink)]">Calendario</p>
+                      <p className="mt-1">
+                        {formatDate(edition.startsAt)} - {formatDate(edition.endsAt)}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="font-semibold text-[var(--color-ink)]">Consulta posterior</p>
+                      <p className="mt-1">{formatDate(edition.accessUntil)}</p>
+                    </div>
+                  </div>
+                  <p className="mt-5 text-sm text-[var(--color-muted)]">
+                    {edition.enrollments} alumnos
+                  </p>
+                </Link>
+              ))
+            ) : (
+              <div className="xl:col-span-2">
+                <EmptyState
+                  description="No hay ediciones demo visibles para los filtros actuales."
+                  title="Sin ediciones"
+                  tone="subtle"
+                />
               </div>
-            </Card>
+            )}
+          </div>
+
+          {selectedDemoEdition ? (
+            <SurfaceCard padding="md">
+              <SectionHeader
+                description={`${selectedDemoEdition.courseTitle} · ${selectedDemoEdition.label}`}
+                eyebrow="Detalle"
+                size="md"
+                title="Detalle de edicion"
+              />
+              <div className="mt-5 space-y-3">
+                <ListRow emphasis="muted" eyebrow="Estado" title={getEditionStatusLabel(selectedDemoEdition.status as never)} />
+                <ListRow emphasis="muted" eyebrow="Inicio" title={formatDate(selectedDemoEdition.startsAt)} />
+                <ListRow emphasis="muted" eyebrow="Fin" title={formatDate(selectedDemoEdition.endsAt)} />
+                <ListRow emphasis="muted" eyebrow="Acceso hasta" title={formatDate(selectedDemoEdition.accessUntil)} />
+                <ListRow emphasis="muted" eyebrow="Alumnado" title={`${selectedDemoEdition.enrollments}`} />
+              </div>
+            </SurfaceCard>
           ) : null}
         </section>
       </div>
@@ -181,25 +267,7 @@ export default async function AdminEditionsPage({ searchParams }: EditionsPagePr
       />
 
       <section className="grid gap-5 xl:grid-cols-[1.1fr_1fr_1fr]">
-        <Card className="rounded-[2rem] p-6">
-          <div className="flex items-center gap-3">
-            <Info className="h-5 w-5 text-[var(--color-primary)]" strokeWidth={1.8} />
-            <h2 className="text-[1.8rem] font-semibold tracking-[-0.05em] text-[var(--color-ink)]">
-              Ciclo de acceso
-            </h2>
-          </div>
-          <div className="mt-5 space-y-3">
-            <div className="rounded-[1.2rem] bg-[#f6fafc] px-4 py-4 text-sm leading-7 text-[#394d61]">
-              <strong>Abierta:</strong> la edicion esta activa y el alumnado interactua con el contenido.
-            </div>
-            <div className="rounded-[1.2rem] border border-[#f0d098] bg-[#fff1cf] px-4 py-4 text-sm leading-7 text-[#7d5a14]">
-              <strong>Finalizada con acceso:</strong> las fechas oficiales terminaron, pero sigue la ventana de consulta.
-            </div>
-            <div className="rounded-[1.2rem] bg-[#f1f4f7] px-4 py-4 text-sm leading-7 text-[#4a5d71]">
-              <strong>Cerrada:</strong> expiro la ventana posterior y el material queda bloqueado.
-            </div>
-          </div>
-        </Card>
+        <EditionLifecycleGuide />
         <AdminMetricCard
           accent="primary"
           icon={<UsersRound className="h-6 w-6" strokeWidth={1.8} />}
@@ -216,14 +284,10 @@ export default async function AdminEditionsPage({ searchParams }: EditionsPagePr
         />
       </section>
 
-      <Card className="rounded-[2rem] p-6">
+      <SurfaceCard padding="md">
         <form className="grid gap-3 md:grid-cols-[1fr_240px_auto]">
           <Input defaultValue={q} name="q" placeholder="Buscar ediciones..." />
-          <select
-            className="h-12 rounded-xl border border-[var(--color-border)] bg-white px-4 text-sm"
-            defaultValue={status}
-            name="status"
-          >
+          <select className={selectClassName} defaultValue={status} name="status">
             <option value="ALL">Todos los estados</option>
             <option value="ACTIVE">Abiertas</option>
             <option value="SCHEDULED">Programadas</option>
@@ -234,67 +298,79 @@ export default async function AdminEditionsPage({ searchParams }: EditionsPagePr
             Aplicar
           </SubmitButton>
         </form>
-      </Card>
+      </SurfaceCard>
 
       <section className="grid gap-6 2xl:grid-cols-[1.15fr_0.85fr]">
         <div className="grid gap-5 xl:grid-cols-2">
-          {editions.map((edition) => {
-            const accessUntil = resolveEditionAccessUntil({
-              startsAt: edition.startsAt,
-              endsAt: edition.endsAt,
-              graceAccessDays: edition.graceAccessDays,
-              accessUntil: edition.accessUntil
-            });
+          {editions.length ? (
+            editions.map((edition) => {
+              const accessUntil = resolveEditionAccessUntil({
+                startsAt: edition.startsAt,
+                endsAt: edition.endsAt,
+                graceAccessDays: edition.graceAccessDays,
+                accessUntil: edition.accessUntil
+              });
 
-            return (
-              <Link
-                className="block rounded-[2rem] border border-[#d5dee7] bg-white p-6 text-left shadow-[0_16px_36px_rgba(15,44,76,0.05)]"
-                href={`/admin/editions?editionId=${edition.id}`}
-                key={edition.id}
-              >
-                <div className="flex items-center justify-between gap-3">
-                  <AdminStatusBadge tone={getEditionStatusTone(edition.status)}>
-                    {getEditionStatusLabel(edition.status)}
-                  </AdminStatusBadge>
-                  <span className="text-xs font-semibold uppercase tracking-[0.18em] text-[#68798b]">
-                    {edition.label}
-                  </span>
-                </div>
-                <h3 className="mt-5 text-[1.65rem] font-semibold tracking-[-0.05em] text-[var(--color-ink)]">
-                  {edition.course.title}
-                </h3>
-                <div className="mt-4 grid gap-4 text-sm leading-7 text-[#46586c] md:grid-cols-2">
-                  <div>
-                    <p className="font-semibold text-[#25384b]">Calendario</p>
-                    <p className="mt-1">
-                      {edition.startsAt ? formatDate(edition.startsAt) : "Sin inicio"} -{" "}
-                      {edition.endsAt ? formatDate(edition.endsAt) : "Sin fin"}
-                    </p>
+              return (
+                <Link
+                  className="ui-card-base ui-card-interactive block p-6 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-surface-canvas)]"
+                  href={`/admin/editions?editionId=${edition.id}`}
+                  key={edition.id}
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <AdminStatusBadge tone={getEditionStatusTone(edition.status)}>
+                      {getEditionStatusLabel(edition.status)}
+                    </AdminStatusBadge>
+                    <span className="text-meta-xs font-semibold text-[var(--color-muted)]">
+                      {edition.label}
+                    </span>
                   </div>
-                  <div>
-                    <p className="font-semibold text-[#25384b]">Consulta posterior</p>
-                    <p className="mt-1">
-                      {accessUntil ? formatDate(accessUntil) : `${edition.graceAccessDays} dias`}
-                    </p>
+                  <h3 className="mt-5 text-[1.65rem] font-semibold tracking-[-0.05em] text-[var(--color-ink)]">
+                    {edition.course.title}
+                  </h3>
+                  <div className="mt-4 grid gap-4 text-sm leading-7 text-[var(--color-ink-soft)] md:grid-cols-2">
+                    <div>
+                      <p className="font-semibold text-[var(--color-ink)]">Calendario</p>
+                      <p className="mt-1">
+                        {edition.startsAt ? formatDate(edition.startsAt) : "Sin inicio"} -{" "}
+                        {edition.endsAt ? formatDate(edition.endsAt) : "Sin fin"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="font-semibold text-[var(--color-ink)]">Consulta posterior</p>
+                      <p className="mt-1">
+                        {accessUntil ? formatDate(accessUntil) : `${edition.graceAccessDays} dias`}
+                      </p>
+                    </div>
                   </div>
-                </div>
-                <p className="mt-5 text-sm text-[#5f7083]">{edition._count.enrollments} alumnos</p>
-              </Link>
-            );
-          })}
+                  <p className="mt-5 text-sm text-[var(--color-muted)]">
+                    {edition._count.enrollments} alumnos
+                  </p>
+                </Link>
+              );
+            })
+          ) : (
+            <div className="xl:col-span-2">
+              <EmptyState
+                description="No hay ediciones visibles para los filtros actuales."
+                title="Sin ediciones"
+                tone="subtle"
+              />
+            </div>
+          )}
         </div>
 
         <div className="space-y-6">
-          {(create === "1" || editions.length === 0) ? (
-            <Card className="rounded-[2rem] p-7" id="create-edition">
-              <h2 className="text-[1.8rem] font-semibold tracking-[-0.05em] text-[var(--color-ink)]">
-                Nueva edicion
-              </h2>
+          {create === "1" || editions.length === 0 ? (
+            <SurfaceCard id="create-edition" padding="md">
+              <SectionHeader
+                description="Alta manual de una cohorte sin alterar el flujo actual de cursos y matriculas."
+                eyebrow="Creacion"
+                size="md"
+                title="Nueva edicion"
+              />
               <form action={createCourseEditionAction} className="mt-5 space-y-4">
-                <select
-                  className="h-12 w-full rounded-xl border border-[var(--color-border)] bg-white px-4 text-sm"
-                  name="courseId"
-                >
+                <select className={selectClassName} name="courseId">
                   {courses.map((course) => (
                     <option key={course.id} value={course.id}>
                       {course.title}
@@ -309,10 +385,7 @@ export default async function AdminEditionsPage({ searchParams }: EditionsPagePr
                 <div className="grid gap-4 md:grid-cols-3">
                   <Input name="accessUntil" type="datetime-local" />
                   <Input defaultValue="0" name="graceAccessDays" type="number" />
-                  <select
-                    className="h-12 rounded-xl border border-[var(--color-border)] bg-white px-4 text-sm"
-                    name="status"
-                  >
+                  <select className={selectClassName} name="status">
                     <option value="ACTIVE">Activa</option>
                     <option value="SCHEDULED">Programada</option>
                     <option value="CLOSED">Cerrada</option>
@@ -322,25 +395,21 @@ export default async function AdminEditionsPage({ searchParams }: EditionsPagePr
                   Crear edicion
                 </SubmitButton>
               </form>
-            </Card>
+            </SurfaceCard>
           ) : null}
 
           {selectedEdition ? (
-            <Card className="rounded-[2rem] p-7">
-              <h2 className="text-[1.8rem] font-semibold tracking-[-0.05em] text-[var(--color-ink)]">
-                Ajustar edicion
-              </h2>
-              <p className="mt-2 text-sm leading-7 text-[#5a6d80]">
-                {selectedEdition.course.title} · {selectedEdition.label}
-              </p>
+            <SurfaceCard padding="md">
+              <SectionHeader
+                description={`${selectedEdition.course.title} · ${selectedEdition.label}`}
+                eyebrow="Ajustes"
+                size="md"
+                title="Ajustar edicion"
+              />
               <form action={updateCourseEditionAction} className="mt-5 space-y-4">
                 <input name="editionId" type="hidden" value={selectedEdition.id} />
                 <Input defaultValue={selectedEdition.label} name="label" required />
-                <select
-                  className="h-12 w-full rounded-xl border border-[var(--color-border)] bg-white px-4 text-sm"
-                  defaultValue={selectedEdition.status}
-                  name="status"
-                >
+                <select className={selectClassName} defaultValue={selectedEdition.status} name="status">
                   <option value="ACTIVE">Activa</option>
                   <option value="SCHEDULED">Programada</option>
                   <option value="CLOSED">Cerrada</option>
@@ -364,9 +433,13 @@ export default async function AdminEditionsPage({ searchParams }: EditionsPagePr
                     name="accessUntil"
                     type="datetime-local"
                   />
-                  <Input defaultValue={String(selectedEdition.graceAccessDays)} name="graceAccessDays" type="number" />
+                  <Input
+                    defaultValue={String(selectedEdition.graceAccessDays)}
+                    name="graceAccessDays"
+                    type="number"
+                  />
                 </div>
-                <label className="flex items-center gap-3 rounded-xl border border-[#d8e0e8] bg-[#f7fafc] px-4 py-3 text-sm text-[#44586d]">
+                <label className="flex items-center gap-3 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3 text-sm text-[var(--color-ink-soft)]">
                   <input defaultChecked={selectedEdition.isActive} name="isActive" type="checkbox" value="true" />
                   Mantener visible en el campus
                 </label>
@@ -374,7 +447,7 @@ export default async function AdminEditionsPage({ searchParams }: EditionsPagePr
                   Guardar edicion
                 </SubmitButton>
               </form>
-            </Card>
+            </SurfaceCard>
           ) : null}
         </div>
       </section>

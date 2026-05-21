@@ -103,12 +103,12 @@ export default async function ForumHomePage({ params, searchParams }: ForumHomeP
         <SectionHeader
           description="La comunidad acompaña el curso como una continuación del campus: anuncios, preguntas y conversaciones recuperables sin cambiar de contexto."
           eyebrow={
-            <div className="flex flex-wrap items-center gap-2">
+            <span className="inline-flex flex-wrap items-center gap-2">
               <Badge tone={canModerate ? "info" : "warning"}>{getRoleLabel(access.role)}</Badge>
               <Badge className="hidden sm:inline-flex" tone="outline">
                 {history.activeSpace.editionLabel}
               </Badge>
-            </div>
+            </span>
           }
           title="Conversaciones del curso"
         />

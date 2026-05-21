@@ -1,11 +1,18 @@
 import Link from "next/link";
 import type { AuditAction, AuditEntityType } from "@prisma/client";
 import { AdminStatusBadge } from "@/components/admin/admin-status-badge";
-import { Card } from "@/components/ui/card";
+import { SectionHeader } from "@/components/ui/section-header";
 import {
-  getAuditActionLabel,
-  getAuditActionTone
-} from "@/lib/admin-console";
+  DataTable,
+  DataTableBody,
+  DataTableCell,
+  DataTableEmpty,
+  DataTableHead,
+  DataTableHeader,
+  DataTableRow
+} from "@/components/ui/data-table";
+import { SurfaceCard } from "@/components/ui/surface-card";
+import { getAuditActionLabel, getAuditActionTone } from "@/lib/admin-console";
 import { cn, formatDateTime } from "@/lib/utils";
 import { getEntityTypeLabel } from "./audit-utils";
 
@@ -31,68 +38,74 @@ export function AuditLogTableCard({
   rangeLabel?: string;
 }) {
   return (
-    <Card className="overflow-hidden rounded-[2rem]">
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#dde4ec] px-7 py-6">
-        <div>
-          <h2 className="text-[2rem] font-semibold tracking-[-0.06em] text-[var(--color-ink)]">
-            Flujo de eventos
-          </h2>
-          <p className="mt-2 text-sm text-[#52667b]">{countLabel}</p>
-        </div>
-        {rangeLabel ? (
-          <div className="rounded-full bg-[#eef3f8] px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-[#4e6276]">
-            {rangeLabel}
-          </div>
-        ) : null}
-      </div>
+    <SurfaceCard className="min-w-0 w-full max-w-full overflow-hidden" padding="md">
+      <SectionHeader
+        actions={
+          rangeLabel ? <AdminStatusBadge tone="neutral">{rangeLabel}</AdminStatusBadge> : null
+        }
+        description={countLabel}
+        eyebrow="Auditoria"
+        size="md"
+        title="Flujo de eventos"
+      />
 
-      <div className="overflow-x-auto">
-        <table className="min-w-full text-left">
-          <thead>
-            <tr className="border-b border-[#dde4ec] text-sm uppercase tracking-[0.16em] text-[#3b4f64]">
-              <th className="px-7 py-4">Fecha y hora</th>
-              <th className="px-4 py-4">Accion</th>
-              <th className="px-4 py-4">Actor</th>
-              <th className="px-7 py-4">Entidad</th>
+      <div className="mt-5 min-w-0">
+        <DataTable>
+          <DataTableHeader>
+            <tr>
+              <DataTableHead>Fecha y hora</DataTableHead>
+              <DataTableHead>Accion</DataTableHead>
+              <DataTableHead>Actor</DataTableHead>
+              <DataTableHead>Entidad</DataTableHead>
             </tr>
-          </thead>
-          <tbody className="divide-y divide-[#e0e7ee]">
-            {logs.map((log) => (
-              <tr
-                className={cn(
-                  "align-top transition hover:bg-[#f8fbfe]",
-                  log.isSelected && "bg-[#f5f9ff]"
-                )}
-                key={log.id}
-              >
-                <td
-                  className={cn(
-                    "px-7 py-5 text-[#304458]",
-                    log.isSelected && "border-l-4 border-[var(--color-primary)] pl-6"
-                  )}
+          </DataTableHeader>
+          <DataTableBody>
+            {logs.length ? (
+              logs.map((log) => (
+                <DataTableRow
+                  className={cn(log.isSelected && "bg-[rgba(22,60,88,0.04)]")}
+                  key={log.id}
                 >
-                  {formatDateTime(log.createdAt)}
-                </td>
-                <td className="px-4 py-5">
-                  <AdminStatusBadge tone={getAuditActionTone(log.action)}>
-                    {getAuditActionLabel(log.action)}
-                  </AdminStatusBadge>
-                </td>
-                <td className="px-4 py-5 text-[#304458]">
-                  <div className="font-medium text-[var(--color-ink)]">{log.actorName}</div>
-                  <div className="mt-1 text-sm text-[#5f7184]">{log.actorEmail}</div>
-                </td>
-                <td className="px-7 py-5">
-                  <Link className="block font-medium text-[var(--color-primary)]" href={log.href}>
-                    {log.entityLabel ?? log.entityType}
-                  </Link>
-                  <p className="mt-1 text-sm text-[#607185]">{getEntityTypeLabel(log.entityType)}</p>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                  <DataTableCell
+                    className={cn(
+                      log.isSelected &&
+                        "border-l-4 border-[var(--color-primary)] pl-4"
+                    )}
+                  >
+                    {formatDateTime(log.createdAt)}
+                  </DataTableCell>
+                  <DataTableCell>
+                    <AdminStatusBadge tone={getAuditActionTone(log.action)}>
+                      {getAuditActionLabel(log.action)}
+                    </AdminStatusBadge>
+                  </DataTableCell>
+                  <DataTableCell>
+                    <div className="font-medium text-[var(--color-ink)]">{log.actorName}</div>
+                    <div className="mt-1 text-sm text-[var(--color-muted)]">{log.actorEmail}</div>
+                  </DataTableCell>
+                  <DataTableCell>
+                    <Link
+                      className="font-medium text-[var(--color-primary)] underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-surface-elevated)]"
+                      href={log.href}
+                    >
+                      {log.entityLabel ?? log.entityType}
+                    </Link>
+                    <p className="mt-1 text-sm text-[var(--color-muted)]">
+                      {getEntityTypeLabel(log.entityType)}
+                    </p>
+                  </DataTableCell>
+                </DataTableRow>
+              ))
+            ) : (
+              <DataTableEmpty
+                colSpan={4}
+                description="No hay registros visibles para los filtros actuales."
+                title="Sin eventos"
+              />
+            )}
+          </DataTableBody>
+        </DataTable>
       </div>
-    </Card>
+    </SurfaceCard>
   );
 }

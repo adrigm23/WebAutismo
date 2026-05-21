@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
 type AdminMetricCardProps = {
@@ -12,9 +13,9 @@ type AdminMetricCardProps = {
 
 const accentStyles = {
   primary: "before:bg-[var(--color-primary)]",
-  warning: "before:bg-[#9b6900]",
-  danger: "before:bg-[#cc3b2f]",
-  neutral: "before:bg-[#d0d8e2]"
+  warning: "before:bg-[var(--color-warning)]",
+  danger: "before:bg-[var(--color-danger)]",
+  neutral: "before:bg-[var(--color-border-strong)]"
 };
 
 export function AdminMetricCard({
@@ -26,23 +27,23 @@ export function AdminMetricCard({
   className
 }: AdminMetricCardProps) {
   return (
-    <div
+    <Card
       className={cn(
-        "relative overflow-hidden rounded-[1.9rem] border border-[#cfd8e2] bg-white px-7 py-6 shadow-[0_16px_36px_rgba(15,44,76,0.05)] before:absolute before:inset-y-0 before:left-0 before:w-1",
+        "relative overflow-hidden border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] px-6 py-6 shadow-[var(--shadow-soft)] before:absolute before:inset-y-0 before:left-0 before:w-1",
         accentStyles[accent],
         className
       )}
     >
       <div className="flex items-start justify-between gap-4">
-        <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#314255]">{label}</p>
+        <p className="text-label-sm font-semibold text-[var(--color-muted)]">{label}</p>
         {icon ? <div className="text-[var(--color-primary)]">{icon}</div> : null}
       </div>
-      <div className="mt-8 flex flex-wrap items-end justify-between gap-5">
-        <p className="text-[3.3rem] font-semibold leading-none tracking-[-0.08em] text-[var(--color-ink)]">
+      <div className="mt-6 flex flex-wrap items-end justify-between gap-5">
+        <p className="font-premium text-[3rem] font-semibold leading-none tracking-[-0.08em] text-[var(--color-ink)]">
           {value}
         </p>
-        {meta ? <div className="text-right text-[1rem] leading-7 text-[#384b60]">{meta}</div> : null}
+        {meta ? <div className="text-right text-body-sm leading-7 text-[var(--color-ink-soft)]">{meta}</div> : null}
       </div>
-    </div>
+    </Card>
   );
 }

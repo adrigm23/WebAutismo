@@ -222,12 +222,12 @@ export default async function ForumCategoryPage({
         <SectionHeader
           description={forumData.category.description}
           eyebrow={
-            <div className="flex flex-wrap items-center gap-2">
+            <span className="inline-flex flex-wrap items-center gap-2">
               <Badge tone={canModerate ? "info" : "warning"}>{getRoleLabel(access.role)}</Badge>
               <Badge className="hidden sm:inline-flex" tone="outline">
                 Categoría activa
               </Badge>
-            </div>
+            </span>
           }
           title={forumData.category.title}
         />

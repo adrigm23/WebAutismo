@@ -4,16 +4,20 @@ import { updateNotificationPreferencesAction } from "@/actions/account";
 import { Badge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/empty-state";
+import { MetricPanel } from "@/components/ui/metric-panel";
+import { SectionHeader } from "@/components/ui/section-header";
+import { SurfaceCard } from "@/components/ui/surface-card";
 import type {
   DashboardNotificationSnapshot,
-  TeacherDashboardCourseSummary,
+  TeacherDashboardCourseSummary
 } from "@/lib/account-dashboard";
 import {
   buildCourseContentHref,
   buildCourseForumHref,
   buildCourseResourcesHref,
   buildCourseTrackingHref,
-  resolvePlatformNotificationHref,
+  resolvePlatformNotificationHref
 } from "@/lib/course-navigation";
 import { cn, formatRelativeTime } from "@/lib/utils";
 
@@ -31,9 +35,7 @@ function truncateText(value: string, maxLength: number) {
   return `${value.slice(0, Math.max(maxLength - 1, 1)).trimEnd()}...`;
 }
 
-export function getPrimaryTeacherCourse(
-  courses: TeacherDashboardCourseSummary[],
-) {
+export function getPrimaryTeacherCourse(courses: TeacherDashboardCourseSummary[]) {
   return (
     [...courses].sort((left, right) => {
       const leftPending = left.pendingReviewItems.length;
@@ -52,53 +54,37 @@ export function getPrimaryTeacherCourse(
   );
 }
 
-export function getTeacherCoursePaths(
-  course: TeacherDashboardCourseSummary | null,
-) {
+export function getTeacherCoursePaths(course: TeacherDashboardCourseSummary | null) {
   if (!course) {
     return {
       campusHref: "/mi-cuenta",
       resourcesHref: "/mi-cuenta",
       trackingHref: "/mi-cuenta",
-      forumHref: "/mi-cuenta",
+      forumHref: "/mi-cuenta"
     };
   }
 
   return {
     campusHref: buildCourseContentHref(course.space.course.slug),
-    resourcesHref: buildCourseResourcesHref(
-      course.space.course.slug,
-      "resource-manager-top",
-    ),
+    resourcesHref: buildCourseResourcesHref(course.space.course.slug, "resource-manager-top"),
     trackingHref: buildCourseTrackingHref({
       courseSlug: course.space.course.slug,
-      submissionId: course.pendingReviewItems[0]?.id ?? null,
+      submissionId: course.pendingReviewItems[0]?.id ?? null
     }),
-    forumHref: buildCourseForumHref(course.space.course.slug),
+    forumHref: buildCourseForumHref(course.space.course.slug)
   };
 }
 
-export function getTeacherGlobalSummary(
-  courses: TeacherDashboardCourseSummary[],
-) {
+export function getTeacherGlobalSummary(courses: TeacherDashboardCourseSummary[]) {
   const allPending = courses.flatMap((course) => course.pendingReviewItems);
-  const activeLearners = new Set(courses.flatMap((course) => course.learnerIds))
-    .size;
-  const resources = courses.reduce(
-    (total, course) => total + course.managedResourceCount,
-    0,
-  );
-  const exercises = courses.reduce(
-    (total, course) => total + course.exerciseCount,
-    0,
-  );
+  const activeLearners = new Set(courses.flatMap((course) => course.learnerIds)).size;
+  const resources = courses.reduce((total, course) => total + course.managedResourceCount, 0);
+  const exercises = courses.reduce((total, course) => total + course.exerciseCount, 0);
   const averageCompletionRate =
     courses.length > 0
       ? Math.round(
-          courses.reduce(
-            (total, course) => total + course.averageCompletionRate,
-            0,
-          ) / courses.length,
+          courses.reduce((total, course) => total + course.averageCompletionRate, 0) /
+            courses.length
         )
       : 0;
 
@@ -107,26 +93,16 @@ export function getTeacherGlobalSummary(
     activeLearners,
     resources,
     exercises,
-    averageCompletionRate,
+    averageCompletionRate
   };
 }
 
-export function getReviewedSubmissionsCount(
-  courses: TeacherDashboardCourseSummary[],
-) {
-  return courses.reduce(
-    (total, course) => total + course.reviewedSubmissionCount,
-    0,
-  );
+export function getReviewedSubmissionsCount(courses: TeacherDashboardCourseSummary[]) {
+  return courses.reduce((total, course) => total + course.reviewedSubmissionCount, 0);
 }
 
-export function getTotalSubmissionsCount(
-  courses: TeacherDashboardCourseSummary[],
-) {
-  return courses.reduce(
-    (total, course) => total + course.totalSubmissionCount,
-    0,
-  );
+export function getTotalSubmissionsCount(courses: TeacherDashboardCourseSummary[]) {
+  return courses.reduce((total, course) => total + course.totalSubmissionCount, 0);
 }
 
 function buildTeacherActivity(input: {
@@ -134,22 +110,20 @@ function buildTeacherActivity(input: {
   forumNotifications: DashboardNotificationSnapshot["forumNotifications"]["notifications"];
   platformNotifications: DashboardNotificationSnapshot["platformNotifications"]["notifications"];
 }) {
-  const submissionItems = input.courses.flatMap(
-    (course) => course.recentSubmissionActivity,
-  );
+  const submissionItems = input.courses.flatMap((course) => course.recentSubmissionActivity);
 
   const platformItems = input.platformNotifications.map((notification) => ({
     id: `platform-${notification.id}`,
     href: resolvePlatformNotificationHref({
       category: notification.category,
       linkPath: notification.linkPath,
-      metadataJson: notification.metadataJson,
+      metadataJson: notification.metadataJson
     }),
     title: notification.title,
     body: truncateText(notification.body, 140),
     createdAt: notification.createdAt,
-    tone: "teacher" as const,
-    sourceLabel: "Plataforma",
+    tone: "info" as const,
+    sourceLabel: "Plataforma"
   }));
 
   const forumItems = input.forumNotifications.map((notification) => ({
@@ -158,8 +132,8 @@ function buildTeacherActivity(input: {
     title: notification.title,
     body: truncateText(notification.body, 140),
     createdAt: notification.createdAt,
-    tone: "student" as const,
-    sourceLabel: "Foro",
+    tone: "brand" as const,
+    sourceLabel: "Foro"
   }));
 
   return [...submissionItems, ...platformItems, ...forumItems]
@@ -177,7 +151,7 @@ export function TeacherSectionSkeleton(input: {
       <div className="mt-5 space-y-2.5">
         {Array.from({ length: input.lines ?? 3 }).map((_, index) => (
           <div
-            className="h-20 animate-pulse rounded-[20px] bg-[var(--color-surface)]"
+            className="h-20 animate-pulse rounded-[var(--radius-md)] bg-[var(--color-surface)]"
             key={`${input.title}-${index}`}
           />
         ))}
@@ -196,9 +170,9 @@ export async function TeacherUnreadBadge(input: {
   }
 
   return (
-    <span className="ml-1.5 rounded-full bg-[var(--color-primary)] px-2 py-0.5 text-[0.68rem] font-semibold text-white shadow-[0_8px_18px_rgba(12,113,195,0.18)]">
+    <Badge className="ml-1.5" size="sm" tone="brand">
       {snapshot.unreadCount}
-    </span>
+    </Badge>
   );
 }
 
@@ -210,23 +184,29 @@ export async function TeacherRecentActivitySection(input: {
   const recentActivity = buildTeacherActivity({
     courses: input.courses,
     forumNotifications: snapshot.forumNotifications.notifications,
-    platformNotifications: snapshot.platformNotifications.notifications,
+    platformNotifications: snapshot.platformNotifications.notifications
   });
 
   return (
-    <Card className="p-5" id="actividad-docente">
-      <div className="flex items-center gap-3">
-        <Bell className="h-5 w-5 text-[var(--color-primary)]" />
-        <h2 className="text-[1.8rem] font-semibold tracking-[-0.04em] text-[var(--color-ink)]">
-          Actividad docente
-        </h2>
-      </div>
+    <SurfaceCard id="actividad-docente" padding="md">
+      <SectionHeader
+        actions={<Badge tone="outline">{snapshot.unreadCount} avisos</Badge>}
+        description="Entregas, avisos de plataforma y movimiento del foro ordenados para priorizar seguimiento y revisiones."
+        eyebrow="Seguimiento"
+        size="md"
+        title={
+          <span className="inline-flex items-center gap-3">
+            <Bell className="h-5 w-5 text-[var(--color-primary)]" />
+            <span>Actividad docente</span>
+          </span>
+        }
+      />
 
       <div className="mt-5 space-y-3">
         {recentActivity.length ? (
           recentActivity.slice(0, 3).map((item) => (
             <Link
-              className="block rounded-[20px] border border-[var(--color-border)] bg-white/92 p-4 transition hover:-translate-y-[1px] hover:border-[var(--color-primary)] hover:shadow-[0_16px_28px_-24px_rgba(12,113,195,0.34)]"
+              className="block rounded-[var(--radius-md)] border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] p-4 transition duration-[var(--motion-duration-base)] hover:-translate-y-[1px] hover:border-[var(--color-border-strong)] hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-surface-canvas)]"
               href={item.href}
               key={item.id}
             >
@@ -239,19 +219,18 @@ export async function TeacherRecentActivitySection(input: {
               <p className="mt-3 text-lg font-semibold leading-tight text-[var(--color-ink)]">
                 {item.title}
               </p>
-              <p className="mt-1.5 text-sm leading-6 text-[var(--color-muted)]">
-                {item.body}
-              </p>
+              <p className="mt-1.5 text-sm leading-6 text-[var(--color-muted)]">{item.body}</p>
             </Link>
           ))
         ) : (
-          <div className="ui-empty-state p-4 text-sm leading-6 text-[var(--color-muted)]">
-            Sin actividad reciente. Las actualizaciones del alumnado aparecerán
-            aquí cuando haya entregas, avisos o movimiento en el foro.
-          </div>
+          <EmptyState
+            description="Las actualizaciones del alumnado apareceran aqui cuando haya entregas, avisos o movimiento en el foro."
+            title="Sin actividad reciente"
+            tone="subtle"
+          />
         )}
       </div>
-    </Card>
+    </SurfaceCard>
   );
 }
 
@@ -264,60 +243,50 @@ export async function TeacherCommunityCard(input: {
   const snapshot = await input.notificationSnapshotPromise;
 
   return (
-    <Card className="p-6">
-      <div className="flex items-center gap-3">
-        <MessageSquareText className="h-5 w-5 text-[var(--color-primary)]" />
-        <h2 className="text-[1.8rem] font-semibold tracking-[-0.04em] text-[var(--color-ink)]">
-          Foro y comunidad
-        </h2>
-      </div>
+    <SurfaceCard padding="md">
+      <SectionHeader
+        description="Accesos directos a foro y recursos del curso prioritario sin separar la operativa docente del campus."
+        eyebrow="Contexto"
+        size="md"
+        title={
+          <span className="inline-flex items-center gap-3">
+            <MessageSquareText className="h-5 w-5 text-[var(--color-primary)]" />
+            <span>Foro y comunidad</span>
+          </span>
+        }
+      />
 
-      <div className="mt-5 space-y-3">
-        <div className="rounded-[var(--radius-md)] bg-[var(--color-surface)] p-4">
-          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[var(--color-muted)]">
-            Avisos del foro
-          </p>
-          <p className="mt-2.5 text-[1.85rem] font-semibold text-[var(--color-ink)]">
-            {snapshot.forumNotifications.unreadCount}
-          </p>
-          <p className="mt-1.5 text-sm leading-6 text-[var(--color-muted)]">
-            Notificaciones no leidas asociadas a tus cursos.
-          </p>
-        </div>
-
-        <div className="rounded-[var(--radius-md)] bg-[var(--color-surface)] p-4">
-          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[var(--color-muted)]">
-            Recursos
-          </p>
-          <p className="mt-2.5 text-[1.85rem] font-semibold text-[var(--color-ink)]">
-            {input.resources}
-          </p>
-          <p className="mt-1.5 text-sm leading-6 text-[var(--color-muted)]">
-            Materiales o ejercicios gestionados desde el campus.
-          </p>
-        </div>
+      <div className="mt-5 grid gap-3">
+        <MetricPanel
+          detail="Notificaciones no leidas asociadas a tus cursos."
+          label="Avisos del foro"
+          tone="brand"
+          value={snapshot.forumNotifications.unreadCount}
+        />
+        <MetricPanel
+          detail="Materiales o ejercicios gestionados desde el campus."
+          label="Recursos"
+          value={input.resources}
+        />
 
         {input.hasCourseContext ? (
           <div className="flex flex-wrap gap-2.5">
-            <ButtonLink href={input.paths.forumHref} variant="secondary">
+            <ButtonLink href={input.paths.forumHref} variant="neutral">
               Abrir foro
             </ButtonLink>
-            <ButtonLink
-              href={input.paths.resourcesHref}
-              prefetch
-              variant="ghost"
-            >
+            <ButtonLink href={input.paths.resourcesHref} prefetch variant="subtle">
               Ir a recursos
             </ButtonLink>
           </div>
         ) : (
-          <div className="ui-empty-state p-4 text-sm leading-6 text-[var(--color-muted)]">
-            Cuando tengas un curso docente activo, aparecerán aquí los accesos
-            directos a foro y recursos.
-          </div>
+          <EmptyState
+            description="Cuando tengas un curso docente activo, apareceran aqui los accesos directos a foro y recursos."
+            title="Sin curso prioritario"
+            tone="subtle"
+          />
         )}
       </div>
-    </Card>
+    </SurfaceCard>
   );
 }
 
@@ -327,45 +296,46 @@ export async function TeacherPreferencesCard(input: {
   const preference = (await input.notificationSnapshotPromise).preference;
 
   return (
-    <Card className="p-6">
-      <div className="flex items-center gap-3">
-        <Settings2 className="h-5 w-5 text-[var(--color-primary)]" />
-        <h2 className="text-[1.8rem] font-semibold tracking-[-0.04em] text-[var(--color-ink)]">
-          Preferencias
-        </h2>
-      </div>
+    <SurfaceCard padding="md">
+      <SectionHeader
+        description="Ajustes simples para decidir donde quieres recibir avisos docentes."
+        eyebrow="Preferencias"
+        size="md"
+        title={
+          <span className="inline-flex items-center gap-3">
+            <Settings2 className="h-5 w-5 text-[var(--color-primary)]" />
+            <span>Preferencias</span>
+          </span>
+        }
+      />
 
       <div className="mt-5 space-y-2.5">
         {[
           {
             title: "Solo email",
-            description:
-              "Recibe avisos por correo y reduce ruido dentro del panel.",
+            description: "Recibe avisos por correo y reduce ruido dentro del panel.",
             emailEnabled: true,
-            webEnabled: false,
+            webEnabled: false
           },
           {
             title: "Solo web",
             description: "Centraliza las alertas dentro de la cuenta docente.",
             emailEnabled: false,
-            webEnabled: true,
+            webEnabled: true
           },
           {
             title: "Email y web",
             description: "Mantiene sincronizados correo y panel privado.",
             emailEnabled: true,
-            webEnabled: true,
-          },
+            webEnabled: true
+          }
         ].map((option) => {
           const isSelected =
             preference.emailEnabled === option.emailEnabled &&
             preference.webEnabled === option.webEnabled;
 
           return (
-            <form
-              action={updateNotificationPreferencesAction}
-              key={option.title}
-            >
+            <form action={updateNotificationPreferencesAction} key={option.title}>
               <input
                 name="emailEnabled"
                 type="hidden"
@@ -378,10 +348,10 @@ export async function TeacherPreferencesCard(input: {
               />
               <button
                 className={cn(
-                  "w-full rounded-[20px] border px-4 py-3.5 text-left transition",
+                  "w-full rounded-[var(--radius-md)] border px-4 py-3.5 text-left transition duration-[var(--motion-duration-base)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-surface-canvas)]",
                   isSelected
-                    ? "border-[var(--color-primary)] bg-[rgba(12,113,195,0.08)] shadow-[0_16px_28px_-24px_rgba(12,113,195,0.36)]"
-                    : "border-[var(--color-border)] bg-[var(--color-surface)] hover:border-[var(--color-primary)] hover:bg-white",
+                    ? "border-[var(--color-primary)] bg-[var(--color-brand-soft)] shadow-[var(--shadow-soft)]"
+                    : "border-[var(--color-border)] bg-[var(--color-surface)] hover:border-[var(--color-border-strong)] hover:bg-white"
                 )}
                 type="submit"
               >
@@ -389,7 +359,7 @@ export async function TeacherPreferencesCard(input: {
                   <p className="text-base font-semibold text-[var(--color-ink)]">
                     {option.title}
                   </p>
-                  <Badge tone={isSelected ? "info" : "outline"}>
+                  <Badge tone={isSelected ? "brand" : "outline"}>
                     {isSelected ? "Activa" : "Disponible"}
                   </Badge>
                 </div>
@@ -401,6 +371,6 @@ export async function TeacherPreferencesCard(input: {
           );
         })}
       </div>
-    </Card>
+    </SurfaceCard>
   );
 }

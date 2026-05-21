@@ -146,8 +146,8 @@ export function ForumShell({
             </div>
 
             <div className="flex flex-col gap-2.5 border-t border-[rgba(22,60,88,0.08)] pt-2 lg:flex-row lg:items-center lg:justify-between">
-              <form action={pathname} className="w-full lg:max-w-[24rem]">
-                <label className="flex min-h-11 items-center gap-3 rounded-[var(--radius-pill)] border border-[rgba(22,60,88,0.1)] bg-[rgba(255,255,255,0.8)] px-4 text-[var(--color-muted)] shadow-[var(--shadow-inset-soft)]">
+              <form className="w-full lg:max-w-[24rem]" method="get">
+                <label className="flex min-h-11 items-center gap-3 rounded-[var(--radius-pill)] border border-[rgba(22,60,88,0.1)] bg-[rgba(255,255,255,0.8)] px-4 text-[var(--color-muted)] shadow-[var(--shadow-inset-soft)] transition focus-within:border-[var(--color-primary)] focus-within:ring-2 focus-within:ring-[var(--color-primary)] focus-within:ring-offset-2 focus-within:ring-offset-[var(--color-surface-canvas)]">
                   <Search className="h-5 w-5 shrink-0" />
                   <input
                     className="w-full min-w-0 bg-transparent text-sm text-[var(--color-ink)] outline-none placeholder:text-[var(--color-muted)]"

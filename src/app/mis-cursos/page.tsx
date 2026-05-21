@@ -3,10 +3,13 @@ import Link from "next/link";
 import { Bell, CircleHelp, Settings2 } from "lucide-react";
 import { AccountAuthHeader } from "@/components/account/account-auth-header";
 import { CourseArtwork } from "@/components/course-artwork";
+import { Badge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/empty-state";
 import { MetricPanel } from "@/components/ui/metric-panel";
 import { SectionHeader } from "@/components/ui/section-header";
+import { SurfaceCard } from "@/components/ui/surface-card";
 import { requireUser } from "@/lib/auth";
 import { getUserCourseSpaces } from "@/lib/course-community";
 import {
@@ -169,20 +172,16 @@ export default async function MyCoursesPage() {
 
             <div className="mt-6 flex flex-wrap gap-3">
               <ButtonLink href={primaryAction.href}>{primaryAction.label}</ButtonLink>
-              <ButtonLink href="/mi-cuenta" variant="secondary">
+              <ButtonLink href="/mi-cuenta" variant="neutral">
                 Volver a mi cuenta
               </ButtonLink>
             </div>
 
             {primaryStudentCourse ? (
-              <div className="mt-8 rounded-[var(--radius-xl)] border border-[var(--color-border-subtle)] bg-[linear-gradient(180deg,rgba(255,253,250,0.96),rgba(223,234,243,0.44))] p-5 lg:p-6">
+              <SurfaceCard className="mt-8" padding="md" variant="muted">
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="inline-flex items-center rounded-[var(--radius-pill)] bg-[var(--color-primary-soft)] px-3 py-1 text-xs font-semibold text-[var(--color-primary)]">
-                    Leccion a continuar
-                  </span>
-                  <span className="inline-flex items-center rounded-[var(--radius-pill)] border border-[var(--color-border)] bg-white px-3 py-1 text-xs font-semibold text-[var(--color-muted)]">
-                    {primaryStudentCourse.space.course.level}
-                  </span>
+                  <Badge tone="brand">Leccion a continuar</Badge>
+                  <Badge tone="outline">{primaryStudentCourse.space.course.level}</Badge>
                 </div>
 
                 <h2 className="font-premium mt-4 text-display-md font-semibold text-[var(--color-ink)]">
@@ -193,7 +192,7 @@ export default async function MyCoursesPage() {
                     ? `${primaryStudentCourse.progress.completedModules} de ${primaryStudentCourse.progress.totalModules} modulos revisados y ${primaryStudentCourse.progress.pendingModules} pendientes.`
                     : "Curso listo para empezar en el campus."}
                 </p>
-              </div>
+              </SurfaceCard>
             ) : null}
           </div>
 
@@ -222,7 +221,7 @@ export default async function MyCoursesPage() {
             <article className="overflow-hidden" role="presentation">
               <Card className="overflow-hidden p-0" variant="elevated">
                 <div className="grid gap-0 lg:grid-cols-[18rem_minmax(0,1fr)]">
-                  <div className="bg-[#132835] p-4 lg:p-5">
+                  <div className="bg-[var(--color-primary-strong)] p-4 lg:p-5">
                     <CourseArtwork
                       className="h-full min-h-[15rem] w-full rounded-[var(--radius-lg)] border-0"
                       course={primaryStudentCourse.space.course}
@@ -278,7 +277,7 @@ export default async function MyCoursesPage() {
                         </ButtonLink>
                         <ButtonLink
                           href={buildCourseResourcesHref(primaryStudentCourse.space.course.slug)}
-                          variant="secondary"
+                          variant="neutral"
                         >
                           Ver tareas
                         </ButtonLink>
@@ -353,7 +352,7 @@ export default async function MyCoursesPage() {
                               </ButtonLink>
                               <ButtonLink
                                 href={buildCourseResourcesHref(space.course.slug)}
-                                variant="secondary"
+                                variant="neutral"
                               >
                                 Ver tareas
                               </ButtonLink>
@@ -379,7 +378,7 @@ export default async function MyCoursesPage() {
                     </ButtonLink>
                     <ButtonLink
                       href={buildCourseResourcesHref(primaryStudentCourse.space.course.slug)}
-                      variant="secondary"
+                      variant="neutral"
                     >
                       Ver tareas
                     </ButtonLink>
@@ -389,40 +388,32 @@ export default async function MyCoursesPage() {
             </div>
           </section>
         ) : (
-          <div className="ui-empty-state mt-12 p-8 text-center">
-            <p className="text-body-sm text-[var(--color-muted)]">
-              Todavia no tienes cursos activos. Explora el catalogo para inscribirte.
-            </p>
-            <ButtonLink className="mt-6" href="/cursos">
-              Ver catalogo
-            </ButtonLink>
-          </div>
+          <EmptyState
+            action={<ButtonLink href="/cursos">Ver catalogo</ButtonLink>}
+            align="center"
+            className="mt-12"
+            description="Explora el catalogo para inscribirte y activar tu siguiente recorrido."
+            title="Todavia no tienes cursos activos"
+          />
         )}
 
         {staffSpaces.length ? (
           <section aria-labelledby="staff-courses-heading" className="mt-14">
-            <div className="flex flex-wrap items-center justify-between gap-4">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-muted)]">
-                  Docencia
-                </p>
-                <h2
-                  className="mt-2 text-[2.35rem] font-semibold tracking-[-0.05em] text-[var(--color-ink)]"
-                  id="staff-courses-heading"
-                >
-                  Como docente
-                </h2>
-              </div>
-
-              <ButtonLink href="/mi-cuenta" variant="ghost">
-                Abrir panel docente
-              </ButtonLink>
-            </div>
+            <SectionHeader
+              actions={
+                <ButtonLink href="/mi-cuenta" variant="subtle">
+                  Abrir panel docente
+                </ButtonLink>
+              }
+              eyebrow="Docencia"
+              id="staff-courses-heading"
+              title="Como docente"
+            />
 
             <div className="mt-6 grid gap-4 md:grid-cols-2">
               {staffSpaces.map((space) => (
                 <Link
-                  className="ui-card-base rounded-[var(--radius-lg)] p-5 transition hover:-translate-y-[1px] hover:border-[var(--color-primary)] hover:shadow-[var(--shadow-medium)]"
+                  className="ui-card-base ui-card-interactive block rounded-[var(--radius-lg)] p-5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2"
                   href={buildCourseContentHref(space.course.slug)}
                   key={space.course.slug}
                 >

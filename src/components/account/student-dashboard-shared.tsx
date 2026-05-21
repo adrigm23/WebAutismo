@@ -3,6 +3,7 @@ import { Clock3, Settings2 } from "lucide-react";
 import { updateNotificationPreferencesAction } from "@/actions/account";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/empty-state";
 import { ListRow } from "@/components/ui/list-row";
 import { SectionHeader } from "@/components/ui/section-header";
 import type {
@@ -29,7 +30,7 @@ type PendingDashboardItem = {
   description: string;
   meta: string;
   badgeLabel: string;
-  badgeTone: "accent" | "muted" | "teacher" | "student";
+  badgeTone: "brand" | "outline" | "warning";
   priority: number;
   dueAt: Date | null;
 };
@@ -40,7 +41,7 @@ type ActivityDashboardItem = {
   title: string;
   body: string;
   sourceLabel: string;
-  sourceTone: "teacher" | "student" | "muted";
+  sourceTone: "brand" | "info";
   createdAt: Date;
 };
 
@@ -119,7 +120,7 @@ export function buildStudentPendingItems(pendingSources: StudentDashboardPending
           : "Tu docente ha solicitado ajustes antes de dar la entrega por cerrada.",
         meta: courseLabel,
         badgeLabel: "Cambios solicitados",
-        badgeTone: "accent",
+        badgeTone: "warning",
         priority: 0,
         dueAt: resource.dueAt,
       });
@@ -136,7 +137,7 @@ export function buildStudentPendingItems(pendingSources: StudentDashboardPending
           : "Ejercicio disponible para entregar desde el campus.",
         meta: courseLabel,
         badgeLabel: "Pendiente",
-        badgeTone: "student",
+        badgeTone: "brand",
         priority: 1,
         dueAt: resource.dueAt,
       });
@@ -151,7 +152,7 @@ export function buildStudentPendingItems(pendingSources: StudentDashboardPending
         description: "Tu entrega ya esta enviada y pendiente de revision docente.",
         meta: courseLabel,
         badgeLabel: "En revision",
-        badgeTone: "muted",
+        badgeTone: "outline",
         priority: 2,
         dueAt: resource.dueAt,
       });
@@ -186,7 +187,7 @@ function buildRecentActivity(input: {
     title: notification.title,
     body: truncateText(notification.body, 150),
     sourceLabel: "Plataforma",
-    sourceTone: "teacher",
+    sourceTone: "info",
     createdAt: notification.createdAt,
   }));
 
@@ -196,7 +197,7 @@ function buildRecentActivity(input: {
     title: notification.title,
     body: truncateText(notification.body, 150),
     sourceLabel: "Foro",
-    sourceTone: "student",
+    sourceTone: "brand",
     createdAt: notification.createdAt,
   }));
 
@@ -231,9 +232,9 @@ export async function StudentUnreadBadge(input: {
   }
 
   return (
-    <span className="ml-2 rounded-full bg-[var(--color-primary)] px-2 py-0.5 text-xs text-white">
+    <Badge className="ml-2 min-w-6 justify-center text-white" size="sm" tone="brand">
       {snapshot.unreadCount}
-    </span>
+    </Badge>
   );
 }
 
@@ -264,7 +265,7 @@ export async function StudentRecentActivitySection(input: {
         {recentActivity.length ? (
           recentActivity.map((item) => (
             <Link
-              className="block rounded-[var(--radius-md)] transition hover:-translate-y-[1px]"
+              className="block rounded-[var(--radius-md)] transition hover:-translate-y-[1px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2"
               href={item.href}
               key={item.id}
             >
@@ -283,10 +284,12 @@ export async function StudentRecentActivitySection(input: {
             </Link>
           ))
         ) : (
-          <div className="ui-empty-state p-5 text-sm leading-7 text-[var(--color-muted)]">
-            Todavia no hay actividad reciente. Cuando el equipo docente publique avisos o haya
-            movimiento en tus foros privados, lo veras aqui.
-          </div>
+          <EmptyState
+            className="px-5 py-6"
+            description="Cuando el equipo docente publique avisos o haya movimiento en tus foros privados, lo veras aqui."
+            title="Sin actividad reciente"
+            tone="subtle"
+          />
         )}
       </div>
     </Card>
@@ -352,6 +355,7 @@ export async function StudentPreferencesCard(input: {
               <button
                 className={cn(
                   "w-full rounded-[var(--radius-md)] border px-4 py-4 text-left transition",
+                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2",
                   isSelected
                     ? "border-[var(--color-primary)] bg-[var(--color-brand-soft)]"
                     : "border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] hover:border-[var(--color-primary)] hover:bg-white",
@@ -362,7 +366,7 @@ export async function StudentPreferencesCard(input: {
                   <p className="text-lg font-semibold text-[var(--color-ink)]">
                     {option.title}
                   </p>
-                  <Badge tone={isSelected ? "teacher" : "muted"}>
+                  <Badge tone={isSelected ? "brand" : "outline"}>
                     {isSelected ? "Activa" : "Disponible"}
                   </Badge>
                 </div>

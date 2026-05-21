@@ -1,7 +1,7 @@
 import type { HTMLAttributes, ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
-type SectionHeaderProps = HTMLAttributes<HTMLDivElement> & {
+type SectionHeaderProps = Omit<HTMLAttributes<HTMLDivElement>, "title"> & {
   eyebrow?: ReactNode;
   title: ReactNode;
   description?: ReactNode;

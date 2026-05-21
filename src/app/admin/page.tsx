@@ -1,27 +1,57 @@
 import { AlertTriangle, BookCopy, Layers3, UsersRound } from "lucide-react";
-import { ButtonLink } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import Link from "next/link";
 import { AdminMetricCard } from "@/components/admin/admin-metric-card";
 import { AdminPageHeader } from "@/components/admin/admin-page-header";
 import { AdminStatusBadge } from "@/components/admin/admin-status-badge";
+import { ButtonLink } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
+import { SectionHeader } from "@/components/ui/section-header";
+import { StateBanner } from "@/components/ui/state-banner";
+import { SurfaceCard } from "@/components/ui/surface-card";
 import { getAuditActionLabel } from "@/lib/admin-console";
 import { requireAdminConsoleUser } from "@/lib/admin-console-server";
-import { isDemoUserId } from "@/lib/demo-auth";
 import { parseAuditMetadata } from "@/lib/audit";
 import { resolveEditionAccessUntil } from "@/lib/course-editions";
+import { isDemoUserId } from "@/lib/demo-auth";
 import { getDb } from "@/lib/prisma";
 import { formatCompactNumber, formatRelativeTime } from "@/lib/utils";
+
+function buildActorInitials(name: string | null | undefined) {
+  return (name ?? "SYS")
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((chunk) => chunk[0]?.toUpperCase())
+    .join("");
+}
 
 export default async function AdminDashboardPage() {
   const user = await requireAdminConsoleUser("/admin");
 
   if (isDemoUserId(user.id)) {
+    const demoLogs = [
+      {
+        id: "demo-audit-1",
+        actor: "Admin Demo",
+        action: "USER_ADMIN_GRANTED",
+        entityLabel: "admin.demo@autismo.local",
+        createdAt: new Date("2026-05-07T09:10:00.000Z")
+      },
+      {
+        id: "demo-audit-2",
+        actor: "Admin Demo",
+        action: "COURSE_CREATED",
+        entityLabel: "Curso de demostracion",
+        createdAt: new Date("2026-05-07T09:05:00.000Z")
+      }
+    ];
+
     return (
       <div className="space-y-9">
         <AdminPageHeader
           actions={
             <>
-              <ButtonLink href="/admin/users" variant="secondary">
+              <ButtonLink href="/admin/users" variant="neutral">
                 Ver usuarios demo
               </ButtonLink>
               <ButtonLink href="/mi-cuenta">Volver a mi cuenta</ButtonLink>
@@ -55,7 +85,7 @@ export default async function AdminDashboardPage() {
             accent="neutral"
             icon={<BookCopy className="h-6 w-6" strokeWidth={1.8} />}
             label="Cursos activos"
-            meta="Catálogo de demostración"
+            meta="Catalogo de demostracion"
             value="3"
           />
           <AdminMetricCard
@@ -69,93 +99,62 @@ export default async function AdminDashboardPage() {
 
         <section className="grid gap-6 xl:grid-cols-[0.92fr_1.25fr]">
           <div className="space-y-4">
-            <div className="flex items-center gap-3">
-              <AlertTriangle
-                className="h-6 w-6 text-[#c43a2f]"
-                strokeWidth={1.9}
-              />
-              <h2 className="text-[2.1rem] font-semibold tracking-[-0.06em] text-[var(--color-ink)]">
-                Alertas operativas
-              </h2>
-            </div>
+            <SectionHeader
+              eyebrow="Estado"
+              size="md"
+              title={
+                <span className="inline-flex items-center gap-3">
+                  <AlertTriangle className="h-6 w-6 text-[var(--color-danger)]" strokeWidth={1.9} />
+                  <span>Alertas operativas</span>
+                </span>
+              }
+            />
 
-            <Card className="rounded-[1.9rem] border-[#f3b8b2] bg-[#fff0ee] p-6 shadow-none">
-              <p className="text-lg font-semibold text-[#a72b20]">
-                Conexion de base pendiente
-              </p>
-              <p className="mt-2 text-base leading-7 text-[#a6473f]">
-                Esta administracion se esta mostrando con datos simulados hasta
-                conectar la base de datos definitiva.
-              </p>
-            </Card>
+            <StateBanner
+              description="Esta administracion se esta mostrando con datos simulados hasta conectar la base de datos definitiva."
+              title="Conexion de base pendiente"
+              tone="danger"
+            />
 
-            <Card className="rounded-[1.9rem] border-[#f0d098] bg-[#fff1cf] p-6 shadow-none">
-              <p className="text-lg font-semibold text-[#7c5300]">
-                Acciones deshabilitadas
-              </p>
-              <p className="mt-2 text-base leading-7 text-[#805c16]">
-                En modo demo puedes recorrer la interfaz, pero las altas,
-                cambios de rol y auditorias no se guardan.
-              </p>
-            </Card>
+            <StateBanner
+              description="En modo demo puedes recorrer la interfaz, pero las altas, cambios de rol y auditorias no se guardan."
+              title="Acciones deshabilitadas"
+              tone="warning"
+            />
           </div>
 
-          <Card className="overflow-hidden rounded-[1.9rem] border-[#cfd8e2]">
-            <div className="flex items-center justify-between gap-4 border-b border-[#d9e0e8] px-7 py-6">
-              <div>
-                <h2 className="text-[2.1rem] font-semibold tracking-[-0.06em] text-[var(--color-ink)]">
-                  Actividad reciente
-                </h2>
-                <p className="mt-2 text-[1rem] text-[#4c6075]">
-                  Registro de ejemplo para validar la experiencia visual.
-                </p>
-              </div>
-            </div>
+          <SurfaceCard padding="md">
+            <SectionHeader
+              description="Registro de ejemplo para validar la experiencia visual."
+              eyebrow="Auditoria"
+              size="md"
+              title="Actividad reciente"
+            />
 
-            <div className="divide-y divide-[#dde4eb]">
-              {[
-                {
-                  id: "demo-audit-1",
-                  actor: "Admin Demo",
-                  action: "USER_ADMIN_GRANTED",
-                  entityLabel: "admin.demo@autismo.local",
-                  createdAt: new Date("2026-05-07T09:10:00.000Z"),
-                },
-                {
-                  id: "demo-audit-2",
-                  actor: "Admin Demo",
-                  action: "COURSE_CREATED",
-                  entityLabel: "Curso de demostración",
-                  createdAt: new Date("2026-05-07T09:05:00.000Z"),
-                },
-              ].map((log) => (
-                <div
-                  className="flex flex-wrap items-start gap-5 px-7 py-6"
-                  key={log.id}
-                >
-                  <div className="grid h-14 w-14 place-items-center rounded-full bg-[rgba(12,113,195,0.12)] text-base font-semibold text-[var(--color-primary)]">
+            <div className="mt-5 divide-y divide-[var(--color-border-subtle)]">
+              {demoLogs.map((log) => (
+                <div className="flex flex-wrap items-start gap-5 py-5 first:pt-0 last:pb-0" key={log.id}>
+                  <div className="grid h-14 w-14 place-items-center rounded-full bg-[var(--color-brand-soft)] text-base font-semibold text-[var(--color-primary)]">
                     AD
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-3">
-                      <p className="text-[1.18rem] font-semibold text-[var(--color-ink)]">
-                        {log.actor}
-                      </p>
+                      <p className="text-[1.12rem] font-semibold text-[var(--color-ink)]">{log.actor}</p>
                       <AdminStatusBadge tone="primary">
                         {getAuditActionLabel(log.action as never)}
                       </AdminStatusBadge>
                     </div>
-                    <p className="mt-2 text-[1.02rem] leading-7 text-[#394d61]">
+                    <p className="mt-2 text-sm leading-7 text-[var(--color-ink-soft)]">
                       {log.entityLabel}
                     </p>
-                    <p className="mt-2 text-sm font-medium text-[#68788a]">
+                    <p className="mt-2 text-sm font-medium text-[var(--color-muted)]">
                       {formatRelativeTime(log.createdAt)}
                     </p>
                   </div>
                 </div>
               ))}
             </div>
-          </Card>
+          </SurfaceCard>
         </section>
       </div>
     );
@@ -174,7 +173,7 @@ export default async function AdminDashboardPage() {
     activePromotionsCount,
     coursesWithoutTeachers,
     editionsForReview,
-    auditLogs,
+    auditLogs
   ] = await Promise.all([
     db.user.count({ where: { isActive: true } }),
     db.user.count({ where: { isActive: true, globalRole: "ADMIN" } }),
@@ -185,9 +184,9 @@ export default async function AdminDashboardPage() {
       where: {
         isActive: true,
         status: {
-          in: ["ACTIVE", "SCHEDULED"],
-        },
-      },
+          in: ["ACTIVE", "SCHEDULED"]
+        }
+      }
     }),
     db.courseEnrollment.count({ where: { status: "ACTIVE" } }),
     db.promotion.count({ where: { isActive: true } }),
@@ -195,51 +194,51 @@ export default async function AdminDashboardPage() {
       where: {
         status: "ACTIVE",
         teacherAssignments: {
-          none: {},
-        },
+          none: {}
+        }
       },
       select: {
         id: true,
         title: true,
-        slug: true,
+        slug: true
       },
       orderBy: {
-        updatedAt: "desc",
+        updatedAt: "desc"
       },
-      take: 4,
+      take: 4
     }),
     db.courseEdition.findMany({
       where: {
         isActive: true,
         status: {
-          in: ["ACTIVE", "CLOSED"],
-        },
+          in: ["ACTIVE", "CLOSED"]
+        }
       },
       include: {
         course: {
           select: {
-            title: true,
-          },
-        },
+            title: true
+          }
+        }
       },
       orderBy: {
-        updatedAt: "desc",
-      },
+        updatedAt: "desc"
+      }
     }),
     db.auditLog.findMany({
       include: {
         actor: {
           select: {
             name: true,
-            email: true,
-          },
-        },
+            email: true
+          }
+        }
       },
       orderBy: {
-        createdAt: "desc",
+        createdAt: "desc"
       },
-      take: 5,
-    }),
+      take: 5
+    })
   ]);
 
   const postAccessEditions = editionsForReview.filter((edition) => {
@@ -247,7 +246,7 @@ export default async function AdminDashboardPage() {
       startsAt: edition.startsAt,
       endsAt: edition.endsAt,
       graceAccessDays: edition.graceAccessDays,
-      accessUntil: edition.accessUntil,
+      accessUntil: edition.accessUntil
     });
 
     return (
@@ -264,15 +263,10 @@ export default async function AdminDashboardPage() {
       <AdminPageHeader
         actions={
           <>
-            <ButtonLink
-              href="/admin/teachers#create-teacher"
-              variant="secondary"
-            >
+            <ButtonLink href="/admin/teachers#create-teacher" variant="neutral">
               Crear docente
             </ButtonLink>
-            <ButtonLink href="/admin/editions#create-edition">
-              Crear edicion
-            </ButtonLink>
+            <ButtonLink href="/admin/editions#create-edition">Crear edicion</ButtonLink>
           </>
         }
         description="Metricas de plataforma, alertas operativas y trazabilidad reciente del campus."
@@ -303,7 +297,7 @@ export default async function AdminDashboardPage() {
           accent="neutral"
           icon={<BookCopy className="h-6 w-6" strokeWidth={1.8} />}
           label="Cursos activos"
-          meta="Catálogo operativo"
+          meta="Catalogo operativo"
           value={activeCoursesCount}
         />
         <AdminMetricCard
@@ -317,124 +311,126 @@ export default async function AdminDashboardPage() {
 
       <section className="grid gap-6 xl:grid-cols-[0.92fr_1.25fr]">
         <div className="space-y-4">
-          <div className="flex items-center gap-3">
-            <AlertTriangle
-              className="h-6 w-6 text-[#c43a2f]"
-              strokeWidth={1.9}
-            />
-            <h2 className="text-[2.1rem] font-semibold tracking-[-0.06em] text-[var(--color-ink)]">
-              Alertas operativas
-            </h2>
-          </div>
+          <SectionHeader
+            eyebrow="Estado"
+            size="md"
+            title={
+              <span className="inline-flex items-center gap-3">
+                <AlertTriangle className="h-6 w-6 text-[var(--color-danger)]" strokeWidth={1.9} />
+                <span>Alertas operativas</span>
+              </span>
+            }
+          />
 
-          <Card className="rounded-[1.9rem] border-[#f3b8b2] bg-[#fff0ee] p-6 shadow-none">
-            <p className="text-lg font-semibold text-[#a72b20]">
-              Cursos sin docentes asignados
-            </p>
-            <p className="mt-2 text-base leading-7 text-[#a6473f]">
-              {coursesWithoutTeachers.length === 0
+          <StateBanner
+            actions={
+              coursesWithoutTeachers.length > 0 ? (
+                <div className="grid w-full gap-2 sm:w-64">
+                  {coursesWithoutTeachers.map((course) => (
+                    <Link
+                      className="inline-flex min-w-0 items-center justify-start rounded-[var(--radius-sm)] px-2.5 py-1.5 text-sm font-medium text-[var(--color-danger)] transition-colors duration-[var(--motion-duration-fast)] hover:bg-white/55 hover:text-[var(--color-danger)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-danger)] focus-visible:ring-offset-2"
+                      href={`/admin/courses?courseId=${course.id}`}
+                      key={course.id}
+                    >
+                      <span className="truncate">{course.title}</span>
+                    </Link>
+                  ))}
+                </div>
+              ) : null
+            }
+            description={
+              coursesWithoutTeachers.length === 0
                 ? "No hay cursos activos sin profesorado asignado."
-                : `${coursesWithoutTeachers.length} cursos activos necesitan al menos un docente.`}
-            </p>
-            {coursesWithoutTeachers.length > 0 ? (
-              <div className="mt-4 flex flex-wrap gap-2">
-                {coursesWithoutTeachers.map((course) => (
-                  <ButtonLink
-                    href={`/admin/courses?courseId=${course.id}`}
-                    key={course.id}
-                    variant="ghost"
-                  >
-                    {course.title}
-                  </ButtonLink>
-                ))}
-              </div>
-            ) : null}
-          </Card>
+                : `${coursesWithoutTeachers.length} cursos activos necesitan al menos un docente.`
+            }
+            title="Cursos sin docentes asignados"
+            tone="danger"
+          />
 
-          <Card className="rounded-[1.9rem] border-[#f0d098] bg-[#fff1cf] p-6 shadow-none">
-            <p className="text-lg font-semibold text-[#7c5300]">
-              Revision de acceso post-edicion
-            </p>
-            <p className="mt-2 text-base leading-7 text-[#805c16]">
-              {postAccessEditions.length === 0
-                ? "No hay ediciones cerradas con acceso de consulta todavía vigente."
-                : `${postAccessEditions.length} ediciones ya finalizaron y siguen dentro de su ventana de consulta.`}
-            </p>
-            {postAccessEditions.length > 0 ? (
-              <div className="mt-4 flex flex-wrap gap-2">
-                {postAccessEditions.slice(0, 4).map((edition) => (
-                  <ButtonLink
-                    href={`/admin/editions?editionId=${edition.id}`}
-                    key={edition.id}
-                    variant="ghost"
-                  >
-                    {edition.course.title}
-                  </ButtonLink>
-                ))}
-              </div>
-            ) : null}
-          </Card>
+          <StateBanner
+            actions={
+              postAccessEditions.length > 0 ? (
+                <div className="grid w-full gap-2 sm:w-64">
+                  {postAccessEditions.slice(0, 4).map((edition) => (
+                    <Link
+                      className="inline-flex min-w-0 items-center justify-start rounded-[var(--radius-sm)] px-2.5 py-1.5 text-sm font-medium text-[var(--color-warning)] transition-colors duration-[var(--motion-duration-fast)] hover:bg-white/55 hover:text-[var(--color-warning)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-warning)] focus-visible:ring-offset-2"
+                      href={`/admin/editions?editionId=${edition.id}`}
+                      key={edition.id}
+                    >
+                      <span className="truncate">{edition.course.title}</span>
+                    </Link>
+                  ))}
+                </div>
+              ) : null
+            }
+            description={
+              postAccessEditions.length === 0
+                ? "No hay ediciones cerradas con acceso de consulta todavia vigente."
+                : `${postAccessEditions.length} ediciones ya finalizaron y siguen dentro de su ventana de consulta.`
+            }
+            title="Revision de acceso post-edicion"
+            tone="warning"
+          />
         </div>
 
-        <Card className="overflow-hidden rounded-[1.9rem] border-[#cfd8e2]">
-          <div className="flex items-center justify-between gap-4 border-b border-[#d9e0e8] px-7 py-6">
-            <div>
-              <h2 className="text-[2.1rem] font-semibold tracking-[-0.06em] text-[var(--color-ink)]">
-                Actividad reciente
-              </h2>
-              <p className="mt-2 text-[1rem] text-[#4c6075]">
-                Eventos administrativos y de negocio con trazabilidad completa.
-              </p>
-            </div>
-            <ButtonLink href="/admin/audit" variant="ghost">
-              Ver auditoria
-            </ButtonLink>
-          </div>
+        <SurfaceCard padding="md">
+          <SectionHeader
+            actions={
+              <ButtonLink href="/admin/audit" variant="subtle">
+                Ver auditoria
+              </ButtonLink>
+            }
+            description="Eventos administrativos y de negocio con trazabilidad completa."
+            eyebrow="Auditoria"
+            size="md"
+            title="Actividad reciente"
+          />
 
-          <div className="divide-y divide-[#dde4eb]">
-            {auditLogs.map((log) => {
-              const metadata = parseAuditMetadata(log.metadataJson);
+          <div className="mt-5 divide-y divide-[var(--color-border-subtle)]">
+            {auditLogs.length ? (
+              auditLogs.map((log) => {
+                const metadata = parseAuditMetadata(log.metadataJson);
 
-              return (
-                <div
-                  className="flex flex-wrap items-start gap-5 px-7 py-6"
-                  key={log.id}
-                >
-                  <div className="grid h-14 w-14 place-items-center rounded-full bg-[rgba(12,113,195,0.12)] text-base font-semibold text-[var(--color-primary)]">
-                    {(log.actor?.name ?? "SYS")
-                      .split(" ")
-                      .filter(Boolean)
-                      .slice(0, 2)
-                      .map((chunk) => chunk[0]?.toUpperCase())
-                      .join("")}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center gap-3">
-                      <p className="text-[1.18rem] font-semibold text-[var(--color-ink)]">
-                        {log.actor?.name ?? "Sistema"}
-                      </p>
-                      <AdminStatusBadge tone="primary">
-                        {getAuditActionLabel(log.action)}
-                      </AdminStatusBadge>
+                return (
+                  <div
+                    className="flex flex-wrap items-start gap-5 py-5 first:pt-0 last:pb-0"
+                    key={log.id}
+                  >
+                    <div className="grid h-14 w-14 place-items-center rounded-full bg-[var(--color-brand-soft)] text-base font-semibold text-[var(--color-primary)]">
+                      {buildActorInitials(log.actor?.name)}
                     </div>
-                    <p className="mt-2 text-[1.02rem] leading-7 text-[#394d61]">
-                      {log.entityLabel ?? log.entityType}
-                      {metadata?.nextRole
-                        ? ` · Rol destino: ${String(metadata.nextRole)}`
-                        : ""}
-                      {metadata?.sourceCourseSlug
-                        ? ` · Origen: ${String(metadata.sourceCourseSlug)}`
-                        : ""}
-                    </p>
-                    <p className="mt-2 text-sm font-medium text-[#68788a]">
-                      {formatRelativeTime(log.createdAt)}
-                    </p>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-3">
+                        <p className="text-[1.12rem] font-semibold text-[var(--color-ink)]">
+                          {log.actor?.name ?? "Sistema"}
+                        </p>
+                        <AdminStatusBadge tone="primary">
+                          {getAuditActionLabel(log.action)}
+                        </AdminStatusBadge>
+                      </div>
+                      <p className="mt-2 text-sm leading-7 text-[var(--color-ink-soft)]">
+                        {log.entityLabel ?? log.entityType}
+                        {metadata?.nextRole ? ` · Rol destino: ${String(metadata.nextRole)}` : ""}
+                        {metadata?.sourceCourseSlug
+                          ? ` · Origen: ${String(metadata.sourceCourseSlug)}`
+                          : ""}
+                      </p>
+                      <p className="mt-2 text-sm font-medium text-[var(--color-muted)]">
+                        {formatRelativeTime(log.createdAt)}
+                      </p>
+                    </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })
+            ) : (
+              <EmptyState
+                description="No hay eventos recientes que mostrar en esta ventana."
+                title="Sin actividad reciente"
+                tone="subtle"
+              />
+            )}
           </div>
-        </Card>
+        </SurfaceCard>
       </section>
     </div>
   );

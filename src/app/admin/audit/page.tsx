@@ -5,7 +5,7 @@ import {
   Filter,
   Search,
   ShieldCheck,
-  UserRoundSearch,
+  UserRoundSearch
 } from "lucide-react";
 import { AuditDetailCard } from "@/components/admin/audit/audit-detail-card";
 import { AuditLogTableCard } from "@/components/admin/audit/audit-log-table-card";
@@ -13,9 +13,9 @@ import { FilterSelect } from "@/components/admin/audit/filter-select";
 import { getEntityTypeLabel } from "@/components/admin/audit/audit-utils";
 import { AdminPageHeader } from "@/components/admin/admin-page-header";
 import { ButtonLink } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { SubmitButton } from "@/components/ui/submit-button";
+import { SurfaceCard } from "@/components/ui/surface-card";
 import { getAuditActionLabel, getSearchParamValue } from "@/lib/admin-console";
 import { requireAdminConsoleUser } from "@/lib/admin-console-server";
 import { parseAuditMetadata } from "@/lib/audit";
@@ -67,7 +67,7 @@ const actionOptions: AuditAction[] = [
   "COURSE_RESOURCE_SUBMISSION_CREATED",
   "COURSE_RESOURCE_SUBMISSION_UPDATED",
   "COURSE_RESOURCE_SUBMISSION_REVIEWED",
-  "COURSE_RESOURCE_SUBMISSION_CHANGES_REQUESTED",
+  "COURSE_RESOURCE_SUBMISSION_CHANGES_REQUESTED"
 ];
 
 const entityOptions: AuditEntityType[] = [
@@ -79,8 +79,11 @@ const entityOptions: AuditEntityType[] = [
   "COURSE_RESOURCE_SUBMISSION",
   "PROMOTION",
   "PURCHASE",
-  "NOTIFICATION_PREFERENCE",
+  "NOTIFICATION_PREFERENCE"
 ];
+
+const selectClassName =
+  "h-12 w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface-elevated)] pl-10 pr-4 text-sm text-[var(--color-ink)] outline-none transition focus:border-[var(--color-primary)] focus:ring-2 focus:ring-[var(--color-primary)] focus:ring-offset-2 focus:ring-offset-[var(--color-surface-canvas)]";
 
 export default async function AdminAuditPage({ searchParams }: AuditPageProps) {
   const currentUser = await requireAdminConsoleUser("/admin/audit");
@@ -103,8 +106,7 @@ export default async function AdminAuditPage({ searchParams }: AuditPageProps) {
 
       return matchesQ && matchesAction && matchesEntity;
     });
-    const selectedDemoLog =
-      demoLogs.find((entry) => entry.id === logId) ?? demoLogs[0] ?? null;
+    const selectedDemoLog = demoLogs.find((entry) => entry.id === logId) ?? demoLogs[0] ?? null;
     const demoLogRows = demoLogs.map((log) => ({
       id: log.id,
       createdAt: log.createdAt,
@@ -114,7 +116,7 @@ export default async function AdminAuditPage({ searchParams }: AuditPageProps) {
       actorName: log.actor.name,
       actorEmail: log.actor.email,
       href: "",
-      isSelected: selectedDemoLog?.id === log.id,
+      isSelected: selectedDemoLog?.id === log.id
     }));
     const selectedDemoLogDetail = selectedDemoLog
       ? {
@@ -125,7 +127,7 @@ export default async function AdminAuditPage({ searchParams }: AuditPageProps) {
           entityId: selectedDemoLog.entityId,
           createdAt: selectedDemoLog.createdAt,
           actorName: selectedDemoLog.actor.name,
-          actorEmail: selectedDemoLog.actor.email,
+          actorEmail: selectedDemoLog.actor.email
         }
       : null;
 
@@ -141,14 +143,14 @@ export default async function AdminAuditPage({ searchParams }: AuditPageProps) {
     };
     const resolvedDemoLogRows = demoLogRows.map((log) => ({
       ...log,
-      href: buildDemoQuery(log.id),
+      href: buildDemoQuery(log.id)
     }));
 
     return (
       <div className="space-y-8">
         <AdminPageHeader
           actions={
-            <ButtonLink href="/admin" variant="secondary">
+            <ButtonLink href="/admin" variant="neutral">
               Volver al panel
             </ButtonLink>
           }
@@ -156,23 +158,16 @@ export default async function AdminAuditPage({ searchParams }: AuditPageProps) {
           title="Registro de auditoria"
         />
 
-        <Card className="rounded-[2rem] p-6">
-          <form className="grid gap-4 xl:grid-cols-[minmax(0,1.3fr)_220px_220px_220px_220px]">
+        <SurfaceCard padding="md">
+          <form className="grid gap-4 2xl:grid-cols-[minmax(0,1.3fr)_220px_220px_220px_220px]">
             <div className="space-y-2">
-              <label className="text-xs font-semibold uppercase tracking-[0.16em] text-[#506174]">
-                Buscar
-              </label>
+              <label className="text-meta-xs font-semibold text-[var(--color-muted)]">Buscar</label>
               <div className="relative">
                 <Search
-                  className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#607185]"
+                  className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--color-muted)]"
                   strokeWidth={1.8}
                 />
-                <Input
-                  className="pl-10"
-                  defaultValue={q}
-                  name="q"
-                  placeholder="Buscar registros..."
-                />
+                <Input className="pl-10" defaultValue={q} name="q" placeholder="Buscar registros..." />
               </div>
             </div>
             <FilterSelect
@@ -208,33 +203,33 @@ export default async function AdminAuditPage({ searchParams }: AuditPageProps) {
               ))}
             </FilterSelect>
             <div className="space-y-2">
-              <label className="text-xs font-semibold uppercase tracking-[0.16em] text-[#506174]">
-                Entidad
-              </label>
+              <label className="text-meta-xs font-semibold text-[var(--color-muted)]">Entidad</label>
               <div className="flex gap-3">
-                <select
-                  className="h-12 flex-1 rounded-xl border border-[var(--color-border)] bg-white px-4 text-sm text-[var(--color-ink)]"
-                  defaultValue={entity}
-                  name="entity"
-                >
-                  <option value="ALL">Todas las entidades</option>
-                  {entityOptions.map((option) => (
-                    <option key={option} value={option}>
-                      {getEntityTypeLabel(option)}
-                    </option>
-                  ))}
-                </select>
+                <div className="relative flex-1">
+                  <Filter
+                    className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--color-muted)]"
+                    strokeWidth={1.8}
+                  />
+                  <select className={selectClassName} defaultValue={entity} name="entity">
+                    <option value="ALL">Todas las entidades</option>
+                    {entityOptions.map((option) => (
+                      <option key={option} value={option}>
+                        {getEntityTypeLabel(option)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
                 <SubmitButton pendingLabel="Filtrando..." variant="secondary">
                   Filtrar
                 </SubmitButton>
               </div>
             </div>
           </form>
-        </Card>
+        </SurfaceCard>
 
-        <section className="grid gap-6 2xl:grid-cols-[minmax(0,1.25fr)_420px]">
+        <section className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-6 2xl:grid-cols-[minmax(0,1.25fr)_420px]">
           <AuditLogTableCard
-            countLabel={`${demoLogs.length} registros visibles de demostración`}
+            countLabel={`${demoLogs.length} registros visibles de demostracion`}
             logs={resolvedDemoLogRows}
           />
 
@@ -262,16 +257,16 @@ export default async function AdminAuditPage({ searchParams }: AuditPageProps) {
     db.user.findMany({
       where: {
         auditLogs: {
-          some: {},
-        },
+          some: {}
+        }
       },
       select: {
         id: true,
-        name: true,
+        name: true
       },
       orderBy: {
-        name: "asc",
-      },
+        name: "asc"
+      }
     }),
     db.auditLog.findMany({
       where: {
@@ -280,41 +275,38 @@ export default async function AdminAuditPage({ searchParams }: AuditPageProps) {
               OR: [
                 { entityLabel: { contains: q } },
                 { entityId: { contains: q } },
-                { actor: { name: { contains: q } } },
-              ],
+                { actor: { name: { contains: q } } }
+              ]
             }
           : {}),
         ...(rangeStart
           ? {
               createdAt: {
-                gte: rangeStart,
-              },
+                gte: rangeStart
+              }
             }
           : {}),
         ...(actorId !== "ALL" ? { actorId } : {}),
         ...(action !== "ALL" ? { action: action as AuditAction } : {}),
-        ...(entity !== "ALL" ? { entityType: entity as AuditEntityType } : {}),
+        ...(entity !== "ALL" ? { entityType: entity as AuditEntityType } : {})
       },
       include: {
         actor: {
           select: {
             name: true,
-            email: true,
-          },
-        },
+            email: true
+          }
+        }
       },
       orderBy: {
-        createdAt: "desc",
+        createdAt: "desc"
       },
-      take: 50,
-    }),
+      take: 50
+    })
   ]);
 
-  const selectedLog =
-    logs.find((entry) => entry.id === logId) ?? logs[0] ?? null;
-  const selectedMetadata = parseAuditMetadata(
-    selectedLog?.metadataJson ?? null,
-  );
+  const selectedLog = logs.find((entry) => entry.id === logId) ?? logs[0] ?? null;
+  const selectedMetadata = parseAuditMetadata(selectedLog?.metadataJson ?? null);
 
   const buildAuditQuery = (nextLogId?: string) => {
     const qs = new URLSearchParams();
@@ -354,7 +346,7 @@ export default async function AdminAuditPage({ searchParams }: AuditPageProps) {
     actorName: log.actor?.name ?? "Sistema",
     actorEmail: log.actor?.email ?? "Proceso interno",
     href: buildAuditQuery(log.id),
-    isSelected: selectedLog?.id === log.id,
+    isSelected: selectedLog?.id === log.id
   }));
   const selectedLogDetail = selectedLog
     ? {
@@ -365,7 +357,7 @@ export default async function AdminAuditPage({ searchParams }: AuditPageProps) {
         entityId: selectedLog.entityId,
         createdAt: selectedLog.createdAt,
         actorName: selectedLog.actor?.name ?? "Sistema",
-        actorEmail: selectedLog.actor?.email ?? "Proceso interno",
+        actorEmail: selectedLog.actor?.email ?? "Proceso interno"
       }
     : null;
 
@@ -375,7 +367,7 @@ export default async function AdminAuditPage({ searchParams }: AuditPageProps) {
         actions={
           <ButtonLink
             href={`/admin/audit/export?range=${range}&actorId=${actorId}&action=${action}&entity=${entity}&q=${encodeURIComponent(q)}`}
-            variant="secondary"
+            variant="neutral"
           >
             <Download className="mr-2 h-4 w-4" strokeWidth={1.8} />
             Exportar CSV
@@ -385,23 +377,16 @@ export default async function AdminAuditPage({ searchParams }: AuditPageProps) {
         title="Registro de auditoria"
       />
 
-      <Card className="rounded-[2rem] p-6">
-        <form className="grid gap-4 xl:grid-cols-[minmax(0,1.3fr)_220px_220px_220px_220px]">
+      <SurfaceCard padding="md">
+        <form className="grid gap-4 2xl:grid-cols-[minmax(0,1.3fr)_220px_220px_220px_220px]">
           <div className="space-y-2">
-            <label className="text-xs font-semibold uppercase tracking-[0.16em] text-[#506174]">
-              Buscar
-            </label>
+            <label className="text-meta-xs font-semibold text-[var(--color-muted)]">Buscar</label>
             <div className="relative">
               <Search
-                className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#607185]"
+                className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--color-muted)]"
                 strokeWidth={1.8}
               />
-              <Input
-                className="pl-10"
-                defaultValue={q}
-                name="q"
-                placeholder="Buscar registros..."
-              />
+              <Input className="pl-10" defaultValue={q} name="q" placeholder="Buscar registros..." />
             </div>
           </div>
 
@@ -445,20 +430,14 @@ export default async function AdminAuditPage({ searchParams }: AuditPageProps) {
           </FilterSelect>
 
           <div className="space-y-2">
-            <label className="text-xs font-semibold uppercase tracking-[0.16em] text-[#506174]">
-              Entidad
-            </label>
+            <label className="text-meta-xs font-semibold text-[var(--color-muted)]">Entidad</label>
             <div className="flex gap-3">
               <div className="relative flex-1">
                 <Filter
-                  className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#607185]"
+                  className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--color-muted)]"
                   strokeWidth={1.8}
                 />
-                <select
-                  className="h-12 w-full rounded-xl border border-[var(--color-border)] bg-white pl-10 pr-4 text-sm text-[var(--color-ink)]"
-                  defaultValue={entity}
-                  name="entity"
-                >
+                <select className={selectClassName} defaultValue={entity} name="entity">
                   <option value="ALL">Todas las entidades</option>
                   {entityOptions.map((option) => (
                     <option key={option} value={option}>
@@ -473,9 +452,9 @@ export default async function AdminAuditPage({ searchParams }: AuditPageProps) {
             </div>
           </div>
         </form>
-      </Card>
+      </SurfaceCard>
 
-      <section className="grid gap-6 2xl:grid-cols-[minmax(0,1.25fr)_420px]">
+      <section className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-6 2xl:grid-cols-[minmax(0,1.25fr)_420px]">
         <AuditLogTableCard
           countLabel={`${logs.length} registros visibles en el rango seleccionado`}
           logs={logRows}
@@ -489,10 +468,7 @@ export default async function AdminAuditPage({ searchParams }: AuditPageProps) {
         />
 
         {selectedLogDetail ? (
-          <AuditDetailCard
-            log={selectedLogDetail}
-            selectedMetadata={selectedMetadata ?? {}}
-          />
+          <AuditDetailCard log={selectedLogDetail} selectedMetadata={selectedMetadata ?? {}} />
         ) : null}
       </section>
     </div>

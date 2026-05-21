@@ -6,7 +6,7 @@ export function DataTable({
   ...props
 }: TableHTMLAttributes<HTMLTableElement>) {
   return (
-    <div className="overflow-x-auto rounded-[var(--radius-lg)] border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)]">
+    <div className="w-full max-w-full overflow-x-auto rounded-[var(--radius-lg)] border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)]">
       <table className={cn("min-w-full border-separate border-spacing-0 text-left", className)} {...props} />
     </div>
   );

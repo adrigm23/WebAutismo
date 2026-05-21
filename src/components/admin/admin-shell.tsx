@@ -13,8 +13,8 @@ import {
   LayoutDashboard,
   LogOut,
   ScrollText,
-  Settings,
   Search,
+  Settings,
   Ticket,
   Tickets,
   UsersRound
@@ -22,7 +22,11 @@ import {
 import { logoutAction } from "@/actions/session";
 import { AdminMobileNav } from "@/components/admin/admin-mobile-nav";
 import { ButtonLink } from "@/components/ui/button";
-import { adminNavigation, getAdminSearchPlaceholder, getUserInitials } from "@/lib/admin-console";
+import {
+  adminNavigation,
+  getAdminSearchPlaceholder,
+  getUserInitials
+} from "@/lib/admin-console";
 import { isDemoUserId } from "@/lib/demo-auth";
 import { siteConfig } from "@/lib/site";
 import { cn } from "@/lib/utils";
@@ -119,13 +123,13 @@ export function AdminShell({ user, children }: AdminShellProps) {
   return (
     <div className="min-h-screen bg-[linear-gradient(180deg,#f7f4ef_0%,#f3f6fa_52%,#fbfaf8_100%)] text-[var(--color-ink)]">
       <div className="grid min-h-screen lg:grid-cols-[290px_minmax(0,1fr)]">
-        <aside className="sticky top-0 hidden h-screen overflow-y-auto border-r border-[#d6dde6] bg-[linear-gradient(180deg,#f5f1eb_0%,#f4f7fb_100%)] lg:flex lg:flex-col">
+        <aside className="sticky top-0 hidden h-screen overflow-y-auto border-r border-[var(--color-border-subtle)] bg-[linear-gradient(180deg,#f5f1eb_0%,#f4f7fb_100%)] lg:flex lg:flex-col">
           <div className="px-8 pb-7 pt-10">
             <Link className="block" href="/admin">
               <div className="text-[2.35rem] font-bold tracking-[-0.07em] text-[var(--color-primary)]">
                 {siteConfig.shortName}
               </div>
-              <p className="mt-3 text-[0.74rem] font-semibold uppercase tracking-[0.28em] text-[#22384f]">
+              <p className="mt-3 text-[0.74rem] font-semibold uppercase tracking-[0.28em] text-[var(--color-ink-soft)]">
                 Control central del campus
               </p>
             </Link>
@@ -133,14 +137,11 @@ export function AdminShell({ user, children }: AdminShellProps) {
 
           <div className="px-7">
             {isDemoAdmin ? (
-              <div className="rounded-2xl border border-[#d6dde6] bg-white px-5 py-4 text-sm leading-6 text-[#4b6074]">
+              <div className="rounded-[var(--radius-lg)] border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] px-5 py-4 text-sm leading-6 text-[var(--color-muted)]">
                 Modo demo: secciones del panel con datos simulados.
               </div>
             ) : primaryAction ? (
-              <ButtonLink
-                className="w-full justify-center rounded-2xl py-4 text-base shadow-none"
-                href={primaryAction.href}
-              >
+              <ButtonLink className="w-full justify-center" href={primaryAction.href}>
                 {primaryAction.label}
               </ButtonLink>
             ) : null}
@@ -156,9 +157,9 @@ export function AdminShell({ user, children }: AdminShellProps) {
               return (
                 <Link
                   className={cn(
-                    "flex items-center gap-4 rounded-2xl px-4 py-3 text-[1.05rem] font-medium text-[#243444] transition hover:bg-white hover:text-[var(--color-primary)]",
+                    "flex items-center gap-4 rounded-[var(--radius-md)] px-4 py-3 text-[1.02rem] font-medium text-[var(--color-ink-soft)] transition duration-[var(--motion-duration-base)] hover:bg-white hover:text-[var(--color-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-surface-canvas)]",
                     isActive &&
-                      "ui-inverse-text bg-[var(--color-primary)] shadow-[0_14px_26px_rgba(12,113,195,0.18)] hover:bg-[var(--color-primary)]"
+                      "ui-inverse-text bg-[var(--color-primary)] shadow-[var(--shadow-soft)] hover:bg-[var(--color-primary)]"
                   )}
                   href={item.href}
                   key={item.href}
@@ -170,10 +171,10 @@ export function AdminShell({ user, children }: AdminShellProps) {
             })}
           </nav>
 
-          <div className="border-t border-[#d6dde6] px-7 py-7">
+          <div className="border-t border-[var(--color-border-subtle)] px-7 py-7">
             <div className="space-y-2">
               <a
-                className="flex items-center gap-4 rounded-2xl px-4 py-3 text-[1.02rem] font-medium text-[#243444] transition hover:bg-white"
+                className="flex items-center gap-4 rounded-[var(--radius-md)] px-4 py-3 text-[1.02rem] font-medium text-[var(--color-ink-soft)] transition duration-[var(--motion-duration-base)] hover:bg-white hover:text-[var(--color-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-surface-canvas)]"
                 href="mailto:formacion@autismocordoba.org"
               >
                 <CircleHelp className="h-[1.05rem] w-[1.05rem]" strokeWidth={2} />
@@ -182,7 +183,7 @@ export function AdminShell({ user, children }: AdminShellProps) {
 
               <form action={logoutAction}>
                 <button
-                  className="flex w-full items-center gap-4 rounded-2xl px-4 py-3 text-left text-[1.02rem] font-medium text-[#243444] transition hover:bg-white"
+                  className="flex w-full items-center gap-4 rounded-[var(--radius-md)] px-4 py-3 text-left text-[1.02rem] font-medium text-[var(--color-ink-soft)] transition duration-[var(--motion-duration-base)] hover:bg-white hover:text-[var(--color-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-surface-canvas)]"
                   type="submit"
                 >
                   <LogOut className="h-[1.05rem] w-[1.05rem]" strokeWidth={2} />
@@ -194,25 +195,28 @@ export function AdminShell({ user, children }: AdminShellProps) {
         </aside>
 
         <div className="min-w-0">
-          <header className="sticky top-0 z-20 border-b border-[#d6dde6] bg-[#f7f4ef]/96 backdrop-blur-md">
+          <header className="sticky top-0 z-20 border-b border-[var(--color-border-subtle)] bg-[rgba(247,244,239,0.96)] backdrop-blur-md">
             <div className="flex flex-wrap items-center justify-between gap-4 px-5 py-4 sm:px-7 xl:px-10">
               <div className="flex flex-col gap-3 lg:hidden">
-                <Link className="text-[1.65rem] font-bold tracking-[-0.06em] text-[var(--color-primary)]" href="/admin">
+                <Link
+                  className="text-[1.65rem] font-bold tracking-[-0.06em] text-[var(--color-primary)]"
+                  href="/admin"
+                >
                   {siteConfig.shortName} Admin
                 </Link>
                 <AdminMobileNav />
               </div>
 
-              <form action={pathname} className="w-full max-w-[34rem]">
+              <form className="w-full max-w-[34rem]" method="get">
                 {preservedSearchParams.map(([key, value]) => (
                   <input key={`${key}-${value}`} name={key} type="hidden" value={value} />
                 ))}
-                <label className="relative block">
-                  <span className="pointer-events-none absolute left-5 top-1/2 -translate-y-1/2 text-[#53657a]">
+                <label className="relative flex min-h-[3.25rem] items-center rounded-[var(--radius-pill)] border border-[var(--color-border)] bg-white px-5 text-[var(--color-muted)] shadow-[var(--shadow-soft)] transition focus-within:border-[var(--color-primary)] focus-within:ring-2 focus-within:ring-[var(--color-primary)] focus-within:ring-offset-2 focus-within:ring-offset-[var(--color-surface-canvas)]">
+                  <span className="pointer-events-none mr-3 text-[var(--color-muted)]">
                     <Search className="hidden h-5 w-5 sm:block" strokeWidth={1.8} />
                   </span>
                   <input
-                    className="h-13 w-full rounded-full border border-[#c8d2de] bg-white pl-6 pr-5 text-[0.98rem] text-[#1f2c3a] shadow-[0_8px_20px_rgba(15,44,76,0.04)] outline-none transition placeholder:text-[#6c7784] focus:border-[var(--color-primary)] focus:ring-2 focus:ring-[rgba(12,113,195,0.12)] sm:pl-14"
+                    className="w-full min-w-0 bg-transparent text-[0.98rem] text-[var(--color-ink)] outline-none placeholder:text-[var(--color-muted)]"
                     defaultValue={searchValue}
                     name="q"
                     placeholder={searchPlaceholder}
@@ -221,27 +225,27 @@ export function AdminShell({ user, children }: AdminShellProps) {
                 </label>
               </form>
 
-              <div className="ml-auto flex items-center gap-3 text-[#203345]">
+              <div className="ml-auto flex items-center gap-3 text-[var(--color-ink-soft)]">
                 <Link
-                  className="grid h-11 w-11 place-items-center rounded-full border border-transparent transition hover:border-[#c8d2de] hover:bg-white"
+                  className="grid h-11 w-11 place-items-center rounded-full border border-transparent transition duration-[var(--motion-duration-base)] hover:border-[var(--color-border)] hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-surface-canvas)]"
                   href="/mi-cuenta#notificaciones"
                 >
                   <Bell className="h-5 w-5" strokeWidth={1.9} />
                 </Link>
                 <Link
-                  className="grid h-11 w-11 place-items-center rounded-full border border-transparent transition hover:border-[#c8d2de] hover:bg-white"
+                  className="grid h-11 w-11 place-items-center rounded-full border border-transparent transition duration-[var(--motion-duration-base)] hover:border-[var(--color-border)] hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-surface-canvas)]"
                   href={`mailto:${siteConfig.supportEmail}`}
                 >
                   <CircleHelp className="h-5 w-5" strokeWidth={1.9} />
                 </Link>
                 <Link
-                  className="grid h-11 w-11 place-items-center rounded-full border border-transparent transition hover:border-[#c8d2de] hover:bg-white"
+                  className="grid h-11 w-11 place-items-center rounded-full border border-transparent transition duration-[var(--motion-duration-base)] hover:border-[var(--color-border)] hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-surface-canvas)]"
                   href="/mi-cuenta"
                 >
                   <Settings className="h-5 w-5" strokeWidth={1.9} />
                 </Link>
                 <Link
-                  className="ui-inverse-text grid h-12 w-12 place-items-center rounded-full bg-[var(--color-primary)] text-sm font-semibold shadow-[0_10px_22px_rgba(12,113,195,0.18)]"
+                  className="ui-inverse-text grid h-12 w-12 place-items-center rounded-full bg-[var(--color-primary)] text-sm font-semibold shadow-[var(--shadow-soft)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-surface-canvas)]"
                   href="/mi-cuenta"
                 >
                   {getUserInitials(user.name)}

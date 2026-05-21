@@ -207,7 +207,7 @@ export default async function ForumThreadPage({ params, searchParams }: ForumThr
             </div>
           }
           eyebrow={
-            <div className="flex flex-wrap items-center gap-2">
+            <span className="inline-flex flex-wrap items-center gap-2">
               {forumData.thread.isPinned ? <Badge tone="warning">Fijado</Badge> : null}
               {forumData.thread.type === "ANNOUNCEMENT" ? <Badge tone="brand">Anuncio</Badge> : null}
               {forumData.thread.isResolved ? <Badge tone="success">Resuelto</Badge> : null}
@@ -216,7 +216,7 @@ export default async function ForumThreadPage({ params, searchParams }: ForumThr
               <Badge tone={canModerateCourse(forumData.thread.authorRole) ? "info" : "warning"}>
                 {getRoleLabel(forumData.thread.authorRole)}
               </Badge>
-            </div>
+            </span>
           }
           title={forumData.thread.title}
           description={

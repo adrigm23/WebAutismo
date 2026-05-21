@@ -25,10 +25,12 @@ import { CourseArtwork } from "@/components/course-artwork";
 import { Badge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/empty-state";
 import { ListRow } from "@/components/ui/list-row";
 import { MetricPanel } from "@/components/ui/metric-panel";
 import { SectionHeader } from "@/components/ui/section-header";
 import { StateBanner } from "@/components/ui/state-banner";
+import { SurfaceCard } from "@/components/ui/surface-card";
 import type {
   DashboardNotificationSnapshot,
   StudentDashboardPendingSource,
@@ -161,24 +163,24 @@ export function StudentAccountDashboard({
                       <ButtonLink href={buildCourseContentHref(primaryCourse.space.course.slug)}>
                         Continuar leccion
                       </ButtonLink>
-                      <ButtonLink href={resourcesHref} variant="secondary">
+                      <ButtonLink href={resourcesHref} variant="neutral">
                         Ver tareas
                       </ButtonLink>
                     </>
                   ) : (
                     <ButtonLink href="/cursos">Explorar catalogo</ButtonLink>
                   )}
-                  <ButtonLink href="/mis-cursos" variant="ghost">
+                  <ButtonLink href="/mis-cursos" variant="subtle">
                     Ver todos mis cursos
                   </ButtonLink>
                 </div>
 
                 {primaryCourse ? (
-                  <div className="mt-8 rounded-[var(--radius-xl)] border border-[var(--color-border-subtle)] bg-[linear-gradient(180deg,rgba(255,253,250,0.96),rgba(223,234,243,0.44))] p-5 lg:p-6">
+                  <SurfaceCard className="mt-8" padding="md" variant="muted">
                     <div className="flex flex-wrap items-center gap-2">
                       <Badge tone="brand">Curso activo</Badge>
-                      <Badge tone="muted">{primaryCourse.space.course.level}</Badge>
-                      <Badge tone="muted">{primaryCourse.space.course.format}</Badge>
+                      <Badge tone="outline">{primaryCourse.space.course.level}</Badge>
+                      <Badge tone="outline">{primaryCourse.space.course.format}</Badge>
                     </div>
 
                     <h2 className="font-premium mt-4 text-display-lg font-semibold text-[var(--color-ink)]">
@@ -190,7 +192,7 @@ export function StudentAccountDashboard({
 
                     <div className="mt-6 flex flex-wrap items-end justify-between gap-4">
                       <div className="min-w-0 flex-1">
-                        <div className="h-2.5 overflow-hidden rounded-full bg-white/84">
+                        <div className="h-2.5 overflow-hidden rounded-full bg-[color:var(--color-surface-elevated)]">
                           <div
                             aria-hidden="true"
                             className="h-full rounded-full bg-[var(--color-primary)] transition-[width]"
@@ -213,7 +215,7 @@ export function StudentAccountDashboard({
                         Abrir campus
                       </ButtonLink>
                     </div>
-                  </div>
+                  </SurfaceCard>
                 ) : null}
               </div>
 
@@ -249,9 +251,9 @@ export function StudentAccountDashboard({
             </section>
 
             {primaryCourse ? (
-              <Card className="overflow-hidden border-[rgba(22,60,88,0.14)] p-0" variant="elevated">
+              <Card className="overflow-hidden border-[var(--color-border-subtle)] p-0" variant="elevated">
                 <div className="grid gap-0 lg:grid-cols-[19rem_minmax(0,1fr)]">
-                  <div className="bg-[#132835] p-4 lg:p-5">
+                  <div className="bg-[var(--color-primary-strong)] p-4 lg:p-5">
                     <CourseArtwork
                       className="h-full min-h-[17rem] w-full rounded-[var(--radius-lg)] border-0"
                       course={primaryCourse.space.course}
@@ -289,10 +291,10 @@ export function StudentAccountDashboard({
                       <ButtonLink href={buildCourseContentHref(primaryCourse.space.course.slug)}>
                         Continuar leccion
                       </ButtonLink>
-                      <ButtonLink href={resourcesHref} variant="secondary">
+                      <ButtonLink href={resourcesHref} variant="neutral">
                         Ver tareas
                       </ButtonLink>
-                      <ButtonLink href="/mis-cursos" variant="ghost">
+                      <ButtonLink href="/mis-cursos" variant="subtle">
                         Ver area completa
                       </ButtonLink>
                     </div>
@@ -338,7 +340,7 @@ export function StudentAccountDashboard({
                 {pendingItems.length ? (
                   pendingItems.map((item) => (
                     <Link
-                      className="block rounded-[var(--radius-md)] transition hover:-translate-y-[1px]"
+                      className="block rounded-[var(--radius-md)] transition hover:-translate-y-[1px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2"
                       href={item.href}
                       key={item.id}
                     >
@@ -366,10 +368,12 @@ export function StudentAccountDashboard({
                     </Link>
                   ))
                 ) : (
-                  <div className="ui-empty-state p-5 text-sm leading-7 text-[var(--color-muted)]">
-                    No hay entregas pendientes ahora mismo. Cuando se publique un nuevo ejercicio o
-                    necesites responder a una revision, aparecera aqui.
-                  </div>
+                  <EmptyState
+                    className="px-5 py-6"
+                    description="Cuando se publique un nuevo ejercicio o necesites responder a una revision, aparecera aqui."
+                    title="Sin entregas pendientes"
+                    tone="subtle"
+                  />
                 )}
               </div>
             </Card>
@@ -389,7 +393,7 @@ export function StudentAccountDashboard({
                 <ButtonLink href="/mis-cursos" variant="secondary">
                   Ver area completa
                 </ButtonLink>
-                <ButtonLink href="/cursos" variant="ghost">
+                <ButtonLink href="/cursos" variant="subtle">
                   Explorar catalogo
                 </ButtonLink>
               </>
@@ -414,8 +418,8 @@ export function StudentAccountDashboard({
                     />
                     <div className="p-5 lg:p-6">
                       <div className="flex flex-wrap items-center gap-2">
-                        <Badge tone="student">{course.space.course.level}</Badge>
-                        <Badge tone="muted">{course.progress.completionRate}% progreso</Badge>
+                        <Badge tone="warning">{course.space.course.level}</Badge>
+                        <Badge tone="outline">{course.progress.completionRate}% progreso</Badge>
                       </div>
 
                       <h3 className="font-premium mt-4 text-heading-lg font-semibold text-[var(--color-ink)]">
@@ -454,7 +458,7 @@ export function StudentAccountDashboard({
                         </ButtonLink>
                         <ButtonLink
                           href={buildCourseResourcesHref(course.space.course.slug)}
-                          variant="secondary"
+                          variant="neutral"
                         >
                           Ver tareas
                         </ButtonLink>
@@ -476,7 +480,7 @@ export function StudentAccountDashboard({
                     </div>
                     <ButtonLink
                       href={buildCourseContentHref(primaryCourse.space.course.slug)}
-                      variant="secondary"
+                      variant="neutral"
                     >
                       Abrir campus
                     </ButtonLink>
@@ -485,15 +489,12 @@ export function StudentAccountDashboard({
               ) : null}
             </div>
           ) : (
-            <Card className="ui-empty-state mt-8 p-8">
-              <p className="text-body-md text-[var(--color-ink)]/84">
-                Todavia no tienes cursos asociados. Cuando completes una compra o te asignen un
-                curso, apareceran aqui con su estado de acceso real.
-              </p>
-              <ButtonLink className="mt-6" href="/cursos">
-                Explorar cursos
-              </ButtonLink>
-            </Card>
+            <EmptyState
+              action={<ButtonLink href="/cursos">Explorar cursos</ButtonLink>}
+              className="mt-8"
+              description="Cuando completes una compra o te asignen un curso, apareceran aqui con su estado de acceso real."
+              title="Todavia no tienes cursos asociados"
+            />
           )}
         </section>
 
@@ -516,7 +517,7 @@ export function StudentAccountDashboard({
                   Consulta anuncios, dudas y respuestas del equipo docente asociadas a tu
                   matricula. Las tareas viven dentro del campus.
                 </p>
-                <ButtonLink className="mt-5" href={forumHref} variant="secondary">
+                <ButtonLink className="mt-5" href={forumHref} variant="neutral">
                   Abrir foro
                 </ButtonLink>
               </Card>
@@ -530,13 +531,14 @@ export function StudentAccountDashboard({
                   Escribe a {siteConfig.supportEmail} si necesitas ayuda con tu cuenta, acceso al
                   campus o incidencias del curso.
                 </p>
-                <a
-                  className="mt-5 inline-flex items-center rounded-[var(--radius-md)] border border-[var(--color-primary)] px-4 py-2.5 text-sm font-semibold text-[var(--color-primary)] transition hover:bg-[var(--color-primary-soft)]"
+                <ButtonLink
+                  className="mt-5 self-start"
                   href={`mailto:${siteConfig.supportEmail}`}
+                  variant="neutral"
                 >
                   <CircleHelp className="mr-2 h-4 w-4" />
                   Contactar soporte
-                </a>
+                </ButtonLink>
               </Card>
             </div>
           </Card>
