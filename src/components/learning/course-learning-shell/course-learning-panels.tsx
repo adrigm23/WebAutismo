@@ -19,6 +19,7 @@ import {
   ModuleResourceCard,
   ModuleRow,
   SurfaceCard,
+  SummaryMetric,
 } from "./primitives";
 import type { LearningShellForumCategory, LearningShellModule } from "./types";
 
@@ -102,8 +103,7 @@ export function CompactLessonHeader(input: {
 }) {
   if (!input.canModerate) {
     const hasCurrentResources =
-      input.currentModuleMaterials.length > 0 ||
-      input.currentModuleExercises.length > 0;
+      input.currentModuleMaterials.length > 0 || input.currentModuleExercises.length > 0;
     const showExerciseShortcut = Boolean(
       input.currentModulePrimaryMaterial && input.currentModuleExercises[0],
     );
@@ -124,29 +124,35 @@ export function CompactLessonHeader(input: {
 
     return (
       <SurfaceCard
-        description="Sigue la lección activa y abre la tarea cuando toque."
-        title="Lección activa"
+        className="overflow-hidden border-[var(--color-border-subtle)] bg-[linear-gradient(180deg,rgba(255,253,250,0.98),rgba(223,234,243,0.44))]"
+        description="Continua desde la leccion activa y mantente dentro del mismo hilo de aprendizaje."
+        title="Leccion activa"
       >
-        <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(17rem,0.72fr)]">
-          <div className="space-y-3">
-            <p className="text-sm font-medium text-[var(--color-muted)]">
-              {input.currentModule
-                ? `Módulo ${input.currentModule.index + 1}${input.editionLabel ? ` | ${input.editionLabel}` : ""}`
-                : input.course.title}
-            </p>
+        <div className="grid gap-5 xl:grid-cols-[minmax(0,1.18fr)_minmax(18rem,0.82fr)]">
+          <div className="space-y-5">
+            <div className="flex flex-wrap items-center gap-2">
+              <Badge tone="brand">Alumno</Badge>
+              {input.currentModule ? (
+                <Badge tone="outline">Modulo {input.currentModule.index + 1}</Badge>
+              ) : null}
+              {input.editionLabel ? <Badge tone="outline">{input.editionLabel}</Badge> : null}
+            </div>
+
             <div>
-              <h2 className="text-display-lg font-semibold text-[var(--color-ink)]">
-                {input.currentModule
-                  ? input.currentModule.title
-                  : input.course.title}
+              <p className="text-meta-xs font-semibold text-[var(--color-primary)]">
+                {input.currentModule ? input.currentModule.estimatedTime : input.course.title}
+              </p>
+              <h2 className="font-premium mt-3 text-display-lg font-semibold text-[var(--color-ink)]">
+                {input.currentModule ? input.currentModule.title : input.course.title}
               </h2>
-              <p className="mt-2 max-w-3xl text-base leading-7 text-[var(--color-muted)]">
+              <p className="mt-3 max-w-3xl text-body-md text-[var(--color-ink-soft)]">
                 {input.currentModule
                   ? input.currentModule.description
-                  : "Todavía no hay una lección activa configurada para este curso."}
+                  : "Todavia no hay una leccion activa configurada para este curso."}
               </p>
             </div>
-            <div className="flex flex-wrap gap-2.5">
+
+            <div className="flex flex-wrap gap-3">
               <Button onClick={primaryAction.onClick} type="button">
                 {primaryAction.label}
               </Button>
@@ -160,47 +166,36 @@ export function CompactLessonHeader(input: {
                 </Button>
               ) : null}
               {hasCurrentResources ? (
-                <Button
-                  onClick={input.onOpenResources}
-                  type="button"
-                  variant="ghost"
-                >
+                <Button onClick={input.onOpenResources} type="button" variant="ghost">
                   Ver recursos
                 </Button>
               ) : null}
             </div>
           </div>
 
-          <div className="rounded-[var(--radius-md)] border border-[rgba(12,113,195,0.12)] bg-[var(--color-surface)] p-3.5">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-muted)]">
-              Qué sigue después
-            </p>
-            <p className="mt-2.5 text-lg font-semibold text-[var(--color-ink)]">
-              {input.currentModuleExercises[0]
-                ? "Abre la actividad del módulo cuando termines el contenido."
-                : "Continúa con la secuencia del curso desde la siguiente lección."}
-            </p>
-            <p className="mt-2 text-sm leading-5 text-[var(--color-muted)]">
-              {input.currentModule
-                ? `${input.currentModule.estimatedTime} | ${input.currentModuleMaterials.length} materiales | ${input.currentModuleExercises.length} tareas.`
-                : "Cuando haya contenido, lo verás aquí con su siguiente paso inmediato."}
-            </p>
-            <div className="mt-3 flex flex-wrap gap-2">
-              <Button
-                onClick={input.onOpenResources}
-                type="button"
-                variant="ghost"
-              >
-                Ir a recursos
-              </Button>
-              <Button
-                onClick={input.onOpenSupport}
-                type="button"
-                variant="ghost"
-              >
-                Abrir comunidad
-              </Button>
-            </div>
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-1">
+            <SummaryMetric
+              detail={
+                input.currentModuleExercises[0]
+                  ? "Abre la actividad cuando termines el contenido."
+                  : "Continua con la secuencia del curso desde la siguiente leccion."
+              }
+              label="Que sigue"
+              value={
+                input.currentModuleExercises[0]
+                  ? `${input.currentModuleExercises.length} tarea${input.currentModuleExercises.length === 1 ? "" : "s"}`
+                  : "Sin tarea inmediata"
+              }
+            />
+            <SummaryMetric
+              detail="Materiales y ejercicios visibles sin salir del campus."
+              label="Recorrido"
+              value={
+                input.currentModule
+                  ? `${input.currentModuleMaterials.length} materiales`
+                  : "Sin modulo activo"
+              }
+            />
           </div>
         </div>
       </SurfaceCard>
@@ -217,20 +212,16 @@ export function CompactLessonHeader(input: {
           <div className="flex flex-wrap items-center gap-2">
             <Badge tone="info">{input.roleLabel}</Badge>
             {input.currentModule ? (
-              <Badge tone="outline">
-                Módulo {input.currentModule.index + 1}
-              </Badge>
+              <Badge tone="outline">Modulo {input.currentModule.index + 1}</Badge>
             ) : null}
-            {input.editionLabel ? (
-              <Badge tone="outline">{input.editionLabel}</Badge>
-            ) : null}
+            {input.editionLabel ? <Badge tone="outline">{input.editionLabel}</Badge> : null}
           </div>
           <div>
-            <h2 className="text-display-md font-semibold text-[var(--color-ink)]">
+            <h2 className="font-premium text-display-md font-semibold text-[var(--color-ink)]">
               Revisa lo pendiente
             </h2>
-            <p className="mt-2 text-sm leading-5 text-[var(--color-muted)]">
-              Seguimiento, recursos, comunidad y lección activa.
+            <p className="mt-2 text-body-sm text-[var(--color-muted)]">
+              Seguimiento, recursos, comunidad y leccion activa.
             </p>
           </div>
           <div className="flex flex-wrap gap-2.5">
@@ -243,53 +234,39 @@ export function CompactLessonHeader(input: {
             >
               Ir a seguimiento
             </ButtonLink>
-            <Button
-              onClick={input.onOpenResources}
-              type="button"
-              variant="secondary"
-            >
+            <Button onClick={input.onOpenResources} type="button" variant="secondary">
               Abrir recursos
             </Button>
             <Button onClick={input.onOpenSupport} type="button" variant="ghost">
               Abrir comunidad
             </Button>
-            <Button
-              onClick={input.onOpenCurrentLesson}
-              type="button"
-              variant="ghost"
-            >
-              Ver lección activa
+            <Button onClick={input.onOpenCurrentLesson} type="button" variant="ghost">
+              Ver leccion activa
             </Button>
           </div>
         </div>
 
         <div className="space-y-3">
-          <div className="rounded-[var(--radius-md)] border border-[rgba(12,113,195,0.12)] bg-[var(--color-surface)] p-3.5">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-muted)]">
-              Lección activa
+          <div className="rounded-[var(--radius-lg)] border border-[var(--color-border-subtle)] bg-[var(--color-bg-subtle)] p-4">
+            <p className="text-meta-xs font-semibold text-[var(--color-muted)]">Leccion activa</p>
+            <p className="mt-3 text-heading-md font-semibold text-[var(--color-ink)]">
+              {input.currentModule ? input.currentModule.title : input.course.title}
             </p>
-            <p className="mt-2.5 text-lg font-semibold text-[var(--color-ink)]">
-              {input.currentModule
-                ? input.currentModule.title
-                : input.course.title}
-            </p>
-            <p className="mt-2 text-sm leading-5 text-[var(--color-muted)]">
+            <p className="mt-2 text-body-sm text-[var(--color-muted)]">
               {input.currentModule
                 ? `${input.currentModule.estimatedTime} | ${input.currentModuleMaterials.length} materiales | ${input.currentModuleExercises.length} tareas.`
                 : "Todavia no hay un modulo activo configurado para este curso."}
             </p>
           </div>
-          <div className="rounded-[var(--radius-md)] border border-[rgba(12,113,195,0.12)] bg-white p-3.5">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-muted)]">
-              Donde continuar
-            </p>
-            <p className="mt-2 text-sm leading-5 text-[var(--color-muted)]">
+          <div className="rounded-[var(--radius-lg)] border border-[var(--color-border-subtle)] bg-white p-4">
+            <p className="text-meta-xs font-semibold text-[var(--color-muted)]">Donde continuar</p>
+            <p className="mt-2 text-body-sm text-[var(--color-muted)]">
               {input.currentModuleExercises[0]
                 ? "Abre la tarea del modulo desde recursos o desde el contenido."
                 : "Continua desde seguimiento o desde el contenido del modulo."}
             </p>
             {input.currentModuleExercises[0] ? (
-              <div className="mt-3">
+              <div className="mt-4">
                 <Button
                   onClick={input.onOpenCurrentExercise}
                   type="button"
@@ -333,23 +310,21 @@ export function CourseLearningContentTab({
         title={canModerate ? "Contenido del modulo" : "Contenido de la leccion"}
       >
         {currentModule ? (
-          <div className="space-y-4">
+          <div className="space-y-5">
             <div className="flex flex-wrap items-center gap-3">
               <Badge tone={currentModule.isCompleted ? "success" : "warning"}>
                 {currentModule.isCompleted ? "Revisado" : "Pendiente"}
               </Badge>
-              <Badge tone="outline">Módulo {currentModule.index + 1}</Badge>
+              <Badge tone="outline">Modulo {currentModule.index + 1}</Badge>
               <Badge tone="outline">{currentModule.estimatedTime}</Badge>
             </div>
 
-            <div>
-              <h3 className="text-display-md font-semibold text-[var(--color-ink)]">
+            <div className={cn("space-y-3", isStudentLessonFirst && "max-w-4xl")}>
+              <h3 className="font-premium text-display-md font-semibold text-[var(--color-ink)]">
                 {currentModule.title}
               </h3>
-              <p className="mt-2 text-base leading-7 text-[var(--color-ink)]">
-                {currentModule.description}
-              </p>
-              <p className="mt-2 text-sm leading-6 text-[var(--color-muted)]">
+              <p className="text-body-md text-[var(--color-ink)]">{currentModule.description}</p>
+              <p className="text-body-sm text-[var(--color-muted)]">
                 {currentModule.resourcesSummary}
               </p>
             </div>
@@ -358,9 +333,7 @@ export function CourseLearningContentTab({
               {currentModulePrimaryMaterial ? (
                 <Button
                   onClick={() =>
-                    onOpenResourceWorkspace(
-                      `resource-${currentModulePrimaryMaterial.id}`,
-                    )
+                    onOpenResourceWorkspace(`resource-${currentModulePrimaryMaterial.id}`)
                   }
                   type="button"
                   variant="secondary"
@@ -371,9 +344,7 @@ export function CourseLearningContentTab({
               {currentModuleExercises[0] ? (
                 <Button
                   onClick={() =>
-                    onOpenResourceWorkspace(
-                      `resource-${currentModuleExercises[0].id}`,
-                    )
+                    onOpenResourceWorkspace(`resource-${currentModuleExercises[0].id}`)
                   }
                   type="button"
                 >
@@ -382,7 +353,14 @@ export function CourseLearningContentTab({
               ) : null}
             </div>
 
-            <div className="grid gap-4 xl:grid-cols-[minmax(0,1.2fr)_minmax(18rem,0.8fr)]">
+            <div
+              className={cn(
+                "grid gap-5",
+                isStudentLessonFirst
+                  ? "xl:grid-cols-[minmax(0,1.28fr)_minmax(18rem,0.72fr)]"
+                  : "xl:grid-cols-[minmax(0,1.2fr)_minmax(18rem,0.8fr)]",
+              )}
+            >
               <div className="space-y-4">
                 <ModuleLessonPreview resource={currentModulePrimaryMaterial} />
               </div>
@@ -392,18 +370,11 @@ export function CourseLearningContentTab({
                   <ModuleResourceCard
                     badge="Material complementario"
                     body={resource.description}
-                    ctaLabel={
-                      resource.isExternal
-                        ? "Abrir material"
-                        : "Descargar material"
-                    }
+                    ctaLabel={resource.isExternal ? "Abrir material" : "Descargar material"}
                     key={resource.id}
                     onClick={() => {
                       if (resource.href) {
-                        window.open(
-                          resource.href,
-                          resource.isExternal ? "_blank" : "_self",
-                        );
+                        window.open(resource.href, resource.isExternal ? "_blank" : "_self");
                       }
                     }}
                     title={resource.title}
@@ -412,47 +383,38 @@ export function CourseLearningContentTab({
 
                 {currentModuleExercises.map((resource) => (
                   <ModuleResourceCard
-                    badge={
-                      canModerate ? "Tarea del módulo" : "Actividad del módulo"
-                    }
+                    badge={canModerate ? "Tarea del modulo" : "Actividad del modulo"}
                     body={
                       canModerate
-                        ? `${resource.submissionStats?.pending ?? 0} entregas pendientes de revisión.`
+                        ? `${resource.submissionStats?.pending ?? 0} entregas pendientes de revision.`
                         : !resource.viewerSubmission
-                          ? "Todavía no has registrado tu entrega en esta actividad."
-                          : resource.viewerSubmission.status ===
-                              "CHANGES_REQUESTED"
-                            ? "Hay cambios solicitados. Abre la tarea para revisar el feedback y enviar una nueva versión."
+                          ? "Todavia no has registrado tu entrega en esta actividad."
+                          : resource.viewerSubmission.status === "CHANGES_REQUESTED"
+                            ? "Hay cambios solicitados. Abre la tarea para revisar el feedback y enviar una nueva version."
                             : resource.viewerSubmission.status === "SUBMITTED"
-                              ? "La entrega ya está enviada y espera revisión docente."
-                              : "La actividad ya tiene revisión registrada dentro del campus."
+                              ? "La entrega ya esta enviada y espera revision docente."
+                              : "La actividad ya tiene revision registrada dentro del campus."
                     }
-                    ctaLabel={
-                      canModerate ? "Abrir tarea del módulo" : "Abrir entrega"
-                    }
+                    ctaLabel={canModerate ? "Abrir tarea del modulo" : "Abrir entrega"}
                     key={resource.id}
-                    onClick={() =>
-                      onOpenResourceWorkspace(`resource-${resource.id}`)
-                    }
+                    onClick={() => onOpenResourceWorkspace(`resource-${resource.id}`)}
                     title={resource.title}
                   />
                 ))}
 
-                {!currentModuleMaterials.length &&
-                !currentModuleExercises.length ? (
+                {!currentModuleMaterials.length && !currentModuleExercises.length ? (
                   <div className="ui-empty-state p-4 text-sm leading-6 text-[var(--color-muted)]">
-                    Este módulo todavía no tiene materiales ni tareas ligados de
-                    forma explícita.
+                    Este modulo todavia no tiene materiales ni tareas ligados de forma explicita.
                   </div>
                 ) : null}
               </div>
             </div>
 
-            <div className="flex flex-wrap items-center justify-between gap-3 rounded-[var(--radius-md)] border border-[rgba(12,113,195,0.12)] bg-[var(--color-surface)] p-3.5">
-              <p className="text-sm leading-5 text-[var(--color-muted)]">
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-[var(--radius-lg)] border border-[var(--color-border-subtle)] bg-[var(--color-bg-subtle)] p-4">
+              <p className="text-body-sm text-[var(--color-muted)]">
                 {currentModule.completedAt
                   ? `Marcado como revisado el ${formatDate(currentModule.completedAt)}.`
-                  : "Todavía no has marcado este módulo como revisado."}
+                  : "Todavia no has marcado este modulo como revisado."}
               </p>
               <CourseProgressToggleForm
                 courseSlug={course.slug}
@@ -464,8 +426,7 @@ export function CourseLearningContentTab({
           </div>
         ) : (
           <p className="text-sm leading-7 text-[var(--color-muted)]">
-            Cuando el curso tenga módulos, podrás revisarlos y marcarlos desde
-            aquí.
+            Cuando el curso tenga modulos, podras revisarlos y marcarlos desde aqui.
           </p>
         )}
       </SurfaceCard>
@@ -473,8 +434,8 @@ export function CourseLearningContentTab({
       <SurfaceCard
         description={
           isStudentLessonFirst
-            ? "Si necesitas cambiar de punto, continúa por otra lección desde esta secuencia."
-            : "Selecciona un módulo sin salir del contexto del campus."
+            ? "Si necesitas cambiar de punto, continua por otra leccion desde esta secuencia."
+            : "Selecciona un modulo sin salir del contexto del campus."
         }
         id="content-module-map"
         title="Secuencia del curso"
@@ -487,8 +448,7 @@ export function CourseLearningContentTab({
             )}
           >
             {progress.modules.map((module) => {
-              const moduleResources =
-                managedResourcesByModuleId.get(module.id) ?? [];
+              const moduleResources = managedResourcesByModuleId.get(module.id) ?? [];
               const moduleMaterialsCount = moduleResources.filter(
                 (resource) => !resource.isExercise,
               ).length;
@@ -523,14 +483,14 @@ export function CourseLearningContentTab({
                         ? "brand"
                         : "outline"
                   }
-                  title={`Módulo ${module.index + 1} | ${module.title}`}
+                  title={`Modulo ${module.index + 1} | ${module.title}`}
                 />
               );
             })}
           </div>
         ) : (
           <div className="ui-empty-state p-4 text-sm leading-6 text-[var(--color-muted)]">
-            Este curso todavía no tiene módulos configurados.
+            Este curso todavia no tiene modulos configurados.
           </div>
         )}
       </SurfaceCard>
@@ -579,7 +539,7 @@ export function CourseLearningSupportTab({
   return (
     <>
       <SurfaceCard
-        description="Usa la comunidad para avisos y conversación académica."
+        description="Usa la comunidad para avisos y conversacion academica."
         id="support-forum-categories"
         title="Comunidad del curso"
       >
@@ -587,17 +547,17 @@ export function CourseLearningSupportTab({
           {forumCategories.length ? (
             forumCategories.map((category) => (
               <Link
-                className="rounded-[var(--radius-lg)] border border-[rgba(12,113,195,0.12)] bg-[var(--color-surface)] p-4 transition hover:border-[var(--color-primary)] hover:bg-white"
+                className="rounded-[var(--radius-lg)] border border-[var(--color-border-subtle)] bg-[var(--color-bg-subtle)] p-4 transition hover:border-[var(--color-primary)] hover:bg-white"
                 href={`/mis-cursos/${courseSlug}/foro/${category.slug}`}
                 key={category.id}
                 prefetch
               >
                 <div className="flex items-start justify-between gap-4">
                   <div>
-                    <p className="text-lg font-semibold text-[var(--color-ink)]">
+                    <p className="text-heading-md font-semibold text-[var(--color-ink)]">
                       {category.title}
                     </p>
-                    <p className="mt-2 text-sm leading-6 text-[var(--color-muted)]">
+                    <p className="mt-2 text-body-sm text-[var(--color-muted)]">
                       {category.description}
                     </p>
                   </div>
@@ -607,7 +567,7 @@ export function CourseLearningSupportTab({
             ))
           ) : (
             <div className="ui-empty-state p-5 text-sm leading-7 text-[var(--color-muted)]">
-              Aún no hay categorías activas en el foro del curso.
+              Aun no hay categorias activas en el foro del curso.
             </div>
           )}
         </div>
@@ -616,19 +576,19 @@ export function CourseLearningSupportTab({
       <div className="grid gap-6 lg:grid-cols-2">
         <SurfaceCard title="Foro del curso">
           <InfoPanel
-            body="Úsalo para anuncios, dudas sobre el contenido y acompañamiento de la comunidad del curso."
+            body="Usalo para anuncios, dudas sobre el contenido y acompanamiento de la comunidad del curso."
             ctaHref={`/mis-cursos/${courseSlug}/foro`}
             ctaLabel="Abrir foro privado"
-            title="Conversación académica"
+            title="Conversacion academica"
           />
         </SurfaceCard>
 
         <SurfaceCard title="Soporte de plataforma">
           <InfoPanel
-            body={`Escribe a ${siteConfig.supportEmail} si el problema es de acceso, cuenta o incidencias técnicas del campus.`}
+            body={`Escribe a ${siteConfig.supportEmail} si el problema es de acceso, cuenta o incidencias tecnicas del campus.`}
             ctaHref={`mailto:${siteConfig.supportEmail}`}
             ctaLabel="Contactar soporte"
-            title="Incidencias técnicas"
+            title="Incidencias tecnicas"
           />
         </SurfaceCard>
       </div>

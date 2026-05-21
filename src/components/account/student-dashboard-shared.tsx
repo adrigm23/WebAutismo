@@ -3,13 +3,15 @@ import { Clock3, Settings2 } from "lucide-react";
 import { updateNotificationPreferencesAction } from "@/actions/account";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
+import { ListRow } from "@/components/ui/list-row";
+import { SectionHeader } from "@/components/ui/section-header";
 import type {
   DashboardNotificationSnapshot,
-  StudentDashboardPendingSource
+  StudentDashboardPendingSource,
 } from "@/lib/account-dashboard";
 import {
   buildCourseResourcesHref,
-  resolvePlatformNotificationHref
+  resolvePlatformNotificationHref,
 } from "@/lib/course-navigation";
 import type { UserCourseSpace } from "@/lib/course-community";
 import type { CourseProgressDetails } from "@/lib/course-progress";
@@ -43,11 +45,7 @@ type ActivityDashboardItem = {
 };
 
 export function getStudentDashboardInitials(name: string) {
-  const parts = name
-    .trim()
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2);
+  const parts = name.trim().split(/\s+/).filter(Boolean).slice(0, 2);
 
   return parts.map((part) => part[0]?.toUpperCase() ?? "").join("") || "A";
 }
@@ -63,9 +61,17 @@ function truncateText(value: string, maxLength: number) {
 export function getPrimaryStudentCourse(courses: StudentDashboardCourse[]) {
   return [...courses].sort((left, right) => {
     const leftInProgress =
-      left.progress.hasStarted && !left.progress.isCompleted ? 3 : left.progress.hasStarted ? 2 : 1;
+      left.progress.hasStarted && !left.progress.isCompleted
+        ? 3
+        : left.progress.hasStarted
+          ? 2
+          : 1;
     const rightInProgress =
-      right.progress.hasStarted && !right.progress.isCompleted ? 3 : right.progress.hasStarted ? 2 : 1;
+      right.progress.hasStarted && !right.progress.isCompleted
+        ? 3
+        : right.progress.hasStarted
+          ? 2
+          : 1;
 
     if (leftInProgress !== rightInProgress) {
       return rightInProgress - leftInProgress;
@@ -90,10 +96,10 @@ export function getNextStudentModuleLabel(course: StudentDashboardCourse) {
   const nextModule = course.progress.modules.find((module) => !module.isCompleted);
 
   if (nextModule) {
-    return `Siguiente paso: módulo ${nextModule.index + 1} - ${nextModule.title}`;
+    return `Siguiente paso: modulo ${nextModule.index + 1} - ${nextModule.title}`;
   }
 
-  return "Has completado todos los módulos disponibles en este curso.";
+  return "Has completado todos los modulos disponibles en este curso.";
 }
 
 export function buildStudentPendingItems(pendingSources: StudentDashboardPendingSource[]) {
@@ -115,7 +121,7 @@ export function buildStudentPendingItems(pendingSources: StudentDashboardPending
         badgeLabel: "Cambios solicitados",
         badgeTone: "accent",
         priority: 0,
-        dueAt: resource.dueAt
+        dueAt: resource.dueAt,
       });
       continue;
     }
@@ -132,7 +138,7 @@ export function buildStudentPendingItems(pendingSources: StudentDashboardPending
         badgeLabel: "Pendiente",
         badgeTone: "student",
         priority: 1,
-        dueAt: resource.dueAt
+        dueAt: resource.dueAt,
       });
       continue;
     }
@@ -142,12 +148,12 @@ export function buildStudentPendingItems(pendingSources: StudentDashboardPending
         id: `review-${resource.resourceId}`,
         href,
         title: resource.title,
-        description: "Tu entrega ya está enviada y pendiente de revisión docente.",
+        description: "Tu entrega ya esta enviada y pendiente de revision docente.",
         meta: courseLabel,
-        badgeLabel: "En revisión",
+        badgeLabel: "En revision",
         badgeTone: "muted",
         priority: 2,
-        dueAt: resource.dueAt
+        dueAt: resource.dueAt,
       });
     }
   }
@@ -175,13 +181,13 @@ function buildRecentActivity(input: {
     href: resolvePlatformNotificationHref({
       category: notification.category,
       linkPath: notification.linkPath,
-      metadataJson: notification.metadataJson
+      metadataJson: notification.metadataJson,
     }),
     title: notification.title,
     body: truncateText(notification.body, 150),
     sourceLabel: "Plataforma",
     sourceTone: "teacher",
-    createdAt: notification.createdAt
+    createdAt: notification.createdAt,
   }));
 
   const forumItems: ActivityDashboardItem[] = input.forumNotifications.map((notification) => ({
@@ -191,7 +197,7 @@ function buildRecentActivity(input: {
     body: truncateText(notification.body, 150),
     sourceLabel: "Foro",
     sourceTone: "student",
-    createdAt: notification.createdAt
+    createdAt: notification.createdAt,
   }));
 
   return [...platformItems, ...forumItems]
@@ -201,12 +207,12 @@ function buildRecentActivity(input: {
 
 export function StudentSectionSkeleton(input: { title: string; lines?: number }) {
   return (
-    <Card className="p-6">
-      <div className="h-8 w-48 animate-pulse rounded-full bg-[var(--color-surface)]" />
-      <div className="mt-6 space-y-3">
+    <Card className="p-6 lg:p-7" variant="muted">
+      <div className="h-7 w-44 animate-pulse rounded-full bg-[var(--color-surface)]" />
+      <div className="mt-5 space-y-3">
         {Array.from({ length: input.lines ?? 3 }).map((_, index) => (
           <div
-            className="h-24 animate-pulse rounded-[22px] bg-[var(--color-surface)]"
+            className="h-20 animate-pulse rounded-[var(--radius-md)] bg-[var(--color-surface)]"
             key={`${input.title}-${index}`}
           />
         ))}
@@ -237,49 +243,49 @@ export async function StudentRecentActivitySection(input: {
   const snapshot = await input.notificationSnapshotPromise;
   const recentActivity = buildRecentActivity({
     platformNotifications: snapshot.platformNotifications.notifications,
-    forumNotifications: snapshot.forumNotifications.notifications
+    forumNotifications: snapshot.forumNotifications.notifications,
   });
 
   return (
-    <Card className="p-6" id="actividad-reciente">
-      <div className="flex items-center gap-3">
-        <div className="grid h-12 w-12 place-items-center rounded-2xl bg-[var(--color-primary-soft)] text-[var(--color-primary)]">
+    <Card className="p-6 lg:p-7" id="actividad-reciente" variant="muted">
+      <div className="flex items-start gap-4">
+        <div className="grid h-11 w-11 shrink-0 place-items-center rounded-[var(--radius-md)] bg-[var(--color-brand-soft)] text-[var(--color-primary)]">
           <Clock3 className="h-5 w-5" />
         </div>
-        <div>
-          <h2 className="text-[2rem] font-semibold tracking-[-0.04em] text-[var(--color-ink)]">
-            Actividad reciente
-          </h2>
-          <p className="text-sm text-[var(--color-muted)]">
-            Avisos del campus y movimientos del foro.
-          </p>
-        </div>
+        <SectionHeader
+          className="gap-0"
+          description="Avisos del campus y movimientos del foro en un solo hilo de lectura."
+          size="md"
+          title="Actividad reciente"
+        />
       </div>
 
       <div className="mt-6 space-y-3">
         {recentActivity.length ? (
           recentActivity.map((item) => (
             <Link
-              className="block rounded-[22px] border border-[var(--color-border)] bg-white p-4 transition hover:border-[var(--color-primary)]"
+              className="block rounded-[var(--radius-md)] transition hover:-translate-y-[1px]"
               href={item.href}
               key={item.id}
             >
-              <div className="flex items-center gap-3">
-                <Badge tone={item.sourceTone}>{item.sourceLabel}</Badge>
-                <p className="text-xs uppercase tracking-[0.16em] text-[var(--color-muted)]">
-                  {formatRelativeTime(item.createdAt)}
-                </p>
-              </div>
-              <p className="mt-3 text-lg font-semibold leading-tight text-[var(--color-ink)]">
-                {item.title}
-              </p>
-              <p className="mt-2 text-sm leading-7 text-[var(--color-muted)]">{item.body}</p>
+              <ListRow
+                description={item.body}
+                eyebrow={
+                  <span className="inline-flex flex-wrap items-center gap-2">
+                    <Badge tone={item.sourceTone}>{item.sourceLabel}</Badge>
+                    <span className="text-meta-xs text-[var(--color-muted)]">
+                      {formatRelativeTime(item.createdAt)}
+                    </span>
+                  </span>
+                }
+                title={item.title}
+              />
             </Link>
           ))
         ) : (
-          <div className="rounded-[22px] border border-dashed border-[rgba(12,113,195,0.18)] bg-white p-5 text-sm leading-7 text-[var(--color-muted)]">
-            Todavía no hay actividad reciente. Cuando el equipo docente publique avisos o haya
-            movimiento en tus foros privados, lo verás aquí.
+          <div className="ui-empty-state p-5 text-sm leading-7 text-[var(--color-muted)]">
+            Todavia no hay actividad reciente. Cuando el equipo docente publique avisos o haya
+            movimiento en tus foros privados, lo veras aqui.
           </div>
         )}
       </div>
@@ -293,19 +299,17 @@ export async function StudentPreferencesCard(input: {
   const preference = (await input.notificationSnapshotPromise).preference;
 
   return (
-    <Card className="p-8" id="preferencias">
-      <div className="flex items-center gap-3">
-        <div className="grid h-12 w-12 place-items-center rounded-2xl bg-[var(--color-primary-soft)] text-[var(--color-primary)]">
+    <Card className="p-6 lg:p-7" id="preferencias" variant="muted">
+      <div className="flex items-start gap-4">
+        <div className="grid h-11 w-11 shrink-0 place-items-center rounded-[var(--radius-md)] bg-[var(--color-brand-soft)] text-[var(--color-primary)]">
           <Settings2 className="h-5 w-5" />
         </div>
-        <div>
-          <h2 className="text-[2rem] font-semibold tracking-[-0.04em] text-[var(--color-ink)]">
-            Preferencias
-          </h2>
-          <p className="text-sm text-[var(--color-muted)]">
-            Elige como recibir avisos del campus y del foro.
-          </p>
-        </div>
+        <SectionHeader
+          className="gap-0"
+          description="Elige como recibir avisos del campus y del foro privado."
+          size="md"
+          title="Preferencias"
+        />
       </div>
 
       <div className="mt-6 space-y-3">
@@ -314,20 +318,20 @@ export async function StudentPreferencesCard(input: {
             title: "Solo email",
             description: "Recibe avisos por correo y reduce ruido dentro de la cuenta.",
             emailEnabled: true,
-            webEnabled: false
+            webEnabled: false,
           },
           {
             title: "Solo web",
             description: "Centraliza los avisos dentro del dashboard y del foro privado.",
             emailEnabled: false,
-            webEnabled: true
+            webEnabled: true,
           },
           {
             title: "Email y web",
             description: "Mantiene sincronizados correo y panel privado para no perder nada.",
             emailEnabled: true,
-            webEnabled: true
-          }
+            webEnabled: true,
+          },
         ].map((option) => {
           const isSelected =
             preference.emailEnabled === option.emailEnabled &&
@@ -347,20 +351,22 @@ export async function StudentPreferencesCard(input: {
               />
               <button
                 className={cn(
-                  "w-full rounded-[22px] border px-5 py-4 text-left transition",
+                  "w-full rounded-[var(--radius-md)] border px-4 py-4 text-left transition",
                   isSelected
-                    ? "border-[var(--color-primary)] bg-[var(--color-primary-soft)]"
-                    : "border-[var(--color-border)] bg-[var(--color-surface)] hover:border-[var(--color-primary)]"
+                    ? "border-[var(--color-primary)] bg-[var(--color-brand-soft)]"
+                    : "border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] hover:border-[var(--color-primary)] hover:bg-white",
                 )}
                 type="submit"
               >
                 <div className="flex items-center justify-between gap-4">
-                  <p className="text-lg font-semibold text-[var(--color-ink)]">{option.title}</p>
+                  <p className="text-lg font-semibold text-[var(--color-ink)]">
+                    {option.title}
+                  </p>
                   <Badge tone={isSelected ? "teacher" : "muted"}>
                     {isSelected ? "Activa" : "Disponible"}
                   </Badge>
                 </div>
-                <p className="mt-2 text-sm leading-7 text-[var(--color-muted)]">
+                <p className="mt-2 text-sm leading-6 text-[var(--color-muted)]">
                   {option.description}
                 </p>
               </button>

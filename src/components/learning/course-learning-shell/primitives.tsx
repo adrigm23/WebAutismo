@@ -17,17 +17,17 @@ export function SurfaceCard(input: {
     <section
       id={input.id}
       className={cn(
-        "ui-card-base rounded-[var(--radius-lg)] bg-white/96 p-4 lg:p-5",
+        "ui-card-base rounded-[var(--radius-xl)] bg-[color:var(--color-surface-elevated)]/96 p-5 lg:p-6",
         input.className,
       )}
     >
       {input.title ? (
-        <div className="mb-3">
-          <h2 className="text-display-md font-semibold text-[var(--color-ink)]">
+        <div className="mb-4">
+          <h2 className="font-premium text-display-md font-semibold text-[var(--color-ink)]">
             {input.title}
           </h2>
           {input.description ? (
-            <p className="mt-1 max-w-3xl text-sm leading-5 text-[var(--color-muted)]">
+            <p className="mt-2 max-w-3xl text-body-sm text-[var(--color-muted)]">
               {input.description}
             </p>
           ) : null}
@@ -44,16 +44,12 @@ export function SummaryMetric(input: {
   detail: string;
 }) {
   return (
-    <div className="rounded-[var(--radius-md)] border border-[rgba(12,113,195,0.1)] bg-[var(--color-surface)] p-3.5">
-      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-muted)]">
-        {input.label}
-      </p>
-      <p className="mt-2 text-[1.55rem] font-semibold leading-tight tracking-[-0.04em] text-[var(--color-ink)] [font-variant-numeric:tabular-nums]">
+    <div className="rounded-[var(--radius-lg)] border border-[var(--color-border-subtle)] bg-[color:var(--color-bg-subtle)] p-4">
+      <p className="text-meta-xs font-semibold text-[var(--color-muted)]">{input.label}</p>
+      <p className="font-premium mt-3 text-[1.55rem] font-semibold leading-tight tracking-[-0.04em] text-[var(--color-ink)] [font-variant-numeric:tabular-nums]">
         {input.value}
       </p>
-      <p className="mt-1 text-sm leading-6 text-[var(--color-muted)]">
-        {input.detail}
-      </p>
+      <p className="mt-2 text-body-sm text-[var(--color-muted)]">{input.detail}</p>
     </div>
   );
 }
@@ -69,10 +65,10 @@ export function WorkspaceTabButton(input: {
   return (
     <button
       className={cn(
-        "inline-flex min-h-10 items-center justify-center gap-1.5 rounded-[var(--radius-pill)] border px-3 py-2 text-sm font-semibold transition",
+        "inline-flex min-h-10 items-center justify-center gap-2 rounded-[var(--radius-pill)] border px-3.5 py-2 text-sm font-semibold transition",
         input.active
-          ? "border-[var(--color-primary)] bg-white text-[var(--color-primary)] shadow-[var(--shadow-inset-soft)]"
-          : "border-[var(--color-border)] bg-white text-[var(--color-ink)] hover:border-[var(--color-primary)] hover:bg-[var(--color-primary-soft)] hover:text-[var(--color-primary)]",
+          ? "border-[var(--color-border-strong)] bg-[var(--color-brand-soft)] text-[var(--color-primary)] shadow-[var(--shadow-inset-soft)]"
+          : "border-transparent bg-transparent text-[var(--color-ink-soft)] hover:border-[var(--color-border-subtle)] hover:bg-white hover:text-[var(--color-ink)]",
       )}
       onClick={input.onClick}
       type="button"
@@ -91,16 +87,12 @@ export function ActionCard(input: {
 }) {
   return (
     <button
-      className="w-full rounded-[var(--radius-md)] border border-[rgba(12,113,195,0.1)] bg-[var(--color-surface)] p-4 text-left transition hover:-translate-y-[1px] hover:border-[var(--color-primary)] hover:bg-white hover:shadow-[var(--shadow-medium)]"
+      className="w-full rounded-[var(--radius-lg)] border border-[var(--color-border-subtle)] bg-[color:var(--color-bg-subtle)] p-4 text-left transition hover:-translate-y-[1px] hover:border-[var(--color-primary)] hover:bg-white hover:shadow-[var(--shadow-medium)]"
       onClick={input.onClick}
       type="button"
     >
-      <p className="text-base font-semibold text-[var(--color-ink)]">
-        {input.title}
-      </p>
-      <p className="mt-2 text-sm leading-6 text-[var(--color-muted)]">
-        {input.body}
-      </p>
+      <p className="text-base font-semibold text-[var(--color-ink)]">{input.title}</p>
+      <p className="mt-2 text-body-sm text-[var(--color-muted)]">{input.body}</p>
       <span className="mt-3 inline-flex items-center text-sm font-semibold text-[var(--color-primary)]">
         {input.cta}
         <ArrowRight className="ml-2 h-4 w-4" />
@@ -120,21 +112,17 @@ export function ModuleRow(input: {
   return (
     <button
       className={cn(
-        "flex w-full items-start justify-between gap-3 rounded-[var(--radius-md)] border p-3 text-left transition",
+        "flex w-full items-start justify-between gap-3 rounded-[var(--radius-lg)] border p-4 text-left transition",
         input.isSelected
-          ? "border-[var(--color-primary)] bg-[rgba(12,113,195,0.08)] shadow-[var(--shadow-medium)]"
-          : "border-[rgba(12,113,195,0.1)] bg-white hover:border-[var(--color-primary)] hover:bg-[rgba(12,113,195,0.03)]",
+          ? "border-[var(--color-border-strong)] bg-[linear-gradient(180deg,rgba(255,253,250,0.98),rgba(223,234,243,0.42))] shadow-[var(--shadow-medium)]"
+          : "border-[var(--color-border-subtle)] bg-[color:var(--color-surface-elevated)] hover:border-[var(--color-primary)] hover:bg-white",
       )}
       onClick={input.onClick}
       type="button"
     >
       <div className="min-w-0">
-        <p className="text-base font-semibold text-[var(--color-ink)]">
-          {input.title}
-        </p>
-        <p className="mt-1 text-sm leading-5 text-[var(--color-muted)]">
-          {input.meta}
-        </p>
+        <p className="text-heading-md font-semibold text-[var(--color-ink)]">{input.title}</p>
+        <p className="mt-2 text-body-sm text-[var(--color-muted)]">{input.meta}</p>
       </div>
       <Badge tone={input.stateTone}>{input.stateLabel}</Badge>
     </button>
@@ -149,16 +137,12 @@ export function InfoPanel(input: {
   onAction?: () => void;
 }) {
   return (
-    <div className="rounded-[var(--radius-md)] border border-[rgba(12,113,195,0.1)] bg-[var(--color-surface)] p-4">
-      <p className="text-base font-semibold text-[var(--color-ink)]">
-        {input.title}
-      </p>
-      <p className="mt-1.5 text-sm leading-5 text-[var(--color-muted)]">
-        {input.body}
-      </p>
+    <div className="rounded-[var(--radius-lg)] border border-[var(--color-border-subtle)] bg-[color:var(--color-bg-subtle)] p-4">
+      <p className="text-heading-md font-semibold text-[var(--color-ink)]">{input.title}</p>
+      <p className="mt-2 text-body-sm text-[var(--color-muted)]">{input.body}</p>
       {input.onAction && input.ctaLabel ? (
         <button
-          className="mt-3 inline-flex items-center text-sm font-semibold text-[var(--color-primary)]"
+          className="mt-4 inline-flex items-center text-sm font-semibold text-[var(--color-primary)]"
           onClick={input.onAction}
           type="button"
         >
@@ -168,7 +152,7 @@ export function InfoPanel(input: {
       ) : null}
       {input.ctaHref && input.ctaLabel ? (
         <Link
-          className="mt-3 inline-flex items-center text-sm font-semibold text-[var(--color-primary)]"
+          className="mt-4 inline-flex items-center text-sm font-semibold text-[var(--color-primary)]"
           href={input.ctaHref}
           prefetch
         >
@@ -189,18 +173,14 @@ export function ModuleResourceCard(input: {
 }) {
   return (
     <button
-      className="w-full rounded-[var(--radius-md)] border border-[rgba(12,113,195,0.1)] bg-white p-3.5 text-left transition hover:-translate-y-[1px] hover:border-[var(--color-primary)] hover:bg-[rgba(12,113,195,0.03)] hover:shadow-[var(--shadow-medium)]"
+      className="w-full rounded-[var(--radius-lg)] border border-[var(--color-border-subtle)] bg-[color:var(--color-bg-subtle)] p-4 text-left transition hover:-translate-y-[1px] hover:border-[var(--color-primary)] hover:bg-white hover:shadow-[var(--shadow-medium)]"
       onClick={input.onClick}
       type="button"
     >
       <Badge tone="outline">{input.badge}</Badge>
-      <p className="mt-2.5 text-base font-semibold text-[var(--color-ink)]">
-        {input.title}
-      </p>
-      <p className="mt-1.5 text-sm leading-5 text-[var(--color-muted)]">
-        {input.body}
-      </p>
-      <span className="mt-2.5 inline-flex items-center text-sm font-semibold text-[var(--color-primary)]">
+      <p className="mt-3 text-heading-md font-semibold text-[var(--color-ink)]">{input.title}</p>
+      <p className="mt-2 text-body-sm text-[var(--color-muted)]">{input.body}</p>
+      <span className="mt-3 inline-flex items-center text-sm font-semibold text-[var(--color-primary)]">
         {input.ctaLabel}
         <ArrowRight className="ml-2 h-4 w-4" />
       </span>

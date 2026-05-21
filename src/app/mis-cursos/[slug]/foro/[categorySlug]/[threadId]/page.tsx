@@ -28,6 +28,10 @@ import { ThreadReplyForm } from "@/components/forum/thread-reply-form";
 import { Badge } from "@/components/ui/badge";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { ConfirmSubmitButton } from "@/components/ui/confirm-submit-button";
+import { EmptyState } from "@/components/ui/empty-state";
+import { SectionHeader } from "@/components/ui/section-header";
+import { StateBanner } from "@/components/ui/state-banner";
+import { SurfaceCard } from "@/components/ui/surface-card";
 import { requireUser } from "@/lib/auth";
 import { getCatalogCourseBySlug } from "@/lib/course-catalog";
 import {
@@ -37,16 +41,14 @@ import {
 } from "@/lib/course-community";
 import { isSafeHttpUrl } from "@/lib/file-security";
 import { canEditForumContent, getForumThreadById } from "@/lib/forum";
-import { formatDateTime, formatRelativeTime } from "@/lib/utils";
+import { cn, formatDateTime, formatRelativeTime } from "@/lib/utils";
 
 type ForumThreadPageProps = {
   params: Promise<{ slug: string; categorySlug: string; threadId: string }>;
   searchParams: Promise<{ page?: string | string[] }>;
 };
 
-export async function generateMetadata({
-  params
-}: ForumThreadPageProps): Promise<Metadata> {
+export async function generateMetadata({ params }: ForumThreadPageProps): Promise<Metadata> {
   const { slug } = await params;
   const course = await getCatalogCourseBySlug(slug);
 
@@ -100,13 +102,13 @@ function AttachmentList({
 
         return (
           <a
-            className="inline-flex min-w-0 w-full items-center gap-3 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-white px-4 py-3 text-sm text-[var(--color-ink)] shadow-[var(--shadow-inset-soft)] transition hover:border-[rgba(12,113,195,0.3)] hover:bg-[var(--color-primary-soft)] sm:w-auto sm:min-w-[15rem]"
+            className="inline-flex min-w-0 w-full items-center gap-3 rounded-[var(--radius-md)] border border-[rgba(22,60,88,0.1)] bg-white px-4 py-3 text-sm text-[var(--color-ink)] shadow-[var(--shadow-inset-soft)] transition hover:border-[rgba(22,60,88,0.16)] hover:bg-[var(--color-brand-soft)] sm:w-auto sm:min-w-[15rem]"
             href={href}
             key={attachment.id}
             rel={isExternal ? "noreferrer" : undefined}
             target={isExternal ? "_blank" : undefined}
           >
-            <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[var(--color-primary-soft)] text-[var(--color-primary)]">
+            <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[var(--color-brand-soft)] text-[var(--color-primary)]">
               <Icon className="h-4 w-4" />
             </div>
             <span className="min-w-0 break-words">{attachment.label}</span>
@@ -170,7 +172,7 @@ export default async function ForumThreadPage({ params, searchParams }: ForumThr
   });
 
   return (
-    <div className="space-y-6 lg:space-y-8">
+    <div className="space-y-5 lg:space-y-6">
       <div className="flex flex-wrap items-center gap-2 text-sm text-[var(--color-muted)]">
         <Link className="hover:text-[var(--color-primary)]" href={`/mis-cursos/${course.slug}/foro`}>
           Comunidad
@@ -186,87 +188,9 @@ export default async function ForumThreadPage({ params, searchParams }: ForumThr
         <span className="text-[var(--color-ink)]">Hilo</span>
       </div>
 
-      <article className="ui-card-base overflow-hidden">
-        <div
-          className={`h-1.5 ${
-            forumData.thread.isResolved
-              ? "bg-[linear-gradient(90deg,#ffb606,#f7d986,#0c71c3)]"
-              : forumData.thread.type === "ANNOUNCEMENT"
-                ? "bg-[linear-gradient(90deg,#ffb606,#f7d986)]"
-                : "bg-[linear-gradient(90deg,#0c71c3,#69b4ff)]"
-          }`}
-        />
-        <div className="px-5 py-5 sm:px-6">
-          <div className="flex flex-col gap-5">
-            <div className="min-w-0">
-              <div className="flex flex-wrap items-center gap-2">
-                {forumData.thread.isPinned ? <Badge tone="warning">Fijado</Badge> : null}
-                {forumData.thread.type === "ANNOUNCEMENT" ? (
-                  <Badge tone="brand">Anuncio</Badge>
-                ) : null}
-                {forumData.thread.isResolved ? <Badge tone="success">Resuelto</Badge> : null}
-                {forumData.thread.isClosed ? <Badge tone="outline">Cerrado</Badge> : null}
-                {forumData.thread.isReadOnly ? <Badge tone="outline">Solo lectura</Badge> : null}
-                <Badge tone={canModerateCourse(forumData.thread.authorRole) ? "info" : "warning"}>
-                  {getRoleLabel(forumData.thread.authorRole)}
-                </Badge>
-              </div>
-
-              <h1 className="mt-4 break-words text-display-sm font-semibold text-[var(--color-ink)] sm:text-display-md">
-                {forumData.thread.title}
-              </h1>
-
-              <div className="mt-4 flex flex-wrap items-center gap-3 text-sm text-[var(--color-muted)]">
-                <span>{forumData.thread.author.name}</span>
-                <span>•</span>
-                <span>{formatRelativeTime(forumData.thread.createdAt)}</span>
-                {forumData.thread.type === "ANNOUNCEMENT" &&
-                forumData.thread.scheduledFor &&
-                !forumData.thread.publishedAt ? (
-                  <>
-                    <span>•</span>
-                    <span>Programado para {formatDateTime(forumData.thread.scheduledFor)}</span>
-                  </>
-                ) : null}
-                {forumData.thread.editedAt ? (
-                  <>
-                    <span>•</span>
-                    <span>Editado {formatRelativeTime(forumData.thread.editedAt)}</span>
-                  </>
-                ) : null}
-              </div>
-
-              <div className="mt-4 flex flex-wrap items-center gap-3 text-sm">
-                <div className="inline-flex items-center gap-2 rounded-[var(--radius-pill)] bg-[#faf8f4] px-3.5 py-2 font-medium text-[var(--color-ink)]">
-                  <CheckCircle2 className="h-4 w-4 text-[var(--color-muted)]" />
-                  <span>{repliesPagination.totalItems} respuestas</span>
-                </div>
-                <span className="text-[var(--color-muted)]">
-                  Estado:{" "}
-                  {forumData.thread.isClosed
-                    ? "Cerrado"
-                    : forumData.thread.isResolved
-                      ? "Resuelto"
-                      : "Abierto"}
-                </span>
-              </div>
-            </div>
-
-            <div className="rounded-[var(--radius-lg)] border border-[rgba(12,113,195,0.1)] bg-[#fcfbf8] px-5 py-5">
-              <div className="whitespace-pre-line break-words text-base leading-8 text-[var(--color-ink)] sm:text-lg sm:leading-9">
-                {forumData.thread.body}
-              </div>
-              <AttachmentList attachments={forumData.thread.attachments} />
-            </div>
-
-            {forumData.thread.isClosed || forumData.thread.isReadOnly ? (
-              <div className="ui-state-panel px-5 py-4 text-sm leading-7 text-[var(--color-muted)]">
-                {forumData.thread.isReadOnly
-                  ? "Este hilo está en modo solo lectura. El alumnado puede consultarlo, pero no añadir nuevas respuestas."
-                  : "Este hilo ha sido cerrado por el equipo docente y ya no admite nuevas respuestas."}
-              </div>
-            ) : null}
-
+      <SurfaceCard className="border-[rgba(22,60,88,0.1)] bg-white/92" padding="md">
+        <SectionHeader
+          actions={
             <div className="flex flex-wrap gap-3">
               {canEditThread ? (
                 <ButtonLink
@@ -277,101 +201,180 @@ export default async function ForumThreadPage({ params, searchParams }: ForumThr
                   Editar hilo
                 </ButtonLink>
               ) : null}
-              <form action={reportThreadAction}>
-                <input name="courseSlug" type="hidden" value={course.slug} />
-                <input name="categorySlug" type="hidden" value={categorySlug} />
-                <input name="threadId" type="hidden" value={threadId} />
-                <input name="nextPath" type="hidden" value={nextPath} />
-                <input
-                  name="reason"
-                  type="hidden"
-                  value="Revisar hilo por posible incumplimiento de las normas del foro."
-                />
-                <Button type="submit" variant="subtle">
-                  Reportar hilo
-                </Button>
-              </form>
-
-              {canModerate ? (
+              <ButtonLink href={`/mis-cursos/${course.slug}/foro/${categorySlug}`} variant="subtle">
+                Volver a la categoría
+              </ButtonLink>
+            </div>
+          }
+          eyebrow={
+            <div className="flex flex-wrap items-center gap-2">
+              {forumData.thread.isPinned ? <Badge tone="warning">Fijado</Badge> : null}
+              {forumData.thread.type === "ANNOUNCEMENT" ? <Badge tone="brand">Anuncio</Badge> : null}
+              {forumData.thread.isResolved ? <Badge tone="success">Resuelto</Badge> : null}
+              {forumData.thread.isClosed ? <Badge tone="outline">Cerrado</Badge> : null}
+              {forumData.thread.isReadOnly ? <Badge tone="outline">Solo lectura</Badge> : null}
+              <Badge tone={canModerateCourse(forumData.thread.authorRole) ? "info" : "warning"}>
+                {getRoleLabel(forumData.thread.authorRole)}
+              </Badge>
+            </div>
+          }
+          title={forumData.thread.title}
+          description={
+            <span className="flex flex-wrap items-center gap-2.5 text-sm text-[var(--color-muted)]">
+              <span>{forumData.thread.author.name}</span>
+              <span>•</span>
+              <span>{formatRelativeTime(forumData.thread.createdAt)}</span>
+              {forumData.thread.type === "ANNOUNCEMENT" &&
+              forumData.thread.scheduledFor &&
+              !forumData.thread.publishedAt ? (
                 <>
-                  <form action={toggleThreadPinnedAction}>
-                    <input name="courseSlug" type="hidden" value={course.slug} />
-                    <input name="categorySlug" type="hidden" value={categorySlug} />
-                    <input name="threadId" type="hidden" value={threadId} />
-                    <input name="nextPath" type="hidden" value={nextPath} />
-                    <Button type="submit" variant="subtle">
-                      {forumData.thread.isPinned ? (
-                        <>
-                          <PinOff className="mr-2 h-4 w-4" />
-                          Quitar fijado
-                        </>
-                      ) : (
-                        <>
-                          <Pin className="mr-2 h-4 w-4" />
-                          Fijar hilo
-                        </>
-                      )}
-                    </Button>
-                  </form>
-
-                  <form action={toggleThreadClosedAction}>
-                    <input name="courseSlug" type="hidden" value={course.slug} />
-                    <input name="categorySlug" type="hidden" value={categorySlug} />
-                    <input name="threadId" type="hidden" value={threadId} />
-                    <input name="nextPath" type="hidden" value={nextPath} />
-                    <Button type="submit" variant="subtle">
-                      {forumData.thread.isClosed ? (
-                        <>
-                          <Unlock className="mr-2 h-4 w-4" />
-                          Reabrir hilo
-                        </>
-                      ) : (
-                        <>
-                          <Lock className="mr-2 h-4 w-4" />
-                          Cerrar hilo
-                        </>
-                      )}
-                    </Button>
-                  </form>
-
-                  <form action={deleteThreadAction}>
-                    <input name="courseSlug" type="hidden" value={course.slug} />
-                    <input name="categorySlug" type="hidden" value={categorySlug} />
-                    <input name="threadId" type="hidden" value={threadId} />
-                    <input name="nextPath" type="hidden" value={nextPath} />
-                    <ConfirmSubmitButton
-                      message="Se eliminará el hilo y dejará de estar visible. ¿Quieres continuar?"
-                      pendingLabel="Eliminando..."
-                      variant="secondary"
-                    >
-                      Eliminar hilo
-                    </ConfirmSubmitButton>
-                  </form>
+                  <span>•</span>
+                  <span>Programado para {formatDateTime(forumData.thread.scheduledFor)}</span>
                 </>
               ) : null}
-            </div>
-          </div>
-        </div>
-      </article>
+              {forumData.thread.editedAt ? (
+                <>
+                  <span>•</span>
+                  <span>Editado {formatRelativeTime(forumData.thread.editedAt)}</span>
+                </>
+              ) : null}
+            </span>
+          }
+        />
 
-      <section className="space-y-5">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <h2 className="text-[1.85rem] font-semibold tracking-[-0.04em] text-[var(--color-ink)] sm:text-[2.25rem]">
-              Respuestas ({repliesPagination.totalItems})
-            </h2>
-            <p className="mt-2 text-sm leading-7 text-[var(--color-muted)] sm:text-base">
-              Ordenadas cronológicamente para seguir el contexto del hilo.
-            </p>
+        <div className="mt-4 flex flex-wrap items-center gap-3 text-sm">
+          <div className="inline-flex items-center gap-2 rounded-[var(--radius-pill)] bg-[rgba(248,245,239,0.82)] px-3 py-1.5 font-medium text-[var(--color-ink-soft)]">
+            <CheckCircle2 className="h-4 w-4 text-[var(--color-muted)]" />
+            <span>{repliesPagination.totalItems} respuestas</span>
           </div>
-          <p className="text-sm text-[var(--color-muted)]">
+          <span className="text-[var(--color-muted)]">
+            Estado:{" "}
+            {forumData.thread.isClosed
+              ? "Cerrado"
+              : forumData.thread.isResolved
+                ? "Resuelto"
+                : "Abierto"}
+          </span>
+        </div>
+
+        <div className="mt-5 border-t border-[rgba(22,60,88,0.08)] pt-5">
+          <div className="whitespace-pre-line break-words text-base leading-8 text-[var(--color-ink)] sm:text-lg sm:leading-9">
+            {forumData.thread.body}
+          </div>
+          <AttachmentList attachments={forumData.thread.attachments} />
+        </div>
+
+        {forumData.thread.isClosed || forumData.thread.isReadOnly ? (
+          <StateBanner
+            className="mt-6"
+            description={
+              forumData.thread.isReadOnly
+                ? "Este hilo está en modo solo lectura. El alumnado puede consultarlo, pero no añadir nuevas respuestas."
+                : "Este hilo ha sido cerrado por el equipo docente y ya no admite nuevas respuestas."
+            }
+            icon={<Lock className="h-5 w-5" />}
+            tone="warning"
+          />
+        ) : null}
+
+        <div className="mt-5 flex flex-wrap gap-4 text-sm">
+          <form action={reportThreadAction}>
+            <input name="courseSlug" type="hidden" value={course.slug} />
+            <input name="categorySlug" type="hidden" value={categorySlug} />
+            <input name="threadId" type="hidden" value={threadId} />
+            <input name="nextPath" type="hidden" value={nextPath} />
+            <input
+              name="reason"
+              type="hidden"
+              value="Revisar hilo por posible incumplimiento de las normas del foro."
+            />
+            <Button className="px-0 text-[var(--color-ink-soft)] hover:text-[var(--color-primary)]" type="submit" variant="subtle">
+              Reportar hilo
+            </Button>
+          </form>
+        </div>
+      </SurfaceCard>
+
+      {canModerate ? (
+        <SurfaceCard className="border-[rgba(22,60,88,0.08)] bg-[rgba(255,255,255,0.82)]" padding="md" variant="muted">
+          <SectionHeader
+            description="Las acciones de moderación siguen disponibles, pero se mantienen fuera del flujo principal de lectura y respuesta."
+            size="md"
+            title="Gestión del hilo"
+          />
+          <div className="mt-4 flex flex-wrap gap-3">
+            <form action={toggleThreadPinnedAction}>
+              <input name="courseSlug" type="hidden" value={course.slug} />
+              <input name="categorySlug" type="hidden" value={categorySlug} />
+              <input name="threadId" type="hidden" value={threadId} />
+              <input name="nextPath" type="hidden" value={nextPath} />
+              <Button type="submit" variant="subtle">
+                {forumData.thread.isPinned ? (
+                  <>
+                    <PinOff className="mr-2 h-4 w-4" />
+                    Quitar fijado
+                  </>
+                ) : (
+                  <>
+                    <Pin className="mr-2 h-4 w-4" />
+                    Fijar hilo
+                  </>
+                )}
+              </Button>
+            </form>
+
+            <form action={toggleThreadClosedAction}>
+              <input name="courseSlug" type="hidden" value={course.slug} />
+              <input name="categorySlug" type="hidden" value={categorySlug} />
+              <input name="threadId" type="hidden" value={threadId} />
+              <input name="nextPath" type="hidden" value={nextPath} />
+              <Button type="submit" variant="subtle">
+                {forumData.thread.isClosed ? (
+                  <>
+                    <Unlock className="mr-2 h-4 w-4" />
+                    Reabrir hilo
+                  </>
+                ) : (
+                  <>
+                    <Lock className="mr-2 h-4 w-4" />
+                    Cerrar hilo
+                  </>
+                )}
+              </Button>
+            </form>
+
+            <form action={deleteThreadAction}>
+              <input name="courseSlug" type="hidden" value={course.slug} />
+              <input name="categorySlug" type="hidden" value={categorySlug} />
+              <input name="threadId" type="hidden" value={threadId} />
+              <input name="nextPath" type="hidden" value={nextPath} />
+              <ConfirmSubmitButton
+                message="Se eliminará el hilo y dejará de estar visible. ¿Quieres continuar?"
+                pendingLabel="Eliminando..."
+                variant="secondary"
+              >
+                Eliminar hilo
+              </ConfirmSubmitButton>
+            </form>
+          </div>
+        </SurfaceCard>
+      ) : null}
+
+      <SurfaceCard className="border-[rgba(22,60,88,0.08)] bg-white/90 p-0">
+        <div className="px-5 py-5 sm:px-6">
+          <SectionHeader
+            description="Ordenadas cronológicamente para seguir el hilo con el menor ruido posible."
+            size="md"
+            title={`Respuestas (${repliesPagination.totalItems})`}
+          />
+          <p className="mt-2 text-sm text-[var(--color-muted)]">
             Página {repliesPagination.page} de {repliesPagination.totalPages}
           </p>
         </div>
 
-        <div className="space-y-4">
-          {replies.length ? (
-            replies.map((post) => {
+        {replies.length ? (
+          <div className="divide-y divide-[rgba(22,60,88,0.08)]">
+            {replies.map((post) => {
               const isResolved = forumData.thread.resolvedPostId === post.id;
               const canEditPost = canEditForumContent({
                 currentUserId: user.id,
@@ -382,19 +385,15 @@ export default async function ForumThreadPage({ params, searchParams }: ForumThr
 
               return (
                 <article
-                  className={`overflow-hidden rounded-[var(--radius-lg)] border px-5 py-5 shadow-[var(--shadow-soft)] sm:px-6 ${
-                    isResolved
-                      ? "border-[rgba(255,182,6,0.34)] bg-[rgba(255,182,6,0.1)]"
-                      : post.deletedAt
-                        ? "border-dashed border-[rgba(12,113,195,0.16)] bg-[#f7f4ef]"
-                        : "border-[rgba(12,113,195,0.14)] bg-white"
-                  }`}
+                  className={cn(
+                    "px-5 py-4 sm:px-6 sm:py-5",
+                    isResolved && "bg-[rgba(255,182,6,0.06)]",
+                    post.deletedAt && "bg-[rgba(248,245,239,0.9)]"
+                  )}
                   key={post.id}
                 >
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="text-base font-semibold text-[var(--color-ink)] sm:text-lg">
-                      {post.author.name}
-                    </span>
+                    <span className="font-semibold text-[var(--color-ink)] sm:text-lg">{post.author.name}</span>
                     <Badge tone={canModerateCourse(post.authorRole) ? "info" : "warning"}>
                       {getRoleLabel(post.authorRole)}
                     </Badge>
@@ -408,13 +407,11 @@ export default async function ForumThreadPage({ params, searchParams }: ForumThr
                       {formatRelativeTime(post.createdAt)}
                     </span>
                     {post.editedAt ? (
-                      <span className="text-sm text-[var(--color-muted)]">
-                        • editado {formatRelativeTime(post.editedAt)}
-                      </span>
+                      <span className="text-sm text-[var(--color-muted)]">• editado {formatRelativeTime(post.editedAt)}</span>
                     ) : null}
                   </div>
 
-                  <div className="mt-5 whitespace-pre-line break-words text-sm leading-7 text-[var(--color-ink)] sm:text-base sm:leading-8">
+                  <div className="mt-3 whitespace-pre-line break-words text-sm leading-7 text-[var(--color-ink)] sm:text-base sm:leading-8">
                     {post.deletedAt
                       ? "Mensaje eliminado por moderación. Se conserva el rastro para auditoría del hilo."
                       : post.body}
@@ -422,16 +419,18 @@ export default async function ForumThreadPage({ params, searchParams }: ForumThr
 
                   {!post.deletedAt ? <AttachmentList attachments={post.attachments} /> : null}
 
-                  <div className="mt-5 flex flex-wrap gap-3">
+                  <div className="mt-4 flex flex-wrap gap-4 text-sm">
                     {canEditPost && !post.deletedAt ? (
                       <ButtonLink
+                        className="px-0 text-[var(--color-ink-soft)] hover:text-[var(--color-primary)]"
                         href={`/mis-cursos/${course.slug}/foro/${categorySlug}/${threadId}/respuesta/${post.id}/editar`}
                         variant="subtle"
                       >
-                        <PencilLine className="mr-2 h-4 w-4" />
+                        <PencilLine className="mr-1.5 h-4 w-4" />
                         Editar respuesta
                       </ButtonLink>
                     ) : null}
+
                     {!post.deletedAt ? (
                       <form action={reportPostAction}>
                         <input name="courseSlug" type="hidden" value={course.slug} />
@@ -444,7 +443,7 @@ export default async function ForumThreadPage({ params, searchParams }: ForumThr
                           type="hidden"
                           value="Revisar respuesta por posible incumplimiento de las normas del foro."
                         />
-                        <Button type="submit" variant="subtle">
+                        <Button className="px-0 text-[var(--color-ink-soft)] hover:text-[var(--color-primary)]" type="submit" variant="subtle">
                           Reportar respuesta
                         </Button>
                       </form>
@@ -458,7 +457,7 @@ export default async function ForumThreadPage({ params, searchParams }: ForumThr
                           <input name="threadId" type="hidden" value={threadId} />
                           <input name="postId" type="hidden" value={post.id} />
                           <input name="nextPath" type="hidden" value={nextPath} />
-                          <Button type="submit" variant="subtle">
+                          <Button className="px-0 text-[var(--color-ink-soft)] hover:text-[var(--color-primary)]" type="submit" variant="subtle">
                             {isResolved ? "Quitar resuelta" : "Marcar resuelta"}
                           </Button>
                         </form>
@@ -487,7 +486,7 @@ export default async function ForumThreadPage({ params, searchParams }: ForumThr
                         <input name="threadId" type="hidden" value={threadId} />
                         <input name="postId" type="hidden" value={post.id} />
                         <input name="nextPath" type="hidden" value={nextPath} />
-                        <Button type="submit" variant="subtle">
+                        <Button className="px-0 text-[var(--color-ink-soft)] hover:text-[var(--color-primary)]" type="submit" variant="subtle">
                           Restaurar respuesta
                         </Button>
                       </form>
@@ -495,19 +494,20 @@ export default async function ForumThreadPage({ params, searchParams }: ForumThr
                   </div>
                 </article>
               );
-            })
-          ) : (
-            <div className="ui-empty-state px-6 py-10 text-sm leading-7 text-[var(--color-muted)]">
-              Todavía no hay respuestas en este hilo.
-            </div>
-          )}
-        </div>
+            })}
+          </div>
+        ) : (
+          <EmptyState
+            align="center"
+            description="Este hilo todavía no tiene respuestas. Puedes abrir la conversación desde el composer inferior."
+            title="Todavía no hay respuestas"
+          />
+        )}
+      </SurfaceCard>
 
-        {repliesPagination.totalPages > 1 ? (
-          <div className="ui-state-panel flex flex-col gap-4 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-sm text-[var(--color-muted)]">
-              Mostrando página {repliesPagination.page} de {repliesPagination.totalPages}
-            </p>
+      {repliesPagination.totalPages > 1 ? (
+        <StateBanner
+          actions={
             <div className="flex flex-wrap gap-3">
               {repliesPagination.hasPreviousPage ? (
                 <ButtonLink href={`${nextPath}?page=${repliesPagination.page - 1}`} variant="neutral">
@@ -520,27 +520,20 @@ export default async function ForumThreadPage({ params, searchParams }: ForumThr
                 </ButtonLink>
               ) : null}
             </div>
-          </div>
-        ) : null}
-      </section>
+          }
+          description={`Mostrando página ${repliesPagination.page} de ${repliesPagination.totalPages}.`}
+          tone="info"
+        />
+      ) : null}
 
-      <section className="ui-card-base px-5 py-5 sm:px-6">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <h2 className="text-2xl font-semibold tracking-[-0.04em] text-[var(--color-ink)] sm:text-3xl">
-              Añadir respuesta
-            </h2>
-            <p className="mt-2 text-sm leading-7 text-[var(--color-muted)]">
-              Responde con contexto y deja claro a qué parte del hilo haces referencia.
-            </p>
-          </div>
+      <SurfaceCard className="border-[rgba(22,60,88,0.08)] bg-white/90" padding="md">
+        <SectionHeader
+          description="Responde con contexto y deja claro a qué parte del hilo haces referencia."
+          size="md"
+          title="Añadir respuesta"
+        />
 
-          <ButtonLink href={`/mis-cursos/${course.slug}/foro/${categorySlug}`} variant="subtle">
-            Volver a la categoría
-          </ButtonLink>
-        </div>
-
-        <div className="mt-6">
+        <div className="mt-5">
           <ThreadReplyForm
             categorySlug={categorySlug}
             courseSlug={course.slug}
@@ -548,7 +541,7 @@ export default async function ForumThreadPage({ params, searchParams }: ForumThr
             threadId={threadId}
           />
         </div>
-      </section>
+      </SurfaceCard>
     </div>
   );
 }

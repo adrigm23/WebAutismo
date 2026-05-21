@@ -16,6 +16,7 @@ import type {
 } from "@/components/learning/course-learning-shell/types";
 import type { CampusResourceItem } from "@/lib/course-resources";
 import { buildCourseResourcesHref } from "@/lib/course-navigation";
+import { cn } from "@/lib/utils";
 
 export type {
   LearningShellProps,
@@ -358,13 +359,19 @@ export function CourseLearningShell({
         roleLabel={roleLabel}
       />
 
-      <div className="site-container py-5 xl:py-6">
+      <div className="site-container py-5 xl:py-7">
         <CampusOnboarding
           courseSlug={course.slug}
           showInitially={showOnboarding}
         />
         <div className="mt-4 grid gap-5 xl:grid-cols-1">
-          <div className="space-y-4">
+          <div
+            className={cn(
+              "space-y-4",
+              !canModerate && activeTab === "content" && "mx-auto max-w-[72rem]",
+              !canModerate && activeTab === "resources" && "mx-auto max-w-[76rem]",
+            )}
+          >
             {isFocusedTaskWorkspace ? (
               <FocusedTaskIntro
                 courseSlug={course.slug}

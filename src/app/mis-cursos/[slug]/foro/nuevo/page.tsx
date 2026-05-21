@@ -3,6 +3,8 @@ import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import { notFound, redirect } from "next/navigation";
 import { ForumThreadComposer } from "@/components/forum/forum-thread-composer";
+import { SectionHeader } from "@/components/ui/section-header";
+import { SurfaceCard } from "@/components/ui/surface-card";
 import { requireUser } from "@/lib/auth";
 import { getCatalogCourseBySlug } from "@/lib/course-catalog";
 import { canAccessCourseCommunity, canModerateCourse } from "@/lib/course-community";
@@ -12,9 +14,7 @@ type ForumNewThreadPageProps = {
   params: Promise<{ slug: string }>;
 };
 
-export async function generateMetadata({
-  params
-}: ForumNewThreadPageProps): Promise<Metadata> {
+export async function generateMetadata({ params }: ForumNewThreadPageProps): Promise<Metadata> {
   const { slug } = await params;
   const course = await getCatalogCourseBySlug(slug);
 
@@ -54,20 +54,19 @@ export default async function ForumNewThreadPage({ params }: ForumNewThreadPageP
     <div className="space-y-8">
       <div className="flex flex-wrap items-center gap-2 text-sm text-[var(--color-muted)]">
         <Link className="hover:text-[var(--color-primary)]" href={`/mis-cursos/${course.slug}/foro`}>
-          Foro
+          Comunidad
         </Link>
         <ChevronRight className="h-4 w-4" />
         <span className="text-[var(--color-ink)]">Crear contenido</span>
       </div>
 
-      <div>
-        <h1 className="text-5xl font-semibold tracking-[-0.05em] text-[var(--color-ink)]">
-          Crear nuevo hilo
-        </h1>
-        <p className="mt-4 max-w-3xl text-lg leading-8 text-[var(--color-muted)]">
-          Publica una nueva discusión o, si tu rol lo permite, un anuncio programado para el curso.
-        </p>
-      </div>
+      <SurfaceCard className="border-[rgba(22,60,88,0.08)] bg-white/92" padding="md">
+        <SectionHeader
+          description="Publica una nueva discusión o, si tu rol lo permite, un anuncio programado para el curso."
+          eyebrow="Nuevo hilo"
+          title="Abrir una conversación"
+        />
+      </SurfaceCard>
 
       <ForumThreadComposer
         allowAnnouncement={canModerateCourse(access.role)}

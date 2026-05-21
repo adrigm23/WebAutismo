@@ -3,6 +3,8 @@ import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import { notFound, redirect } from "next/navigation";
 import { ForumThreadComposer } from "@/components/forum/forum-thread-composer";
+import { SectionHeader } from "@/components/ui/section-header";
+import { SurfaceCard } from "@/components/ui/surface-card";
 import { requireUser } from "@/lib/auth";
 import { getCatalogCourseBySlug } from "@/lib/course-catalog";
 import { canAccessCourseCommunity, canModerateCourse } from "@/lib/course-community";
@@ -61,7 +63,7 @@ export default async function ForumCategoryNewThreadPage({
     <div className="space-y-8">
       <div className="flex flex-wrap items-center gap-2 text-sm text-[var(--color-muted)]">
         <Link className="hover:text-[var(--color-primary)]" href={`/mis-cursos/${course.slug}/foro`}>
-          Foro
+          Comunidad
         </Link>
         <ChevronRight className="h-4 w-4" />
         <Link
@@ -74,14 +76,13 @@ export default async function ForumCategoryNewThreadPage({
         <span className="text-[var(--color-ink)]">Crear contenido</span>
       </div>
 
-      <div>
-        <h1 className="text-5xl font-semibold tracking-[-0.05em] text-[var(--color-ink)]">
-          Nuevo hilo en {selectedCategory.title}
-        </h1>
-        <p className="mt-4 max-w-3xl text-lg leading-8 text-[var(--color-muted)]">
-          Redacta una publicación clara, añade adjuntos si hace falta y deja el hilo preparado para que el grupo lo siga con contexto.
-        </p>
-      </div>
+      <SurfaceCard className="border-[rgba(22,60,88,0.08)] bg-white/92" padding="md">
+        <SectionHeader
+          description="Redacta una publicación clara, añade adjuntos si hace falta y deja el hilo preparado para que el grupo lo siga con contexto."
+          eyebrow="Nuevo hilo"
+          title={`Abrir conversación en ${selectedCategory.title}`}
+        />
+      </SurfaceCard>
 
       <ForumThreadComposer
         allowAnnouncement={canModerateCourse(access.role)}

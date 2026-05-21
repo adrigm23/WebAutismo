@@ -20,6 +20,7 @@ import {
 } from "@/actions/forum";
 import { Badge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button";
+import { SurfaceCard } from "@/components/ui/surface-card";
 import { buildCourseResourcesHref, buildCourseTrackingHref } from "@/lib/course-navigation";
 import { getForumCategoryPreset } from "@/lib/forum-presentation";
 import { siteConfig } from "@/lib/site";
@@ -102,23 +103,24 @@ export function ForumShell({
   ];
 
   return (
-    <div className="min-h-screen overflow-x-clip bg-[linear-gradient(180deg,#f7f4ef_0%,#f4f7fb_52%,#fbfaf8_100%)] text-[var(--color-ink)]">
-      <header className="sticky top-0 z-40 border-b border-[rgba(12,113,195,0.12)] bg-[rgba(255,255,255,0.92)] backdrop-blur-xl">
-        <div className="site-container py-4">
-          <div className="flex flex-col gap-4">
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+    <div className="min-h-screen overflow-x-clip bg-[linear-gradient(180deg,#f8f5ef_0%,#f5f7fb_48%,#fcfbf8_100%)] text-[var(--color-ink)]">
+      <header className="sticky top-0 z-40 border-b border-[rgba(22,60,88,0.1)] bg-[rgba(248,245,239,0.9)] backdrop-blur-xl">
+        <div className="site-container py-2.5">
+          <div className="flex flex-col gap-2.5">
+            <div className="flex flex-col gap-2.5 lg:flex-row lg:items-start lg:justify-between">
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-2">
                   <Badge tone={canModerate ? "info" : "warning"}>{roleLabel}</Badge>
                   <Badge className="hidden sm:inline-flex" tone="outline">
-                    Comunidad del curso
+                    Comunidad integrada
                   </Badge>
                 </div>
-                <p className="mt-3 text-display-sm font-semibold text-[var(--color-ink)] sm:text-display-md">
+                <p className="mt-1.5 font-premium text-display-sm font-semibold text-[var(--color-ink)] sm:text-display-md">
                   {course.title}
                 </p>
-                <p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--color-muted)]">
-                  Foro privado del curso dentro del mismo recorrido del campus.
+                <p className="mt-1 max-w-3xl text-sm leading-6 text-[var(--color-muted)]">
+                  Un espacio de conversación dentro del campus para seguir el curso, plantear
+                  dudas y compartir avances sin perder contexto.
                 </p>
               </div>
 
@@ -131,8 +133,8 @@ export function ForumShell({
                     className={cn(
                       "inline-flex min-h-11 items-center justify-center rounded-[var(--radius-pill)] px-3.5 py-2 text-sm font-semibold transition",
                       item.active
-                        ? "border border-[var(--color-primary)] bg-white text-[var(--color-primary)] shadow-[var(--shadow-inset-soft)]"
-                        : "text-[var(--color-ink)] hover:bg-[var(--color-primary-soft)] hover:text-[var(--color-primary)]"
+                        ? "border border-[rgba(22,60,88,0.18)] bg-white text-[var(--color-primary)] shadow-[var(--shadow-inset-soft)]"
+                        : "text-[var(--color-ink-soft)] hover:bg-white hover:text-[var(--color-primary)]"
                     )}
                     href={item.href}
                     key={item.href}
@@ -143,9 +145,9 @@ export function ForumShell({
               </nav>
             </div>
 
-            <div className="flex flex-col gap-3 border-t border-[rgba(12,113,195,0.08)] pt-3 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex flex-col gap-2.5 border-t border-[rgba(22,60,88,0.08)] pt-2 lg:flex-row lg:items-center lg:justify-between">
               <form action={pathname} className="w-full lg:max-w-[24rem]">
-                <label className="flex min-h-11 items-center gap-3 rounded-[var(--radius-pill)] border border-[rgba(12,113,195,0.14)] bg-[#f3f1ee] px-4 text-[var(--color-muted)] shadow-[var(--shadow-inset-soft)]">
+                <label className="flex min-h-11 items-center gap-3 rounded-[var(--radius-pill)] border border-[rgba(22,60,88,0.1)] bg-[rgba(255,255,255,0.8)] px-4 text-[var(--color-muted)] shadow-[var(--shadow-inset-soft)]">
                   <Search className="h-5 w-5 shrink-0" />
                   <input
                     className="w-full min-w-0 bg-transparent text-sm text-[var(--color-ink)] outline-none placeholder:text-[var(--color-muted)]"
@@ -159,12 +161,12 @@ export function ForumShell({
 
               <div className="flex flex-wrap items-center gap-2 lg:justify-end">
                 <ButtonLink href={newThreadHref}>Nuevo hilo</ButtonLink>
-                <ButtonLink className="sm:inline-flex" href={`/mis-cursos/${course.slug}`} variant="secondary">
+                <ButtonLink href={`/mis-cursos/${course.slug}`} variant="secondary">
                   Volver al campus
                 </ButtonLink>
 
                 <details className="relative">
-                  <summary className="flex h-11 cursor-pointer list-none items-center justify-center rounded-[var(--radius-pill)] border border-[rgba(12,113,195,0.18)] bg-white px-4 text-[var(--color-ink)] shadow-[var(--shadow-inset-soft)] transition hover:border-[var(--color-primary)]">
+                  <summary className="flex h-11 cursor-pointer list-none items-center justify-center rounded-[var(--radius-pill)] border border-[rgba(22,60,88,0.12)] bg-white px-4 text-[var(--color-ink)] shadow-[var(--shadow-inset-soft)] transition hover:border-[var(--color-primary)]">
                     <Bell className="h-5 w-5" />
                     {forumNotifications.unreadCount ? (
                       <span className="ml-2 inline-flex min-w-5 items-center justify-center rounded-full bg-[var(--color-primary)] px-1.5 py-0.5 text-[10px] font-semibold text-white">
@@ -173,7 +175,7 @@ export function ForumShell({
                     ) : null}
                   </summary>
 
-                  <div className="absolute right-0 top-[calc(100%+0.75rem)] z-50 w-[min(22rem,calc(100vw-2rem))] max-w-[calc(100vw-2rem)] rounded-[var(--radius-lg)] border border-[rgba(12,113,195,0.14)] bg-white p-4 shadow-[0_24px_60px_rgba(34,34,33,0.12)]">
+                  <div className="absolute right-0 top-[calc(100%+0.75rem)] z-50 w-[min(22rem,calc(100vw-2rem))] max-w-[calc(100vw-2rem)] rounded-[var(--radius-lg)] border border-[rgba(22,60,88,0.12)] bg-white p-4 shadow-[0_24px_60px_rgba(34,34,33,0.12)]">
                     <div className="flex items-center justify-between gap-3">
                       <div className="min-w-0">
                         <p className="text-lg font-semibold tracking-[-0.03em] text-[var(--color-ink)]">
@@ -200,14 +202,17 @@ export function ForumShell({
                       {forumNotifications.notifications.length ? (
                         forumNotifications.notifications.map((notification) => (
                           <div
-                            className="rounded-[var(--radius-md)] border border-[rgba(12,113,195,0.12)] bg-[#fcfbf8] p-4"
+                            className="rounded-[var(--radius-md)] border border-[rgba(22,60,88,0.1)] bg-[#fcfbf8] p-4"
                             key={notification.id}
                           >
                             <div className="flex items-center gap-2">
                               <span
-                                className={`inline-flex h-2.5 w-2.5 rounded-full ${
-                                  notification.readAt ? "bg-[rgba(12,113,195,0.2)]" : "bg-[var(--color-accent)]"
-                                }`}
+                                className={cn(
+                                  "inline-flex h-2.5 w-2.5 rounded-full",
+                                  notification.readAt
+                                    ? "bg-[rgba(22,60,88,0.18)]"
+                                    : "bg-[var(--color-accent)]"
+                                )}
                               />
                               <span className="text-xs uppercase tracking-[0.14em] text-[var(--color-muted)]">
                                 {formatRelativeTime(notification.createdAt)}
@@ -250,8 +255,8 @@ export function ForumShell({
                   </div>
                 </details>
 
-                <div className="hidden min-w-0 items-center gap-3 rounded-[var(--radius-pill)] border border-[var(--color-border)] bg-white px-3 py-2 lg:flex lg:max-w-[16rem]">
-                  <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[var(--color-primary-soft)] text-sm font-semibold text-[var(--color-primary)]">
+                <div className="hidden min-w-0 items-center gap-3 rounded-[var(--radius-pill)] border border-[rgba(22,60,88,0.12)] bg-white/92 px-3 py-2 lg:flex lg:max-w-[16rem]">
+                  <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[var(--color-brand-soft)] text-sm font-semibold text-[var(--color-primary)]">
                     {initials}
                   </div>
                   <div className="min-w-0 overflow-hidden">
@@ -265,46 +270,54 @@ export function ForumShell({
         </div>
       </header>
 
-      <div className="site-container min-h-[calc(100vh-74px)] py-5 lg:grid lg:grid-cols-[17.5rem_minmax(0,1fr)] lg:gap-6 lg:py-8">
+      <div className="site-container min-h-[calc(100vh-74px)] py-5 lg:grid lg:grid-cols-[14.75rem_minmax(0,1fr)] lg:gap-7 lg:py-7">
         <aside className="hidden lg:sticky lg:top-[7.4rem] lg:block lg:self-start">
-          <div className="flex flex-col gap-4">
-            <div className="ui-card-base px-4 py-4">
-              <div className="flex items-start gap-4">
-                <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-[var(--color-primary)] text-white">
+          <div className="flex flex-col gap-3">
+            <SurfaceCard
+              className="border-[rgba(22,60,88,0.08)] bg-white/82"
+              padding="md"
+              variant="muted"
+            >
+              <div className="flex items-start gap-3">
+                <div className="grid h-10 w-10 shrink-0 place-items-center rounded-[18px] bg-[linear-gradient(180deg,var(--color-primary)_0%,var(--color-primary-strong)_100%)] text-white shadow-[0_8px_20px_rgba(22,60,88,0.16)]">
                   <MessageSquareText className="h-5 w-5" />
                 </div>
                 <div className="min-w-0">
-                  <p className="truncate text-[1.35rem] font-semibold tracking-[-0.03em] text-[var(--color-ink)]">
+                  <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--color-muted)]">
+                    Comunidad del curso
+                  </p>
+                  <p className="mt-1.5 truncate font-premium text-[1.18rem] font-semibold tracking-[-0.03em] text-[var(--color-ink)]">
                     {course.title}
                   </p>
-                  <p className="mt-1 text-sm leading-6 text-[var(--color-muted)]">
-                    Comunidad privada / {roleLabel}
-                  </p>
+                  <p className="mt-0.5 text-sm text-[var(--color-muted)]">{roleLabel}</p>
                 </div>
               </div>
-            </div>
-
-            <div className="ui-card-base rounded-[var(--radius-md)] px-4 py-4">
-              <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--color-muted)]">
-                Actividad del foro
-              </p>
-              <div className="mt-3 flex items-end justify-between gap-4">
+              <div className="mt-4 grid grid-cols-2 gap-3 border-t border-[rgba(22,60,88,0.08)] pt-3">
                 <div>
-                  <p className="text-[1.8rem] font-semibold tracking-[-0.04em] text-[var(--color-ink)]">
+                  <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--color-muted)]">
+                    Temas
+                  </p>
+                  <p className="mt-1.5 font-premium text-[1.45rem] font-semibold tracking-[-0.04em] text-[var(--color-ink)]">
                     {totalThreads}
                   </p>
-                  <p className="text-sm text-[var(--color-muted)]">temas visibles</p>
+                  <p className="text-sm text-[var(--color-muted)]">visibles</p>
                 </div>
-                <div className="text-right">
-                  <p className="text-[1.8rem] font-semibold tracking-[-0.04em] text-[var(--color-ink)]">
+                <div>
+                  <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--color-muted)]">
+                    Avisos
+                  </p>
+                  <p className="mt-1.5 font-premium text-[1.45rem] font-semibold tracking-[-0.04em] text-[var(--color-ink)]">
                     {forumNotifications.unreadCount}
                   </p>
                   <p className="text-sm text-[var(--color-muted)]">sin leer</p>
                 </div>
               </div>
-            </div>
+            </SurfaceCard>
 
-            <nav className="ui-card-base p-3">
+            <nav className="rounded-[var(--radius-lg)] border border-[rgba(22,60,88,0.07)] bg-white/74 p-2.5 shadow-[var(--shadow-soft)]">
+              <p className="px-3 pb-1.5 text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--color-muted)]">
+                Categorías
+              </p>
               {categories.length ? (
                 categories.map((category) => {
                   const preset = getForumCategoryPreset(category.slug);
@@ -315,20 +328,21 @@ export function ForumShell({
                   return (
                     <Link
                       className={cn(
-                        "flex items-center gap-3 rounded-[var(--radius-md)] px-4 py-3 text-sm font-medium text-[var(--color-ink)] transition hover:bg-white",
-                        isActive &&
-                          "bg-[rgba(12,113,195,0.12)] text-[var(--color-primary)] shadow-[inset_0_0_0_1px_rgba(12,113,195,0.08)]"
+                        "flex items-center gap-3 rounded-[var(--radius-md)] px-3 py-2.5 text-sm font-medium transition",
+                        isActive
+                          ? "bg-[rgba(22,60,88,0.08)] text-[var(--color-primary)] shadow-[inset_0_0_0_1px_rgba(22,60,88,0.08)]"
+                          : "text-[var(--color-ink)] hover:bg-[rgba(22,60,88,0.04)]"
                       )}
                       href={href}
                       key={category.id}
                       prefetch
-                    >
-                      <div
-                        className={cn(
-                          "grid h-9 w-9 shrink-0 place-items-center rounded-xl",
-                          isActive ? "bg-white" : preset.softClass
-                        )}
                       >
+                        <div
+                          className={cn(
+                            "grid h-8 w-8 shrink-0 place-items-center rounded-xl",
+                            isActive ? "bg-white" : preset.softClass
+                          )}
+                        >
                         <Icon className="h-4 w-4" />
                       </div>
                       <div className="min-w-0 flex-1">
@@ -345,16 +359,16 @@ export function ForumShell({
               )}
             </nav>
 
-            <div className="ui-card-base p-3">
-              <div className="space-y-2">
+            <div className="rounded-[var(--radius-lg)] border border-[rgba(22,60,88,0.07)] bg-white/72 p-2.5 shadow-[var(--shadow-soft)]">
+              <div className="space-y-1">
                 {canModerate ? (
                   <>
                     <Link
                       className={cn(
-                        "flex items-center gap-3 rounded-[var(--radius-md)] px-4 py-3 text-sm font-medium transition hover:bg-white",
+                        "flex items-center gap-3 rounded-[var(--radius-md)] px-3 py-2.5 text-sm font-medium transition",
                         pathname.startsWith(`${forumRootPath}/moderacion`)
-                          ? "bg-[rgba(12,113,195,0.12)] text-[var(--color-primary)]"
-                          : "text-[var(--color-ink)]"
+                          ? "bg-[rgba(22,60,88,0.08)] text-[var(--color-primary)]"
+                          : "text-[var(--color-ink)] hover:bg-[rgba(22,60,88,0.04)]"
                       )}
                       href={`${forumRootPath}/moderacion`}
                     >
@@ -363,10 +377,10 @@ export function ForumShell({
                     </Link>
                     <Link
                       className={cn(
-                        "flex items-center gap-3 rounded-[var(--radius-md)] px-4 py-3 text-sm font-medium transition hover:bg-white",
+                        "flex items-center gap-3 rounded-[var(--radius-md)] px-3 py-2.5 text-sm font-medium transition",
                         pathname.startsWith(`${forumRootPath}/historico`)
-                          ? "bg-[rgba(12,113,195,0.12)] text-[var(--color-primary)]"
-                          : "text-[var(--color-ink)]"
+                          ? "bg-[rgba(22,60,88,0.08)] text-[var(--color-primary)]"
+                          : "text-[var(--color-ink)] hover:bg-[rgba(22,60,88,0.04)]"
                       )}
                       href={`${forumRootPath}/historico`}
                     >
@@ -377,49 +391,48 @@ export function ForumShell({
                 ) : null}
 
                 <Link
-                  className="flex items-center gap-3 rounded-[var(--radius-md)] px-4 py-3 text-sm font-medium text-[var(--color-ink)] transition hover:bg-white"
+                  className="flex items-center gap-3 rounded-[var(--radius-md)] px-3 py-2.5 text-sm font-medium text-[var(--color-ink-soft)] transition hover:bg-[rgba(22,60,88,0.04)] hover:text-[var(--color-ink)]"
                   href={`/mis-cursos/${course.slug}`}
                 >
                   <BookOpen className="h-4 w-4" />
                   <span>Volver al curso</span>
                 </Link>
                 <Link
-                  className="flex items-center gap-3 rounded-[var(--radius-md)] px-4 py-3 text-sm font-medium text-[var(--color-ink)] transition hover:bg-white"
+                  className="flex items-center gap-3 rounded-[var(--radius-md)] px-3 py-2.5 text-sm font-medium text-[var(--color-ink-soft)] transition hover:bg-[rgba(22,60,88,0.04)] hover:text-[var(--color-ink)]"
                   href="/mi-cuenta"
                 >
                   <GraduationCap className="h-4 w-4" />
                   <span>Mi cuenta</span>
                 </Link>
                 <Link
-                  className="flex items-center gap-3 rounded-[var(--radius-md)] px-4 py-3 text-sm font-medium text-[var(--color-ink)] transition hover:bg-white"
+                  className="flex items-center gap-3 rounded-[var(--radius-md)] px-3 py-2.5 text-sm font-medium text-[var(--color-ink-soft)] transition hover:bg-[rgba(22,60,88,0.04)] hover:text-[var(--color-ink)]"
                   href={buildCourseResourcesHref(course.slug)}
                 >
                   <FolderKanban className="h-4 w-4" />
                   <span>Recursos y tareas</span>
                 </Link>
                 <a
-                  className="flex items-center gap-3 rounded-[var(--radius-md)] px-4 py-3 text-sm font-medium text-[var(--color-ink)] transition hover:bg-white"
+                  className="flex items-center gap-3 rounded-[var(--radius-md)] px-3 py-2.5 text-sm font-medium text-[var(--color-ink-soft)] transition hover:bg-[rgba(22,60,88,0.04)] hover:text-[var(--color-ink)]"
                   href={`mailto:${siteConfig.supportEmail}`}
                 >
                   <CircleHelp className="h-4 w-4" />
                   <span>Soporte</span>
                 </a>
-              </div>
-            </div>
 
-            <div className="ui-card-base mt-auto px-4 py-4 text-sm text-[var(--color-muted)]">
-              <p className="font-semibold text-[var(--color-ink)]">{siteConfig.name}</p>
-              <p className="mt-2 leading-6">
-                Comunidad privada por curso. Los anuncios, dudas y respuestas siguen el mismo
-                recorrido autenticado del campus.
-              </p>
+                <div className="border-t border-[rgba(22,60,88,0.08)] px-3 pt-3 text-sm text-[var(--color-muted)]">
+                  <p className="font-medium text-[var(--color-ink-soft)]">{siteConfig.shortName}</p>
+                  <p className="mt-1.5 leading-6">
+                    Comunidad privada del curso, integrada en el mismo recorrido del campus.
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
         </aside>
 
-        <div className="min-w-0 space-y-4 lg:space-y-0">
+        <div className="min-w-0 space-y-6 lg:space-y-0">
           <div className="space-y-3 lg:hidden">
-            <section className="ui-card-base px-4 py-4">
+            <section className="rounded-[var(--radius-lg)] border border-[rgba(22,60,88,0.08)] bg-white/82 px-4 py-4 shadow-[var(--shadow-soft)]">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <p className="text-sm font-semibold text-[var(--color-ink)]">Comunidad del curso</p>
@@ -435,22 +448,20 @@ export function ForumShell({
                 </Link>
               </div>
             </section>
+          </div>
 
-            <section className="ui-card-base px-4 py-4">
+          <main>{children}</main>
+
+          <div className="space-y-3 lg:hidden">
+            <section className="rounded-[var(--radius-lg)] border border-[rgba(22,60,88,0.08)] bg-white/82 px-4 py-4 shadow-[var(--shadow-soft)]">
               <div className="flex items-center justify-between gap-3">
                 <p className="text-sm font-semibold text-[var(--color-ink)]">Categorías</p>
                 {canModerate ? (
-                  <div className="flex flex-wrap gap-2">
-                    <Link
-                      className="text-sm font-medium text-[var(--color-primary)]"
-                      href={`${forumRootPath}/moderacion`}
-                    >
+                  <div className="flex flex-wrap gap-3 text-sm">
+                    <Link className="font-medium text-[var(--color-primary)]" href={`${forumRootPath}/moderacion`}>
                       Moderación
                     </Link>
-                    <Link
-                      className="text-sm font-medium text-[var(--color-primary)]"
-                      href={`${forumRootPath}/historico`}
-                    >
+                    <Link className="font-medium text-[var(--color-primary)]" href={`${forumRootPath}/historico`}>
                       Archivo
                     </Link>
                   </div>
@@ -458,32 +469,30 @@ export function ForumShell({
               </div>
 
               {categories.length ? (
-                <div className="mt-3">
-                  <div className="flex flex-wrap gap-2">
-                    {categories.map((category) => {
-                      const preset = getForumCategoryPreset(category.slug);
-                      const Icon = preset.icon;
-                      const href = `${forumRootPath}/${category.slug}`;
-                      const isActive = pathname === href || pathname.startsWith(`${href}/`);
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {categories.map((category) => {
+                    const preset = getForumCategoryPreset(category.slug);
+                    const Icon = preset.icon;
+                    const href = `${forumRootPath}/${category.slug}`;
+                    const isActive = pathname === href || pathname.startsWith(`${href}/`);
 
-                      return (
-                        <Link
-                          className={cn(
-                            "inline-flex max-w-full min-w-0 items-center gap-2 rounded-[var(--radius-pill)] border px-3 py-2 text-sm font-medium transition sm:max-w-[15rem]",
-                            isActive
-                              ? "border-[var(--color-primary)] bg-white text-[var(--color-primary)]"
-                              : "border-[var(--color-border)] bg-[#faf8f4] text-[var(--color-ink)]"
-                          )}
-                          href={href}
-                          key={category.id}
-                        >
-                          <Icon className="h-4 w-4 shrink-0" />
-                          <span className="truncate">{category.title}</span>
-                          <span className="text-xs text-[var(--color-muted)]">{category._count.threads}</span>
-                        </Link>
-                      );
-                    })}
-                  </div>
+                    return (
+                      <Link
+                        className={cn(
+                          "inline-flex max-w-full min-w-0 items-center gap-2 rounded-[var(--radius-pill)] border px-3 py-2 text-sm font-medium transition",
+                          isActive
+                            ? "border-[rgba(22,60,88,0.18)] bg-white text-[var(--color-primary)]"
+                            : "border-[rgba(22,60,88,0.1)] bg-[#faf8f4] text-[var(--color-ink)]"
+                        )}
+                        href={href}
+                        key={category.id}
+                      >
+                        <Icon className="h-4 w-4 shrink-0" />
+                        <span className="truncate">{category.title}</span>
+                        <span className="text-xs text-[var(--color-muted)]">{category._count.threads}</span>
+                      </Link>
+                    );
+                  })}
                 </div>
               ) : (
                 <div className="ui-empty-state mt-3 px-4 py-5 text-sm text-[var(--color-muted)]">
@@ -491,11 +500,8 @@ export function ForumShell({
                 </div>
               )}
 
-              <div className="mt-4 flex flex-wrap gap-2 text-sm">
-                <Link
-                  className="font-medium text-[var(--color-primary)]"
-                  href={buildCourseResourcesHref(course.slug)}
-                >
+              <div className="mt-4 flex flex-wrap gap-3 text-sm">
+                <Link className="font-medium text-[var(--color-primary)]" href={buildCourseResourcesHref(course.slug)}>
                   Recursos y tareas
                 </Link>
                 <a className="font-medium text-[var(--color-primary)]" href={`mailto:${siteConfig.supportEmail}`}>
@@ -505,8 +511,7 @@ export function ForumShell({
             </section>
           </div>
 
-          <main>{children}</main>
-          <footer className="border-t border-[rgba(12,113,195,0.12)] px-1 py-6 text-sm text-[var(--color-muted)]">
+          <footer className="border-t border-[rgba(22,60,88,0.1)] px-1 py-6 text-sm text-[var(--color-muted)]">
             <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
               <span>{siteConfig.shortName}</span>
               <span>Campus privado por curso</span>

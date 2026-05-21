@@ -4,6 +4,10 @@ import { ChevronRight, MessageSquare, MoveRight, Pin } from "lucide-react";
 import { notFound, redirect } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
+import { SectionHeader } from "@/components/ui/section-header";
+import { StateBanner } from "@/components/ui/state-banner";
+import { SurfaceCard } from "@/components/ui/surface-card";
 import { requireUser } from "@/lib/auth";
 import { getCatalogCourseBySlug } from "@/lib/course-catalog";
 import {
@@ -43,9 +47,7 @@ function buildFilterHref(
   return `/mis-cursos/${courseSlug}/foro/${categorySlug}${query ? `?${query}` : ""}`;
 }
 
-export async function generateMetadata({
-  params
-}: ForumCategoryPageProps): Promise<Metadata> {
+export async function generateMetadata({ params }: ForumCategoryPageProps): Promise<Metadata> {
   const { slug, categorySlug } = await params;
   const course = await getCatalogCourseBySlug(slug);
 
@@ -190,37 +192,15 @@ export default async function ForumCategoryPage({
   return (
     <div className="space-y-6 lg:space-y-8">
       <div className="flex flex-wrap items-center gap-2 text-sm text-[var(--color-muted)]">
-        <Link
-          className="hover:text-[var(--color-primary)]"
-          href={`/mis-cursos/${course.slug}/foro`}
-          prefetch
-        >
+        <Link className="hover:text-[var(--color-primary)]" href={`/mis-cursos/${course.slug}/foro`} prefetch>
           Comunidad
         </Link>
         <ChevronRight className="h-4 w-4" />
         <span className="text-[var(--color-ink)]">{forumData.category.title}</span>
       </div>
 
-      <section className="ui-card-base overflow-hidden">
-        <div className="flex flex-col gap-5 px-5 py-5 sm:px-6 lg:flex-row lg:items-end lg:justify-between">
-          <div className="max-w-4xl">
-            <div className="flex flex-wrap items-center gap-2">
-              <Badge tone={canModerate ? "info" : "warning"}>{getRoleLabel(access.role)}</Badge>
-              <Badge className="hidden sm:inline-flex" tone="outline">
-                Categoría activa
-              </Badge>
-            </div>
-            <h1 className="mt-4 text-display-sm font-semibold text-[var(--color-ink)] sm:text-display-md">
-              {forumData.category.title}
-            </h1>
-            <p className="mt-3 max-w-3xl text-sm leading-7 text-[var(--color-muted)] sm:text-base">
-              {forumData.category.description}
-            </p>
-            <p className="mt-4 text-sm leading-6 text-[var(--color-muted)]">
-              {formatCompactNumber(totalThreads)} hilos en esta vista.
-            </p>
-          </div>
-
+      <SurfaceCard
+        actions={
           <div className="flex flex-wrap gap-3">
             <ButtonLink href={`/mis-cursos/${course.slug}/foro/${categorySlug}/nuevo`} prefetch>
               Nuevo hilo
@@ -235,9 +215,24 @@ export default async function ForumCategoryPage({
               </ButtonLink>
             ) : null}
           </div>
-        </div>
+        }
+        className="border-[rgba(22,60,88,0.1)] bg-white/90"
+        padding="md"
+      >
+        <SectionHeader
+          description={forumData.category.description}
+          eyebrow={
+            <div className="flex flex-wrap items-center gap-2">
+              <Badge tone={canModerate ? "info" : "warning"}>{getRoleLabel(access.role)}</Badge>
+              <Badge className="hidden sm:inline-flex" tone="outline">
+                Categoría activa
+              </Badge>
+            </div>
+          }
+          title={forumData.category.title}
+        />
 
-        <div className="hidden grid-cols-2 gap-3 border-t border-[rgba(12,113,195,0.1)] px-5 py-5 sm:grid xl:grid-cols-5 sm:px-6">
+        <div className="mt-5 grid gap-3 border-t border-[rgba(22,60,88,0.08)] pt-4 sm:grid-cols-2 xl:grid-cols-5">
           {[
             { label: "Total", value: formatCompactNumber(totalThreads) },
             { label: "Abiertos", value: String(openCount) },
@@ -246,28 +241,28 @@ export default async function ForumCategoryPage({
             { label: "Anuncios", value: String(announcementCount) }
           ].map((metric) => (
             <div
-              className="rounded-[var(--radius-md)] border border-[rgba(12,113,195,0.1)] bg-[#faf8f4] px-4 py-4"
+              className="rounded-[var(--radius-md)] bg-[rgba(248,245,239,0.72)] px-4 py-3"
               key={metric.label}
             >
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-muted)]">
+              <p className="text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-[var(--color-muted)]">
                 {metric.label}
               </p>
-              <p className="mt-2 text-3xl font-semibold tracking-[-0.04em] text-[var(--color-ink)]">
+              <p className="mt-1.5 font-premium text-[1.6rem] font-semibold tracking-[-0.04em] text-[var(--color-ink)]">
                 {metric.value}
               </p>
             </div>
           ))}
         </div>
-      </section>
+      </SurfaceCard>
 
       <div className="-mx-1 overflow-x-auto pb-1">
-        <div className="flex w-max gap-2 px-1">
+        <div className="flex w-max min-w-full gap-2 px-1">
           {filters.map((tab) => (
             <Link
               className={
                 tab.active
-                  ? "inline-flex min-h-10 items-center justify-center rounded-[var(--radius-pill)] border border-[var(--color-primary)] bg-white px-4 py-2 text-sm font-semibold text-[var(--color-primary)] shadow-[var(--shadow-inset-soft)]"
-                  : "inline-flex min-h-10 items-center justify-center rounded-[var(--radius-pill)] border border-[transparent] bg-transparent px-4 py-2 text-sm font-semibold text-[var(--color-ink)] transition hover:bg-[var(--color-primary-soft)] hover:text-[var(--color-primary)]"
+                  ? "inline-flex min-h-10 items-center justify-center rounded-[var(--radius-pill)] border border-[rgba(22,60,88,0.18)] bg-white px-4 py-2 text-sm font-semibold text-[var(--color-primary)] shadow-[var(--shadow-inset-soft)]"
+                  : "inline-flex min-h-10 items-center justify-center rounded-[var(--radius-pill)] border border-transparent bg-transparent px-4 py-2 text-sm font-semibold text-[var(--color-ink-soft)] transition hover:bg-white hover:text-[var(--color-primary)]"
               }
               href={tab.href}
               key={tab.label}
@@ -279,26 +274,16 @@ export default async function ForumCategoryPage({
         </div>
       </div>
 
-      <div className="space-y-4">
+      <SurfaceCard className="border-[rgba(22,60,88,0.08)] bg-white/88 p-0" padding="md">
         {filteredThreads.length ? (
-          filteredThreads.map((thread) => (
-            <Link
-              className="ui-card-base group relative block overflow-hidden px-5 py-5 transition hover:-translate-y-[2px] hover:border-[rgba(12,113,195,0.24)] sm:px-6"
-              href={`/mis-cursos/${course.slug}/foro/${categorySlug}/${thread.id}`}
-              key={thread.id}
-            >
-              <div
-                className={`absolute inset-y-0 left-0 w-1 ${
-                  thread.type === "ANNOUNCEMENT"
-                    ? "bg-[linear-gradient(180deg,#ffb606,#f0d07a)]"
-                    : thread.isResolved
-                      ? "bg-[linear-gradient(180deg,#2ea3f2,#9fd2ff)]"
-                      : "bg-[linear-gradient(180deg,#0c71c3,#69b4ff)]"
-                }`}
-              />
-
-              <div className="flex flex-col gap-4">
-                <div className="min-w-0">
+          <div className="divide-y divide-[rgba(22,60,88,0.08)]">
+            {filteredThreads.map((thread) => (
+              <Link
+                className="group block px-5 py-4 transition hover:bg-[rgba(22,60,88,0.03)] sm:px-6 sm:py-5"
+                href={`/mis-cursos/${course.slug}/foro/${categorySlug}/${thread.id}`}
+                key={thread.id}
+              >
+                <div className="flex flex-col gap-4">
                   <div className="flex flex-wrap items-center gap-2">
                     {thread.isPinned ? (
                       <Badge tone="warning">
@@ -314,18 +299,19 @@ export default async function ForumCategoryPage({
                     </Badge>
                   </div>
 
-                  <div className="mt-4 flex items-start justify-between gap-4">
-                    <h2 className="min-w-0 text-[1.45rem] font-semibold tracking-[-0.04em] text-[var(--color-ink)] sm:text-[1.8rem]">
-                      {thread.title}
-                    </h2>
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="min-w-0">
+                      <h2 className="font-premium text-[1.24rem] font-semibold tracking-[-0.04em] text-[var(--color-ink)] sm:text-[1.45rem]">
+                        {thread.title}
+                      </h2>
+                      <p className="mt-2.5 line-clamp-3 max-w-4xl whitespace-pre-line break-words text-sm leading-7 text-[var(--color-muted)] sm:text-base">
+                        {thread.body}
+                      </p>
+                    </div>
                     <MoveRight className="mt-1 hidden h-5 w-5 shrink-0 text-[var(--color-muted)] transition group-hover:translate-x-1 group-hover:text-[var(--color-primary)] sm:block" />
                   </div>
 
-                  <p className="mt-3 line-clamp-3 max-w-4xl whitespace-pre-line break-words text-sm leading-7 text-[var(--color-muted)] sm:text-base">
-                    {thread.body}
-                  </p>
-
-                  <div className="mt-4 flex flex-wrap items-center gap-3 text-sm text-[var(--color-muted)]">
+                  <div className="flex flex-wrap items-center gap-2.5 text-sm text-[var(--color-muted)]">
                     <span>{thread.author.name}</span>
                     <span>•</span>
                     <span>{formatRelativeTime(thread.createdAt)}</span>
@@ -338,65 +324,68 @@ export default async function ForumCategoryPage({
                       </>
                     ) : null}
                   </div>
-                </div>
 
-                <div className="flex flex-wrap items-center gap-3 text-sm">
-                  <div className="inline-flex items-center gap-2 rounded-[var(--radius-pill)] bg-[#faf8f4] px-3.5 py-2 font-medium text-[var(--color-ink)]">
-                    <MessageSquare className="h-4 w-4 text-[var(--color-muted)]" />
-                    <span>{thread._count.posts} respuestas</span>
+                  <div className="flex flex-wrap items-center gap-3 text-sm">
+                    <div className="inline-flex items-center gap-2 rounded-[var(--radius-pill)] bg-[rgba(248,245,239,0.8)] px-3 py-1.5 font-medium text-[var(--color-ink-soft)]">
+                      <MessageSquare className="h-4 w-4 text-[var(--color-muted)]" />
+                      <span>{thread._count.posts} respuestas</span>
+                    </div>
+                    <span className="text-[var(--color-muted)]">
+                      Última actividad {formatRelativeTime(thread.lastActivityAt)}
+                    </span>
                   </div>
-                  <span className="text-[var(--color-muted)]">
-                    Última actividad {formatRelativeTime(thread.lastActivityAt)}
-                  </span>
                 </div>
-              </div>
-            </Link>
-          ))
-        ) : (
-          <div className="ui-empty-state px-6 py-10 text-sm leading-7 text-[var(--color-muted)]">
-            No hay hilos que coincidan con los filtros actuales.
+              </Link>
+            ))}
           </div>
+        ) : (
+          <EmptyState
+            align="center"
+            description="Cambia los filtros o crea un nuevo hilo para abrir conversación en esta categoría."
+            title="No hay hilos que coincidan con la vista actual"
+          />
         )}
-      </div>
+      </SurfaceCard>
 
       {pagination.totalPages > 1 ? (
-        <div className="ui-state-panel flex flex-col gap-4 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-sm text-[var(--color-muted)]">
-            Página {pagination.page} de {pagination.totalPages} · {pagination.totalItems} hilos
-          </p>
-          <div className="flex flex-wrap gap-3">
-            {pagination.hasPreviousPage ? (
-              <ButtonLink
-                href={buildFilterHref(course.slug, categorySlug, {
-                  q: selectedQuery || undefined,
-                  sort: selectedSort || undefined,
-                  status: selectedStatus || undefined,
-                  type: selectedType || undefined,
-                  filter: selectedFilter || undefined,
-                  page: String(pagination.page - 1)
-                })}
-                variant="neutral"
-              >
-                Página anterior
-              </ButtonLink>
-            ) : null}
-            {pagination.hasNextPage ? (
-              <ButtonLink
-                href={buildFilterHref(course.slug, categorySlug, {
-                  q: selectedQuery || undefined,
-                  sort: selectedSort || undefined,
-                  status: selectedStatus || undefined,
-                  type: selectedType || undefined,
-                  filter: selectedFilter || undefined,
-                  page: String(pagination.page + 1)
-                })}
-                variant="neutral"
-              >
-                Página siguiente
-              </ButtonLink>
-            ) : null}
-          </div>
-        </div>
+        <StateBanner
+          actions={
+            <div className="flex flex-wrap gap-3">
+              {pagination.hasPreviousPage ? (
+                <ButtonLink
+                  href={buildFilterHref(course.slug, categorySlug, {
+                    q: selectedQuery || undefined,
+                    sort: selectedSort || undefined,
+                    status: selectedStatus || undefined,
+                    type: selectedType || undefined,
+                    filter: selectedFilter || undefined,
+                    page: String(pagination.page - 1)
+                  })}
+                  variant="neutral"
+                >
+                  Página anterior
+                </ButtonLink>
+              ) : null}
+              {pagination.hasNextPage ? (
+                <ButtonLink
+                  href={buildFilterHref(course.slug, categorySlug, {
+                    q: selectedQuery || undefined,
+                    sort: selectedSort || undefined,
+                    status: selectedStatus || undefined,
+                    type: selectedType || undefined,
+                    filter: selectedFilter || undefined,
+                    page: String(pagination.page + 1)
+                  })}
+                  variant="neutral"
+                >
+                  Página siguiente
+                </ButtonLink>
+              ) : null}
+            </div>
+          }
+          description={`Página ${pagination.page} de ${pagination.totalPages} · ${pagination.totalItems} hilos visibles en esta categoría.`}
+          tone="info"
+        />
       ) : null}
     </div>
   );

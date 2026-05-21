@@ -1,10 +1,14 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useId, useState } from "react";
 import { createForumThreadAction, type ForumFormState } from "@/actions/forum";
 import { ButtonLink } from "@/components/ui/button";
+import { FormField } from "@/components/ui/form-field";
 import { Input } from "@/components/ui/input";
+import { SectionHeader } from "@/components/ui/section-header";
+import { StateBanner } from "@/components/ui/state-banner";
 import { SubmitButton } from "@/components/ui/submit-button";
+import { SurfaceCard } from "@/components/ui/surface-card";
 import { Textarea } from "@/components/ui/textarea";
 
 const initialState: ForumFormState = {};
@@ -21,8 +25,7 @@ type ForumThreadComposerProps = {
   cancelHref: string;
 };
 
-const selectClassName =
-  "ui-control-base min-h-14 px-4 text-sm sm:text-base";
+const selectClassName = "ui-control-base min-h-14 px-4 text-sm sm:text-base";
 
 export function ForumThreadComposer({
   courseSlug,
@@ -34,53 +37,51 @@ export function ForumThreadComposer({
 }: ForumThreadComposerProps) {
   const [state, action] = useActionState(createForumThreadAction, initialState);
   const [threadType, setThreadType] = useState<"DISCUSSION" | "ANNOUNCEMENT">("DISCUSSION");
+  const titleId = useId();
+  const bodyId = useId();
+  const linksId = useId();
 
   return (
-    <form action={action} className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_22rem]">
+    <form action={action} className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_19.5rem]">
       <input name="courseSlug" type="hidden" value={courseSlug} />
 
       <div className="space-y-6">
-        <section className="ui-card-base overflow-hidden">
-          <div className="border-b border-[rgba(12,113,195,0.1)] px-5 py-5 sm:px-6">
-            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--color-muted)]">
-              Contenido principal
-            </p>
-            <h2 className="mt-2 text-2xl font-semibold tracking-[-0.03em] text-[var(--color-ink)]">
-              Redacta el hilo
-            </h2>
-          </div>
+        <SurfaceCard className="border-[rgba(22,60,88,0.09)] bg-white/92" padding="md">
+          <SectionHeader
+            description="Escribe un hilo fácil de recuperar: buen título, contexto suficiente y una pregunta o idea clara."
+            eyebrow="Composición"
+            size="md"
+            title="Redacta la conversación"
+          />
 
-          <div className="space-y-5 px-5 py-5 sm:px-6">
-            <label className="block space-y-2">
-              <span className="text-sm font-semibold uppercase tracking-[0.14em] text-[var(--color-muted)]">
-                Título del hilo
-              </span>
+          <div className="mt-5 space-y-5">
+            <FormField
+              description="Piensa en el título como la línea que ayudará a encontrar esta conversación dentro del curso."
+              htmlFor={titleId}
+              label="Título del hilo"
+              required
+            >
               <Input
                 className="min-h-14 px-5 text-base sm:text-lg"
+                id={titleId}
                 name="title"
                 placeholder="Escribe un título claro y específico..."
                 required
               />
-            </label>
+            </FormField>
 
             {lockCategory && selectedCategorySlug ? (
               <>
                 <input name="categorySlug" type="hidden" value={selectedCategorySlug} />
-                <div className="space-y-2">
-                  <span className="text-sm font-semibold uppercase tracking-[0.14em] text-[var(--color-muted)]">
-                    Categoría
-                  </span>
-                  <div className="flex min-h-14 items-center rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[#f8f6f3] px-5 text-sm text-[var(--color-ink)] shadow-[var(--shadow-inset-soft)] sm:text-base">
+                <FormField label="Categoría">
+                  <div className="flex min-h-14 items-center rounded-[var(--radius-md)] border border-[rgba(22,60,88,0.1)] bg-[rgba(248,245,239,0.82)] px-5 text-sm text-[var(--color-ink)] shadow-[var(--shadow-inset-soft)] sm:text-base">
                     {categories.find((category) => category.slug === selectedCategorySlug)?.title ??
                       "Categoría seleccionada"}
                   </div>
-                </div>
+                </FormField>
               </>
             ) : (
-              <label className="block space-y-2">
-                <span className="text-sm font-semibold uppercase tracking-[0.14em] text-[var(--color-muted)]">
-                  Categoría
-                </span>
+              <FormField label="Categoría">
                 <select
                   className={selectClassName}
                   defaultValue={selectedCategorySlug ?? categories[0]?.slug}
@@ -92,82 +93,71 @@ export function ForumThreadComposer({
                     </option>
                   ))}
                 </select>
-              </label>
+              </FormField>
             )}
 
-            <label className="block space-y-2">
-              <span className="text-sm font-semibold uppercase tracking-[0.14em] text-[var(--color-muted)]">
-                Mensaje inicial
-              </span>
+            <FormField
+              description="Describe el contexto, cita el módulo o actividad y deja clara la pregunta o aportación."
+              htmlFor={bodyId}
+              label="Mensaje inicial"
+              required
+            >
               <Textarea
-                className="min-h-[20rem] px-5 py-4 text-base leading-8"
+                className="min-h-[18rem] px-5 py-4 text-base leading-8"
+                id={bodyId}
                 name="body"
                 placeholder="Explica el contexto, la duda o la aportación que quieres compartir con el grupo."
                 required
                 rows={12}
               />
-            </label>
+            </FormField>
           </div>
-        </section>
+          <div className="mt-6 border-t border-[rgba(22,60,88,0.08)] pt-5">
+            <SectionHeader
+              description="Los adjuntos se mantienen como apoyo visual o documental; no deberían cargar más la lectura de lo necesario."
+              eyebrow="Adjuntos"
+              size="md"
+              title="Recursos de apoyo"
+            />
 
-        <section className="ui-card-base overflow-hidden border-dashed">
-          <div className="border-b border-[rgba(12,113,195,0.1)] px-5 py-5 sm:px-6">
-            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--color-muted)]">
-              Adjuntos
-            </p>
-            <h2 className="mt-2 text-2xl font-semibold tracking-[-0.03em] text-[var(--color-ink)]">
-              Recursos de apoyo
-            </h2>
-          </div>
-
-          <div className="space-y-5 px-5 py-5 sm:px-6">
-            <label className="block space-y-2">
-              <span className="text-sm font-semibold text-[var(--color-ink)]">
-                Archivos o imágenes
-              </span>
+            <div className="mt-5 space-y-5">
+            <FormField
+              description="Hasta 6 adjuntos por mensaje y 8 MB por archivo."
+              label="Archivos o imágenes"
+            >
               <Input
-                className="h-auto px-4 py-4 file:mr-3 file:rounded-[var(--radius-sm)] file:border-0 file:bg-[var(--color-primary-soft)] file:px-3 file:py-2 file:text-sm file:font-semibold file:text-[var(--color-primary)]"
+                className="h-auto px-4 py-4 file:mr-3 file:rounded-[var(--radius-sm)] file:border-0 file:bg-[var(--color-brand-soft)] file:px-3 file:py-2 file:text-sm file:font-semibold file:text-[var(--color-primary)]"
                 multiple
                 name="attachments"
                 type="file"
               />
-              <p className="text-sm leading-7 text-[var(--color-muted)]">
-                Hasta 6 adjuntos por mensaje y 8 MB por archivo.
-              </p>
-            </label>
+            </FormField>
 
-            <label className="block space-y-2">
-              <span className="text-sm font-semibold text-[var(--color-ink)]">
-                Enlaces o recursos externos
-              </span>
+            <FormField
+              description="Pega un enlace por línea. Los vídeos de YouTube o Vimeo se guardarán como recurso de vídeo."
+              htmlFor={linksId}
+              label="Enlaces o recursos externos"
+            >
               <Textarea
+                id={linksId}
                 name="attachmentLinks"
-                placeholder="Pega un enlace por línea. Los vídeos de YouTube o Vimeo se guardarán como recurso de vídeo."
+                placeholder="https://..."
                 rows={4}
               />
-            </label>
+            </FormField>
           </div>
-        </section>
+          </div>
+        </SurfaceCard>
       </div>
 
       <aside className="space-y-6 xl:sticky xl:top-28 xl:self-start">
-        <section className="ui-card-base overflow-hidden">
-          <div className="border-b border-[rgba(12,113,195,0.1)] px-5 py-5 sm:px-6">
-            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--color-muted)]">
-              Publicación
-            </p>
-            <h2 className="mt-2 text-[1.85rem] font-semibold tracking-[-0.03em] text-[var(--color-ink)]">
-              Ajustes
-            </h2>
-          </div>
+        <SurfaceCard className="border-[rgba(22,60,88,0.08)] bg-white/90" padding="md">
+          <SectionHeader eyebrow="Publicación" size="md" title="Ajustes" />
 
-          <div className="space-y-5 px-5 py-5 sm:px-6">
+          <div className="mt-4 space-y-4">
             {allowAnnouncement ? (
               <>
-                <label className="block space-y-2">
-                  <span className="text-sm font-semibold text-[var(--color-ink)]">
-                    Tipo de publicación
-                  </span>
+                <FormField label="Tipo de publicación">
                   <select
                     className={selectClassName}
                     name="threadType"
@@ -179,9 +169,9 @@ export function ForumThreadComposer({
                     <option value="DISCUSSION">Hilo de discusión</option>
                     <option value="ANNOUNCEMENT">Anuncio</option>
                   </select>
-                </label>
+                </FormField>
 
-                <label className="flex items-start gap-3 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[#faf8f4] px-4 py-4">
+                <label className="flex items-start gap-3 rounded-[var(--radius-md)] border border-[rgba(22,60,88,0.1)] bg-[rgba(248,245,239,0.82)] px-4 py-4">
                   <input
                     className="mt-1 h-4 w-4 accent-[var(--color-primary)]"
                     name="isReadOnly"
@@ -195,26 +185,23 @@ export function ForumThreadComposer({
                   </div>
                 </label>
 
-                <label className="block space-y-2">
-                  <span className="text-sm font-semibold text-[var(--color-ink)]">
-                    Programar publicación
-                  </span>
+                <FormField
+                  description="Disponible para anuncios. Si queda vacío, se publica de inmediato."
+                  label="Programar publicación"
+                >
                   <Input
                     disabled={threadType !== "ANNOUNCEMENT"}
                     name="scheduledFor"
                     type="datetime-local"
                   />
-                  <p className="text-sm leading-6 text-[var(--color-muted)]">
-                    Disponible para anuncios. Si queda vacío, se publica de inmediato.
-                  </p>
-                </label>
+                </FormField>
               </>
             ) : (
               <input name="threadType" type="hidden" value="DISCUSSION" />
             )}
 
             {allowAnnouncement ? (
-              <label className="flex items-start gap-3 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[#faf8f4] px-4 py-4">
+              <label className="flex items-start gap-3 rounded-[var(--radius-md)] border border-[rgba(22,60,88,0.1)] bg-[rgba(248,245,239,0.82)] px-4 py-4">
                 <input
                   className="mt-1 h-4 w-4 accent-[var(--color-primary)]"
                   name="isPinned"
@@ -229,20 +216,13 @@ export function ForumThreadComposer({
               </label>
             ) : null}
 
-            <div className="rounded-[var(--radius-md)] border border-dashed border-[rgba(12,113,195,0.16)] px-4 py-4 text-sm leading-7 text-[var(--color-muted)]">
-              Usa un título concreto y describe contexto, módulo o actividad para que la
-              conversación se pueda recuperar después.
-            </div>
+            <StateBanner description="Prioriza claridad y contexto para que el hilo se pueda recuperar y seguir sin esfuerzo." tone="info" />
           </div>
-        </section>
+        </SurfaceCard>
 
-        <section className="ui-card-base p-5 sm:p-6">
+        <SurfaceCard className="border-[rgba(22,60,88,0.08)] bg-white/90" padding="md">
           <div className="space-y-4">
-            {state.error ? (
-              <p className="rounded-[var(--radius-md)] border border-[#efb3a6] bg-[#fff1ec] px-4 py-3 text-sm text-[#9b4128]">
-                {state.error}
-              </p>
-            ) : null}
+            {state.error ? <StateBanner description={state.error} tone="danger" /> : null}
 
             <SubmitButton className="w-full justify-center py-4 text-base" pendingLabel="Publicando...">
               Publicar contenido
@@ -251,7 +231,7 @@ export function ForumThreadComposer({
               Cancelar
             </ButtonLink>
           </div>
-        </section>
+        </SurfaceCard>
       </aside>
     </form>
   );

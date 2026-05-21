@@ -1,9 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ChevronRight, Lock, MoveRight, ShieldCheck } from "lucide-react";
+import { ChevronRight, Lock, MessageSquareText, MoveRight, ShieldCheck } from "lucide-react";
 import { notFound, redirect } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
+import { MetricPanel } from "@/components/ui/metric-panel";
+import { SectionHeader } from "@/components/ui/section-header";
+import { StateBanner } from "@/components/ui/state-banner";
+import { SurfaceCard } from "@/components/ui/surface-card";
 import { requireUser } from "@/lib/auth";
 import { getCatalogCourseBySlug } from "@/lib/course-catalog";
 import {
@@ -13,7 +18,7 @@ import {
 } from "@/lib/course-community";
 import { getForumCategories, getForumSpaceHistory } from "@/lib/forum";
 import { getForumCategoryPreset } from "@/lib/forum-presentation";
-import { firstValue, formatCompactNumber } from "@/lib/utils";
+import { cn, firstValue, formatCompactNumber } from "@/lib/utils";
 
 type ForumHomePageProps = {
   params: Promise<{ slug: string }>;
@@ -33,10 +38,7 @@ export async function generateMetadata({ params }: ForumHomePageProps): Promise<
   };
 }
 
-export default async function ForumHomePage({
-  params,
-  searchParams
-}: ForumHomePageProps) {
+export default async function ForumHomePage({ params, searchParams }: ForumHomePageProps) {
   const { slug } = await params;
   const { q } = await searchParams;
   const course = await getCatalogCourseBySlug(slug);
@@ -82,52 +84,56 @@ export default async function ForumHomePage({
         <span className="text-[var(--color-ink)]">Comunidad</span>
       </div>
 
-      <section className="ui-card-base overflow-hidden">
-        <div className="px-5 py-5 sm:px-6">
-          <div className="flex flex-wrap items-center gap-2">
-            <Badge tone={canModerate ? "info" : "warning"}>{getRoleLabel(access.role)}</Badge>
-            <Badge className="hidden sm:inline-flex" tone="outline">
-              {history.activeSpace.editionLabel}
-            </Badge>
-          </div>
-          <h1 className="mt-4 text-display-sm font-semibold text-[var(--color-ink)] sm:text-display-md">
-            Categorías del foro
-          </h1>
-          <p className="mt-3 max-w-3xl text-sm leading-7 text-[var(--color-muted)] sm:text-base">
-            Elige una categoría y entra directamente en anuncios, dudas o conversaciones del curso.
-          </p>
-          <p className="mt-4 text-sm leading-6 text-[var(--color-muted)]">
-            {formatCompactNumber(totalThreads)} hilos visibles en {categories.length} categorías.
-          </p>
-        </div>
+      <SurfaceCard
+        actions={
+          canModerate ? (
+            <div className="flex flex-wrap gap-3">
+              <ButtonLink href={`/mis-cursos/${course.slug}/foro/moderacion`} variant="neutral">
+                Moderación
+              </ButtonLink>
+              <ButtonLink href={`/mis-cursos/${course.slug}/foro/historico`} variant="subtle">
+                Histórico
+              </ButtonLink>
+            </div>
+          ) : null
+        }
+        className="border-[rgba(22,60,88,0.1)] bg-white/90"
+        padding="md"
+      >
+        <SectionHeader
+          description="La comunidad acompaña el curso como una continuación del campus: anuncios, preguntas y conversaciones recuperables sin cambiar de contexto."
+          eyebrow={
+            <div className="flex flex-wrap items-center gap-2">
+              <Badge tone={canModerate ? "info" : "warning"}>{getRoleLabel(access.role)}</Badge>
+              <Badge className="hidden sm:inline-flex" tone="outline">
+                {history.activeSpace.editionLabel}
+              </Badge>
+            </div>
+          }
+          title="Conversaciones del curso"
+        />
 
-        <div className="hidden grid-cols-3 gap-3 border-t border-[rgba(12,113,195,0.1)] px-5 py-5 sm:grid sm:px-6">
-          <div className="rounded-[var(--radius-md)] border border-[rgba(12,113,195,0.1)] bg-[#faf8f4] px-4 py-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-muted)]">
-              Hilos visibles
-            </p>
-            <p className="mt-2 text-3xl font-semibold tracking-[-0.04em] text-[var(--color-ink)]">
-              {formatCompactNumber(totalThreads)}
-            </p>
-          </div>
-          <div className="rounded-[var(--radius-md)] border border-[rgba(12,113,195,0.1)] bg-[#faf8f4] px-4 py-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-muted)]">
-              Categorías
-            </p>
-            <p className="mt-2 text-3xl font-semibold tracking-[-0.04em] text-[var(--color-ink)]">
-              {categories.length}
-            </p>
-          </div>
-          <div className="rounded-[var(--radius-md)] border border-[rgba(12,113,195,0.1)] bg-[#faf8f4] px-4 py-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-muted)]">
-              Archivo
-            </p>
-            <p className="mt-2 text-3xl font-semibold tracking-[-0.04em] text-[var(--color-ink)]">
-              {history.archivedSpaces.length}
-            </p>
-          </div>
+        <div className="mt-5 grid gap-3 md:grid-cols-3">
+          <MetricPanel
+            detail="Temas visibles en la edición actual."
+            label="Hilos"
+            tone="default"
+            value={formatCompactNumber(totalThreads)}
+          />
+          <MetricPanel
+            detail="Categorías activas para orientar la conversación."
+            label="Categorías"
+            tone="brand"
+            value={categories.length}
+          />
+          <MetricPanel
+            detail="Espacios previos conservados para consulta docente."
+            label="Histórico"
+            tone="warning"
+            value={history.archivedSpaces.length}
+          />
         </div>
-      </section>
+      </SurfaceCard>
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {visibleCategories.length ? (
@@ -137,67 +143,77 @@ export default async function ForumHomePage({
 
             return (
               <Link
-                className="ui-card-base group relative flex min-h-[13.5rem] flex-col overflow-hidden px-5 py-5 transition hover:-translate-y-[2px] hover:border-[rgba(12,113,195,0.24)]"
+                className="group"
                 href={`/mis-cursos/${course.slug}/foro/${category.slug}`}
                 key={category.id}
               >
-                <div className={`absolute inset-y-0 left-0 w-1 ${preset.accentClass}`} />
-                <div className="flex items-start justify-between gap-4">
-                  <div className={`grid h-11 w-11 shrink-0 place-items-center rounded-2xl ${preset.iconClass}`}>
-                    <Icon className="h-5 w-5" />
-                  </div>
-                  <MoveRight className="h-5 w-5 shrink-0 text-[var(--color-muted)] transition group-hover:translate-x-1 group-hover:text-[var(--color-primary)]" />
-                </div>
+                <SurfaceCard
+                  className="h-full border-[rgba(22,60,88,0.08)] bg-white/84 transition duration-[var(--motion-duration-base)] hover:-translate-y-[1px] hover:border-[rgba(22,60,88,0.14)]"
+                  padding="md"
+                  variant="interactive"
+                >
+                  <div className="flex h-full flex-col">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className={cn("grid h-11 w-11 place-items-center rounded-2xl", preset.iconClass)}>
+                        <Icon className="h-5 w-5" />
+                      </div>
+                      <MoveRight className="h-5 w-5 shrink-0 text-[var(--color-muted)] transition group-hover:translate-x-1 group-hover:text-[var(--color-primary)]" />
+                    </div>
 
-                <div className="mt-4 min-w-0">
-                  <h2 className="text-[1.45rem] font-semibold tracking-[-0.04em] text-[var(--color-ink)] sm:text-[1.7rem]">
-                    {category.title}
-                  </h2>
-                  <p className="mt-3 text-sm leading-7 text-[var(--color-muted)] sm:text-base">
-                    {category.description}
-                  </p>
-                </div>
+                    <div className="mt-4 min-w-0">
+                      <h2 className="font-premium text-[1.28rem] font-semibold tracking-[-0.04em] text-[var(--color-ink)] sm:text-[1.5rem]">
+                        {category.title}
+                      </h2>
+                      <p className="mt-3 text-sm leading-7 text-[var(--color-muted)] sm:text-base">
+                        {category.description}
+                      </p>
+                    </div>
 
-                <div className="mt-auto space-y-3 pt-5">
-                  <div className={`hidden rounded-[var(--radius-md)] px-4 py-3 sm:block ${preset.softClass}`}>
-                    <p className="text-sm leading-6 text-[var(--color-ink)]">
+                    <p className="mt-4 text-sm leading-6 text-[var(--color-ink-soft)]">
                       {preset.expectedContent}
                     </p>
+
+                    <div className="mt-auto flex items-center justify-between gap-3 pt-4 text-sm">
+                      <span className="font-medium text-[var(--color-ink-soft)]">
+                        {category._count.threads} temas
+                      </span>
+                      <span className="text-[var(--color-muted)]">Abrir conversación</span>
+                    </div>
                   </div>
-                  <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[rgba(12,113,195,0.1)] pt-4 text-sm">
-                    <span className="font-medium text-[var(--color-ink)]">
-                      {category._count.threads} temas
-                    </span>
-                    <span className="text-[var(--color-muted)]">Abrir categoría</span>
-                  </div>
-                </div>
+                </SurfaceCard>
               </Link>
             );
           })
         ) : (
-          <div className="ui-empty-state px-6 py-10 text-sm leading-7 text-[var(--color-muted)] md:col-span-2 xl:col-span-3">
-            No hay categorías que coincidan con la búsqueda actual.
+          <div className="md:col-span-2 xl:col-span-3">
+            <EmptyState
+              align="center"
+              description="Prueba con otro término o limpia la búsqueda para volver a ver todas las categorías activas del curso."
+              icon={<MessageSquareText className="h-5 w-5" />}
+              title="No hay categorías que coincidan con esta búsqueda"
+              tone="subtle"
+            />
           </div>
         )}
 
         {canModerate ? (
-          <div className="ui-card-base relative overflow-hidden px-5 py-5 md:col-span-2 xl:col-span-1">
-            <div className="absolute inset-0 bg-[linear-gradient(135deg,transparent_0%,transparent_42%,rgba(12,113,195,0.04)_42%,rgba(12,113,195,0.04)_46%,transparent_46%,transparent_82%,rgba(255,182,6,0.06)_82%,rgba(255,182,6,0.06)_86%,transparent_86%)]" />
-            <div className="relative flex h-full flex-col">
+          <SurfaceCard className="border-[rgba(22,60,88,0.08)] bg-[linear-gradient(180deg,rgba(255,255,255,0.94),rgba(243,247,251,0.88))] md:col-span-2 xl:col-span-1" padding="md">
+            <div className="flex h-full flex-col">
               <div className="flex items-start justify-between gap-4">
-                <div className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-[rgba(12,113,195,0.08)] text-[var(--color-primary)]">
+                <div className="grid h-11 w-11 place-items-center rounded-2xl bg-[var(--color-brand-soft)] text-[var(--color-primary)]">
                   <ShieldCheck className="h-5 w-5" />
                 </div>
                 <Lock className="h-5 w-5 shrink-0 text-[var(--color-muted)]" />
               </div>
 
-              <div className="mt-4">
+              <div className="mt-5">
                 <Badge tone="info">Docencia</Badge>
-                <h2 className="mt-3 text-[1.45rem] font-semibold tracking-[-0.04em] text-[var(--color-ink)] sm:text-[1.7rem]">
+                <h2 className="mt-3 font-premium text-[1.4rem] font-semibold tracking-[-0.04em] text-[var(--color-ink)]">
                   Gestión de comunidad
                 </h2>
-                <p className="mt-3 text-sm leading-7 text-[var(--color-muted)] sm:text-base">
-                  Revisa contenido reportado o consulta el histórico sin salir del área del curso.
+                <p className="mt-3 text-sm leading-7 text-[var(--color-muted)]">
+                  Revisa contenido reportado o consulta espacios anteriores sin separar el foro del
+                  resto del campus.
                 </p>
               </div>
 
@@ -210,16 +226,20 @@ export default async function ForumHomePage({
                 </ButtonLink>
               </div>
             </div>
-          </div>
+          </SurfaceCard>
         ) : null}
       </div>
 
-      {!canModerate ? (
-        <div className="ui-state-panel px-5 py-4 text-sm leading-7 text-[var(--color-muted)]">
-          Esta vista muestra la edición activa del foro. El histórico y las herramientas de
-          moderación están reservados a profesorado y administración.
-        </div>
-      ) : null}
+      <StateBanner
+        description={
+          canModerate
+            ? "La vista principal prioriza leer y responder. La moderación y el histórico siguen disponibles, pero quedan relegados a accesos secundarios."
+            : "La comunidad muestra la edición activa del curso. El histórico y las herramientas de moderación siguen reservados al equipo docente y administración."
+        }
+        icon={canModerate ? <ShieldCheck className="h-5 w-5" /> : <MessageSquareText className="h-5 w-5" />}
+        className="px-4 py-3"
+        tone={canModerate ? "info" : "warning"}
+      />
     </div>
   );
 }

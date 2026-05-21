@@ -1,8 +1,10 @@
 "use client";
 
-import { useActionState } from "react";
+import { useId, useActionState } from "react";
 import { createForumThreadAction, type ForumFormState } from "@/actions/forum";
+import { FormField } from "@/components/ui/form-field";
 import { Input } from "@/components/ui/input";
+import { StateBanner } from "@/components/ui/state-banner";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { Textarea } from "@/components/ui/textarea";
 
@@ -15,8 +17,7 @@ type ThreadCreateFormProps = {
   allowAnnouncement?: boolean;
 };
 
-const selectClassName =
-  "ui-control-base min-h-[var(--control-height-md)] px-4 text-sm";
+const selectClassName = "ui-control-base min-h-[var(--control-height-md)] px-4 text-sm";
 
 export function ThreadCreateForm({
   courseSlug,
@@ -25,6 +26,9 @@ export function ThreadCreateForm({
   allowAnnouncement = false
 }: ThreadCreateFormProps) {
   const [state, action] = useActionState(createForumThreadAction, initialState);
+  const titleId = useId();
+  const bodyId = useId();
+  const linksId = useId();
 
   return (
     <form action={action} className="space-y-5">
@@ -32,88 +36,87 @@ export function ThreadCreateForm({
       <input name="categorySlug" type="hidden" value={categorySlug} />
 
       {allowAnnouncement ? (
-        <div className="space-y-4">
-          <div className="grid gap-4 sm:grid-cols-2">
-            <label className="block space-y-2">
-              <span className="text-sm font-semibold text-[var(--color-ink)]">Tipo</span>
-              <select className={selectClassName} defaultValue="DISCUSSION" name="threadType">
-                <option value="DISCUSSION">Hilo</option>
-                <option value="ANNOUNCEMENT">Anuncio</option>
-              </select>
-            </label>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <FormField label="Tipo de publicación">
+            <select className={selectClassName} defaultValue="DISCUSSION" name="threadType">
+              <option value="DISCUSSION">Hilo</option>
+              <option value="ANNOUNCEMENT">Anuncio</option>
+            </select>
+          </FormField>
 
-            <label className="flex items-center gap-3 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-white px-4 py-3 shadow-[var(--shadow-inset-soft)]">
-              <input
-                className="h-4 w-4 accent-[var(--color-primary)]"
-                name="isReadOnly"
-                type="checkbox"
-              />
-              <span className="text-sm text-[var(--color-ink)]">Solo lectura</span>
-            </label>
-          </div>
-
-          <label className="block space-y-2">
-            <span className="text-sm font-semibold text-[var(--color-ink)]">
-              Programar anuncio (opcional)
-            </span>
+          <FormField
+            description="Si completas esta fecha, el contenido queda oculto para el alumnado hasta ese momento."
+            label="Programar anuncio"
+          >
             <Input name="scheduledFor" type="datetime-local" />
-            <p className="text-xs leading-6 text-[var(--color-muted)]">
-              Si completas esta fecha, el contenido queda oculto para el alumnado hasta ese
-              momento. Solo se aplica a anuncios.
-            </p>
+          </FormField>
+
+          <label className="flex items-center gap-3 rounded-[var(--radius-md)] border border-[rgba(22,60,88,0.1)] bg-[rgba(248,245,239,0.8)] px-4 py-3 shadow-[var(--shadow-inset-soft)] sm:col-span-2">
+            <input
+              className="h-4 w-4 accent-[var(--color-primary)]"
+              name="isReadOnly"
+              type="checkbox"
+            />
+            <span className="text-sm text-[var(--color-ink)]">Solo lectura</span>
           </label>
         </div>
       ) : (
         <input name="threadType" type="hidden" value="DISCUSSION" />
       )}
 
-      <label className="block space-y-2">
-        <span className="text-sm font-semibold text-[var(--color-ink)]">Título del hilo</span>
-        <Input name="title" placeholder="Ej.: Duda sobre la unidad 1" required />
-      </label>
+      <FormField
+        description="Un buen título ayuda a recuperar la conversación más tarde."
+        htmlFor={titleId}
+        label="Título del hilo"
+        required
+      >
+        <Input id={titleId} name="title" placeholder="Ej.: Duda sobre la unidad 1" required />
+      </FormField>
 
-      <label className="block space-y-2">
-        <span className="text-sm font-semibold text-[var(--color-ink)]">Mensaje inicial</span>
+      <FormField
+        description="Describe la duda, el contexto o la aportación que quieres dejar al grupo."
+        htmlFor={bodyId}
+        label="Mensaje inicial"
+        required
+      >
         <Textarea
+          id={bodyId}
           name="body"
-          placeholder="Describe tu duda, reflexión o aportación para el grupo."
+          placeholder="Escribe con el contexto suficiente para que el resto pueda seguirte sin esfuerzo."
           required
           rows={compact ? 5 : 7}
         />
-      </label>
+      </FormField>
 
-      <div className="grid gap-4">
-        <label className="block space-y-2">
-          <span className="text-sm font-semibold text-[var(--color-ink)]">
-            Adjuntar archivos o imágenes
-          </span>
+      <div className="grid gap-4 border-t border-[rgba(22,60,88,0.08)] pt-4">
+        <FormField
+          description="Hasta 6 adjuntos por mensaje y 8 MB por archivo."
+          label="Adjuntar archivos o imágenes"
+        >
           <Input
-            className="h-auto px-3 py-3 file:mr-3 file:rounded-[var(--radius-sm)] file:border-0 file:bg-[var(--color-primary-soft)] file:px-3 file:py-2 file:text-sm file:font-semibold file:text-[var(--color-primary)]"
+            className="h-auto px-3 py-3 file:mr-3 file:rounded-[var(--radius-sm)] file:border-0 file:bg-[var(--color-brand-soft)] file:px-3 file:py-2 file:text-sm file:font-semibold file:text-[var(--color-primary)]"
             multiple
             name="attachments"
             type="file"
           />
-          <p className="text-xs leading-6 text-[var(--color-muted)]">
-            Hasta 6 adjuntos por mensaje y 8 MB por archivo.
-          </p>
-        </label>
+        </FormField>
 
-        <label className="block space-y-2">
-          <span className="text-sm font-semibold text-[var(--color-ink)]">
-            Enlaces o recursos externos
-          </span>
+        <FormField
+          description="Pega un enlace por línea. Los vídeos de YouTube o Vimeo se guardarán como recurso de vídeo."
+          htmlFor={linksId}
+          label="Enlaces o recursos externos"
+        >
           <Textarea
+            id={linksId}
             name="attachmentLinks"
-            placeholder="Pega un enlace por línea. Los vídeos de YouTube o Vimeo se guardarán como recurso de vídeo."
+            placeholder="https://..."
             rows={3}
           />
-        </label>
+        </FormField>
       </div>
 
       {state.error ? (
-        <p className="rounded-[var(--radius-md)] border border-[#efb3a6] bg-[#fff1ec] px-4 py-3 text-sm text-[#9b4128]">
-          {state.error}
-        </p>
+        <StateBanner description={state.error} tone="danger" />
       ) : null}
 
       <SubmitButton className={compact ? "" : "w-full sm:w-auto"} pendingLabel="Publicando...">

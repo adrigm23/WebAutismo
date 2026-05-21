@@ -7,7 +7,7 @@ const baseStyles =
 
 const variants = {
   primary:
-    "[--button-fg:var(--color-surface-elevated)] [--button-fg-hover:var(--color-surface-elevated)] [--button-fg-disabled:color-mix(in_srgb,var(--color-surface-elevated)_78%,transparent)] bg-[linear-gradient(180deg,var(--color-primary)_0%,var(--color-primary-strong)_100%)] shadow-[0_12px_22px_rgba(22,60,88,0.16)] hover:-translate-y-[1px] hover:shadow-[0_16px_28px_rgba(22,60,88,0.2)] focus-visible:ring-[var(--color-primary)]",
+    "[--button-fg:var(--color-surface-elevated)] [--button-fg-hover:var(--color-surface-elevated)] [--button-fg-disabled:color-mix(in_srgb,var(--color-surface-elevated)_78%,transparent)] bg-[linear-gradient(180deg,var(--color-primary)_0%,var(--color-primary-strong)_100%)] shadow-[0_8px_18px_rgba(22,60,88,0.14)] hover:-translate-y-[1px] hover:shadow-[0_12px_22px_rgba(22,60,88,0.17)] focus-visible:ring-[var(--color-primary)]",
   neutral:
     "[--button-fg:var(--color-ink)] [--button-fg-hover:var(--color-ink)] border border-[var(--color-border)] bg-[color:var(--color-surface-elevated)] shadow-[var(--shadow-inset-soft)] hover:-translate-y-[1px] hover:border-[var(--color-border-strong)] hover:bg-white focus-visible:ring-[var(--color-primary)]",
   subtle:
@@ -21,7 +21,7 @@ const variants = {
 const sizes = {
   sm: "min-h-10 px-3.5 py-2 text-sm",
   md: "min-h-[var(--control-height-md)] px-4 py-2.5 text-sm",
-  lg: "min-h-[var(--control-height-lg)] px-5 py-3 text-base",
+  lg: "min-h-[var(--control-height-lg)] px-5 py-2.5 text-base",
   icon: "min-h-[var(--control-height-md)] min-w-[var(--control-height-md)] px-0 text-sm"
 } as const;
 

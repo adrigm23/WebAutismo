@@ -8,13 +8,13 @@ type BadgeProps = HTMLAttributes<HTMLSpanElement> & {
 };
 
 const tones = {
-  neutral: "bg-[var(--color-surface)] text-[var(--color-ink)]",
-  outline: "border border-[var(--color-border)] bg-white text-[var(--color-muted)]",
-  info: "bg-[color:var(--color-brand-soft)] text-[var(--color-primary)]",
-  success: "bg-[var(--color-success-soft)] text-[var(--color-success)]",
-  warning: "bg-[var(--color-warning-soft)] text-[var(--color-warning)]",
-  danger: "bg-[var(--color-danger-soft)] text-[var(--color-danger)]",
-  brand: "bg-[var(--color-primary-soft)] text-[var(--color-primary)]"
+  neutral: "bg-[rgba(248,245,239,0.9)] text-[var(--color-ink-soft)]",
+  outline: "border border-[rgba(22,60,88,0.12)] bg-white/88 text-[var(--color-muted)]",
+  info: "bg-[color:rgba(223,234,243,0.78)] text-[var(--color-primary)]",
+  success: "bg-[color:rgba(228,241,235,0.72)] text-[var(--color-success)]",
+  warning: "bg-[color:rgba(248,239,216,0.74)] text-[var(--color-warning)]",
+  danger: "bg-[color:rgba(248,225,219,0.78)] text-[var(--color-danger)]",
+  brand: "bg-[color:rgba(223,234,243,0.72)] text-[var(--color-primary)]"
 } as const;
 
 const legacyToneMap = {
@@ -30,8 +30,8 @@ export type BadgeTone =
   | keyof typeof legacyToneMap;
 
 const sizes = {
-  sm: "px-2.5 py-1 text-[0.72rem]",
-  md: "px-3 py-1 text-xs"
+  sm: "px-2.5 py-0.5 text-[0.68rem]",
+  md: "px-2.75 py-0.5 text-[0.72rem]"
 } as const;
 
 function resolveTone(tone: BadgeTone) {
@@ -50,7 +50,7 @@ export function Badge({
   return (
     <span
       className={cn(
-        "inline-flex items-center font-semibold",
+        "inline-flex items-center font-medium tracking-[0.01em]",
         shape === "pill" ? "rounded-[var(--radius-pill)]" : "rounded-[var(--radius-sm)]",
         sizes[size],
         resolveTone(tone),
