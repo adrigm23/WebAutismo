@@ -62,8 +62,10 @@ export async function generateMetadata({
 }
 
 export default async function MyCoursePage({ params, searchParams }: MyCoursePageProps) {
-  const { slug } = await params;
-  const { tab, resource, module, onboarding } = await searchParams;
+  const [{ slug }, { tab, resource, module, onboarding }] = await Promise.all([
+    params,
+    searchParams
+  ]);
   const course = await getCatalogCourseBySlug(slug);
 
   if (!course) {
@@ -92,21 +94,23 @@ export default async function MyCoursePage({ params, searchParams }: MyCoursePag
 
   const activeTab = requestedTab;
   const focusedResourceId = activeTab === "resources" ? firstValue(resource) ?? null : null;
-  const progress = await getCourseProgressDetailsForUser({
+  const progressPromise = getCourseProgressDetailsForUser({
     userId: user.id,
     course
   });
+  const forumCategoriesPromise = getForumCategories(course.slug, access.role);
+  const resourcesPromise = getCampusResources({
+    course,
+    viewerUserId: user.id,
+    canModerate
+  });
+  const [progress, forumCategories, resources] = await Promise.all([
+    progressPromise,
+    forumCategoriesPromise,
+    resourcesPromise
+  ]);
   const initialModuleIndex = getModuleIndex(module, progress.modules.length);
   const showOnboarding = firstValue(onboarding) === "1";
-
-  const [forumCategories, resources] = await Promise.all([
-    getForumCategories(course.slug, access.role),
-    getCampusResources({
-      course,
-      viewerUserId: user.id,
-      canModerate
-    })
-  ]);
 
   return (
     <CourseLearningShell
