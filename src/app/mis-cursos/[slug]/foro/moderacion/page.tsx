@@ -1,6 +1,12 @@
+import type { ReactNode } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { AlertTriangle, CalendarClock, ChevronRight, Clock3, Pin } from "lucide-react";
+import {
+  AlertTriangle,
+  ChevronRight,
+  Clock3,
+  Pin
+} from "lucide-react";
 import { notFound, redirect } from "next/navigation";
 import {
   resolveForumReportAction,
@@ -10,6 +16,10 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { ConfirmSubmitButton } from "@/components/ui/confirm-submit-button";
+import { EmptyState } from "@/components/ui/empty-state";
+import { SectionHeader } from "@/components/ui/section-header";
+import { StateBanner } from "@/components/ui/state-banner";
+import { SurfaceCard } from "@/components/ui/surface-card";
 import { requireUser } from "@/lib/auth";
 import { getCatalogCourseBySlug } from "@/lib/course-catalog";
 import {
@@ -24,6 +34,8 @@ type ForumModerationPageProps = {
   params: Promise<{ slug: string }>;
 };
 
+type ReportOutcome = "ACTION_TAKEN" | "REVIEWED" | "DISMISSED";
+
 export async function generateMetadata({
   params
 }: ForumModerationPageProps): Promise<Metadata> {
@@ -37,6 +49,46 @@ export async function generateMetadata({
       follow: false
     }
   };
+}
+
+function ReportResolutionForm({
+  courseSlug,
+  reportId,
+  outcome,
+  children,
+  variant = "subtle"
+}: {
+  courseSlug: string;
+  reportId: string;
+  outcome: ReportOutcome;
+  children: ReactNode;
+  variant?: "primary" | "subtle";
+}) {
+  return (
+    <form action={resolveForumReportAction}>
+      <input name="courseSlug" type="hidden" value={courseSlug} />
+      <input name="reportId" type="hidden" value={reportId} />
+      <input name="outcome" type="hidden" value={outcome} />
+      <input
+        name="nextPath"
+        type="hidden"
+        value={`/mis-cursos/${courseSlug}/foro/moderacion`}
+      />
+      {outcome === "DISMISSED" ? (
+        <ConfirmSubmitButton
+          message="El reporte se marcara como descartado. Quieres continuar?"
+          pendingLabel="Descartando..."
+          variant={variant}
+        >
+          {children}
+        </ConfirmSubmitButton>
+      ) : (
+        <Button type="submit" variant={variant}>
+          {children}
+        </Button>
+      )}
+    </form>
+  );
 }
 
 export default async function ForumModerationPage({
@@ -69,257 +121,199 @@ export default async function ForumModerationPage({
   const dashboard = await getForumModerationDashboard(course.slug);
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 lg:space-y-8">
       <div className="flex flex-wrap items-center gap-2 text-sm text-[var(--color-muted)]">
         <Link className="hover:text-[var(--color-primary)]" href={`/mis-cursos/${course.slug}/foro`}>
-          Foro
+          Comunidad
         </Link>
         <ChevronRight className="h-4 w-4" />
         <span className="text-[var(--color-ink)]">Moderacion</span>
       </div>
 
-      <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
-        <div>
-          <Badge tone="teacher">{getRoleLabel(access.role)}</Badge>
-          <h1 className="mt-4 text-5xl font-semibold tracking-[-0.05em] text-[var(--color-ink)] sm:text-[4rem]">
-            Panel de moderacion
-          </h1>
-          <p className="mt-4 max-w-3xl text-lg leading-8 text-[var(--color-muted)]">
-            Supervision operativa del foro, cola de reportes, restauracion de contenido y
-            seguimiento de actividad.
-          </p>
+      <SurfaceCard
+        actions={
+          <ButtonLink href={`/mis-cursos/${course.slug}/foro`} variant="neutral">
+            Volver al foro
+          </ButtonLink>
+        }
+        className="border-[rgba(22,60,88,0.1)] bg-white/90"
+        padding="md"
+      >
+        <SectionHeader
+          description="Supervision operativa del foro, revision de reportes, restauracion de contenido y seguimiento de actividad reciente sin salir del contexto de Comunidad V2."
+          eyebrow={
+            <span className="inline-flex flex-wrap items-center gap-2">
+              <Badge tone="info">{getRoleLabel(access.role)}</Badge>
+              <Badge tone={dashboard.stats.reportCount > 0 ? "warning" : "outline"}>
+                {dashboard.stats.reportCount > 0
+                  ? `${dashboard.stats.reportCount} reportes abiertos`
+                  : "Sin incidencias abiertas"}
+              </Badge>
+            </span>
+          }
+          title="Panel de moderacion"
+        />
+
+        <div className="mt-5 grid gap-3 border-t border-[rgba(22,60,88,0.08)] pt-4 md:grid-cols-2 xl:grid-cols-4">
+          {[
+            {
+              label: "Total hilos",
+              value: formatCompactNumber(dashboard.stats.threadCount),
+              icon: <Pin className="h-4 w-4 text-[var(--color-primary)]" />
+            },
+            {
+              label: "Hilos fijados",
+              value: String(dashboard.stats.pinnedCount),
+              icon: <Pin className="h-4 w-4 text-[var(--color-primary)]" />
+            },
+            {
+              label: "Resueltos",
+              value: String(dashboard.stats.resolvedCount),
+              icon: <Clock3 className="h-4 w-4 text-[var(--color-success)]" />
+            },
+            {
+              label: "Pendientes",
+              value: String(dashboard.stats.reportCount),
+              icon: <AlertTriangle className="h-4 w-4 text-[var(--color-warning)]" />
+            }
+          ].map((metric) => (
+            <div
+              className="rounded-[var(--radius-md)] bg-[rgba(248,245,239,0.72)] px-4 py-3"
+              key={metric.label}
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-[var(--color-muted)]">
+                    {metric.label}
+                  </p>
+                  <p className="mt-1.5 font-premium text-[1.6rem] font-semibold tracking-[-0.04em] text-[var(--color-ink)]">
+                    {metric.value}
+                  </p>
+                </div>
+                <div className="grid h-10 w-10 shrink-0 place-items-center rounded-[var(--radius-md)] bg-white/72">
+                  {metric.icon}
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
 
-        <ButtonLink href={`/mis-cursos/${course.slug}/foro`} variant="secondary">
-          Volver al foro
-        </ButtonLink>
-      </div>
-
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <div className="rounded-[28px] border border-[rgba(12,113,195,0.16)] bg-white px-6 py-5 shadow-[0_18px_40px_rgba(34,34,33,0.05)]">
-          <div className="flex items-center justify-between gap-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--color-muted)]">
-              Total hilos
-            </p>
-            <Pin className="h-5 w-5 text-[var(--color-primary)]" />
-          </div>
-          <p className="mt-4 text-5xl font-semibold tracking-[-0.05em] text-[var(--color-ink)]">
-            {formatCompactNumber(dashboard.stats.threadCount)}
-          </p>
-        </div>
-
-        <div className="rounded-[28px] border border-[rgba(46,163,242,0.2)] bg-white px-6 py-5 shadow-[0_18px_40px_rgba(34,34,33,0.05)]">
-          <div className="flex items-center justify-between gap-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--color-muted)]">
-              Hilos fijados
-            </p>
-            <Pin className="h-5 w-5 text-[var(--color-secondary)]" />
-          </div>
-          <p className="mt-4 text-5xl font-semibold tracking-[-0.05em] text-[var(--color-ink)]">
-            {dashboard.stats.pinnedCount}
-          </p>
-        </div>
-
-        <div className="rounded-[28px] border border-[rgba(10,109,84,0.18)] bg-white px-6 py-5 shadow-[0_18px_40px_rgba(34,34,33,0.05)]">
-          <div className="flex items-center justify-between gap-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--color-muted)]">
-              Resueltos
-            </p>
-            <Clock3 className="h-5 w-5 text-[var(--color-success)]" />
-          </div>
-          <p className="mt-4 text-5xl font-semibold tracking-[-0.05em] text-[var(--color-ink)]">
-            {dashboard.stats.resolvedCount}
-          </p>
-        </div>
-
-        <div className="rounded-[28px] border border-[rgba(195,37,12,0.12)] bg-[rgba(255,226,221,0.72)] px-6 py-5 shadow-[0_18px_40px_rgba(34,34,33,0.05)]">
-          <div className="flex items-center justify-between gap-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#8d2c15]">
-              Reportes pendientes
-            </p>
-            <AlertTriangle className="h-5 w-5 text-[#b43816]" />
-          </div>
-          <p className="mt-4 text-5xl font-semibold tracking-[-0.05em] text-[#8d2c15]">
-            {dashboard.stats.reportCount}
-          </p>
-        </div>
-      </div>
+        {dashboard.stats.reportCount > 0 ? (
+          <StateBanner
+            className="mt-5"
+            description="Las incidencias pendientes se resuelven desde esta vista sin alterar permisos, rutas ni el flujo principal del foro."
+            icon={<AlertTriangle className="h-5 w-5" />}
+            tone="warning"
+          />
+        ) : null}
+      </SurfaceCard>
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_20rem]">
-        <section className="overflow-hidden rounded-[30px] border border-[rgba(12,113,195,0.14)] bg-white shadow-[0_18px_40px_rgba(34,34,33,0.05)]">
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[rgba(12,113,195,0.1)] px-6 py-5">
-            <div>
-              <h2 className="text-[2.1rem] font-semibold tracking-[-0.04em] text-[var(--color-ink)]">
-                Cola de reportes
-              </h2>
-              <p className="mt-2 text-sm text-[var(--color-muted)]">
-                {dashboard.openReports.length} reportes abiertos en esta edicion
-              </p>
-            </div>
-            <Badge tone="accent">{dashboard.stats.reportCount} pendientes</Badge>
+        <SurfaceCard className="border-[rgba(22,60,88,0.08)] bg-white/90 p-0">
+          <div className="px-5 py-5 sm:px-6">
+            <SectionHeader
+              description="Revisa el contexto del contenido reportado y resuelve cada incidencia desde la misma cola."
+              eyebrow={<Badge tone="warning">{dashboard.openReports.length} abiertos</Badge>}
+              size="md"
+              title="Cola de reportes"
+            />
           </div>
 
-          <div className="space-y-5 px-6 py-6">
-            {dashboard.openReports.length ? (
-              dashboard.openReports.map((report) => (
-                <div
-                  className="rounded-[26px] border border-[rgba(12,113,195,0.14)] bg-[#fcfbf8] px-5 py-5"
-                  key={report.id}
-                >
-                  <div className="flex flex-wrap items-center justify-between gap-3">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <Badge tone="accent">{report.reason}</Badge>
-                      <span className="text-sm text-[var(--color-muted)]">
-                        {report.thread
-                          ? `Reportado en ${report.thread.categorySlug}`
-                          : report.post
-                            ? `Reportado en ${report.post.categorySlug}`
-                            : "Foro"}
-                      </span>
+          {dashboard.openReports.length ? (
+            <div className="divide-y divide-[rgba(22,60,88,0.08)]">
+              {dashboard.openReports.map((report) => {
+                const targetTitle = report.thread
+                  ? report.thread.title
+                  : report.post
+                    ? report.post.threadTitle
+                    : "Contenido del foro";
+                const reviewHref = report.thread
+                  ? `/mis-cursos/${course.slug}/foro/${report.thread.categorySlug}/${report.thread.id}`
+                  : report.post
+                    ? `/mis-cursos/${course.slug}/foro/${report.post.categorySlug}/${report.post.threadId}`
+                    : `/mis-cursos/${course.slug}/foro`;
+                const targetContext = report.thread
+                  ? `Hilo en ${report.thread.categorySlug}`
+                  : report.post
+                    ? `Respuesta en ${report.post.categorySlug}`
+                    : "Foro";
+
+                return (
+                  <article className="px-5 py-5 sm:px-6" key={report.id}>
+                    <div className="flex flex-col gap-4">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Badge tone="warning">{report.reason}</Badge>
+                        <Badge tone="outline">{targetContext}</Badge>
+                        <span className="text-sm text-[var(--color-muted)]">
+                          {formatRelativeTime(report.createdAt)}
+                        </span>
+                      </div>
+
+                      <div className="rounded-[var(--radius-md)] bg-[rgba(248,245,239,0.82)] px-4 py-4">
+                        <p className="text-meta-xs font-semibold text-[var(--color-muted)]">
+                          Contenido reportado
+                        </p>
+                        <p className="mt-2 font-premium text-heading-md font-semibold text-[var(--color-ink)]">
+                          {targetTitle}
+                        </p>
+                      </div>
+
+                      <div className="flex flex-wrap gap-3">
+                        <ButtonLink href={reviewHref} variant="neutral">
+                          Revisar contenido
+                        </ButtonLink>
+                        <ReportResolutionForm
+                          courseSlug={course.slug}
+                          outcome="ACTION_TAKEN"
+                          reportId={report.id}
+                          variant="primary"
+                        >
+                          Accion tomada
+                        </ReportResolutionForm>
+                        <ReportResolutionForm
+                          courseSlug={course.slug}
+                          outcome="REVIEWED"
+                          reportId={report.id}
+                        >
+                          Marcar revisado
+                        </ReportResolutionForm>
+                        <ReportResolutionForm
+                          courseSlug={course.slug}
+                          outcome="DISMISSED"
+                          reportId={report.id}
+                        >
+                          Descartar
+                        </ReportResolutionForm>
+                      </div>
                     </div>
-                    <span className="text-sm text-[var(--color-muted)]">
-                      {formatRelativeTime(report.createdAt)}
-                    </span>
-                  </div>
-
-                  <div className="mt-4 rounded-[22px] border-l-4 border-[rgba(12,113,195,0.18)] bg-white px-4 py-4 text-lg italic leading-8 text-[var(--color-ink)]">
-                    {report.thread
-                      ? report.thread.title
-                      : report.post
-                        ? report.post.threadTitle
-                        : "Contenido del foro"}
-                  </div>
-
-                  <div className="mt-4 flex flex-wrap gap-3">
-                    {report.thread ? (
-                      <>
-                        <ButtonLink
-                          href={`/mis-cursos/${course.slug}/foro/${report.thread.categorySlug}/${report.thread.id}`}
-                          variant="secondary"
-                        >
-                          Revisar hilo
-                        </ButtonLink>
-                        <form action={resolveForumReportAction}>
-                          <input name="courseSlug" type="hidden" value={course.slug} />
-                          <input name="reportId" type="hidden" value={report.id} />
-                          <input name="outcome" type="hidden" value="ACTION_TAKEN" />
-                          <input
-                            name="nextPath"
-                            type="hidden"
-                            value={`/mis-cursos/${course.slug}/foro/moderacion`}
-                          />
-                          <Button type="submit" variant="primary">
-                            Accion tomada
-                          </Button>
-                        </form>
-                        <form action={resolveForumReportAction}>
-                          <input name="courseSlug" type="hidden" value={course.slug} />
-                          <input name="reportId" type="hidden" value={report.id} />
-                          <input name="outcome" type="hidden" value="REVIEWED" />
-                          <input
-                            name="nextPath"
-                            type="hidden"
-                            value={`/mis-cursos/${course.slug}/foro/moderacion`}
-                          />
-                          <Button type="submit" variant="ghost">
-                            Marcar revisado
-                          </Button>
-                        </form>
-                        <form action={resolveForumReportAction}>
-                          <input name="courseSlug" type="hidden" value={course.slug} />
-                          <input name="reportId" type="hidden" value={report.id} />
-                          <input name="outcome" type="hidden" value="DISMISSED" />
-                          <input
-                            name="nextPath"
-                            type="hidden"
-                            value={`/mis-cursos/${course.slug}/foro/moderacion`}
-                          />
-                          <ConfirmSubmitButton
-                            message="El reporte se marcara como descartado. Quieres continuar?"
-                            pendingLabel="Descartando..."
-                            variant="ghost"
-                          >
-                            Descartar
-                          </ConfirmSubmitButton>
-                        </form>
-                      </>
-                    ) : report.post ? (
-                      <>
-                        <ButtonLink
-                          href={`/mis-cursos/${course.slug}/foro/${report.post.categorySlug}/${report.post.threadId}`}
-                          variant="secondary"
-                        >
-                          Revisar respuesta
-                        </ButtonLink>
-                        <form action={resolveForumReportAction}>
-                          <input name="courseSlug" type="hidden" value={course.slug} />
-                          <input name="reportId" type="hidden" value={report.id} />
-                          <input name="outcome" type="hidden" value="ACTION_TAKEN" />
-                          <input
-                            name="nextPath"
-                            type="hidden"
-                            value={`/mis-cursos/${course.slug}/foro/moderacion`}
-                          />
-                          <Button type="submit" variant="primary">
-                            Accion tomada
-                          </Button>
-                        </form>
-                        <form action={resolveForumReportAction}>
-                          <input name="courseSlug" type="hidden" value={course.slug} />
-                          <input name="reportId" type="hidden" value={report.id} />
-                          <input name="outcome" type="hidden" value="REVIEWED" />
-                          <input
-                            name="nextPath"
-                            type="hidden"
-                            value={`/mis-cursos/${course.slug}/foro/moderacion`}
-                          />
-                          <Button type="submit" variant="ghost">
-                            Marcar revisado
-                          </Button>
-                        </form>
-                        <form action={resolveForumReportAction}>
-                          <input name="courseSlug" type="hidden" value={course.slug} />
-                          <input name="reportId" type="hidden" value={report.id} />
-                          <input name="outcome" type="hidden" value="DISMISSED" />
-                          <input
-                            name="nextPath"
-                            type="hidden"
-                            value={`/mis-cursos/${course.slug}/foro/moderacion`}
-                          />
-                          <ConfirmSubmitButton
-                            message="El reporte se marcara como descartado. Quieres continuar?"
-                            pendingLabel="Descartando..."
-                            variant="ghost"
-                          >
-                            Descartar
-                          </ConfirmSubmitButton>
-                        </form>
-                      </>
-                    ) : null}
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="rounded-[26px] border border-dashed border-[rgba(12,113,195,0.18)] bg-[#fcfbf8] px-5 py-8 text-[var(--color-muted)]">
-                No hay reportes pendientes.
-              </div>
-            )}
-          </div>
-        </section>
+                  </article>
+                );
+              })}
+            </div>
+          ) : (
+            <EmptyState
+              align="center"
+              className="m-5 sm:m-6"
+              description="La cola esta limpia. Los nuevos reportes apareceran aqui sin interrumpir la navegacion del foro."
+              title="No hay reportes pendientes"
+              tone="subtle"
+            />
+          )}
+        </SurfaceCard>
 
         <div className="space-y-6">
-          <section className="rounded-[30px] border border-[rgba(12,113,195,0.14)] bg-white px-6 py-5 shadow-[0_18px_40px_rgba(34,34,33,0.05)]">
-            <div className="flex items-center gap-3">
-              <CalendarClock className="h-5 w-5 text-[var(--color-primary)]" />
-              <h2 className="text-[2rem] font-semibold tracking-[-0.04em] text-[var(--color-ink)]">
-                Anuncios programados
-              </h2>
-            </div>
-            <div className="mt-5 space-y-3">
-              {dashboard.scheduledAnnouncements.length ? (
-                dashboard.scheduledAnnouncements.map((thread) => (
+          <SurfaceCard className="border-[rgba(22,60,88,0.08)] bg-white/88" padding="md">
+            <SectionHeader
+              description="Anuncios preparados para publicarse en esta edicion."
+              size="md"
+              title="Anuncios programados"
+            />
+
+            {dashboard.scheduledAnnouncements.length ? (
+              <div className="mt-4 space-y-3">
+                {dashboard.scheduledAnnouncements.map((thread) => (
                   <Link
-                    className="block rounded-[22px] border border-[rgba(12,113,195,0.12)] bg-[#fcfbf8] px-4 py-4 transition hover:border-[var(--color-primary)]"
+                    className="block rounded-[var(--radius-md)] border border-[rgba(22,60,88,0.08)] bg-[rgba(248,245,239,0.76)] px-4 py-4 transition hover:border-[rgba(22,60,88,0.14)] hover:bg-white"
                     href={`/mis-cursos/${course.slug}/foro/${thread.categorySlug}/${thread.id}`}
                     key={thread.id}
                   >
@@ -328,128 +322,162 @@ export default async function ForumModerationPage({
                       Se publica {formatDateTime(thread.scheduledFor)}
                     </p>
                   </Link>
-                ))
-              ) : (
-                <div className="rounded-[22px] border border-dashed border-[rgba(12,113,195,0.18)] px-4 py-4 text-sm text-[var(--color-muted)]">
-                  No hay anuncios programados.
-                </div>
-              )}
-            </div>
-          </section>
+                ))}
+              </div>
+            ) : (
+              <EmptyState
+                className="mt-4 px-5 py-6"
+                description="No hay publicaciones pendientes de programacion en este momento."
+                title="Sin anuncios programados"
+                tone="subtle"
+              />
+            )}
+          </SurfaceCard>
 
-          <section className="rounded-[30px] border border-[rgba(12,113,195,0.14)] bg-white px-6 py-5 shadow-[0_18px_40px_rgba(34,34,33,0.05)]">
-            <div className="flex items-center gap-3">
-              <Clock3 className="h-5 w-5 text-[var(--color-primary)]" />
-              <h2 className="text-[2rem] font-semibold tracking-[-0.04em] text-[var(--color-ink)]">
-                Registro de actividad
-              </h2>
-            </div>
-            <div className="mt-5 space-y-5">
-              {dashboard.recentActivity.length ? (
-                dashboard.recentActivity.map((entry) => (
+          <SurfaceCard className="border-[rgba(22,60,88,0.08)] bg-white/88" padding="md">
+            <SectionHeader
+              description="Trazas recientes para contextualizar decisiones de moderacion y actividad docente."
+              size="md"
+              title="Registro de actividad"
+            />
+
+            {dashboard.recentActivity.length ? (
+              <div className="mt-4 space-y-3">
+                {dashboard.recentActivity.map((entry) => (
                   <Link
-                    className="relative block border-l-2 border-[rgba(12,113,195,0.16)] pl-5"
+                    className="block rounded-[var(--radius-md)] border border-[rgba(22,60,88,0.08)] bg-[rgba(248,245,239,0.62)] px-4 py-4 transition hover:border-[rgba(22,60,88,0.14)] hover:bg-white"
                     href={entry.linkPath ?? `/mis-cursos/${course.slug}/foro`}
                     key={entry.id}
                   >
-                    <span
-                      className={`absolute -left-[0.4rem] top-1 block h-3 w-3 rounded-full ${
-                        entry.actorRole === "STUDENT" ? "bg-[var(--color-accent)]" : "bg-[var(--color-primary)]"
-                      }`}
-                    />
-                    <p className="text-base leading-7 text-[var(--color-ink)]">{entry.summary}</p>
-                    <p className="mt-2 text-sm text-[var(--color-muted)]">
-                      {formatRelativeTime(entry.createdAt)}
-                    </p>
+                    <div className="flex items-start gap-3">
+                      <div className="mt-1 grid h-9 w-9 shrink-0 place-items-center rounded-[var(--radius-md)] bg-white/90">
+                        <Clock3
+                          className={`h-4 w-4 ${
+                            entry.actorRole === "STUDENT"
+                              ? "text-[var(--color-warning)]"
+                              : "text-[var(--color-primary)]"
+                          }`}
+                        />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm leading-7 text-[var(--color-ink)]">
+                          {entry.summary}
+                        </p>
+                        <p className="mt-2 text-sm text-[var(--color-muted)]">
+                          {formatRelativeTime(entry.createdAt)}
+                        </p>
+                      </div>
+                    </div>
                   </Link>
-                ))
-              ) : (
-                <div className="rounded-[22px] border border-dashed border-[rgba(12,113,195,0.18)] px-4 py-4 text-sm text-[var(--color-muted)]">
-                  Todavia no hay actividad registrada.
-                </div>
-              )}
-            </div>
-          </section>
+                ))}
+              </div>
+            ) : (
+              <EmptyState
+                className="mt-4 px-5 py-6"
+                description="La actividad reciente aparecera aqui cuando haya acciones relevantes en el foro."
+                title="Todavia no hay actividad registrada"
+                tone="subtle"
+              />
+            )}
+          </SurfaceCard>
         </div>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <section className="rounded-[30px] border border-[rgba(12,113,195,0.14)] bg-white px-6 py-5 shadow-[0_18px_40px_rgba(34,34,33,0.05)]">
-          <h2 className="text-[2rem] font-semibold tracking-[-0.04em] text-[var(--color-ink)]">
-            Hilos eliminados
-          </h2>
-          <div className="mt-5 space-y-4">
-            {dashboard.deletedThreads.length ? (
-              dashboard.deletedThreads.map((thread) => (
-                <div
-                  className="rounded-[24px] border border-[rgba(12,113,195,0.12)] bg-[#fcfbf8] px-5 py-4"
-                  key={thread.id}
-                >
-                  <p className="font-semibold text-[var(--color-ink)]">{thread.title}</p>
-                  <p className="mt-2 text-sm text-[var(--color-muted)]">
-                    Eliminado {formatRelativeTime(thread.deletedAt)}
-                  </p>
-                  <form action={restoreThreadAction} className="mt-4">
-                    <input name="courseSlug" type="hidden" value={course.slug} />
-                    <input name="categorySlug" type="hidden" value={thread.categorySlug} />
-                    <input name="threadId" type="hidden" value={thread.id} />
-                    <input
-                      name="nextPath"
-                      type="hidden"
-                      value={`/mis-cursos/${course.slug}/foro/moderacion`}
-                    />
-                    <Button type="submit" variant="ghost">
-                      Restaurar hilo
-                    </Button>
-                  </form>
-                </div>
-              ))
-            ) : (
-              <div className="rounded-[22px] border border-dashed border-[rgba(12,113,195,0.18)] px-4 py-4 text-sm text-[var(--color-muted)]">
-                No hay hilos eliminados pendientes.
-              </div>
-            )}
+        <SurfaceCard className="border-[rgba(22,60,88,0.08)] bg-white/90 p-0">
+          <div className="px-5 py-5 sm:px-6">
+            <SectionHeader
+              description="Rastro de hilos retirados que todavia pueden devolverse a la conversacion."
+              size="md"
+              title="Hilos eliminados"
+            />
           </div>
-        </section>
 
-        <section className="rounded-[30px] border border-[rgba(12,113,195,0.14)] bg-white px-6 py-5 shadow-[0_18px_40px_rgba(34,34,33,0.05)]">
-          <h2 className="text-[2rem] font-semibold tracking-[-0.04em] text-[var(--color-ink)]">
-            Respuestas eliminadas
-          </h2>
-          <div className="mt-5 space-y-4">
-            {dashboard.deletedPosts.length ? (
-              dashboard.deletedPosts.map((post) => (
-                <div
-                  className="rounded-[24px] border border-[rgba(12,113,195,0.12)] bg-[#fcfbf8] px-5 py-4"
-                  key={post.id}
-                >
-                  <p className="font-semibold text-[var(--color-ink)]">{post.threadTitle}</p>
-                  <p className="mt-2 text-sm text-[var(--color-muted)]">
-                    Eliminada {formatRelativeTime(post.deletedAt)}
-                  </p>
-                  <form action={restorePostAction} className="mt-4">
-                    <input name="courseSlug" type="hidden" value={course.slug} />
-                    <input name="categorySlug" type="hidden" value={post.categorySlug} />
-                    <input name="threadId" type="hidden" value={post.threadId} />
-                    <input name="postId" type="hidden" value={post.id} />
-                    <input
-                      name="nextPath"
-                      type="hidden"
-                      value={`/mis-cursos/${course.slug}/foro/moderacion`}
-                    />
-                    <Button type="submit" variant="ghost">
-                      Restaurar respuesta
-                    </Button>
-                  </form>
-                </div>
-              ))
-            ) : (
-              <div className="rounded-[22px] border border-dashed border-[rgba(12,113,195,0.18)] px-4 py-4 text-sm text-[var(--color-muted)]">
-                No hay respuestas eliminadas pendientes.
-              </div>
-            )}
+          {dashboard.deletedThreads.length ? (
+            <div className="divide-y divide-[rgba(22,60,88,0.08)]">
+              {dashboard.deletedThreads.map((thread) => (
+                <article className="px-5 py-5 sm:px-6" key={thread.id}>
+                  <div className="flex flex-col gap-4">
+                    <div>
+                      <p className="font-semibold text-[var(--color-ink)]">{thread.title}</p>
+                      <p className="mt-2 text-sm text-[var(--color-muted)]">
+                        Eliminado {formatRelativeTime(thread.deletedAt)}
+                      </p>
+                    </div>
+                    <form action={restoreThreadAction}>
+                      <input name="courseSlug" type="hidden" value={course.slug} />
+                      <input name="categorySlug" type="hidden" value={thread.categorySlug} />
+                      <input name="threadId" type="hidden" value={thread.id} />
+                      <input
+                        name="nextPath"
+                        type="hidden"
+                        value={`/mis-cursos/${course.slug}/foro/moderacion`}
+                      />
+                      <Button type="submit" variant="subtle">
+                        Restaurar hilo
+                      </Button>
+                    </form>
+                  </div>
+                </article>
+              ))}
+            </div>
+          ) : (
+            <EmptyState
+              className="m-5 sm:m-6"
+              description="No hay hilos retirados pendientes de restauracion."
+              title="Sin hilos eliminados"
+              tone="subtle"
+            />
+          )}
+        </SurfaceCard>
+
+        <SurfaceCard className="border-[rgba(22,60,88,0.08)] bg-white/90 p-0">
+          <div className="px-5 py-5 sm:px-6">
+            <SectionHeader
+              description="Respuestas eliminadas que se pueden recuperar sin abandonar el panel."
+              size="md"
+              title="Respuestas eliminadas"
+            />
           </div>
-        </section>
+
+          {dashboard.deletedPosts.length ? (
+            <div className="divide-y divide-[rgba(22,60,88,0.08)]">
+              {dashboard.deletedPosts.map((post) => (
+                <article className="px-5 py-5 sm:px-6" key={post.id}>
+                  <div className="flex flex-col gap-4">
+                    <div>
+                      <p className="font-semibold text-[var(--color-ink)]">{post.threadTitle}</p>
+                      <p className="mt-2 text-sm text-[var(--color-muted)]">
+                        Eliminada {formatRelativeTime(post.deletedAt)}
+                      </p>
+                    </div>
+                    <form action={restorePostAction}>
+                      <input name="courseSlug" type="hidden" value={course.slug} />
+                      <input name="categorySlug" type="hidden" value={post.categorySlug} />
+                      <input name="threadId" type="hidden" value={post.threadId} />
+                      <input name="postId" type="hidden" value={post.id} />
+                      <input
+                        name="nextPath"
+                        type="hidden"
+                        value={`/mis-cursos/${course.slug}/foro/moderacion`}
+                      />
+                      <Button type="submit" variant="subtle">
+                        Restaurar respuesta
+                      </Button>
+                    </form>
+                  </div>
+                </article>
+              ))}
+            </div>
+          ) : (
+            <EmptyState
+              className="m-5 sm:m-6"
+              description="No hay respuestas retiradas pendientes de revision."
+              title="Sin respuestas eliminadas"
+              tone="subtle"
+            />
+          )}
+        </SurfaceCard>
       </div>
     </div>
   );

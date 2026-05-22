@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Archive, ChevronRight, Layers3, RotateCcw } from "lucide-react";
+import { Archive, ChevronRight, RotateCcw } from "lucide-react";
 import { notFound, redirect } from "next/navigation";
 import {
   archiveForumSpaceAction,
@@ -10,6 +10,11 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button";
 import { ConfirmSubmitButton } from "@/components/ui/confirm-submit-button";
+import { EmptyState } from "@/components/ui/empty-state";
+import { ListRow } from "@/components/ui/list-row";
+import { SectionHeader } from "@/components/ui/section-header";
+import { StateBanner } from "@/components/ui/state-banner";
+import { SurfaceCard } from "@/components/ui/surface-card";
 import { requireUser } from "@/lib/auth";
 import { getCatalogCourseBySlug } from "@/lib/course-catalog";
 import {
@@ -29,7 +34,7 @@ export async function generateMetadata({ params }: ForumHistoryPageProps): Promi
   const course = await getCatalogCourseBySlug(slug);
 
   return {
-    title: course ? `Histórico del foro | ${course.title}` : "Histórico del foro",
+    title: course ? `Historico del foro | ${course.title}` : "Historico del foro",
     robots: {
       index: false,
       follow: false
@@ -65,216 +70,240 @@ export default async function ForumHistoryPage({ params }: ForumHistoryPageProps
   const history = await getForumSpaceHistory(course.slug);
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 lg:space-y-8">
       <div className="flex flex-wrap items-center gap-2 text-sm text-[var(--color-muted)]">
         <Link className="hover:text-[var(--color-primary)]" href={`/mis-cursos/${course.slug}/foro`}>
-          Foro
+          Comunidad
         </Link>
         <ChevronRight className="h-4 w-4" />
-        <span className="text-[var(--color-ink)]">Histórico</span>
+        <span className="text-[var(--color-ink)]">Historico</span>
       </div>
 
-      <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
-        <div>
-          <Badge tone="teacher">{getRoleLabel(access.role)}</Badge>
-          <h1 className="mt-4 text-5xl font-semibold tracking-[-0.05em] text-[var(--color-ink)] sm:text-[4rem]">
-            Histórico y Archivo
-          </h1>
-          <p className="mt-4 max-w-3xl text-lg leading-8 text-[var(--color-muted)]">
-            Gestiona la edición activa del foro, restaura cohortes anteriores y retira ediciones del histórico cuando ya no deban permanecer accesibles al staff.
-          </p>
-        </div>
+      <SurfaceCard
+        actions={
+          <ButtonLink href={`/mis-cursos/${course.slug}/foro`} variant="neutral">
+            Volver al foro
+          </ButtonLink>
+        }
+        className="border-[rgba(22,60,88,0.1)] bg-white/90"
+        padding="md"
+      >
+        <SectionHeader
+          description="Gestiona la edicion activa del foro, consulta cohortes archivadas y decide cuando una edicion ya no debe seguir visible para el equipo."
+          eyebrow={
+            <span className="inline-flex flex-wrap items-center gap-2">
+              <Badge tone="info">{getRoleLabel(access.role)}</Badge>
+              <Badge tone="outline">{history.archivedSpaces.length} archivadas</Badge>
+            </span>
+          }
+          title="Historico y archivo"
+        />
 
-        <ButtonLink href={`/mis-cursos/${course.slug}/foro`} variant="secondary">
-          Volver al foro
-        </ButtonLink>
-      </div>
-
-      <section className="space-y-5">
-        <div className="flex items-center gap-3">
-          <Layers3 className="h-5 w-5 text-[var(--color-primary)]" />
-          <h2 className="text-4xl font-semibold tracking-[-0.04em] text-[var(--color-ink)]">
-            Edición actual
-          </h2>
-        </div>
-
-        <div className="rounded-[30px] border border-[rgba(12,113,195,0.14)] bg-white px-6 py-6 shadow-[0_18px_40px_rgba(34,34,33,0.05)]">
-          <div className="flex flex-col gap-6 xl:flex-row xl:items-center xl:justify-between">
-            <div className="min-w-0 flex-1">
-              <Badge tone="teacher">Activo</Badge>
-              <h3 className="mt-4 text-[2.6rem] font-semibold tracking-[-0.05em] text-[var(--color-ink)]">
-                {history.activeSpace.editionLabel}
-              </h3>
-              <p className="mt-3 max-w-3xl text-lg leading-8 text-[var(--color-muted)]">
-                Foro principal de la edición en curso. Creado el {formatDate(history.activeSpace.createdAt)}.
+        <div className="mt-5 grid gap-3 border-t border-[rgba(22,60,88,0.08)] pt-4 sm:grid-cols-2 xl:grid-cols-4">
+          {[
+            {
+              label: "Edicion activa",
+              value: history.activeSpace.editionLabel
+            },
+            {
+              label: "Hilos activos",
+              value: formatCompactNumber(history.activeSpace.threadCount)
+            },
+            {
+              label: "Archivadas",
+              value: String(history.archivedSpaces.length)
+            },
+            {
+              label: "Eliminadas",
+              value: String(history.deletedSpaces.length)
+            }
+          ].map((metric) => (
+            <div
+              className="rounded-[var(--radius-md)] bg-[rgba(248,245,239,0.72)] px-4 py-3"
+              key={metric.label}
+            >
+              <p className="text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-[var(--color-muted)]">
+                {metric.label}
+              </p>
+              <p className="mt-1.5 font-premium text-[1.15rem] font-semibold tracking-[-0.04em] text-[var(--color-ink)] sm:text-[1.35rem]">
+                {metric.value}
               </p>
             </div>
+          ))}
+        </div>
+      </SurfaceCard>
 
-            <div className="grid gap-4 sm:grid-cols-3">
-              <div className="rounded-[24px] border border-[rgba(12,113,195,0.12)] bg-[#faf8f4] px-5 py-4">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-muted)]">
-                  Hilos
-                </p>
-                <p className="mt-2 text-4xl font-semibold tracking-[-0.05em] text-[var(--color-ink)]">
-                  {formatCompactNumber(history.activeSpace.threadCount)}
-                </p>
-              </div>
-              <div className="rounded-[24px] border border-[rgba(12,113,195,0.12)] bg-[#faf8f4] px-5 py-4">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-muted)]">
-                  Categorías
-                </p>
-                <p className="mt-2 text-4xl font-semibold tracking-[-0.05em] text-[var(--color-ink)]">
-                  {history.activeSpace.categoryCount}
-                </p>
-              </div>
-              <form action={archiveForumSpaceAction} className="flex">
-                <input name="courseSlug" type="hidden" value={course.slug} />
-                <input
-                  name="nextPath"
-                  type="hidden"
-                  value={`/mis-cursos/${course.slug}/foro/historico`}
-                />
-                <ConfirmSubmitButton
-                  className="w-full rounded-[24px]"
-                  message="Se archivará la edición actual y se abrirá una nueva. ¿Quieres continuar?"
-                  pendingLabel="Archivando..."
-                  variant="secondary"
-                >
-                  Gestionar foro
-                </ConfirmSubmitButton>
-              </form>
-            </div>
+      <SurfaceCard className="border-[rgba(22,60,88,0.08)] bg-white/90" padding="md">
+        <SectionHeader
+          actions={
+            <form action={archiveForumSpaceAction}>
+              <input name="courseSlug" type="hidden" value={course.slug} />
+              <input
+                name="nextPath"
+                type="hidden"
+                value={`/mis-cursos/${course.slug}/foro/historico`}
+              />
+              <ConfirmSubmitButton
+                message="Se archivara la edicion actual y se abrira una nueva. Quieres continuar?"
+                pendingLabel="Archivando..."
+                variant="neutral"
+              >
+                Gestionar foro
+              </ConfirmSubmitButton>
+            </form>
+          }
+          description={`Foro principal de la edicion en curso. Creado el ${formatDate(history.activeSpace.createdAt)}.`}
+          eyebrow={<Badge tone="info">Activo</Badge>}
+          size="md"
+          title={history.activeSpace.editionLabel}
+        />
+
+        <div className="mt-5 grid gap-3 border-t border-[rgba(22,60,88,0.08)] pt-4 sm:grid-cols-2">
+          <div className="rounded-[var(--radius-md)] bg-[rgba(248,245,239,0.72)] px-4 py-3">
+            <p className="text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-[var(--color-muted)]">
+              Hilos
+            </p>
+            <p className="mt-1.5 font-premium text-[1.6rem] font-semibold tracking-[-0.04em] text-[var(--color-ink)]">
+              {formatCompactNumber(history.activeSpace.threadCount)}
+            </p>
+          </div>
+          <div className="rounded-[var(--radius-md)] bg-[rgba(248,245,239,0.72)] px-4 py-3">
+            <p className="text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-[var(--color-muted)]">
+              Categorias
+            </p>
+            <p className="mt-1.5 font-premium text-[1.6rem] font-semibold tracking-[-0.04em] text-[var(--color-ink)]">
+              {history.activeSpace.categoryCount}
+            </p>
           </div>
         </div>
-      </section>
+      </SurfaceCard>
 
-      <section className="space-y-5">
-        <div className="flex items-center gap-3">
-          <Archive className="h-5 w-5 text-[var(--color-primary)]" />
-          <h2 className="text-4xl font-semibold tracking-[-0.04em] text-[var(--color-ink)]">
-            Ediciones archivadas
-          </h2>
+      <SurfaceCard className="border-[rgba(22,60,88,0.08)] bg-white/90 p-0">
+        <div className="px-5 py-5 sm:px-6">
+          <SectionHeader
+            description="Cada restauracion convierte esa edicion en la activa. La actual pasa automaticamente al historico."
+            eyebrow={<Badge tone="outline">Archivo operativo</Badge>}
+            size="md"
+            title="Ediciones archivadas"
+          />
+          {history.archivedSpaces.length ? (
+            <StateBanner
+              className="mt-4"
+              description="Restaurar una edicion archivada mantiene intacta la logica del foro, pero cambia cual es el espacio principal visible para moderacion y comunidad."
+              tone="info"
+            />
+          ) : null}
         </div>
 
-        <div className="space-y-4">
-          {history.archivedSpaces.length ? (
-            history.archivedSpaces.map((space) => (
-              <div
-                className="rounded-[30px] border border-[rgba(12,113,195,0.14)] bg-white px-6 py-6 shadow-[0_18px_40px_rgba(34,34,33,0.05)]"
-                key={space.id}
-              >
-                <div className="flex flex-col gap-6 xl:flex-row xl:items-center xl:justify-between">
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-4">
-                      <div className="grid h-14 w-14 place-items-center rounded-full bg-[#f3f1ee] text-[var(--color-muted)]">
-                        <Archive className="h-5 w-5" />
-                      </div>
-                      <div>
-                        <h3 className="text-[2rem] font-semibold tracking-[-0.04em] text-[var(--color-ink)]">
-                          {space.editionLabel}
-                        </h3>
-                        <p className="mt-1 text-lg text-[var(--color-muted)]">
-                          Cerrado el {space.archivedAt ? formatDate(space.archivedAt) : "sin fecha"}
-                        </p>
-                      </div>
+        {history.archivedSpaces.length ? (
+          <div className="divide-y divide-[rgba(22,60,88,0.08)]">
+            {history.archivedSpaces.map((space) => (
+              <article className="px-5 py-5 sm:px-6" key={space.id}>
+                <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Badge tone="outline">Archivada</Badge>
+                      <span className="text-sm text-[var(--color-muted)]">
+                        Cerrado el {space.archivedAt ? formatDate(space.archivedAt) : "sin fecha"}
+                      </span>
+                    </div>
+                    <h3 className="mt-3 font-premium text-heading-md font-semibold text-[var(--color-ink)]">
+                      {space.editionLabel}
+                    </h3>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      <span className="inline-flex items-center rounded-[var(--radius-pill)] bg-[rgba(248,245,239,0.8)] px-3 py-1.5 text-sm font-medium text-[var(--color-ink-soft)]">
+                        {formatCompactNumber(space.threadCount)} hilos
+                      </span>
+                      <span className="inline-flex items-center rounded-[var(--radius-pill)] bg-[rgba(248,245,239,0.8)] px-3 py-1.5 text-sm font-medium text-[var(--color-ink-soft)]">
+                        {space.categoryCount} categorias
+                      </span>
                     </div>
                   </div>
 
-                  <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-[9rem_9rem_auto] xl:items-center">
-                    <div className="text-right">
-                      <p className="text-3xl font-semibold tracking-[-0.04em] text-[var(--color-ink)]">
-                        {formatCompactNumber(space.threadCount)}
-                      </p>
-                      <p className="text-sm uppercase tracking-[0.14em] text-[var(--color-muted)]">
-                        Hilos
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-3xl font-semibold tracking-[-0.04em] text-[var(--color-ink)]">
-                        {space.categoryCount}
-                      </p>
-                      <p className="text-sm uppercase tracking-[0.14em] text-[var(--color-muted)]">
-                        Categorías
-                      </p>
-                    </div>
-                    <div className="flex flex-wrap justify-end gap-3">
-                      <form action={restoreForumSpaceAction}>
-                        <input name="courseSlug" type="hidden" value={course.slug} />
-                        <input name="forumSpaceId" type="hidden" value={space.id} />
-                        <input
-                          name="nextPath"
-                          type="hidden"
-                          value={`/mis-cursos/${course.slug}/foro/historico`}
-                        />
-                        <ConfirmSubmitButton
-                          message="La edición seleccionada pasará a ser la activa. ¿Quieres continuar?"
-                          pendingLabel="Restaurando..."
-                          variant="ghost"
-                        >
-                          <RotateCcw className="mr-2 h-4 w-4" />
-                          Restaurar
-                        </ConfirmSubmitButton>
-                      </form>
+                  <div className="flex flex-wrap gap-3 lg:justify-end">
+                    <form action={restoreForumSpaceAction}>
+                      <input name="courseSlug" type="hidden" value={course.slug} />
+                      <input name="forumSpaceId" type="hidden" value={space.id} />
+                      <input
+                        name="nextPath"
+                        type="hidden"
+                        value={`/mis-cursos/${course.slug}/foro/historico`}
+                      />
+                      <ConfirmSubmitButton
+                        message="La edicion seleccionada pasara a ser la activa. Quieres continuar?"
+                        pendingLabel="Restaurando..."
+                        variant="subtle"
+                      >
+                        <RotateCcw className="mr-2 h-4 w-4" />
+                        Restaurar
+                      </ConfirmSubmitButton>
+                    </form>
 
-                      <form action={deleteForumSpaceAction}>
-                        <input name="courseSlug" type="hidden" value={course.slug} />
-                        <input name="forumSpaceId" type="hidden" value={space.id} />
-                        <input
-                          name="nextPath"
-                          type="hidden"
-                          value={`/mis-cursos/${course.slug}/foro/historico`}
-                        />
-                        <ConfirmSubmitButton
-                          message="La edición archivada se retirará del histórico. ¿Quieres continuar?"
-                          pendingLabel="Eliminando..."
-                          variant="secondary"
-                        >
-                          Eliminar
-                        </ConfirmSubmitButton>
-                      </form>
-                    </div>
+                    <form action={deleteForumSpaceAction}>
+                      <input name="courseSlug" type="hidden" value={course.slug} />
+                      <input name="forumSpaceId" type="hidden" value={space.id} />
+                      <input
+                        name="nextPath"
+                        type="hidden"
+                        value={`/mis-cursos/${course.slug}/foro/historico`}
+                      />
+                      <ConfirmSubmitButton
+                        message="La edicion archivada se retirara del historico. Quieres continuar?"
+                        pendingLabel="Eliminando..."
+                        variant="neutral"
+                      >
+                        Eliminar
+                      </ConfirmSubmitButton>
+                    </form>
                   </div>
                 </div>
-              </div>
-            ))
-          ) : (
-            <div className="rounded-[28px] border border-dashed border-[rgba(12,113,195,0.18)] bg-white px-6 py-8 text-[var(--color-muted)]">
-              Todavía no hay ediciones archivadas.
-            </div>
-          )}
-        </div>
-      </section>
+              </article>
+            ))}
+          </div>
+        ) : (
+          <EmptyState
+            align="center"
+            className="m-5 sm:m-6"
+            description="Cuando cierres una edicion del foro aparecera aqui para restaurarla o retirarla mas adelante."
+            title="Todavia no hay ediciones archivadas"
+            tone="subtle"
+          />
+        )}
+      </SurfaceCard>
 
-      <section className="space-y-5">
-        <div className="flex items-center gap-3">
-          <Archive className="h-5 w-5 text-[var(--color-primary)]" />
-          <h2 className="text-4xl font-semibold tracking-[-0.04em] text-[var(--color-ink)]">
-            Ediciones eliminadas
-          </h2>
-        </div>
+      <SurfaceCard className="border-[rgba(22,60,88,0.08)] bg-white/90" padding="md">
+        <SectionHeader
+          description="Rastro de espacios que ya no forman parte del historico operativo."
+          eyebrow={<Badge tone="outline">Solo consulta</Badge>}
+          size="md"
+          title="Ediciones eliminadas"
+        />
 
-        <div className="space-y-4">
-          {history.deletedSpaces.length ? (
-            history.deletedSpaces.map((space) => (
-              <div
-                className="rounded-[28px] border border-dashed border-[rgba(12,113,195,0.18)] bg-white px-6 py-5"
+        {history.deletedSpaces.length ? (
+          <div className="mt-4 space-y-3">
+            {history.deletedSpaces.map((space) => (
+              <ListRow
+                description={`Eliminada el ${space.deletedAt ? formatDate(space.deletedAt) : "sin fecha"}.`}
+                emphasis="muted"
                 key={space.id}
-              >
-                <h3 className="text-2xl font-semibold tracking-[-0.04em] text-[var(--color-ink)]">
-                  {space.editionLabel}
-                </h3>
-                <p className="mt-2 text-[var(--color-muted)]">
-                  Eliminada el {space.deletedAt ? formatDate(space.deletedAt) : "sin fecha"}
-                </p>
-              </div>
-            ))
-          ) : (
-            <div className="rounded-[28px] border border-dashed border-[rgba(12,113,195,0.18)] bg-white px-6 py-8 text-[var(--color-muted)]">
-              No hay ediciones eliminadas.
-            </div>
-          )}
-        </div>
-      </section>
+                leading={
+                  <div className="grid h-10 w-10 place-items-center rounded-[var(--radius-md)] bg-[rgba(248,245,239,0.82)] text-[var(--color-muted)]">
+                    <Archive className="h-4 w-4" />
+                  </div>
+                }
+                title={space.editionLabel}
+              />
+            ))}
+          </div>
+        ) : (
+          <EmptyState
+            className="mt-4 px-5 py-6"
+            description="No hay ediciones retiradas del historico en este momento."
+            title="No hay ediciones eliminadas"
+            tone="subtle"
+          />
+        )}
+      </SurfaceCard>
     </div>
   );
 }
