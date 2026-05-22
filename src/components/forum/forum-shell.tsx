@@ -1,32 +1,54 @@
-"use client";
-
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { usePathname, useSearchParams } from "next/navigation";
 import {
-  Archive,
   Bell,
   BookOpen,
   CircleHelp,
   FolderKanban,
   GraduationCap,
   MessageSquareText,
-  Search,
-  ShieldCheck
+  Search
 } from "lucide-react";
 import {
   markAllForumNotificationsReadAction,
   markForumNotificationReadAction
 } from "@/actions/forum";
+import {
+  ForumShellCategoryDesktopNav,
+  ForumShellDesktopModerationLinks,
+  ForumShellMobileCategoryList
+} from "@/components/forum/forum-shell-active-nav";
+import {
+  ForumShellNewThreadButton,
+  ForumShellNextPathInput,
+  ForumShellSearchInput
+} from "@/components/forum/forum-shell-url-state";
 import { Badge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button";
 import { SurfaceCard } from "@/components/ui/surface-card";
 import { buildCourseResourcesHref, buildCourseTrackingHref } from "@/lib/course-navigation";
-import { getForumCategoryPreset } from "@/lib/forum-presentation";
 import { siteConfig } from "@/lib/site";
 import { cn } from "@/lib/utils";
 
-type ForumShellProps = {
+export type ForumShellCategory = {
+  id: string;
+  slug: string;
+  title: string;
+  _count: {
+    threads: number;
+  };
+};
+
+export type ForumShellNotification = {
+  id: string;
+  title: string;
+  body: string;
+  linkPath: string;
+  readAt: Date | null;
+  createdRelativeLabel?: string;
+};
+
+export type ForumShellProps = {
   course: {
     slug: string;
     title: string;
@@ -38,29 +60,13 @@ type ForumShellProps = {
   };
   roleLabel: string;
   canModerate: boolean;
-  categories: Array<{
-    id: string;
-    slug: string;
-    title: string;
-    _count: {
-      threads: number;
-    };
-  }>;
+  categories: ForumShellCategory[];
   forumNotifications: {
     unreadCount: number;
-    notifications: Array<{
-      id: string;
-      title: string;
-      body: string;
-      linkPath: string;
-      readAt: Date | null;
-      createdRelativeLabel?: string;
-    }>;
+    notifications: ForumShellNotification[];
   };
   children: ReactNode;
 };
-
-const reservedSections = new Set(["nuevo", "moderacion", "historico"]);
 
 export function ForumShell({
   course,
@@ -71,20 +77,7 @@ export function ForumShell({
   forumNotifications,
   children
 }: ForumShellProps) {
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
   const forumRootPath = `/mis-cursos/${course.slug}/foro`;
-  const currentQuery = searchParams.get("q") ?? "";
-  const relativePath = pathname.startsWith(forumRootPath)
-    ? pathname.slice(forumRootPath.length)
-    : "";
-  const pathSegments = relativePath.split("/").filter(Boolean);
-  const currentCategorySlug =
-    pathSegments[0] && !reservedSections.has(pathSegments[0]) ? pathSegments[0] : null;
-  const newThreadHref = currentCategorySlug
-    ? `${forumRootPath}/${currentCategorySlug}/nuevo`
-    : `${forumRootPath}/nuevo`;
-  const nextPath = `${pathname}${searchParams.toString() ? `?${searchParams.toString()}` : ""}`;
   const initials = user.name
     .split(" ")
     .filter(Boolean)
@@ -149,18 +142,12 @@ export function ForumShell({
               <form className="w-full lg:max-w-[24rem]" method="get">
                 <label className="flex min-h-11 items-center gap-3 rounded-[var(--radius-pill)] border border-[rgba(22,60,88,0.1)] bg-[rgba(255,255,255,0.8)] px-4 text-[var(--color-muted)] shadow-[var(--shadow-inset-soft)] transition focus-within:border-[var(--color-primary)] focus-within:ring-2 focus-within:ring-[var(--color-primary)] focus-within:ring-offset-2 focus-within:ring-offset-[var(--color-surface-canvas)]">
                   <Search className="h-5 w-5 shrink-0" />
-                  <input
-                    className="w-full min-w-0 bg-transparent text-sm text-[var(--color-ink)] outline-none placeholder:text-[var(--color-muted)]"
-                    defaultValue={currentQuery}
-                    name="q"
-                    placeholder="Buscar en la comunidad..."
-                    type="search"
-                  />
+                  <ForumShellSearchInput />
                 </label>
               </form>
 
               <div className="flex flex-wrap items-center gap-2 lg:justify-end">
-                <ButtonLink href={newThreadHref}>Nuevo hilo</ButtonLink>
+                <ForumShellNewThreadButton courseSlug={course.slug} />
                 <ButtonLink href={`/mis-cursos/${course.slug}`} variant="secondary">
                   Volver al campus
                 </ButtonLink>
@@ -187,7 +174,7 @@ export function ForumShell({
                       </div>
                       {forumNotifications.unreadCount ? (
                         <form action={markAllForumNotificationsReadAction}>
-                          <input name="nextPath" type="hidden" value={nextPath} />
+                          <ForumShellNextPathInput />
                           <button
                             className="text-sm font-medium text-[var(--color-primary)] transition hover:text-[var(--color-primary-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-white"
                             type="submit"
@@ -233,7 +220,7 @@ export function ForumShell({
                               </Link>
                               {!notification.readAt ? (
                                 <form action={markForumNotificationReadAction}>
-                                  <input name="nextPath" type="hidden" value={nextPath} />
+                                  <ForumShellNextPathInput />
                                   <input name="notificationId" type="hidden" value={notification.id} />
                                   <button
                                     className="text-sm font-medium text-[var(--color-muted)] transition hover:text-[var(--color-ink)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-white"
@@ -314,81 +301,11 @@ export function ForumShell({
               </div>
             </SurfaceCard>
 
-            <nav className="rounded-[var(--radius-lg)] border border-[rgba(22,60,88,0.07)] bg-white/74 p-2.5 shadow-[var(--shadow-soft)]">
-              <p className="px-3 pb-1.5 text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--color-muted)]">
-                Categorías
-              </p>
-              {categories.length ? (
-                categories.map((category) => {
-                  const preset = getForumCategoryPreset(category.slug);
-                  const Icon = preset.icon;
-                  const href = `${forumRootPath}/${category.slug}`;
-                  const isActive = pathname === href || pathname.startsWith(`${href}/`);
-
-                  return (
-                    <Link
-                      className={cn(
-                        "flex items-center gap-3 rounded-[var(--radius-md)] px-3 py-2.5 text-sm font-medium transition",
-                        isActive
-                          ? "bg-[rgba(22,60,88,0.08)] text-[var(--color-primary)] shadow-[inset_0_0_0_1px_rgba(22,60,88,0.08)]"
-                          : "text-[var(--color-ink)] hover:bg-[rgba(22,60,88,0.04)]"
-                      )}
-                      href={href}
-                      key={category.id}
-                      prefetch
-                      >
-                        <div
-                          className={cn(
-                            "grid h-8 w-8 shrink-0 place-items-center rounded-xl",
-                            isActive ? "bg-white" : preset.softClass
-                          )}
-                        >
-                        <Icon className="h-4 w-4" />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate">{category.title}</p>
-                      </div>
-                      <span className="text-xs text-[var(--color-muted)]">{category._count.threads}</span>
-                    </Link>
-                  );
-                })
-              ) : (
-                <div className="ui-empty-state px-4 py-5 text-sm leading-7 text-[var(--color-muted)]">
-                  No hay categorías visibles en este curso.
-                </div>
-              )}
-            </nav>
+            <ForumShellCategoryDesktopNav categories={categories} courseSlug={course.slug} />
 
             <div className="rounded-[var(--radius-lg)] border border-[rgba(22,60,88,0.07)] bg-white/72 p-2.5 shadow-[var(--shadow-soft)]">
               <div className="space-y-1">
-                {canModerate ? (
-                  <>
-                    <Link
-                      className={cn(
-                        "flex items-center gap-3 rounded-[var(--radius-md)] px-3 py-2.5 text-sm font-medium transition",
-                        pathname.startsWith(`${forumRootPath}/moderacion`)
-                          ? "bg-[rgba(22,60,88,0.08)] text-[var(--color-primary)]"
-                          : "text-[var(--color-ink)] hover:bg-[rgba(22,60,88,0.04)]"
-                      )}
-                      href={`${forumRootPath}/moderacion`}
-                    >
-                      <ShieldCheck className="h-4 w-4" />
-                      <span>Panel de moderación</span>
-                    </Link>
-                    <Link
-                      className={cn(
-                        "flex items-center gap-3 rounded-[var(--radius-md)] px-3 py-2.5 text-sm font-medium transition",
-                        pathname.startsWith(`${forumRootPath}/historico`)
-                          ? "bg-[rgba(22,60,88,0.08)] text-[var(--color-primary)]"
-                          : "text-[var(--color-ink)] hover:bg-[rgba(22,60,88,0.04)]"
-                      )}
-                      href={`${forumRootPath}/historico`}
-                    >
-                      <Archive className="h-4 w-4" />
-                      <span>Archivo</span>
-                    </Link>
-                  </>
-                ) : null}
+                {canModerate ? <ForumShellDesktopModerationLinks courseSlug={course.slug} /> : null}
 
                 <Link
                   className="flex items-center gap-3 rounded-[var(--radius-md)] px-3 py-2.5 text-sm font-medium text-[var(--color-ink-soft)] transition hover:bg-[rgba(22,60,88,0.04)] hover:text-[var(--color-ink)]"
@@ -458,47 +375,23 @@ export function ForumShell({
                 <p className="text-sm font-semibold text-[var(--color-ink)]">Categorías</p>
                 {canModerate ? (
                   <div className="flex flex-wrap gap-3 text-sm">
-                    <Link className="font-medium text-[var(--color-primary)]" href={`${forumRootPath}/moderacion`}>
+                    <Link
+                      className="font-medium text-[var(--color-primary)]"
+                      href={`${forumRootPath}/moderacion`}
+                    >
                       Moderación
                     </Link>
-                    <Link className="font-medium text-[var(--color-primary)]" href={`${forumRootPath}/historico`}>
+                    <Link
+                      className="font-medium text-[var(--color-primary)]"
+                      href={`${forumRootPath}/historico`}
+                    >
                       Archivo
                     </Link>
                   </div>
                 ) : null}
               </div>
 
-              {categories.length ? (
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {categories.map((category) => {
-                    const preset = getForumCategoryPreset(category.slug);
-                    const Icon = preset.icon;
-                    const href = `${forumRootPath}/${category.slug}`;
-                    const isActive = pathname === href || pathname.startsWith(`${href}/`);
-
-                    return (
-                      <Link
-                        className={cn(
-                          "inline-flex max-w-full min-w-0 items-center gap-2 rounded-[var(--radius-pill)] border px-3 py-2 text-sm font-medium transition",
-                          isActive
-                            ? "border-[rgba(22,60,88,0.18)] bg-white text-[var(--color-primary)]"
-                            : "border-[rgba(22,60,88,0.1)] bg-[#faf8f4] text-[var(--color-ink)]"
-                        )}
-                        href={href}
-                        key={category.id}
-                      >
-                        <Icon className="h-4 w-4 shrink-0" />
-                        <span className="truncate">{category.title}</span>
-                        <span className="text-xs text-[var(--color-muted)]">{category._count.threads}</span>
-                      </Link>
-                    );
-                  })}
-                </div>
-              ) : (
-                <div className="ui-empty-state mt-3 px-4 py-5 text-sm text-[var(--color-muted)]">
-                  No hay categorías visibles en este curso.
-                </div>
-              )}
+              <ForumShellMobileCategoryList categories={categories} courseSlug={course.slug} />
 
               <div className="mt-4 flex flex-wrap gap-3 text-sm">
                 <Link className="font-medium text-[var(--color-primary)]" href={buildCourseResourcesHref(course.slug)}>
