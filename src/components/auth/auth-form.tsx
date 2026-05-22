@@ -2,8 +2,14 @@
 
 import Link from "next/link";
 import { useActionState } from "react";
-import { loginAction, registerAction, type AuthFormState } from "@/actions/auth";
+import {
+  loginAction,
+  registerAction,
+  type AuthFormState,
+} from "@/actions/auth";
+import { FormField } from "@/components/ui/form-field";
 import { Input } from "@/components/ui/input";
+import { StateBanner } from "@/components/ui/state-banner";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { cn } from "@/lib/utils";
 
@@ -24,73 +30,91 @@ export function AuthForm({
   className,
   submitLabel,
   pendingLabel,
-  showForgotLink = false
+  showForgotLink = false,
 }: AuthFormProps) {
   const action = mode === "login" ? loginAction : registerAction;
   const [state, formAction] = useActionState(action, initialState);
 
   return (
-    <form action={formAction} className={cn("space-y-4", className)}>
+    <form action={formAction} className={cn("flex flex-col gap-5", className)}>
       {mode === "register" ? (
-        <label className="block space-y-2">
-          <span className="text-sm font-medium text-[var(--color-ink)]">Nombre y apellidos</span>
-          <Input name="name" placeholder="Tu nombre" required />
-        </label>
+        <FormField htmlFor="auth-name" label="Nombre y apellidos" required>
+          <Input
+            id="auth-name"
+            name="name"
+            placeholder="Tu nombre completo"
+            required
+          />
+        </FormField>
       ) : null}
 
-      <label className="block space-y-2">
-        <span className="text-sm font-medium text-[var(--color-ink)]">Correo electrónico</span>
-        <Input autoComplete="email" name="email" placeholder="tu@email.com" required type="email" />
-      </label>
+      <FormField htmlFor="auth-email" label="Correo electronico" required>
+        <Input
+          autoComplete="email"
+          id="auth-email"
+          name="email"
+          placeholder="tu@email.com"
+          required
+          type="email"
+        />
+      </FormField>
 
-      <label className="block space-y-2">
-        <div className="flex items-center justify-between gap-3">
-          <span className="text-sm font-medium text-[var(--color-ink)]">Contraseña</span>
-          {mode === "login" && showForgotLink ? (
-            <Link
-              className="text-sm font-medium text-[var(--color-primary)] underline-offset-4 hover:underline"
-              href="/recuperar-contrasena"
-            >
-              ¿Has olvidado tu contraseña?
-            </Link>
-          ) : null}
-        </div>
+      <FormField htmlFor="auth-password" label="Contrasena" required>
         <Input
           autoComplete={mode === "login" ? "current-password" : "new-password"}
+          id="auth-password"
           name="password"
-          placeholder="Introduce tu contraseña"
+          placeholder="Introduce tu contrasena"
           required
           type="password"
         />
-      </label>
+      </FormField>
+
+      {mode === "login" && showForgotLink ? (
+        <div className="-mt-2 flex justify-end">
+          <Link
+            className="text-sm font-medium text-[var(--color-primary)] underline-offset-4 hover:underline"
+            href="/recuperar-contrasena"
+          >
+            Has olvidado tu contrasena
+          </Link>
+        </div>
+      ) : null}
 
       {mode === "register" ? (
-        <label className="block space-y-2">
-          <span className="text-sm font-medium text-[var(--color-ink)]">Confirmar contraseña</span>
+        <FormField
+          htmlFor="auth-confirm-password"
+          label="Confirmar contrasena"
+          required
+        >
           <Input
             autoComplete="new-password"
+            id="auth-confirm-password"
             name="confirmPassword"
-            placeholder="Repite tu contraseña"
+            placeholder="Repite tu contrasena"
             required
             type="password"
           />
-        </label>
+        </FormField>
       ) : null}
 
       <input name="next" type="hidden" value={next || ""} />
 
       {state.error ? (
-        <p
+        <StateBanner
           aria-live="polite"
-          className="rounded-2xl border border-[#efb3a6] bg-[#fff1ec] px-4 py-3 text-sm text-[#9b4128]"
+          description={state.error}
           role="status"
-        >
-          {state.error}
-        </p>
+          tone="danger"
+        />
       ) : null}
 
-      <SubmitButton className="w-full" pendingLabel={pendingLabel ?? "Validando..."}>
-        {submitLabel ?? (mode === "login" ? "Acceder" : "Crear cuenta")}
+      <SubmitButton
+        className="w-full"
+        pendingLabel={pendingLabel ?? "Validando..."}
+      >
+        {submitLabel ??
+          (mode === "login" ? "Acceder al panel" : "Crear cuenta")}
       </SubmitButton>
     </form>
   );

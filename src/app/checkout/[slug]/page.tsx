@@ -1,9 +1,13 @@
 import type { Metadata } from "next";
-import { CheckCircle2, Lock, Shield } from "lucide-react";
+import { CheckCircle2, Lock, Shield, UserRoundCheck } from "lucide-react";
 import { notFound, redirect } from "next/navigation";
 import { CourseArtwork } from "@/components/course-artwork";
 import { PurchaseForm } from "@/components/purchase-form";
+import { Badge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button";
+import { SectionHeader } from "@/components/ui/section-header";
+import { StateBanner } from "@/components/ui/state-banner";
+import { SurfaceCard } from "@/components/ui/surface-card";
 import { getCurrentUser } from "@/lib/auth";
 import { getCatalogCourseBySlug } from "@/lib/course-catalog";
 import { getPurchaseRuntimeMode } from "@/lib/purchase-runtime";
@@ -15,7 +19,7 @@ type CheckoutPageProps = {
 };
 
 export async function generateMetadata({
-  params
+  params,
 }: CheckoutPageProps): Promise<Metadata> {
   const { slug } = await params;
   const course = await getCatalogCourseBySlug(slug);
@@ -24,8 +28,8 @@ export async function generateMetadata({
     title: course ? `Inscripcion | ${course.title}` : "Inscripcion",
     robots: {
       index: false,
-      follow: false
-    }
+      follow: false,
+    },
   };
 }
 
@@ -50,184 +54,240 @@ export default async function CheckoutPage({ params }: CheckoutPageProps) {
   const totalAmount = course.priceInCents + taxAmount;
 
   return (
-    <div className="min-h-screen bg-[var(--color-background)]">
-      <header className="border-b border-[rgba(12,113,195,0.14)] bg-white">
-        <div className="site-container flex items-center justify-between py-4">
-          <p className="text-2xl font-bold tracking-[-0.04em] text-[var(--color-primary)]">
-            Autismo Cordoba
-          </p>
-          <div className="flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.14em] text-[var(--color-muted)]">
-            <Lock className="h-4 w-4" />
+    <main className="campus-calm-bg min-h-[100dvh]">
+      <header className="border-b border-[var(--color-border-subtle)] bg-[color:var(--color-surface-elevated)]">
+        <div className="site-container flex min-h-[var(--topbar-height)] items-center justify-between gap-4">
+          <div>
+            <p className="font-premium text-heading-lg font-semibold text-[var(--color-text)]">
+              Autismo Cordoba
+            </p>
+            <p className="text-label-sm text-[var(--color-text-muted)]">
+              Pago seguro institucional
+            </p>
+          </div>
+          <Badge
+            tone={isStripeReady ? "brand" : isDemoMode ? "warning" : "danger"}
+          >
             {isStripeReady
               ? "Pago real con Stripe"
               : isDemoMode
                 ? "Modo demo local"
                 : "Checkout desactivado"}
-          </div>
+          </Badge>
         </div>
       </header>
 
-      <div className="site-container pb-16 pt-14">
-        <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_430px]">
-          <section>
-            <h1 className="text-[4.2rem] font-semibold leading-[0.95] tracking-[-0.08em] text-[var(--color-ink)]">
-              Finalizar inscripcion
-            </h1>
-            <p className="mt-4 max-w-3xl text-[1.16rem] leading-9 text-[var(--color-ink)]/84">
-              {isStripeReady
-                ? "Vas a pasar a una pasarela segura para completar el pago y activar el curso en tu cuenta."
-                : isDemoMode
-                  ? "Estas en un flujo de validacion. El boton final no cobra: activa acceso local de prueba para revisar el producto end to end."
-                  : "La pasarela de pago no esta disponible en este entorno, por lo que no se puede completar la inscripcion automatica."}
-            </p>
-
-            <div
-              className={`mt-6 rounded-2xl px-5 py-4 text-sm leading-7 ${
+      <div className="site-container py-8 sm:py-10 lg:py-12">
+        <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_24rem] xl:grid-cols-[minmax(0,1fr)_26rem]">
+          <section className="flex flex-col gap-6">
+            <h1 className="sr-only">Finalizar inscripcion</h1>
+            <SectionHeader
+              description={
                 isStripeReady
-                  ? "border border-[rgba(12,113,195,0.16)] bg-white text-[var(--color-ink)]"
-                  : "border border-[rgba(255,182,6,0.4)] bg-[var(--color-accent-soft)] text-[var(--color-ink)]"
-              }`}
-            >
-              {isStripeReady
-                ? "El pago se procesa fuera de la app mediante Stripe. El acceso se concede automaticamente cuando la compra queda confirmada por webhook."
-                : isDemoMode
-                  ? "Stripe no esta configurado en este entorno. La app dejara constancia de una activacion demo y te llevara al campus sin cobro real."
-                  : "Stripe no esta configurado en este entorno y la inscripcion automatica queda bloqueada hasta habilitar una pasarela real."}
-            </div>
+                  ? "Vas a pasar a una pasarela segura para completar el pago y activar el curso en tu cuenta."
+                  : isDemoMode
+                    ? "Estas en un flujo de validacion. El boton final no cobra: activa acceso local de prueba para revisar el producto end to end."
+                    : "La pasarela de pago no esta disponible en este entorno, por lo que no se puede completar la inscripcion automatica."
+              }
+              eyebrow="Checkout institucional"
+              title="Finalizar inscripcion"
+            />
+
+            <StateBanner
+              description={
+                isStripeReady
+                  ? "El pago se procesa fuera de la app mediante Stripe. El acceso se concede automaticamente cuando la compra queda confirmada por webhook."
+                  : isDemoMode
+                    ? "Stripe no esta configurado en este entorno. La app registrara una activacion demo y te llevara al flujo de exito sin cobro real."
+                    : "Stripe no esta configurado en este entorno y la inscripcion automatica queda bloqueada hasta habilitar una pasarela real."
+              }
+              icon={<Lock className="size-4" strokeWidth={2} />}
+              title={
+                isStripeReady
+                  ? "Procesamiento seguro"
+                  : isDemoMode
+                    ? "Validacion local"
+                    : "Entorno no operativo"
+              }
+              tone={isStripeReady ? "info" : isDemoMode ? "warning" : "danger"}
+            />
 
             {course.activeEdition ? (
-              <div className="mt-6 rounded-2xl border border-[rgba(12,113,195,0.16)] bg-white px-5 py-4 text-sm leading-7 text-[var(--color-ink)]">
-                La matricula se asociara a <strong>{course.activeEdition.label}</strong>. Si la
-                edicion termina, el acceso se mantendra hasta la fecha configurada para consulta.
-              </div>
+              <SurfaceCard padding="md" variant="muted">
+                <p className="text-sm leading-7 text-[var(--color-text)]">
+                  La matricula se asociara a{" "}
+                  <strong>{course.activeEdition.label}</strong>. Si la edicion
+                  termina, el acceso se mantendra hasta la fecha configurada
+                  para consulta.
+                </p>
+              </SurfaceCard>
             ) : null}
 
-            <div className="mt-10 grid gap-5 md:grid-cols-3">
-              <div className="rounded-2xl border border-[var(--color-border)] bg-white p-5">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-muted)]">
+            <div className="grid gap-4 md:grid-cols-3">
+              <SurfaceCard padding="md">
+                <p className="text-meta-xs font-semibold text-[var(--color-primary)]">
                   Paso 1
                 </p>
-                <p className="mt-3 text-lg font-semibold text-[var(--color-ink)]">Cuenta</p>
-                <p className="mt-2 text-sm leading-7 text-[var(--color-muted)]">
-                  El curso se vincula a tu usuario para mantener acceso, notificaciones y auditoria.
-                </p>
-              </div>
-              <div className="rounded-2xl border border-[var(--color-border)] bg-white p-5">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-muted)]">
-                  Paso 2
-                </p>
-                <p className="mt-3 text-lg font-semibold text-[var(--color-ink)]">
-                  {isStripeReady
-                    ? "Pago seguro"
-                    : isDemoMode
-                      ? "Activacion demo"
-                      : "Pago no disponible"}
-                </p>
-                <p className="mt-2 text-sm leading-7 text-[var(--color-muted)]">
-                  {isStripeReady
-                    ? "Puedes introducir un cupon y el importe final se genera en servidor."
-                    : isDemoMode
-                      ? "No se solicitan datos de pago porque no existe cobro real en este entorno."
-                      : "No se inicia ningun cobro ni activacion automatica mientras no haya pasarela configurada."}
-                </p>
-              </div>
-              <div className="rounded-2xl border border-[var(--color-border)] bg-white p-5">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-muted)]">
-                  Paso 3
-                </p>
-                <p className="mt-3 text-lg font-semibold text-[var(--color-ink)]">Campus</p>
-                <p className="mt-2 text-sm leading-7 text-[var(--color-muted)]">
-                  Acceso al curso, materiales y foro privado segun la edicion asociada.
-                </p>
-              </div>
-            </div>
-
-            {!user ? (
-              <div className="mt-10 rounded-2xl border border-[var(--color-border)] bg-white p-8">
-                <h2 className="text-[2rem] font-semibold tracking-[-0.05em] text-[var(--color-ink)]">
-                  Antes de continuar, identifica tu cuenta
-                </h2>
-                <p className="mt-4 text-[1.04rem] leading-8 text-[var(--color-ink)]/84">
-                  Necesitamos un usuario para vincular la compra, gestionar tu acceso y dejar
-                  trazabilidad de la matricula en el campus.
-                </p>
-                <div className="mt-8 space-y-3">
-                  <ButtonLink className="w-full" href={`/registro?next=/checkout/${course.slug}`}>
-                    Crear cuenta y continuar
-                  </ButtonLink>
-                  <ButtonLink
-                    className="w-full"
-                    href={`/acceder?next=/checkout/${course.slug}`}
-                    variant="secondary"
-                  >
-                    Ya tengo cuenta
-                  </ButtonLink>
-                </div>
-              </div>
-            ) : (
-              <div className="mt-10 rounded-2xl border border-[var(--color-border)] bg-white p-8">
-                <div className="flex items-start gap-4">
-                  <div className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-[var(--color-surface)] text-[var(--color-primary)]">
-                    <Shield className="h-5 w-5" />
-                  </div>
+                <div className="mt-4 flex items-start gap-3">
+                  <UserRoundCheck
+                    className="mt-0.5 size-4 shrink-0 text-[var(--color-primary)]"
+                    strokeWidth={2}
+                  />
                   <div>
-                    <h2 className="text-[2rem] font-semibold tracking-[-0.05em] text-[var(--color-ink)]">
-                      Confirmacion del proceso
-                    </h2>
-                    <p className="mt-3 text-[1.04rem] leading-8 text-[var(--color-ink)]/84">
-                      {isStripeReady
-                        ? "Al pulsar el boton final saldras de esta pantalla y Stripe gestionara el pago."
-                        : isDemoMode
-                          ? "Al pulsar el boton final la app registrara una activacion local y te enviara al flujo de exito demo."
-                          : "El boton final mostrara un bloqueo controlado hasta que este entorno disponga de una pasarela de pago real."}
+                    <p className="font-premium text-heading-md font-semibold text-[var(--color-text)]">
+                      Cuenta
+                    </p>
+                    <p className="mt-2 text-sm leading-7 text-[var(--color-text-muted)]">
+                      La compra se vincula a tu usuario para mantener acceso,
+                      progreso y trazabilidad.
                     </p>
                   </div>
                 </div>
-              </div>
+              </SurfaceCard>
+
+              <SurfaceCard padding="md">
+                <p className="text-meta-xs font-semibold text-[var(--color-primary)]">
+                  Paso 2
+                </p>
+                <div className="mt-4 flex items-start gap-3">
+                  <Shield
+                    className="mt-0.5 size-4 shrink-0 text-[var(--color-primary)]"
+                    strokeWidth={2}
+                  />
+                  <div>
+                    <p className="font-premium text-heading-md font-semibold text-[var(--color-text)]">
+                      {isStripeReady
+                        ? "Pago seguro"
+                        : isDemoMode
+                          ? "Activacion demo"
+                          : "Pago no disponible"}
+                    </p>
+                    <p className="mt-2 text-sm leading-7 text-[var(--color-text-muted)]">
+                      {isStripeReady
+                        ? "Puedes introducir un codigo promocional y el importe final se calculara en servidor."
+                        : isDemoMode
+                          ? "No se solicitan datos de pago porque no existe cobro real en este entorno."
+                          : "No se inicia ningun cobro ni activacion automatica mientras no haya pasarela configurada."}
+                    </p>
+                  </div>
+                </div>
+              </SurfaceCard>
+
+              <SurfaceCard padding="md">
+                <p className="text-meta-xs font-semibold text-[var(--color-primary)]">
+                  Paso 3
+                </p>
+                <div className="mt-4 flex items-start gap-3">
+                  <CheckCircle2
+                    className="mt-0.5 size-4 shrink-0 text-[var(--color-primary)]"
+                    strokeWidth={2}
+                  />
+                  <div>
+                    <p className="font-premium text-heading-md font-semibold text-[var(--color-text)]">
+                      Campus
+                    </p>
+                    <p className="mt-2 text-sm leading-7 text-[var(--color-text-muted)]">
+                      Acceso al curso, materiales y foro privado segun la
+                      edicion asociada.
+                    </p>
+                  </div>
+                </div>
+              </SurfaceCard>
+            </div>
+
+            {!user ? (
+              <SurfaceCard
+                actions={
+                  <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
+                    <ButtonLink
+                      href={`/registro?next=/checkout/${course.slug}`}
+                    >
+                      Crear cuenta y continuar
+                    </ButtonLink>
+                    <ButtonLink
+                      href={`/acceder?next=/checkout/${course.slug}`}
+                      variant="neutral"
+                    >
+                      Ya tengo cuenta
+                    </ButtonLink>
+                  </div>
+                }
+                description="Necesitamos un usuario para vincular la compra, gestionar tu acceso y dejar trazabilidad de la matricula en el campus."
+                title="Antes de continuar, identifica tu cuenta"
+              >
+                <div />
+              </SurfaceCard>
+            ) : (
+              <SurfaceCard
+                description={
+                  isStripeReady
+                    ? "Al pulsar el boton final saldras de esta pantalla y Stripe gestionara el pago."
+                    : isDemoMode
+                      ? "Al pulsar el boton final la app registrara una activacion local y te llevara al flujo de exito demo."
+                      : "El boton final mostrara un bloqueo controlado hasta que este entorno disponga de una pasarela de pago real."
+                }
+                title="Confirmacion del proceso"
+              >
+                <div className="flex items-start gap-4">
+                  <div className="grid size-12 shrink-0 place-items-center rounded-[var(--radius-pill)] bg-[var(--color-primary-soft)] text-[var(--color-primary)]">
+                    <Shield className="size-5" strokeWidth={2} />
+                  </div>
+                  <p className="text-sm leading-7 text-[var(--color-text-muted)]">
+                    El checkout mantiene la logica actual. Esta capa solo
+                    reorganiza la experiencia para que el proceso sea mas
+                    legible y mas calmado.
+                  </p>
+                </div>
+              </SurfaceCard>
             )}
           </section>
 
-          <aside className="lg:pt-12">
-            <div className="rounded-2xl border border-[var(--color-border)] bg-white p-8 shadow-[0_18px_40px_rgba(34,34,33,0.06)]">
-              <h2 className="text-[2.4rem] font-semibold tracking-[-0.05em] text-[var(--color-ink)]">
-                Resumen del pedido
-              </h2>
-
-              <div className="mt-8 flex items-start gap-5">
+          <aside className="lg:sticky lg:top-6 lg:self-start">
+            <SurfaceCard
+              description="Resumen economico y activacion vinculada a tu cuenta."
+              padding="lg"
+              title="Resumen del pedido"
+            >
+              <div className="flex items-start gap-4">
                 <CourseArtwork
-                  className="h-20 w-20 shrink-0 rounded-xl"
+                  className="size-20 shrink-0 rounded-[var(--radius-md)]"
                   course={course}
                   variant="thumb"
                 />
                 <div className="min-w-0 flex-1">
-                  <div className="flex gap-4">
-                    <div className="min-w-0 flex-1">
-                      <p className="text-[1.2rem] font-medium leading-6 text-[var(--color-ink)]">
-                        {course.title}
-                      </p>
-                      <p className="mt-2 text-sm text-[var(--color-muted)]">{course.level}</p>
-                    </div>
-                    <p className="text-[1.2rem] font-medium text-[var(--color-ink)]">
-                      {formatPrice(course.priceInCents)}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-6 rounded-2xl bg-[var(--color-surface)] p-4 text-sm leading-7 text-[var(--color-muted)]">
-                <div className="flex items-start gap-3">
-                  <CheckCircle2 className="mt-1 h-4 w-4 shrink-0 text-[var(--color-teal)]" />
-                  <p>
-                    {isStripeReady
-                      ? "Compra real con confirmacion automatica y acceso privado por cuenta."
-                      : isDemoMode
-                        ? "Activacion demo local sin procesamiento de pago ni solicitud de tarjeta."
-                        : "Compra bloqueada hasta disponer de un proveedor de pago configurado."}
+                  <p className="font-premium text-heading-md font-semibold text-[var(--color-text)]">
+                    {course.title}
+                  </p>
+                  <p className="mt-2 text-sm text-[var(--color-text-muted)]">
+                    {course.level}
                   </p>
                 </div>
               </div>
 
-              <div className="thin-divider mt-8 pt-8 text-[1.1rem] text-[var(--color-ink)]">
+              <div className="mt-5">
+                <CourseArtwork
+                  className="hidden h-44 w-full rounded-[var(--radius-lg)] lg:block"
+                  course={course}
+                  variant="hero"
+                />
+              </div>
+
+              <StateBanner
+                className="mt-5"
+                description={
+                  isStripeReady
+                    ? "Compra real con confirmacion automatica y acceso privado por cuenta."
+                    : isDemoMode
+                      ? "Activacion demo local sin procesamiento de pago ni solicitud de tarjeta."
+                      : "Compra bloqueada hasta disponer de un proveedor de pago configurado."
+                }
+                title="Estado del entorno"
+                tone={
+                  isStripeReady ? "info" : isDemoMode ? "warning" : "danger"
+                }
+              />
+
+              <div className="mt-6 border-t border-[var(--color-border-subtle)] pt-6 text-sm text-[var(--color-text)]">
                 <div className="flex items-center justify-between">
                   <span>Subtotal</span>
                   <span>{formatPrice(course.priceInCents)}</span>
@@ -238,21 +298,22 @@ export default async function CheckoutPage({ params }: CheckoutPageProps) {
                 </div>
               </div>
 
-              <div className="thin-divider mt-8 flex items-end justify-between pt-8">
-                <span className="text-[1.8rem] font-semibold tracking-[-0.05em] text-[var(--color-primary)]">
-                  Total base
-                </span>
-                <span className="text-[3rem] font-semibold tracking-[-0.06em] text-[var(--color-primary)]">
-                  {formatPrice(totalAmount)}
-                </span>
+              <div className="mt-6 border-t border-[var(--color-border-subtle)] pt-6">
+                <div className="flex items-end justify-between gap-4">
+                  <span className="font-premium text-heading-lg font-semibold text-[var(--color-text)]">
+                    Total
+                  </span>
+                  <span className="font-premium text-display-md font-semibold text-[var(--color-primary)]">
+                    {formatPrice(totalAmount)}
+                  </span>
+                </div>
+                <p className="mt-3 text-sm leading-7 text-[var(--color-text-muted)]">
+                  Si introduces un codigo promocional, el precio final se
+                  recalculara en servidor antes de iniciar el pago.
+                </p>
               </div>
 
-              <p className="mt-3 text-sm leading-7 text-[var(--color-muted)]">
-                Si introduces un codigo promocional, el precio final se recalculara en servidor
-                antes de iniciar el pago.
-              </p>
-
-              <div className="mt-8">
+              <div className="mt-6">
                 {user ? (
                   <PurchaseForm
                     buttonLabel={
@@ -273,23 +334,18 @@ export default async function CheckoutPage({ params }: CheckoutPageProps) {
                     }
                   />
                 ) : (
-                  <ButtonLink className="w-full" href={`/registro?next=/checkout/${course.slug}`}>
+                  <ButtonLink
+                    className="w-full"
+                    href={`/registro?next=/checkout/${course.slug}`}
+                  >
                     Iniciar proceso
                   </ButtonLink>
                 )}
               </div>
-
-              <p className="mt-6 text-center text-sm leading-6 text-[var(--color-muted)]">
-                {isStripeReady
-                  ? "El cobro se realiza fuera de esta pagina, en la pasarela segura de Stripe."
-                  : isDemoMode
-                    ? "Este entorno esta configurado para validar el flujo sin cobro real."
-                    : "Este entorno no permite cobro ni activacion automatica hasta configurar Stripe."}
-              </p>
-            </div>
+            </SurfaceCard>
           </aside>
         </div>
       </div>
-    </div>
+    </main>
   );
 }

@@ -3,45 +3,59 @@
 import { useActionState } from "react";
 import {
   requestPasswordResetAction,
-  type AccountSecurityFormState
+  type AccountSecurityFormState,
 } from "@/actions/account-security";
+import { FormField } from "@/components/ui/form-field";
 import { Input } from "@/components/ui/input";
+import { StateBanner } from "@/components/ui/state-banner";
 import { SubmitButton } from "@/components/ui/submit-button";
 
 const initialState: AccountSecurityFormState = {};
 
 export function PasswordResetRequestForm() {
-  const [state, formAction] = useActionState(requestPasswordResetAction, initialState);
+  const [state, formAction] = useActionState(
+    requestPasswordResetAction,
+    initialState,
+  );
 
   return (
-    <form action={formAction} className="space-y-4">
-      <label className="block space-y-2">
-        <span className="text-sm font-medium text-[var(--color-ink)]">Correo electrónico</span>
-        <Input autoComplete="email" name="email" placeholder="tu@email.com" required type="email" />
-      </label>
+    <form action={formAction} className="flex flex-col gap-5">
+      <FormField
+        description="Usa el correo con el que accedes habitualmente al campus."
+        htmlFor="reset-request-email"
+        label="Correo electronico"
+        required
+      >
+        <Input
+          autoComplete="email"
+          id="reset-request-email"
+          name="email"
+          placeholder="tu@email.com"
+          required
+          type="email"
+        />
+      </FormField>
 
       {state.error ? (
-        <p
+        <StateBanner
           aria-live="polite"
-          className="rounded-2xl border border-[#efb3a6] bg-[#fff1ec] px-4 py-3 text-sm text-[#9b4128]"
+          description={state.error}
           role="status"
-        >
-          {state.error}
-        </p>
+          tone="danger"
+        />
       ) : null}
 
       {state.success ? (
-        <p
+        <StateBanner
           aria-live="polite"
-          className="rounded-2xl border border-[rgba(12,113,195,0.14)] bg-white px-4 py-3 text-sm text-[var(--color-ink)]"
+          description={state.success}
           role="status"
-        >
-          {state.success}
-        </p>
+          tone="success"
+        />
       ) : null}
 
       <SubmitButton className="w-full" pendingLabel="Enviando instrucciones...">
-        Enviar enlace de recuperación
+        Enviar enlace de recuperacion
       </SubmitButton>
     </form>
   );

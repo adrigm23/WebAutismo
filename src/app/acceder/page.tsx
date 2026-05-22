@@ -10,8 +10,8 @@ export const metadata: Metadata = {
   title: "Acceder",
   robots: {
     index: false,
-    follow: false
-  }
+    follow: false,
+  },
 };
 
 type LoginPageProps = {
@@ -35,14 +35,13 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
 
   return (
     <SplitAuthPanel
-      emphasis="login"
       next={safeNext}
       showDemoNotice={isDemoAuthEnabled()}
       statusMessage={
         showVerificationMessage
-          ? "Tu cuenta se ha creado. Revisa tu correo y verifica tu dirección antes de acceder."
+          ? "Tu cuenta se ha creado. Revisa tu correo y verifica tu direccion antes de acceder."
           : showResetMessage
-            ? "Tu contraseña se ha actualizado. Ya puedes iniciar sesión con la nueva clave."
+            ? "Tu contrasena se ha actualizado. Ya puedes iniciar sesion con la nueva clave."
             : null
       }
     />
