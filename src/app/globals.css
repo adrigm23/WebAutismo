@@ -1,9 +1,45 @@
 @import "tailwindcss";
 
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
 :root {
-  --font-sans: var(--font-manrope), "Segoe UI", -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
-  --font-sans-premium: var(--font-plus-jakarta), "Segoe UI", -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
-  --font-mono-data: "JetBrains Mono", "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  --font-sans:
+    var(--font-manrope), "Segoe UI", -apple-system, BlinkMacSystemFont,
+    "Helvetica Neue", sans-serif;
+  --font-sans-premium:
+    var(--font-plus-jakarta), "Segoe UI", -apple-system, BlinkMacSystemFont,
+    "Helvetica Neue", sans-serif;
+  --font-mono-data:
+    "JetBrains Mono", "SFMono-Regular", Consolas, "Liberation Mono", Menlo,
+    monospace;
   --color-bg-app: #f6f3ee;
   --color-bg-subtle: #fbf8f4;
   --color-surface: #f3eee7;
@@ -26,8 +62,14 @@
   --color-danger: #9f452e;
   --color-danger-soft: #fceee9;
   --color-background: var(--color-bg-app);
+  --color-background-subtle: var(--color-bg-subtle);
   --color-surface-strong: var(--color-surface-elevated);
+  --color-surface-soft: var(--color-surface-muted);
   --color-muted: var(--color-ink-muted);
+  --color-text: var(--color-ink);
+  --color-text-muted: var(--color-ink-soft);
+  --color-text-subtle: var(--color-ink-muted);
+  --color-text-inverse: var(--color-surface-elevated);
   --color-border: #d3d9e0;
   --color-primary: var(--color-brand);
   --color-primary-strong: var(--color-brand-strong);
@@ -40,30 +82,66 @@
   --color-gold: var(--color-accent);
   --surface-border-subtle: var(--color-border-subtle);
   --focus-ring: rgba(22, 60, 88, 0.16);
+  --shadow-xs: 0 1px 2px rgba(23, 32, 44, 0.04);
   --shadow-soft: 0 14px 34px rgba(23, 32, 44, 0.05);
   --shadow-medium: 0 18px 40px -24px rgba(23, 32, 44, 0.14);
   --shadow-strong: 0 24px 52px -26px rgba(23, 32, 44, 0.18);
   --shadow-overlay: 0 32px 72px -28px rgba(23, 32, 44, 0.22);
   --shadow-inset-soft: inset 0 1px 0 rgba(255, 255, 255, 0.72);
+  --radius-xs: 0.625rem;
   --radius-sm: 0.75rem;
   --radius-md: 1rem;
   --radius-lg: 1.5rem;
   --radius-xl: 2rem;
+  --radius-2xl: 2.5rem;
   --radius-surface: var(--radius-lg);
   --radius-pill: 9999px;
   --control-height-md: 3rem;
   --control-height-lg: 3.25rem;
+  --motion-fast: 160ms;
+  --motion-base: 200ms;
+  --motion-slow: 220ms;
+  --motion-ease: cubic-bezier(0.22, 1, 0.36, 1);
   --motion-duration-fast: 160ms;
   --motion-duration-base: 200ms;
   --motion-duration-slow: 220ms;
   --motion-ease-standard: cubic-bezier(0.22, 1, 0.36, 1);
   --container-public: 1280px;
   --container-app: 1360px;
+  --container-reading: 760px;
+  --container-form: 640px;
   --sidebar-width-admin: 290px;
   --sidebar-width-community: 280px;
   --topbar-height: 72px;
   --z-header: 40;
   --z-overlay: 60;
+  --radius: var(--radius-md);
+  --background: var(--color-background);
+  --foreground: var(--color-ink);
+  --card: var(--color-surface-elevated);
+  --card-foreground: var(--color-ink);
+  --popover: var(--color-surface-elevated);
+  --popover-foreground: var(--color-ink);
+  --primary: var(--color-primary);
+  --primary-foreground: var(--color-text-inverse);
+  --secondary: color-mix(in srgb, var(--color-surface-muted) 72%, white);
+  --secondary-foreground: var(--color-ink);
+  --muted: color-mix(in srgb, var(--color-surface-muted) 78%, white);
+  --muted-foreground: var(--color-ink-muted);
+  --accent: var(--color-primary-soft);
+  --accent-foreground: var(--color-primary);
+  --destructive: var(--color-danger);
+  --destructive-foreground: var(--color-text-inverse);
+  --input: var(--color-border);
+  --ring: var(--color-primary);
+  --sidebar: color-mix(in srgb, var(--color-surface-elevated) 92%, white);
+  --sidebar-foreground: var(--color-ink);
+  --sidebar-primary: var(--color-primary);
+  --sidebar-primary-foreground: var(--color-text-inverse);
+  --sidebar-accent: var(--color-primary-soft);
+  --sidebar-accent-foreground: var(--color-primary);
+  --sidebar-border: var(--color-border-subtle);
+  --sidebar-ring: var(--focus-ring);
 }
 
 .text-display-xl {
@@ -286,11 +364,13 @@ html {
 
 body {
   margin: 0;
-  min-height: 100vh;
+  min-height: 100dvh;
   background: var(--color-background);
   color: var(--color-ink);
   font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
-  font-feature-settings: "ss01" 1, "cv10" 1;
+  font-feature-settings:
+    "ss01" 1,
+    "cv10" 1;
   text-rendering: optimizeLegibility;
 }
 
@@ -331,6 +411,18 @@ select {
   width: 100%;
   max-width: var(--container-app);
   padding-inline: 1.5rem;
+}
+
+.reading-container {
+  margin-inline: auto;
+  width: 100%;
+  max-width: var(--container-reading);
+}
+
+.form-container {
+  margin-inline: auto;
+  width: 100%;
+  max-width: var(--container-form);
 }
 
 @media (min-width: 1024px) {
@@ -381,9 +473,21 @@ select {
   position: absolute;
   inset: -22%;
   background:
-    radial-gradient(circle at 24% 30%, rgba(97, 194, 255, 0.42), transparent 24%),
-    radial-gradient(circle at 78% 18%, rgba(255, 182, 6, 0.28), transparent 18%),
-    radial-gradient(circle at 50% 80%, rgba(46, 163, 242, 0.22), transparent 28%);
+    radial-gradient(
+      circle at 24% 30%,
+      rgba(97, 194, 255, 0.42),
+      transparent 24%
+    ),
+    radial-gradient(
+      circle at 78% 18%,
+      rgba(255, 182, 6, 0.28),
+      transparent 18%
+    ),
+    radial-gradient(
+      circle at 50% 80%,
+      rgba(46, 163, 242, 0.22),
+      transparent 28%
+    );
   opacity: 0.9;
 }
 
@@ -391,7 +495,11 @@ select {
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(5, 16, 25, 0.08), rgba(5, 16, 25, 0.4));
+  background: linear-gradient(
+    180deg,
+    rgba(5, 16, 25, 0.08),
+    rgba(5, 16, 25, 0.4)
+  );
 }
 
 .campus-scrollbar {
@@ -433,6 +541,8 @@ details > summary::-webkit-details-marker {
   box-shadow:
     0 0 0 2px rgba(12, 113, 195, 0.28),
     0 24px 54px rgba(12, 113, 195, 0.14);
-  transition: box-shadow 220ms ease, transform 220ms ease;
+  transition:
+    box-shadow 220ms ease,
+    transform 220ms ease;
   transform: translateY(-1px);
 }
