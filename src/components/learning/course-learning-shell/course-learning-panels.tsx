@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { CourseProgressToggleForm } from "@/components/learning/course-progress-toggle-form";
-import { CourseResourceManager } from "@/components/learning/course-resource-manager";
 import { Badge } from "@/components/ui/badge";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   buildCourseContentHref,
   buildCourseTrackingHref,
@@ -23,6 +24,40 @@ import {
   SummaryMetric,
 } from "./primitives";
 import type { LearningShellForumCategory, LearningShellModule } from "./types";
+
+const DynamicCourseResourceManager = dynamic(
+  () =>
+    import("@/components/learning/course-resource-manager").then(
+      (module) => module.CourseResourceManager,
+    ),
+  {
+    loading: () => <CourseResourceManagerSkeleton />,
+  },
+);
+
+function CourseResourceManagerSkeleton() {
+  return (
+    <div className="space-y-4" aria-hidden="true">
+      <div className="space-y-3 rounded-[var(--radius-lg)] border border-[var(--color-border-subtle)] bg-[color:var(--color-surface-elevated)] p-5">
+        <div className="flex flex-wrap gap-2">
+          <Skeleton className="h-6 w-24" rounded="pill" />
+          <Skeleton className="h-6 w-20" rounded="pill" />
+          <Skeleton className="h-6 w-28" rounded="pill" />
+        </div>
+        <Skeleton className="h-7 w-56" rounded="md" />
+        <Skeleton className="h-4 w-full" rounded="md" />
+        <Skeleton className="h-4 w-11/12" rounded="md" />
+        <Skeleton className="h-10 w-36" rounded="md" />
+      </div>
+      <div className="space-y-3 rounded-[var(--radius-lg)] border border-[var(--color-border-subtle)] bg-[color:var(--color-surface-elevated)] p-5">
+        <Skeleton className="h-6 w-40" rounded="md" />
+        <Skeleton className="h-4 w-full" rounded="md" />
+        <Skeleton className="h-4 w-10/12" rounded="md" />
+        <Skeleton className="h-40 w-full" rounded="lg" />
+      </div>
+    </div>
+  );
+}
 
 type CourseLearningContentTabProps = {
   course: CatalogCourse;
@@ -527,7 +562,7 @@ export function CourseLearningResourcesTab({
       id="resources-panel"
       title={isFocusedTaskWorkspace ? "Tarea abierta" : "Recursos"}
     >
-      <CourseResourceManager
+      <DynamicCourseResourceManager
         canModerate={canModerate}
         course={course}
         focusedResourceId={focusedStudentExerciseId}

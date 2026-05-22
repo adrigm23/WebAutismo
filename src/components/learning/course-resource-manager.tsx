@@ -1,18 +1,18 @@
 "use client";
 
 import { useActionState, useState } from "react";
+import dynamic from "next/dynamic";
 import {
   createCourseResourceAction,
   type CourseResourceFormState,
 } from "@/actions/course-resources";
-import { CourseExerciseReviewForm } from "@/components/learning/course-exercise-review-form";
 import { CourseExerciseSubmissionForm } from "@/components/learning/course-exercise-submission-form";
-import { CourseManagedResourceControls } from "@/components/learning/course-managed-resource-controls";
 import { Badge } from "@/components/ui/badge";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import { SectionHeader } from "@/components/ui/section-header";
+import { Skeleton } from "@/components/ui/skeleton";
 import { StateBanner } from "@/components/ui/state-banner";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { Textarea } from "@/components/ui/textarea";
@@ -23,6 +23,59 @@ import { formatDateTime } from "@/lib/utils";
 const initialState: CourseResourceFormState = {};
 const selectClassName =
   "ui-control-base h-[var(--control-height-md)] px-4 text-sm";
+
+const DynamicCourseManagedResourceControls = dynamic(
+  () =>
+    import("@/components/learning/course-managed-resource-controls").then(
+      (module) => module.CourseManagedResourceControls,
+    ),
+  {
+    loading: () => <CourseManagedResourceControlsSkeleton />,
+  },
+);
+
+const DynamicCourseExerciseReviewForm = dynamic(
+  () =>
+    import("@/components/learning/course-exercise-review-form").then(
+      (module) => module.CourseExerciseReviewForm,
+    ),
+  {
+    loading: () => <CourseExerciseReviewFormSkeleton />,
+  },
+);
+
+function CourseManagedResourceControlsSkeleton() {
+  return (
+    <div className="mt-5 space-y-3" aria-hidden="true">
+      <div className="flex flex-wrap gap-2">
+        <Skeleton className="h-9 w-28" rounded="pill" />
+        <Skeleton className="h-9 w-24" rounded="pill" />
+        <Skeleton className="h-9 w-20" rounded="pill" />
+      </div>
+      <Skeleton className="h-24 w-full" rounded="lg" />
+    </div>
+  );
+}
+
+function CourseExerciseReviewFormSkeleton() {
+  return (
+    <div
+      className="rounded-[var(--radius-lg)] border border-[var(--color-border-subtle)] bg-white p-5"
+      aria-hidden="true"
+    >
+      <div className="space-y-3">
+        <Skeleton className="h-6 w-40" rounded="md" />
+        <Skeleton className="h-4 w-full" rounded="md" />
+        <Skeleton className="h-4 w-9/12" rounded="md" />
+        <Skeleton className="h-24 w-full" rounded="lg" />
+        <div className="flex flex-wrap gap-3">
+          <Skeleton className="h-10 w-28" rounded="md" />
+          <Skeleton className="h-10 w-24" rounded="md" />
+        </div>
+      </div>
+    </div>
+  );
+}
 
 type CourseResourceManagerProps = {
   course: CatalogCourse;
@@ -199,7 +252,7 @@ export function CourseResourceManager({
         </div>
 
         {canModerate && resource.isManaged ? (
-          <CourseManagedResourceControls
+          <DynamicCourseManagedResourceControls
             courseSlug={course.slug}
             isFirst={(managedPositionById.get(resource.id) ?? 0) === 0}
             isLast={
@@ -231,7 +284,7 @@ export function CourseResourceManager({
 
               {resource.submissions.length ? (
                 resource.submissions.map((submission) => (
-                  <CourseExerciseReviewForm
+                  <DynamicCourseExerciseReviewForm
                     courseSlug={course.slug}
                     key={submission.id}
                     passingScore={resource.passingScore}
