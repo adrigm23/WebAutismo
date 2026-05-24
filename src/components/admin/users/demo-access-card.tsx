@@ -1,33 +1,34 @@
 import { UserPlus } from "lucide-react";
-import { Card } from "@/components/ui/card";
+import { StateBanner } from "@/components/ui/state-banner";
+import { SurfaceCard } from "@/components/ui/surface-card";
 
 export function DemoAccessCard() {
   return (
-    <Card className="rounded-[2rem] p-7" id="create-teacher">
+    <SurfaceCard
+      id="create-teacher"
+      padding="md"
+      title="Acceso demo"
+      description="El modo demo solo puede habilitarse por configuracion local y ya no expone credenciales en la interfaz."
+    >
       <div className="flex items-center gap-3">
-        <div className="grid h-12 w-12 place-items-center rounded-2xl bg-[rgba(12,113,195,0.1)] text-[var(--color-primary)]">
+        <div className="grid h-12 w-12 place-items-center rounded-[var(--radius-md)] bg-[color:color-mix(in_srgb,var(--color-primary-soft)_72%,white)] text-[var(--color-primary)]">
           <UserPlus className="h-5 w-5" strokeWidth={1.8} />
         </div>
-        <div>
-          <h2 className="text-[1.8rem] font-semibold tracking-[-0.05em] text-[var(--color-ink)]">
-            Acceso demo
-          </h2>
-          <p className="mt-1 text-sm leading-6 text-[#52667b]">
-            El modo demo solo puede habilitarse por configuración local y ya no
-            expone credenciales en la interfaz.
+        <div className="min-w-0">
+          <p className="text-sm font-semibold text-[var(--color-ink)]">
+            Entorno local controlado
+          </p>
+          <p className="mt-1 text-sm leading-6 text-[var(--color-muted)]">
+            Conserva solo los datos simulados necesarios para revisar la interfaz.
           </p>
         </div>
       </div>
 
-      <div className="mt-6 space-y-4 rounded-2xl border border-[#d8e0e8] bg-[#f7fafc] px-4 py-4 text-sm leading-7 text-[#4c6074]">
-        <p>
-          Define `DEMO_AUTH_ENABLED=true`, `ALLOW_DEMO_AUTH=true` y una
-          contraseña segura solo en tu entorno local.
-        </p>
-        <p>
-          Este panel conserva solo datos simulados para revisar la interfaz.
-        </p>
-      </div>
-    </Card>
+      <StateBanner
+        className="mt-5"
+        description="Define DEMO_AUTH_ENABLED=true, ALLOW_DEMO_AUTH=true y una contrasena segura solo en tu entorno local."
+        tone="info"
+      />
+    </SurfaceCard>
   );
 }

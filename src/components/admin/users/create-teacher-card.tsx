@@ -1,27 +1,31 @@
 import { UserPlus } from "lucide-react";
 import { createTeacherAction } from "@/actions/admin";
-import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { StateBanner } from "@/components/ui/state-banner";
 import { SubmitButton } from "@/components/ui/submit-button";
+import { SurfaceCard } from "@/components/ui/surface-card";
 
 export function CreateTeacherCard() {
   return (
-    <Card className="rounded-[2rem] p-5 sm:p-7" id="create-teacher">
-      <div className="flex items-start gap-3">
-        <div className="grid h-12 w-12 place-items-center rounded-2xl bg-[rgba(12,113,195,0.1)] text-[var(--color-primary)]">
+    <SurfaceCard
+      id="create-teacher"
+      padding="md"
+      title="Crear docente"
+      description="Alta controlada. Solo administracion puede crear profesorado."
+    >
+      <div className="mb-5 flex items-start gap-3 rounded-[var(--radius-md)] border border-[var(--color-border-subtle)] bg-[color:color-mix(in_srgb,var(--color-primary-soft)_26%,white)] p-4">
+        <div className="grid h-11 w-11 shrink-0 place-items-center rounded-[var(--radius-md)] bg-[color:color-mix(in_srgb,var(--color-primary-soft)_72%,white)] text-[var(--color-primary)]">
           <UserPlus className="h-5 w-5" strokeWidth={1.8} />
         </div>
         <div className="min-w-0">
-          <h2 className="text-[1.8rem] font-semibold tracking-[-0.05em] text-[var(--color-ink)]">
-            Crear docente
-          </h2>
-          <p className="mt-1 text-sm leading-6 text-[#52667b]">
-            Alta controlada. Solo administración puede crear profesorado.
+          <p className="text-sm font-semibold text-[var(--color-ink)]">Provision segura</p>
+          <p className="mt-1 text-sm leading-6 text-[var(--color-muted)]">
+            Crea una nueva cuenta docente sin salir del panel de administracion.
           </p>
         </div>
       </div>
 
-      <form action={createTeacherAction} className="mt-6 space-y-4">
+      <form action={createTeacherAction} className="space-y-4">
         <input name="returnTo" type="hidden" value="/admin/users" />
         <Input name="name" placeholder="Nombre y apellidos" required />
         <Input
@@ -33,18 +37,18 @@ export function CreateTeacherCard() {
         <Input
           minLength={8}
           name="password"
-          placeholder="Contraseña temporal"
+          placeholder="Contrasena temporal"
           required
           type="password"
         />
-        <div className="rounded-2xl border border-[#d8e0e8] bg-[#f7fafc] px-4 py-4 text-sm leading-7 text-[#4c6074]">
-          La cuenta se crea activa, con rol global docente y preferencias
-          básicas de notificación.
-        </div>
+        <StateBanner
+          description="La cuenta se crea activa, con rol global docente y preferencias basicas de notificacion."
+          tone="info"
+        />
         <SubmitButton className="w-full" pendingLabel="Creando docente...">
           Crear docente
         </SubmitButton>
       </form>
-    </Card>
+    </SurfaceCard>
   );
 }

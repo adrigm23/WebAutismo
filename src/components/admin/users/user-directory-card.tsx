@@ -10,6 +10,7 @@ import {
   getRoleTone,
   getUserInitials
 } from "@/lib/admin-console";
+import { EmptyState } from "@/components/ui/empty-state";
 import { formatDate, formatRelativeTime } from "@/lib/utils";
 import type { UserDirectoryItem } from "./types";
 
@@ -50,7 +51,7 @@ export function UserDirectoryCard({
       </div>
 
       <div className="divide-y divide-[#dde5ed]">
-        {users.map((account) => (
+        {users.length ? users.map((account) => (
           <div className="space-y-5 px-4 py-5 sm:px-7 sm:py-6" key={account.id}>
             <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between">
               <div className="flex min-w-0 items-center gap-4">
@@ -137,7 +138,16 @@ export function UserDirectoryCard({
               </form>
             </div>
           </div>
-        ))}
+        )) : (
+          <div className="px-4 py-5 sm:px-7 sm:py-6">
+            <EmptyState
+              align="center"
+              description="Ajusta la busqueda, el rol o el estado para encontrar la cuenta que necesitas gestionar."
+              title="No hay usuarios visibles"
+              tone="subtle"
+            />
+          </div>
+        )}
       </div>
     </Card>
   );

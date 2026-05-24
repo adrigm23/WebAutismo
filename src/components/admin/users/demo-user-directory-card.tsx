@@ -1,5 +1,6 @@
 import { AdminStatusBadge } from "@/components/admin/admin-status-badge";
-import { Card } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/empty-state";
+import { SurfaceCard } from "@/components/ui/surface-card";
 import {
   getRoleFilterLabel,
   getRoleTone,
@@ -14,7 +15,7 @@ export function DemoUserDirectoryCard({
   users: DemoUserDirectoryItem[];
 }) {
   return (
-    <Card className="overflow-hidden rounded-[2rem]">
+    <SurfaceCard className="overflow-hidden p-0">
       <div className="border-b border-[#dce3eb] px-7 py-6">
         <h2 className="text-[2rem] font-semibold tracking-[-0.06em] text-[var(--color-ink)]">
           Directorio de usuarios
@@ -23,7 +24,7 @@ export function DemoUserDirectoryCard({
       </div>
 
       <div className="divide-y divide-[#dde5ed]">
-        {users.map((account) => (
+        {users.length ? users.map((account) => (
           <div className="space-y-5 px-7 py-6" key={account.id}>
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div className="flex items-center gap-4">
@@ -65,8 +66,17 @@ export function DemoUserDirectoryCard({
               </div>
             </div>
           </div>
-        ))}
+        )) : (
+          <div className="px-7 py-6">
+            <EmptyState
+              align="center"
+              description="Ajusta los filtros activos para volver a mostrar las cuentas demo disponibles."
+              title="No hay usuarios demo visibles"
+              tone="subtle"
+            />
+          </div>
+        )}
       </div>
-    </Card>
+    </SurfaceCard>
   );
 }
