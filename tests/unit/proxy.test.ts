@@ -95,4 +95,28 @@ describe("proxy route protection", () => {
     expect(response.status).toBe(307);
     expect(response.headers.get("location")).toBe("https://example.com/mi-cuenta");
   });
+
+  test("normalizes SESSION_SECRET before verifying session cookies", async () => {
+    process.env.SESSION_SECRET = "  test-session-secret  ";
+    jwtVerifyMock.mockResolvedValue({
+      payload: {
+        sub: "user-1"
+      }
+    });
+
+    const { NextRequest } = await import("next/server");
+    const { proxy } = await import("@/proxy");
+    const request = new NextRequest("https://example.com/mi-cuenta", {
+      headers: {
+        cookie: "academy_session=valid-token"
+      }
+    });
+
+    const response = await proxy(request);
+    const secretBuffer = jwtVerifyMock.mock.calls[0]?.[1];
+
+    expect(response.status).toBe(200);
+    expect(secretBuffer).toBeInstanceOf(Uint8Array);
+    expect(new TextDecoder().decode(secretBuffer)).toBe("test-session-secret");
+  });
 });

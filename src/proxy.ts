@@ -8,7 +8,7 @@ const protectedPrefixes = ["/mi-cuenta", "/mis-cursos", "/admin"];
 const guestOnlyPrefixes = ["/acceder", "/registro"];
 
 function getSessionSecret() {
-  const secret = process.env.SESSION_SECRET;
+  const secret = process.env.SESSION_SECRET?.trim();
 
   if (!secret) {
     return null;
