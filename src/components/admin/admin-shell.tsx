@@ -216,7 +216,7 @@ export function AdminShell({ user, children }: AdminShellProps) {
                     <Search className="hidden h-5 w-5 sm:block" strokeWidth={1.8} />
                   </span>
                   <input
-                    className="w-full min-w-0 bg-transparent text-[0.98rem] text-[var(--color-ink)] outline-none placeholder:text-[var(--color-muted)]"
+                    className="w-full min-w-0 bg-transparent text-[0.98rem] text-[var(--color-ink)] outline-none placeholder:text-[var(--color-muted)] focus-visible:outline-2 focus-visible:outline-[var(--color-primary)] focus-visible:outline-offset-2"
                     defaultValue={searchValue}
                     name="q"
                     placeholder={searchPlaceholder}

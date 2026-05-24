@@ -146,12 +146,50 @@ export default async function AdminSupervisionPage({ searchParams }: Supervision
           teachersLabel: selectedDemoEnrollment.teachers.join(", ")
         }
       : null;
+    const demoCourses = Array.from(
+      new Map(
+        demoAdminSupervisionRows.map((row) => [
+          row.courseTitle,
+          {
+            id: row.courseTitle,
+            title: row.courseTitle
+          }
+        ])
+      ).values()
+    );
+    const demoTeachers = Array.from(
+      new Map(
+        demoAdminSupervisionRows.flatMap((row) =>
+          row.teachers.map((teacher) => [
+            teacher,
+            {
+              id: teacher,
+              name: teacher
+            }
+          ])
+        )
+      ).values()
+    );
 
     return (
       <div className="space-y-9">
         <AdminPageHeader
           description="Seguimiento demo del alumnado y de la vigencia de sus accesos."
           title="Supervision academica"
+        />
+        <SupervisionFiltersCard
+          accessState={accessStateFilter}
+          courseId={courseId}
+          courses={demoCourses}
+          exportLinks={[
+            { href: buildExportHref("enrollments"), label: "Exportar matriculas" },
+            { href: buildExportHref("progress"), label: "Exportar progreso" },
+            { href: buildExportHref("submissions"), label: "Exportar entregas" },
+            { href: buildExportHref("grades"), label: "Exportar notas" }
+          ]}
+          q={q}
+          teacherId={teacherId}
+          teachers={demoTeachers}
         />
         <section className="grid gap-5 xl:grid-cols-3">
           <AdminMetricCard
@@ -175,8 +213,11 @@ export default async function AdminSupervisionPage({ searchParams }: Supervision
             value={`${averageProgress}%`}
           />
         </section>
-        <section className="grid gap-6 2xl:grid-cols-[1.22fr_0.78fr]">
-          <SupervisionTableCard rows={demoTableRows} />
+        <section className="grid min-w-0 gap-6 2xl:grid-cols-[1.22fr_0.78fr]">
+          <SupervisionTableCard
+            countLabel={`${demoTableRows.length} matriculas visibles en la consulta actual`}
+            rows={demoTableRows}
+          />
           {demoDetail ? <SupervisionDetailCard detail={demoDetail} /> : null}
         </section>
       </div>
@@ -445,7 +486,7 @@ export default async function AdminSupervisionPage({ searchParams }: Supervision
         />
       </section>
 
-      <section className="grid gap-6 2xl:grid-cols-[1.22fr_0.78fr]">
+      <section className="grid min-w-0 gap-6 2xl:grid-cols-[1.22fr_0.78fr]">
         <SupervisionTableCard
           countLabel={`${tableRows.length} matriculas visibles en la consulta actual`}
           rows={tableRows}

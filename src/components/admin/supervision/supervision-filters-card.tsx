@@ -1,7 +1,13 @@
-import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { ButtonLink } from "@/components/ui/button";
-import { SubmitButton } from "@/components/ui/submit-button";
+import { ListFilter } from "lucide-react";
+import { Button, ButtonLink } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from "@/components/ui/select";
+import { SurfaceCard } from "@/components/ui/surface-card";
 import type {
   SupervisionAccessState,
   SupervisionCourseOption,
@@ -29,58 +35,77 @@ export function SupervisionFiltersCard({
   }>;
 }) {
   return (
-    <Card className="rounded-[2rem] p-7">
-      <form className="grid gap-3 xl:grid-cols-[1.2fr_1fr_1fr_1fr_auto]">
-        <Input defaultValue={q} name="q" placeholder="Buscar estudiantes o cursos..." />
-        <select
-          className="h-12 rounded-xl border border-[var(--color-border)] bg-white px-4 text-sm"
-          defaultValue={courseId}
-          name="courseId"
+    <SurfaceCard padding="md">
+      <form className="grid gap-3 md:grid-cols-2 xl:grid-cols-[auto_1fr_1fr_1fr]">
+        <input name="q" type="hidden" value={q} />
+
+        <Button
+          aria-label="Aplicar filtros"
+          className="justify-self-start"
+          size="icon"
+          type="submit"
+          variant="secondary"
         >
-          <option value="ALL">Todos los cursos</option>
-          {courses.map((course) => (
-            <option key={course.id} value={course.id}>
-              {course.title}
-            </option>
-          ))}
-        </select>
-        <select
-          className="h-12 rounded-xl border border-[var(--color-border)] bg-white px-4 text-sm"
-          defaultValue={teacherId}
-          name="teacherId"
-        >
-          <option value="ALL">Todo el profesorado</option>
-          {teachers.map((teacher) => (
-            <option key={teacher.id} value={teacher.id}>
-              {teacher.name}
-            </option>
-          ))}
-        </select>
-        <select
-          className="h-12 rounded-xl border border-[var(--color-border)] bg-white px-4 text-sm"
-          defaultValue={accessState}
-          name="accessState"
-        >
-          <option value="ALL">Todos los accesos</option>
-          <option value="active">Vigentes</option>
-          <option value="scheduled">Programados</option>
-          <option value="expired">Caducados</option>
-          <option value="inactive">Inactivos</option>
-        </select>
-        <SubmitButton pendingLabel="Filtrando..." variant="secondary">
-          Aplicar filtros
-        </SubmitButton>
+          <ListFilter className="size-4" strokeWidth={2} />
+        </Button>
+
+        <Select defaultValue={courseId} name="courseId">
+          <SelectTrigger aria-label="Curso">
+            <SelectValue placeholder="Todos los cursos" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="ALL">Todos los cursos</SelectItem>
+            {courses.map((course) => (
+              <SelectItem key={course.id} value={course.id}>
+                {course.title}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Select defaultValue={teacherId} name="teacherId">
+          <SelectTrigger aria-label="Profesorado">
+            <SelectValue placeholder="Todo el profesorado" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="ALL">Todo el profesorado</SelectItem>
+            {teachers.map((teacher) => (
+              <SelectItem key={teacher.id} value={teacher.id}>
+                {teacher.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Select defaultValue={accessState} name="accessState">
+          <SelectTrigger aria-label="Estado del acceso">
+            <SelectValue placeholder="Todos los accesos" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="ALL">Todos los accesos</SelectItem>
+            <SelectItem value="active">Vigentes</SelectItem>
+            <SelectItem value="scheduled">Programados</SelectItem>
+            <SelectItem value="expired">Caducados</SelectItem>
+            <SelectItem value="inactive">Inactivos</SelectItem>
+          </SelectContent>
+        </Select>
       </form>
 
       {exportLinks?.length ? (
-        <div className="mt-5 flex flex-wrap gap-3 border-t border-[#e1e8ef] pt-5">
+        <div className="mt-5 flex flex-wrap gap-x-4 gap-y-3 border-t border-[var(--color-border-subtle)] pt-5">
           {exportLinks.map((link) => (
-            <ButtonLink href={link.href} key={link.href} variant="ghost">
+            <ButtonLink
+              className="min-h-0 px-0 py-0 text-[0.98rem] font-semibold text-[var(--color-ink)] shadow-none hover:translate-y-0"
+              href={link.href}
+              key={link.href}
+              size="sm"
+              variant="ghost"
+            >
               {link.label}
             </ButtonLink>
           ))}
         </div>
       ) : null}
-    </Card>
+    </SurfaceCard>
   );
 }

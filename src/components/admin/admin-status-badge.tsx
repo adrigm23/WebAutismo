@@ -6,10 +6,14 @@ type AdminStatusBadgeProps = HTMLAttributes<HTMLSpanElement> & {
 };
 
 const toneStyles = {
-  primary: "bg-[rgba(12,113,195,0.12)] text-[var(--color-primary)]",
-  warning: "bg-[rgba(255,182,6,0.22)] text-[#8c5b00]",
-  danger: "bg-[rgba(204,59,47,0.12)] text-[#c43a2f]",
-  neutral: "bg-[#eef2f6] text-[#56687b]"
+  primary:
+    "border-[color:color-mix(in_srgb,var(--color-primary-soft)_85%,white)] bg-[color:color-mix(in_srgb,var(--color-primary-soft)_78%,white)] text-[var(--color-primary)]",
+  warning:
+    "border-[color:color-mix(in_srgb,var(--color-accent-soft)_88%,white)] bg-[color:color-mix(in_srgb,var(--color-accent-soft)_80%,white)] text-[var(--color-warning)]",
+  danger:
+    "border-[color:color-mix(in_srgb,var(--color-danger-soft)_86%,white)] bg-[color:color-mix(in_srgb,var(--color-danger-soft)_78%,white)] text-[var(--color-danger)]",
+  neutral:
+    "border-[color:color-mix(in_srgb,var(--color-border)_76%,white)] bg-[color:color-mix(in_srgb,var(--color-surface-soft)_58%,white)] text-[var(--color-ink-soft)]"
 };
 
 export function AdminStatusBadge({
@@ -20,7 +24,7 @@ export function AdminStatusBadge({
   return (
     <span
       className={cn(
-        "inline-flex items-center rounded-xl px-3 py-1 text-xs font-semibold tracking-[0.08em]",
+        "inline-flex items-center rounded-[var(--radius-pill)] border px-3 py-1 text-[0.72rem] font-semibold uppercase tracking-[0.08em]",
         toneStyles[tone],
         className
       )}

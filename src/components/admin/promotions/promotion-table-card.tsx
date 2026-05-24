@@ -30,12 +30,12 @@ export function PromotionTableCard({
   promotions: PromotionRow[];
 }) {
   return (
-    <Card className="overflow-hidden rounded-[2rem]">
+    <Card className="min-w-0 overflow-hidden rounded-[2rem]">
       <div className="border-b border-[#dde4ec] px-7 py-6">
-        <form className="grid gap-3 md:grid-cols-[1fr_220px_auto]">
+        <form className="grid min-w-0 gap-3 md:grid-cols-[minmax(0,1fr)_220px_auto]">
           <Input defaultValue={q} name="q" placeholder="Buscar cupones..." />
           <select
-            className="h-12 rounded-xl border border-[var(--color-border)] bg-white px-4 text-sm"
+            className="h-12 min-w-0 rounded-xl border border-[var(--color-border)] bg-white px-4 text-sm"
             defaultValue={status}
             name="status"
           >
@@ -51,7 +51,7 @@ export function PromotionTableCard({
         </form>
       </div>
 
-      <div className="overflow-x-auto">
+      <div className="max-w-full overflow-x-auto">
         <table className="min-w-full text-left">
           <thead>
             <tr className="border-b border-[#dde4ec] text-sm uppercase tracking-[0.16em] text-[#3b4f64]">

@@ -114,7 +114,7 @@ export default async function AdminTeachersPage({ searchParams }: TeachersPagePr
     };
 
     return (
-      <div className="space-y-8">
+      <div className="space-y-8 overflow-x-hidden">
         <AdminPageHeader
           actions={<ButtonLink href="/admin/users" variant="secondary">Ver usuarios demo</ButtonLink>}
           description="Vista demo del portal docente. La asignacion de cursos y la carga academica se muestran con datos simulados."
@@ -351,7 +351,7 @@ export default async function AdminTeachersPage({ searchParams }: TeachersPagePr
   const courseOptions: TeacherCourseOption[] = allCourses;
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 overflow-x-hidden">
       <AdminPageHeader
         actions={<ButtonLink href="#create-teacher">Crear docente</ButtonLink>}
         description="Gestion del equipo docente, carga academica y cursos asignados en el campus."
@@ -439,8 +439,8 @@ export default async function AdminTeachersPage({ searchParams }: TeachersPagePr
         </div>
       </Card>
 
-      <section className="grid gap-6 2xl:grid-cols-[minmax(0,1.55fr)_420px]">
-        <div className="grid gap-5 xl:grid-cols-2">
+      <section className="grid min-w-0 gap-6 2xl:grid-cols-[minmax(0,1.55fr)_420px]">
+        <div className="grid min-w-0 gap-5 xl:grid-cols-2">
           {visibleTeachers.length > 0 ? (
             visibleTeachers.map((teacher) => (
               <TeacherCard
@@ -462,7 +462,7 @@ export default async function AdminTeachersPage({ searchParams }: TeachersPagePr
           )}
         </div>
 
-        <div className="space-y-6 2xl:sticky 2xl:top-6 2xl:self-start">
+        <div className="min-w-0 space-y-6 2xl:sticky 2xl:top-6 2xl:self-start">
           {selectedTeacher ? (
             <TeacherDetailCard allCourses={courseOptions} selectedTeacher={selectedTeacher} />
           ) : null}

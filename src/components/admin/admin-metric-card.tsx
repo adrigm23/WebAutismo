@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Card } from "@/components/ui/card";
+import { SurfaceCard } from "@/components/ui/surface-card";
 import { cn } from "@/lib/utils";
 
 type AdminMetricCardProps = {
@@ -27,23 +27,28 @@ export function AdminMetricCard({
   className
 }: AdminMetricCardProps) {
   return (
-    <Card
+    <SurfaceCard
       className={cn(
-        "relative overflow-hidden border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] px-6 py-6 shadow-[var(--shadow-soft)] before:absolute before:inset-y-0 before:left-0 before:w-1",
+        "relative min-h-[11.5rem] overflow-hidden border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] before:absolute before:inset-y-0 before:left-0 before:w-1",
         accentStyles[accent],
         className
       )}
+      padding="md"
     >
       <div className="flex items-start justify-between gap-4">
-        <p className="text-label-sm font-semibold text-[var(--color-muted)]">{label}</p>
-        {icon ? <div className="text-[var(--color-primary)]">{icon}</div> : null}
+        <p className="text-meta-xs font-semibold text-[var(--color-ink)]">{label}</p>
+        {icon ? <div className="text-[var(--color-ink-soft)]">{icon}</div> : null}
       </div>
-      <div className="mt-6 flex flex-wrap items-end justify-between gap-5">
-        <p className="font-premium text-[3rem] font-semibold leading-none tracking-[-0.08em] text-[var(--color-ink)]">
+      <div className="mt-7 flex flex-wrap items-end justify-between gap-5">
+        <p className="font-premium text-[3.2rem] font-semibold leading-none tracking-[-0.08em] text-[var(--color-ink)] sm:text-[3.45rem]">
           {value}
         </p>
-        {meta ? <div className="text-right text-body-sm leading-7 text-[var(--color-ink-soft)]">{meta}</div> : null}
+        {meta ? (
+          <div className="max-w-[16rem] text-right text-sm leading-7 text-[var(--color-muted)]">
+            {meta}
+          </div>
+        ) : null}
       </div>
-    </Card>
+    </SurfaceCard>
   );
 }

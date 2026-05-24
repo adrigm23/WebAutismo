@@ -14,7 +14,7 @@ import type {
   EditableCourseDetail,
 } from "@/components/admin/courses/types";
 import { ButtonLink } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { SurfaceCard } from "@/components/ui/surface-card";
 import { getSearchParamValue } from "@/lib/admin-console";
 import { requireAdminConsoleUser } from "@/lib/admin-console-server";
 import { demoAdminCourses } from "@/lib/admin-demo";
@@ -122,7 +122,7 @@ export default async function AdminCoursesPage({
       <div className="space-y-9">
         <AdminPageHeader
           actions={
-            <ButtonLink href="/admin/promotions" variant="secondary">
+            <ButtonLink href="/admin/promotions" variant="neutral">
               Ir a promociones
             </ButtonLink>
           }
@@ -286,7 +286,7 @@ export default async function AdminCoursesPage({
       <AdminPageHeader
         actions={
           <>
-            <ButtonLink href="#course-filters" variant="secondary">
+            <ButtonLink href="#course-filters" variant="neutral">
               Filtrar
             </ButtonLink>
             <ButtonLink href="#create-course">Crear curso</ButtonLink>
@@ -332,15 +332,12 @@ export default async function AdminCoursesPage({
           {selectedCourse ? (
             <CreateCourseEditionCard courseId={selectedCourse.id} />
           ) : (
-            <Card className="rounded-[2rem] p-7">
-              <h2 className="text-[1.5rem] font-semibold tracking-[-0.05em] text-[var(--color-ink)]">
-                Crear edicion
-              </h2>
-              <p className="mt-3 text-sm leading-7 text-[#5f7083]">
+            <SurfaceCard title="Crear edicion">
+              <p className="text-sm leading-7 text-[var(--color-muted)]">
                 Selecciona un curso en la tabla y pulsa en gestionar curso para
                 preparar su siguiente edicion desde este mismo lateral.
               </p>
-            </Card>
+            </SurfaceCard>
           )}
         </div>
       </section>

@@ -16,13 +16,13 @@ export function TeacherCard({
   return (
     <Link
       className={cn(
-        "block rounded-[2rem] border border-[#d4dde6] bg-white p-6 text-left shadow-[0_16px_36px_rgba(15,44,76,0.05)] transition hover:border-[var(--color-primary)] hover:shadow-[0_22px_42px_rgba(15,44,76,0.08)]",
+        "block min-w-0 rounded-[2rem] border border-[#d4dde6] bg-white p-6 text-left shadow-[0_16px_36px_rgba(15,44,76,0.05)] transition hover:border-[var(--color-primary)] hover:shadow-[0_22px_42px_rgba(15,44,76,0.08)]",
         isSelected && "border-[var(--color-primary)] ring-2 ring-[rgba(12,113,195,0.08)]"
       )}
       href={teacherHref}
     >
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex items-start gap-4">
+      <div className="flex min-w-0 items-start justify-between gap-4">
+        <div className="flex min-w-0 flex-1 items-start gap-4">
           <div className="grid h-12 w-12 place-items-center rounded-full bg-[#eef2f6] text-base font-semibold text-[#2d3d4c]">
             {getUserInitials(teacher.name)}
           </div>

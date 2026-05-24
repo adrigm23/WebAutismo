@@ -33,7 +33,7 @@ export function DataTableRow({
   return (
     <tr
       className={cn(
-        "align-top transition-colors duration-[var(--motion-duration-fast)] hover:bg-[rgba(22,60,88,0.02)]",
+        "align-top transition-colors duration-[var(--motion-duration-fast)] hover:bg-[color:color-mix(in_srgb,var(--color-primary-soft)_26%,white)]",
         className
       )}
       {...props}
@@ -48,7 +48,7 @@ export function DataTableHead({
   return (
     <th
       className={cn(
-        "px-5 py-4 text-meta-xs font-semibold text-[var(--color-muted)]",
+        "px-5 py-4 text-meta-xs font-semibold text-[var(--color-ink-soft)]",
         className
       )}
       {...props}

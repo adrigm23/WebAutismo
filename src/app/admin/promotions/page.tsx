@@ -98,7 +98,7 @@ export default async function AdminPromotionsPage({ searchParams }: PromotionsPa
       : null;
 
     return (
-      <div className="space-y-9">
+      <div className="space-y-9 overflow-x-hidden">
         <AdminPageHeader
           actions={<ButtonLink href="/admin/courses" variant="secondary">Volver a cursos</ButtonLink>}
           description="Promociones demo para revisar tabla, estados y detalle lateral sin persistencia real."
@@ -266,7 +266,7 @@ export default async function AdminPromotionsPage({ searchParams }: PromotionsPa
     : null;
 
   return (
-    <div className="space-y-9">
+    <div className="space-y-9 overflow-x-hidden">
       <AdminPageHeader
         actions={<ButtonLink href="/admin/promotions?create=1#create-promotion">Crear cupon</ButtonLink>}
         description="Gestiona codigos promocionales, ambito global o por curso y consumo real sobre compras del campus."
@@ -307,10 +307,10 @@ export default async function AdminPromotionsPage({ searchParams }: PromotionsPa
         />
       </section>
 
-      <section className="grid gap-6 2xl:grid-cols-[1.25fr_0.88fr]">
+      <section className="grid min-w-0 gap-6 2xl:grid-cols-[minmax(0,1.25fr)_minmax(0,0.88fr)]">
         <PromotionTableCard promotions={promotionRows} q={q} status={status} />
 
-        <div className="space-y-6">
+        <div className="min-w-0 space-y-6">
           {create === "1" || promotions.length === 0 ? (
             <CreatePromotionCard courses={courseOptions} />
           ) : null}
