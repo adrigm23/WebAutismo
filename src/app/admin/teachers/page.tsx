@@ -147,8 +147,8 @@ export default async function AdminTeachersPage({ searchParams }: TeachersPagePr
           </div>
         </Card>
 
-        <section className="grid gap-6 2xl:grid-cols-[minmax(0,1.55fr)_420px]">
-          <div className="grid gap-5 xl:grid-cols-2">
+        <section className="grid min-w-0 items-start gap-6 xl:grid-cols-[minmax(0,1.15fr)_24rem]">
+          <div className="grid min-w-0 self-start content-start gap-4 md:grid-cols-2">
             {demoTeachers.map((teacher) => (
               <TeacherCard
                 isSelected={selectedDemoTeacher?.id === teacher.id}
@@ -159,7 +159,11 @@ export default async function AdminTeachersPage({ searchParams }: TeachersPagePr
             ))}
           </div>
 
-          {selectedDemoTeacher ? <DemoTeacherDetailCard selectedTeacher={selectedDemoTeacher} /> : null}
+          <div className="min-w-0 self-start xl:sticky xl:top-28">
+            {selectedDemoTeacher ? (
+              <DemoTeacherDetailCard selectedTeacher={selectedDemoTeacher} />
+            ) : null}
+          </div>
         </section>
       </div>
     );
@@ -421,9 +425,12 @@ export default async function AdminTeachersPage({ searchParams }: TeachersPagePr
             ))}
           </div>
 
-          <form action="/admin/teachers" className="flex w-full max-w-[32rem] gap-3">
+          <form
+            action="/admin/teachers"
+            className="flex w-full max-w-[32rem] flex-col gap-3 sm:flex-row"
+          >
             {view !== "all" ? <input name="view" type="hidden" value={view} /> : null}
-            <div className="relative flex-1">
+            <div className="relative min-w-0 flex-1">
               <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#607185]" strokeWidth={1.8} />
               <Input
                 className="pl-10"
@@ -432,15 +439,15 @@ export default async function AdminTeachersPage({ searchParams }: TeachersPagePr
                 placeholder="Filtrar por docente, email o curso..."
               />
             </div>
-            <SubmitButton pendingLabel="Buscando..." variant="secondary">
+            <SubmitButton className="w-full sm:w-auto" pendingLabel="Buscando..." variant="secondary">
               Buscar
             </SubmitButton>
           </form>
         </div>
       </Card>
 
-      <section className="grid min-w-0 gap-6 2xl:grid-cols-[minmax(0,1.55fr)_420px]">
-        <div className="grid min-w-0 gap-5 xl:grid-cols-2">
+      <section className="grid min-w-0 items-start gap-6 xl:grid-cols-[minmax(0,1.15fr)_24rem]">
+        <div className="grid min-w-0 self-start content-start gap-4 md:grid-cols-2">
           {visibleTeachers.length > 0 ? (
             visibleTeachers.map((teacher) => (
               <TeacherCard
@@ -451,7 +458,7 @@ export default async function AdminTeachersPage({ searchParams }: TeachersPagePr
               />
             ))
           ) : (
-            <Card className="rounded-[2rem] p-8 xl:col-span-2">
+            <Card className="rounded-[2rem] p-8 md:col-span-2">
               <p className="text-[1.35rem] font-semibold text-[var(--color-ink)]">
                 No hay docentes que coincidan con los filtros.
               </p>
@@ -462,7 +469,7 @@ export default async function AdminTeachersPage({ searchParams }: TeachersPagePr
           )}
         </div>
 
-        <div className="min-w-0 space-y-6 2xl:sticky 2xl:top-6 2xl:self-start">
+        <div className="min-w-0 self-start space-y-6 xl:sticky xl:top-28">
           {selectedTeacher ? (
             <TeacherDetailCard allCourses={courseOptions} selectedTeacher={selectedTeacher} />
           ) : null}

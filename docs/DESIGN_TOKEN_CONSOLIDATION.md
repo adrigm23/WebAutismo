@@ -173,7 +173,7 @@ Consolidar los tokens reales ya presentes en el producto para que la siguiente e
 
 ## 4.3 Radius mezclado
 - Conviven:
-  - `rounded-[var(--radius-...)]`
+  - `rounded-[var(--radius-md)]`
   - `rounded-2xl`
   - `rounded-[18px]`
   - `rounded-[20px]`
