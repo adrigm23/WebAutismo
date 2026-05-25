@@ -7,20 +7,20 @@ import { absoluteUrl, siteConfig } from "@/lib/site";
 const manrope = Manrope({
   subsets: ["latin"],
   variable: "--font-manrope",
-  display: "swap"
+  display: "swap",
 });
 
 const plusJakartaSans = Plus_Jakarta_Sans({
   subsets: ["latin"],
   variable: "--font-plus-jakarta",
-  display: "swap"
+  display: "swap",
 });
 
 export const metadata: Metadata = {
   metadataBase: new URL(absoluteUrl("/")),
   title: {
     default: siteConfig.name,
-    template: `%s | ${siteConfig.name}`
+    template: `%s | ${siteConfig.name}`,
   },
   description: siteConfig.description,
   openGraph: {
@@ -35,23 +35,23 @@ export const metadata: Metadata = {
         url: absoluteUrl("/opengraph-image"),
         width: 1200,
         height: 630,
-        alt: siteConfig.name
-      }
-    ]
+        alt: siteConfig.name,
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: siteConfig.name,
     description: siteConfig.description,
-    images: [absoluteUrl("/twitter-image")]
-  }
+    images: [absoluteUrl("/twitter-image")],
+  },
 };
 
 export default function RootLayout({
-  children
+  children,
 }: Readonly<{ children: ReactNode }>) {
   return (
-    <html lang="es">
+    <html data-scroll-behavior="smooth" lang="es">
       <body
         className={`${manrope.variable} ${plusJakartaSans.variable} antialiased`}
         suppressHydrationWarning

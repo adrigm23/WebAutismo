@@ -17,7 +17,7 @@ import {
   Settings,
   Ticket,
   Tickets,
-  UsersRound
+  UsersRound,
 } from "lucide-react";
 import { logoutAction } from "@/actions/session";
 import { AdminMobileNav } from "@/components/admin/admin-mobile-nav";
@@ -25,7 +25,7 @@ import { ButtonLink } from "@/components/ui/button";
 import {
   adminNavigation,
   getAdminSearchPlaceholder,
-  getUserInitials
+  getUserInitials,
 } from "@/lib/admin-console";
 import { isDemoUserId } from "@/lib/demo-auth";
 import { siteConfig } from "@/lib/site";
@@ -79,11 +79,17 @@ function getPrimaryAction(input: {
   }
 
   if (input.pathname.startsWith("/admin/editions")) {
-    return { href: "/admin/editions?create=1#create-edition", label: "+ Nueva edicion" };
+    return {
+      href: "/admin/editions?create=1#create-edition",
+      label: "+ Nueva edicion",
+    };
   }
 
   if (input.pathname.startsWith("/admin/promotions")) {
-    return { href: "/admin/promotions?create=1#create-promotion", label: "+ Crear cupon" };
+    return {
+      href: "/admin/promotions?create=1#create-promotion",
+      label: "+ Crear cupon",
+    };
   }
 
   if (input.pathname.startsWith("/admin/audit")) {
@@ -95,7 +101,7 @@ function getPrimaryAction(input: {
 
     return {
       href: `/admin/audit/export?range=${encodeURIComponent(range)}&actorId=${encodeURIComponent(actorId)}&action=${encodeURIComponent(action)}&entity=${encodeURIComponent(entity)}&q=${encodeURIComponent(q)}`,
-      label: "Exportar CSV"
+      label: "Exportar CSV",
     };
   }
 
@@ -112,11 +118,13 @@ export function AdminShell({ user, children }: AdminShellProps) {
   const searchPlaceholder = getAdminSearchPlaceholder(pathname);
   const searchValue = searchParams.get("q") ?? "";
   const isDemoAdmin = isDemoUserId(user.id);
-  const preservedSearchParams = Array.from(searchParams.entries()).filter(([key]) => key !== "q");
+  const preservedSearchParams = Array.from(searchParams.entries()).filter(
+    ([key]) => key !== "q",
+  );
   const primaryAction = getPrimaryAction({
     pathname,
     searchParams: new URLSearchParams(searchParams.toString()),
-    isDemoAdmin
+    isDemoAdmin,
   });
   const navigationItems = adminNavigation;
 
@@ -141,7 +149,10 @@ export function AdminShell({ user, children }: AdminShellProps) {
                 Modo demo: secciones del panel con datos simulados.
               </div>
             ) : primaryAction ? (
-              <ButtonLink className="w-full justify-center" href={primaryAction.href}>
+              <ButtonLink
+                className="w-full justify-center"
+                href={primaryAction.href}
+              >
                 {primaryAction.label}
               </ButtonLink>
             ) : null}
@@ -152,14 +163,15 @@ export function AdminShell({ user, children }: AdminShellProps) {
               const isActive =
                 item.href === "/admin"
                   ? pathname === item.href
-                  : pathname === item.href || pathname.startsWith(`${item.href}/`);
+                  : pathname === item.href ||
+                    pathname.startsWith(`${item.href}/`);
 
               return (
                 <Link
                   className={cn(
                     "flex items-center gap-4 rounded-[var(--radius-md)] px-4 py-3 text-[1.02rem] font-medium text-[var(--color-ink-soft)] transition duration-[var(--motion-duration-base)] hover:bg-white hover:text-[var(--color-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-surface-canvas)]",
                     isActive &&
-                      "ui-inverse-text bg-[var(--color-primary)] shadow-[var(--shadow-soft)] hover:bg-[var(--color-primary)]"
+                      "ui-inverse-text bg-[var(--color-primary)] shadow-[var(--shadow-soft)] hover:bg-[var(--color-primary)]",
                   )}
                   href={item.href}
                   key={item.href}
@@ -177,7 +189,10 @@ export function AdminShell({ user, children }: AdminShellProps) {
                 className="flex items-center gap-4 rounded-[var(--radius-md)] px-4 py-3 text-[1.02rem] font-medium text-[var(--color-ink-soft)] transition duration-[var(--motion-duration-base)] hover:bg-white hover:text-[var(--color-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-surface-canvas)]"
                 href="mailto:formacion@autismocordoba.org"
               >
-                <CircleHelp className="h-[1.05rem] w-[1.05rem]" strokeWidth={2} />
+                <CircleHelp
+                  className="h-[1.05rem] w-[1.05rem]"
+                  strokeWidth={2}
+                />
                 <span>Soporte</span>
               </a>
 
@@ -196,65 +211,100 @@ export function AdminShell({ user, children }: AdminShellProps) {
 
         <div className="min-w-0">
           <header className="sticky top-0 z-20 border-b border-[var(--color-border-subtle)] bg-[rgba(247,244,239,0.96)] backdrop-blur-md">
-            <div className="flex flex-wrap items-center justify-between gap-4 px-5 py-4 sm:px-7 xl:px-10">
-              <div className="flex flex-col gap-3 lg:hidden">
-                <Link
-                  className="text-[1.65rem] font-bold tracking-[-0.06em] text-[var(--color-primary)]"
-                  href="/admin"
-                >
-                  {siteConfig.shortName} Admin
-                </Link>
-                <AdminMobileNav />
+            <div className="flex flex-col gap-3 px-4 py-3 sm:px-6 sm:py-4 xl:px-10">
+              <div className="flex items-center justify-between gap-3 lg:hidden">
+                <div className="flex min-w-0 items-center gap-2.5">
+                  <AdminMobileNav />
+                  <Link
+                    className="truncate text-sm font-semibold uppercase tracking-[0.18em] text-[var(--color-primary)]"
+                    href="/admin"
+                  >
+                    AC Admin
+                  </Link>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <Link
+                    aria-label="Abrir ajustes de mi cuenta"
+                    className="hidden min-h-10 min-w-10 place-items-center rounded-full border border-transparent text-[var(--color-ink-soft)] transition duration-[var(--motion-duration-base)] hover:border-[var(--color-border)] hover:bg-white hover:text-[var(--color-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-surface-canvas)] sm:grid"
+                    href="/mi-cuenta"
+                  >
+                    <Settings className="h-4 w-4" strokeWidth={1.9} />
+                  </Link>
+                  <Link
+                    aria-label="Ir a mi cuenta"
+                    className="ui-inverse-text grid h-10 w-10 place-items-center rounded-full bg-[var(--color-primary)] text-sm font-semibold shadow-[var(--shadow-soft)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-surface-canvas)]"
+                    href="/mi-cuenta"
+                  >
+                    {getUserInitials(user.name)}
+                  </Link>
+                </div>
               </div>
 
-              <form className="w-full max-w-[34rem]" method="get">
-                {preservedSearchParams.map(([key, value]) => (
-                  <input key={`${key}-${value}`} name={key} type="hidden" value={value} />
-                ))}
-                <label className="relative flex min-h-[3.25rem] items-center rounded-[var(--radius-pill)] border border-[var(--color-border)] bg-white px-5 text-[var(--color-muted)] shadow-[var(--shadow-soft)] transition focus-within:border-[var(--color-primary)] focus-within:ring-2 focus-within:ring-[var(--color-primary)] focus-within:ring-offset-2 focus-within:ring-offset-[var(--color-surface-canvas)]">
-                  <span className="pointer-events-none mr-3 text-[var(--color-muted)]">
-                    <Search className="hidden h-5 w-5 sm:block" strokeWidth={1.8} />
-                  </span>
-                  <input
-                    className="w-full min-w-0 bg-transparent text-[0.98rem] text-[var(--color-ink)] outline-none placeholder:text-[var(--color-muted)] focus-visible:outline-2 focus-visible:outline-[var(--color-primary)] focus-visible:outline-offset-2"
-                    defaultValue={searchValue}
-                    name="q"
-                    placeholder={searchPlaceholder}
-                    type="search"
-                  />
-                </label>
-              </form>
+              <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                <form className="w-full lg:max-w-[34rem]" method="get">
+                  {preservedSearchParams.map(([key, value]) => (
+                    <input
+                      key={`${key}-${value}`}
+                      name={key}
+                      type="hidden"
+                      value={value}
+                    />
+                  ))}
+                  <label className="relative flex min-h-11 items-center rounded-[var(--radius-pill)] border border-[var(--color-border)] bg-white px-4 text-[var(--color-muted)] shadow-[var(--shadow-inset-soft)] transition focus-within:border-[var(--color-primary)] focus-within:ring-2 focus-within:ring-[var(--color-primary)] focus-within:ring-offset-2 focus-within:ring-offset-[var(--color-surface-canvas)] sm:px-4 lg:min-h-[3.25rem] lg:px-5 lg:shadow-[var(--shadow-soft)]">
+                    <span className="pointer-events-none mr-2 text-[var(--color-muted)] lg:mr-3">
+                      <Search
+                        className="h-4 w-4 sm:h-[1.05rem] sm:w-[1.05rem]"
+                        strokeWidth={1.8}
+                      />
+                    </span>
+                    <input
+                      className="w-full min-w-0 bg-transparent text-sm text-[var(--color-ink)] outline-none placeholder:text-[var(--color-muted)] focus-visible:outline-2 focus-visible:outline-[var(--color-primary)] focus-visible:outline-offset-2 sm:text-[0.98rem]"
+                      defaultValue={searchValue}
+                      name="q"
+                      placeholder={searchPlaceholder}
+                      type="search"
+                    />
+                  </label>
+                </form>
 
-              <div className="ml-auto flex items-center gap-3 text-[var(--color-ink-soft)]">
-                <Link
-                  className="grid h-11 w-11 place-items-center rounded-full border border-transparent transition duration-[var(--motion-duration-base)] hover:border-[var(--color-border)] hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-surface-canvas)]"
-                  href="/mi-cuenta#notificaciones"
-                >
-                  <Bell className="h-5 w-5" strokeWidth={1.9} />
-                </Link>
-                <Link
-                  className="grid h-11 w-11 place-items-center rounded-full border border-transparent transition duration-[var(--motion-duration-base)] hover:border-[var(--color-border)] hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-surface-canvas)]"
-                  href={`mailto:${siteConfig.supportEmail}`}
-                >
-                  <CircleHelp className="h-5 w-5" strokeWidth={1.9} />
-                </Link>
-                <Link
-                  className="grid h-11 w-11 place-items-center rounded-full border border-transparent transition duration-[var(--motion-duration-base)] hover:border-[var(--color-border)] hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-surface-canvas)]"
-                  href="/mi-cuenta"
-                >
-                  <Settings className="h-5 w-5" strokeWidth={1.9} />
-                </Link>
-                <Link
-                  className="ui-inverse-text grid h-12 w-12 place-items-center rounded-full bg-[var(--color-primary)] text-sm font-semibold shadow-[var(--shadow-soft)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-surface-canvas)]"
-                  href="/mi-cuenta"
-                >
-                  {getUserInitials(user.name)}
-                </Link>
+                <div className="hidden items-center gap-3 text-[var(--color-ink-soft)] lg:flex">
+                  <Link
+                    aria-label="Ir a notificaciones"
+                    className="grid h-11 w-11 place-items-center rounded-full border border-transparent transition duration-[var(--motion-duration-base)] hover:border-[var(--color-border)] hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-surface-canvas)]"
+                    href="/mi-cuenta#notificaciones"
+                  >
+                    <Bell className="h-5 w-5" strokeWidth={1.9} />
+                  </Link>
+                  <Link
+                    aria-label="Contactar con soporte"
+                    className="grid h-11 w-11 place-items-center rounded-full border border-transparent transition duration-[var(--motion-duration-base)] hover:border-[var(--color-border)] hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-surface-canvas)]"
+                    href={`mailto:${siteConfig.supportEmail}`}
+                  >
+                    <CircleHelp className="h-5 w-5" strokeWidth={1.9} />
+                  </Link>
+                  <Link
+                    aria-label="Abrir ajustes de mi cuenta"
+                    className="grid h-11 w-11 place-items-center rounded-full border border-transparent transition duration-[var(--motion-duration-base)] hover:border-[var(--color-border)] hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-surface-canvas)]"
+                    href="/mi-cuenta"
+                  >
+                    <Settings className="h-5 w-5" strokeWidth={1.9} />
+                  </Link>
+                  <Link
+                    aria-label="Ir a mi cuenta"
+                    className="ui-inverse-text grid h-12 w-12 place-items-center rounded-full bg-[var(--color-primary)] text-sm font-semibold shadow-[var(--shadow-soft)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-surface-canvas)]"
+                    href="/mi-cuenta"
+                  >
+                    {getUserInitials(user.name)}
+                  </Link>
+                </div>
               </div>
             </div>
           </header>
 
-          <main className="px-5 py-8 sm:px-7 xl:px-10 xl:py-10">{children}</main>
+          <main className="px-5 py-8 sm:px-7 xl:px-10 xl:py-10">
+            {children}
+          </main>
         </div>
       </div>
     </div>

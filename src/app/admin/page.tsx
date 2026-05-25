@@ -35,15 +35,15 @@ export default async function AdminDashboardPage() {
         actor: "Admin Demo",
         action: "USER_ADMIN_GRANTED",
         entityLabel: "admin.demo@autismo.local",
-        createdAt: new Date("2026-05-07T09:10:00.000Z")
+        createdAt: new Date("2026-05-07T09:10:00.000Z"),
       },
       {
         id: "demo-audit-2",
         actor: "Admin Demo",
         action: "COURSE_CREATED",
         entityLabel: "Curso de demostracion",
-        createdAt: new Date("2026-05-07T09:05:00.000Z")
-      }
+        createdAt: new Date("2026-05-07T09:05:00.000Z"),
+      },
     ];
 
     return (
@@ -98,13 +98,16 @@ export default async function AdminDashboardPage() {
         </section>
 
         <section className="grid gap-6 xl:grid-cols-[0.92fr_1.25fr]">
-          <div className="space-y-4">
+          <div className="min-w-0 space-y-4">
             <SectionHeader
               eyebrow="Estado"
               size="md"
               title={
                 <span className="inline-flex items-center gap-3">
-                  <AlertTriangle className="h-6 w-6 text-[var(--color-danger)]" strokeWidth={1.9} />
+                  <AlertTriangle
+                    className="h-6 w-6 text-[var(--color-danger)]"
+                    strokeWidth={1.9}
+                  />
                   <span>Alertas operativas</span>
                 </span>
               }
@@ -123,7 +126,7 @@ export default async function AdminDashboardPage() {
             />
           </div>
 
-          <SurfaceCard padding="md">
+          <SurfaceCard className="min-w-0" padding="md">
             <SectionHeader
               description="Registro de ejemplo para validar la experiencia visual."
               eyebrow="Auditoria"
@@ -133,18 +136,23 @@ export default async function AdminDashboardPage() {
 
             <div className="mt-5 divide-y divide-[var(--color-border-subtle)]">
               {demoLogs.map((log) => (
-                <div className="flex flex-wrap items-start gap-5 py-5 first:pt-0 last:pb-0" key={log.id}>
+                <div
+                  className="flex flex-wrap items-start gap-5 py-5 first:pt-0 last:pb-0"
+                  key={log.id}
+                >
                   <div className="grid h-14 w-14 place-items-center rounded-full bg-[var(--color-brand-soft)] text-base font-semibold text-[var(--color-primary)]">
                     AD
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-3">
-                      <p className="text-[1.12rem] font-semibold text-[var(--color-ink)]">{log.actor}</p>
+                      <p className="text-[1.12rem] font-semibold text-[var(--color-ink)]">
+                        {log.actor}
+                      </p>
                       <AdminStatusBadge tone="primary">
                         {getAuditActionLabel(log.action as never)}
                       </AdminStatusBadge>
                     </div>
-                    <p className="mt-2 text-sm leading-7 text-[var(--color-ink-soft)]">
+                    <p className="mt-2 break-words text-sm leading-7 text-[var(--color-ink-soft)]">
                       {log.entityLabel}
                     </p>
                     <p className="mt-2 text-sm font-medium text-[var(--color-muted)]">
@@ -173,7 +181,7 @@ export default async function AdminDashboardPage() {
     activePromotionsCount,
     coursesWithoutTeachers,
     editionsForReview,
-    auditLogs
+    auditLogs,
   ] = await Promise.all([
     db.user.count({ where: { isActive: true } }),
     db.user.count({ where: { isActive: true, globalRole: "ADMIN" } }),
@@ -184,9 +192,9 @@ export default async function AdminDashboardPage() {
       where: {
         isActive: true,
         status: {
-          in: ["ACTIVE", "SCHEDULED"]
-        }
-      }
+          in: ["ACTIVE", "SCHEDULED"],
+        },
+      },
     }),
     db.courseEnrollment.count({ where: { status: "ACTIVE" } }),
     db.promotion.count({ where: { isActive: true } }),
@@ -194,51 +202,51 @@ export default async function AdminDashboardPage() {
       where: {
         status: "ACTIVE",
         teacherAssignments: {
-          none: {}
-        }
+          none: {},
+        },
       },
       select: {
         id: true,
         title: true,
-        slug: true
+        slug: true,
       },
       orderBy: {
-        updatedAt: "desc"
+        updatedAt: "desc",
       },
-      take: 4
+      take: 4,
     }),
     db.courseEdition.findMany({
       where: {
         isActive: true,
         status: {
-          in: ["ACTIVE", "CLOSED"]
-        }
+          in: ["ACTIVE", "CLOSED"],
+        },
       },
       include: {
         course: {
           select: {
-            title: true
-          }
-        }
+            title: true,
+          },
+        },
       },
       orderBy: {
-        updatedAt: "desc"
-      }
+        updatedAt: "desc",
+      },
     }),
     db.auditLog.findMany({
       include: {
         actor: {
           select: {
             name: true,
-            email: true
-          }
-        }
+            email: true,
+          },
+        },
       },
       orderBy: {
-        createdAt: "desc"
+        createdAt: "desc",
       },
-      take: 5
-    })
+      take: 5,
+    }),
   ]);
 
   const postAccessEditions = editionsForReview.filter((edition) => {
@@ -246,7 +254,7 @@ export default async function AdminDashboardPage() {
       startsAt: edition.startsAt,
       endsAt: edition.endsAt,
       graceAccessDays: edition.graceAccessDays,
-      accessUntil: edition.accessUntil
+      accessUntil: edition.accessUntil,
     });
 
     return (
@@ -266,7 +274,9 @@ export default async function AdminDashboardPage() {
             <ButtonLink href="/admin/teachers#create-teacher" variant="neutral">
               Crear docente
             </ButtonLink>
-            <ButtonLink href="/admin/editions#create-edition">Crear edicion</ButtonLink>
+            <ButtonLink href="/admin/editions#create-edition">
+              Crear edicion
+            </ButtonLink>
           </>
         }
         description="Metricas de plataforma, alertas operativas y trazabilidad reciente del campus."
@@ -310,13 +320,16 @@ export default async function AdminDashboardPage() {
       </section>
 
       <section className="grid gap-6 xl:grid-cols-[0.92fr_1.25fr]">
-        <div className="space-y-4">
+        <div className="min-w-0 space-y-4">
           <SectionHeader
             eyebrow="Estado"
             size="md"
             title={
               <span className="inline-flex items-center gap-3">
-                <AlertTriangle className="h-6 w-6 text-[var(--color-danger)]" strokeWidth={1.9} />
+                <AlertTriangle
+                  className="h-6 w-6 text-[var(--color-danger)]"
+                  strokeWidth={1.9}
+                />
                 <span>Alertas operativas</span>
               </span>
             }
@@ -373,7 +386,7 @@ export default async function AdminDashboardPage() {
           />
         </div>
 
-        <SurfaceCard padding="md">
+        <SurfaceCard className="min-w-0" padding="md">
           <SectionHeader
             actions={
               <ButtonLink href="/admin/audit" variant="subtle">
@@ -408,9 +421,11 @@ export default async function AdminDashboardPage() {
                           {getAuditActionLabel(log.action)}
                         </AdminStatusBadge>
                       </div>
-                      <p className="mt-2 text-sm leading-7 text-[var(--color-ink-soft)]">
+                      <p className="mt-2 break-words text-sm leading-7 text-[var(--color-ink-soft)]">
                         {log.entityLabel ?? log.entityType}
-                        {metadata?.nextRole ? ` · Rol destino: ${String(metadata.nextRole)}` : ""}
+                        {metadata?.nextRole
+                          ? ` · Rol destino: ${String(metadata.nextRole)}`
+                          : ""}
                         {metadata?.sourceCourseSlug
                           ? ` · Origen: ${String(metadata.sourceCourseSlug)}`
                           : ""}
