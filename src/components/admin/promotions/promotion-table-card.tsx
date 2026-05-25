@@ -51,7 +51,68 @@ export function PromotionTableCard({
         </form>
       </div>
 
-      <div className="max-w-full overflow-x-auto">
+      <div className="grid gap-4 p-4 md:hidden">
+        {promotions.map((promotion) => (
+          <Card className="rounded-[1.6rem] p-5" key={promotion.id}>
+            <div className="flex items-start justify-between gap-4">
+              <div className="min-w-0">
+                <Link
+                  className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2"
+                  href={`/admin/promotions?promotionId=${promotion.id}`}
+                >
+                  <span className="block text-[1.18rem] font-semibold text-[var(--color-ink)]">
+                    {promotion.code}
+                  </span>
+                  <span className="mt-1 block text-sm text-[#647487]">
+                    {promotion.validUntil
+                      ? `Hasta ${formatDate(promotion.validUntil)}`
+                      : "Sin caducidad"}
+                  </span>
+                </Link>
+              </div>
+              <AdminStatusBadge tone={promotion.visualState.tone}>
+                {promotion.visualState.label}
+              </AdminStatusBadge>
+            </div>
+
+            <div className="mt-4 grid grid-cols-2 gap-4 border-t border-[#e0e7ee] pt-4 text-sm text-[#32465a]">
+              <div>
+                <p className="text-meta-xs font-semibold text-[var(--color-ink-soft)]">
+                  Descuento
+                </p>
+                <p className="mt-1.5">
+                  {getPromotionDiscountSummary({
+                    discountType: promotion.discountType,
+                    amountInCents: promotion.amountInCents
+                  })}
+                </p>
+              </div>
+              <div>
+                <p className="text-meta-xs font-semibold text-[var(--color-ink-soft)]">
+                  Uso
+                </p>
+                <p className="mt-1.5">
+                  {promotion.redemptionCount}
+                  {promotion.usageLimit ? ` / ${promotion.usageLimit}` : " / ilimitado"}
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-4 rounded-[var(--radius-md)] bg-[color:var(--color-bg-subtle)] px-4 py-3 text-sm text-[#32465a]">
+              <p className="text-meta-xs font-semibold text-[var(--color-ink-soft)]">
+                Ambito
+              </p>
+              <p className="mt-1.5 break-words">
+                {promotion.scope === "GLOBAL"
+                  ? "Global"
+                  : promotion.courseTitle ?? "Curso especifico"}
+              </p>
+            </div>
+          </Card>
+        ))}
+      </div>
+
+      <div className="hidden max-w-full overflow-x-auto md:block">
         <table className="min-w-full text-left">
           <thead>
             <tr className="border-b border-[#dde4ec] text-sm uppercase tracking-[0.16em] text-[#3b4f64]">
