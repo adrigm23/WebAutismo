@@ -5,8 +5,9 @@ test.describe("public pages", () => {
     await page.goto("/", { waitUntil: "domcontentloaded" });
 
     await expect(page.getByRole("main")).toBeVisible();
-    await expect(page.getByRole("link", { name: /ver cursos/i })).toBeVisible();
-    await expect(page.getByRole("link", { name: /acceder/i })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /formaci[oó]n en autismo/i })).toBeVisible();
+    await expect(page.getByRole("link", { name: /^Ver cursos$/ }).first()).toBeVisible();
+    await expect(page.getByRole("link", { name: /acceder/i }).first()).toBeVisible();
   });
 
   test("courses index renders at least one course card", async ({ page }) => {

@@ -311,6 +311,8 @@ Casos válidos de readiness:
 - `OBJECT_STORAGE_PROVIDER` sin definir explícitamente: readiness debe fallar con `503`.
 - `OBJECT_STORAGE_PROVIDER=vercel-blob` sin `BLOB_READ_WRITE_TOKEN`: readiness debe fallar con `503`.
 
+- ExcepciÃ³n local: fuera de entornos desplegados, si `NEXT_PUBLIC_SITE_URL` apunta a `localhost`, `127.0.0.1` o `::1`, puede aceptarse el fallback implÃ­cito a `database` y readiness seguir en `200` con detalle `implicit-local-database-fallback`.
+
 ## 12. Rollback
 
 Rollback de aplicación:

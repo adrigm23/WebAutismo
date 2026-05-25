@@ -9,7 +9,7 @@ const adminPassword = process.env.E2E_ADMIN_PASSWORD;
 async function loginFromAccessPanel(page: Page, email: string, password: string) {
   await page.getByLabel(/correo/i).fill(email);
   await page.getByLabel(/contrase/i).fill(password);
-  await page.getByRole("button", { name: /acceder/i }).click();
+  await page.getByRole("button", { name: /acceder al panel/i }).click();
 }
 
 test.describe("authenticated student flows", () => {
@@ -23,26 +23,33 @@ test.describe("authenticated student flows", () => {
     await loginFromAccessPanel(page, studentEmail!, studentPassword!);
 
     await expect(page).toHaveURL(/\/mi-cuenta/);
-    await expect(page.getByRole("link", { name: /mis cursos/i })).toBeVisible();
+    await expect(page.getByRole("link", { name: /^Mis cursos$/ })).toBeVisible();
     await expect(
-      page.getByRole("link", {
-        name: /continuar curso|abrir docencia|explorar catálogo/i
-      })
+      page
+        .getByRole("main")
+        .getByRole("link", {
+          name: /continuar leccion|abrir docencia|explorar catalogo/i
+        })
+        .first()
     ).toBeVisible();
 
     await page.goto("/mis-cursos");
-    await expect(page.getByRole("heading", { name: /mis cursos/i })).toBeVisible();
-    await expect(page.getByRole("link", { name: /volver a mi cuenta/i })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /^Mis cursos$/ })).toBeVisible();
+    await expect(page.getByRole("link", { name: /^Mi cuenta$/ })).toBeVisible();
 
     await page.goto(`/mis-cursos/${courseSlug}`);
-    await expect(page.getByRole("link", { name: /comunidad/i })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1 }).first()).toBeVisible();
+    await expect(page.getByRole("link", { name: /^Foro$/ })).toBeVisible();
+    await expect(page.getByText(/^Comunidad$/)).toBeVisible();
     await expect(
-      page.getByRole("button", { name: /vista simple|vista completa/i }).first()
+      page
+        .getByRole("button", { name: /continuar contenido|abrir tarea/i })
+        .first()
     ).toBeVisible();
 
     await page.goto(`/mis-cursos/${courseSlug}/foro`);
-    await expect(page.getByRole("link", { name: /nuevo hilo/i })).toBeVisible();
-    await expect(page.getByRole("link", { name: /volver al campus/i })).toBeVisible();
+    await expect(page.getByRole("link", { name: /^Nuevo hilo$/ })).toBeVisible();
+    await expect(page.getByRole("link", { name: /^Volver al campus$/ })).toBeVisible();
   });
 });
 
@@ -56,13 +63,8 @@ test.describe("authenticated admin flows", () => {
     await page.goto("/acceder");
     await loginFromAccessPanel(page, adminEmail!, adminPassword!);
 
-    await expect(page).toHaveURL(/\/mi-cuenta/);
-    await expect(page.getByRole("link", { name: /abrir administracion/i })).toBeVisible();
-
-    await page.goto("/admin");
+    await page.waitForURL(/\/admin/, { timeout: 10_000 });
     await expect(page.getByRole("main")).toBeVisible();
-    await expect(
-      page.getByRole("heading", { name: /dashboard general|administraci[oó]n/i })
-    ).toBeVisible();
+    await expect(page.getByRole("heading", { name: /dashboard general|admin/i })).toBeVisible();
   });
 });

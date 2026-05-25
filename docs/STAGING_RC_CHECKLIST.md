@@ -82,6 +82,10 @@ Notas:
 | `BLOB_READ_WRITE_TOKEN` | `vercel_blob_rw_xxx` | Sí si `OBJECT_STORAGE_PROVIDER=vercel-blob` | Fallan uploads/downloads del provider blob | Token real de staging |
 | `OBJECT_STORAGE_FILESYSTEM_ROOT` | `storage/objects` | No | Solo afecta si se usa `filesystem` | Solo definir si staging usa `filesystem` |
 
+Nota:
+
+- El fallback implÃ­cito a `database` solo es aceptable en local cuando `NEXT_PUBLIC_SITE_URL` apunta a loopback. En staging/preview/prod, `OBJECT_STORAGE_PROVIDER` debe quedar definido explÃ­citamente.
+
 ### Rate limit
 
 | Variable | Ejemplo seguro | Obligatoria | Riesgo si falta | Recomendado en staging |

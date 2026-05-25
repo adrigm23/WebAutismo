@@ -23,6 +23,10 @@ import { consumeRateLimit } from "@/lib/rate-limit";
 
 export type AuthFormState = {
   error?: string;
+  fields?: {
+    name?: string;
+    email?: string;
+  };
 };
 
 const registerSchema = z
@@ -50,6 +54,19 @@ const DUMMY_PASSWORD_HASH = "$2b$10$UVxjH7726JLyAsVadN8HVe3Kt0jMDfhJESSea8meSy76
 function getOptionalString(formData: FormData, key: string) {
   const value = formData.get(key);
   return typeof value === "string" && value.length > 0 ? value : undefined;
+}
+
+function getRegisterFieldState(formData: FormData): NonNullable<AuthFormState["fields"]> {
+  return {
+    name: getOptionalString(formData, "name") ?? "",
+    email: getOptionalString(formData, "email") ?? ""
+  };
+}
+
+function getLoginFieldState(formData: FormData): NonNullable<AuthFormState["fields"]> {
+  return {
+    email: getOptionalString(formData, "email") ?? ""
+  };
 }
 
 function getDefaultPrivateRedirect(globalRole: "STUDENT" | "TEACHER" | "ADMIN") {
@@ -176,7 +193,8 @@ export async function registerAction(
       });
       return {
         error:
-          "La verificacion obligatoria por email esta activada, pero el envio de correo no esta configurado."
+          "La verificacion obligatoria por email esta activada, pero el envio de correo no esta configurado.",
+        fields: getRegisterFieldState(formData)
       };
     }
 
@@ -194,7 +212,8 @@ export async function registerAction(
         durationMs: Date.now() - startedAt
       });
       return {
-        error: parsed.error.issues[0]?.message || "Revisa los datos del formulario."
+        error: parsed.error.issues[0]?.message || "Revisa los datos del formulario.",
+        fields: getRegisterFieldState(formData)
       };
     }
 
@@ -213,7 +232,8 @@ export async function registerAction(
         durationMs: Date.now() - startedAt
       });
       return {
-        error: `Demasiados intentos de registro. Espera ${registerRateLimit.retryAfterSeconds} segundos antes de volver a intentarlo.`
+        error: `Demasiados intentos de registro. Espera ${registerRateLimit.retryAfterSeconds} segundos antes de volver a intentarlo.`,
+        fields: getRegisterFieldState(formData)
       };
     }
 
@@ -228,7 +248,10 @@ export async function registerAction(
         result: "duplicate-email",
         durationMs: Date.now() - startedAt
       });
-      return { error: "Ya existe una cuenta con ese correo." };
+      return {
+        error: "Ya existe una cuenta con ese correo.",
+        fields: getRegisterFieldState(formData)
+      };
     }
 
     const passwordHash = await hashPassword(parsed.data.password);
@@ -298,7 +321,8 @@ export async function registerAction(
         error: error instanceof Error ? error : new Error(String(error))
       });
       return {
-        error: "No se puede conectar con la base de datos en este momento. Revisa DATABASE_URL en Vercel."
+        error: "No se puede conectar con la base de datos en este momento. Revisa DATABASE_URL en Vercel.",
+        fields: getRegisterFieldState(formData)
       };
     }
 
@@ -310,7 +334,8 @@ export async function registerAction(
       });
       return {
         error:
-          "La aplicacion necesita aplicar la migracion pendiente de la base de datos antes de completar esta operacion."
+          "La aplicacion necesita aplicar la migracion pendiente de la base de datos antes de completar esta operacion.",
+        fields: getRegisterFieldState(formData)
       };
     }
 
@@ -347,7 +372,8 @@ export async function loginAction(
         durationMs: Date.now() - startedAt
       });
       return {
-        error: parsed.error.issues[0]?.message || "Revisa los datos del formulario."
+        error: parsed.error.issues[0]?.message || "Revisa los datos del formulario.",
+        fields: getLoginFieldState(formData)
       };
     }
 
@@ -366,7 +392,8 @@ export async function loginAction(
         durationMs: Date.now() - startedAt
       });
       return {
-        error: `Demasiados intentos de acceso. Espera ${loginRateLimit.retryAfterSeconds} segundos antes de volver a intentarlo.`
+        error: `Demasiados intentos de acceso. Espera ${loginRateLimit.retryAfterSeconds} segundos antes de volver a intentarlo.`,
+        fields: getLoginFieldState(formData)
       };
     }
 
@@ -379,7 +406,10 @@ export async function loginAction(
           result: "invalid-demo-password",
           durationMs: Date.now() - startedAt
         });
-        return { error: INVALID_LOGIN_MESSAGE };
+        return {
+          error: INVALID_LOGIN_MESSAGE,
+          fields: getLoginFieldState(formData)
+        };
       }
 
       await createSession(demoUser.id);
@@ -405,7 +435,10 @@ export async function loginAction(
         result: "missing-user",
         durationMs: Date.now() - startedAt
       });
-      return { error: INVALID_LOGIN_MESSAGE };
+      return {
+        error: INVALID_LOGIN_MESSAGE,
+        fields: getLoginFieldState(formData)
+      };
     }
 
     if (!isValidPassword) {
@@ -415,7 +448,10 @@ export async function loginAction(
         result: "invalid-password",
         durationMs: Date.now() - startedAt
       });
-      return { error: INVALID_LOGIN_MESSAGE };
+      return {
+        error: INVALID_LOGIN_MESSAGE,
+        fields: getLoginFieldState(formData)
+      };
     }
 
     if (!user.isActive) {
@@ -425,7 +461,10 @@ export async function loginAction(
         result: "inactive-account",
         durationMs: Date.now() - startedAt
       });
-      return { error: "Tu cuenta esta desactivada. Contacta con administracion." };
+      return {
+        error: "Tu cuenta esta desactivada. Contacta con administracion.",
+        fields: getLoginFieldState(formData)
+      };
     }
 
     if (isEmailVerificationRequired()) {
@@ -440,7 +479,8 @@ export async function loginAction(
         });
         return {
           error:
-            "El acceso con verificacion de correo todavia no esta disponible en este entorno. Aplica la migracion pendiente de la base de datos."
+            "El acceso con verificacion de correo todavia no esta disponible en este entorno. Aplica la migracion pendiente de la base de datos.",
+          fields: getLoginFieldState(formData)
         };
       }
 
@@ -452,7 +492,8 @@ export async function loginAction(
           durationMs: Date.now() - startedAt
         });
         return {
-          error: "Debes verificar tu correo electronico antes de acceder al campus."
+          error: "Debes verificar tu correo electronico antes de acceder al campus.",
+          fields: getLoginFieldState(formData)
         };
       }
     }
@@ -485,7 +526,8 @@ export async function loginAction(
         error: error instanceof Error ? error : new Error(String(error))
       });
       return {
-        error: "No se puede conectar con la base de datos en este momento. Revisa DATABASE_URL en Vercel."
+        error: "No se puede conectar con la base de datos en este momento. Revisa DATABASE_URL en Vercel.",
+        fields: getLoginFieldState(formData)
       };
     }
 
@@ -497,7 +539,8 @@ export async function loginAction(
       });
       return {
         error:
-          "La aplicacion necesita aplicar la migracion pendiente de la base de datos antes de completar esta operacion."
+          "La aplicacion necesita aplicar la migracion pendiente de la base de datos antes de completar esta operacion.",
+        fields: getLoginFieldState(formData)
       };
     }
 

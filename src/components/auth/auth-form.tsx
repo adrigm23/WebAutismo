@@ -34,13 +34,19 @@ export function AuthForm({
 }: AuthFormProps) {
   const action = mode === "login" ? loginAction : registerAction;
   const [state, formAction] = useActionState(action, initialState);
+  const fieldValues = {
+    name: state.fields?.name ?? "",
+    email: state.fields?.email ?? "",
+  };
 
   return (
     <form action={formAction} className={cn("flex flex-col gap-5", className)}>
       {mode === "register" ? (
         <FormField htmlFor="auth-name" label="Nombre y apellidos" required>
           <Input
+            defaultValue={fieldValues.name}
             id="auth-name"
+            key={`auth-name:${fieldValues.name}`}
             name="name"
             placeholder="Tu nombre completo"
             required
@@ -51,7 +57,9 @@ export function AuthForm({
       <FormField htmlFor="auth-email" label="Correo electronico" required>
         <Input
           autoComplete="email"
+          defaultValue={fieldValues.email}
           id="auth-email"
+          key={`auth-email:${fieldValues.email}`}
           name="email"
           placeholder="tu@email.com"
           required

@@ -1,7 +1,6 @@
 import { compare, hash } from "bcryptjs";
 import type { UserGlobalRole } from "@prisma/client";
 import { redirect } from "next/navigation";
-import { cache } from "react";
 import { getDemoUserById, isDemoUserId } from "@/lib/demo-auth";
 import {
   isDatabaseConnectionError,
@@ -126,7 +125,7 @@ export async function ensureBootstrapAdmin(input: {
   return "ADMIN" as const;
 }
 
-export const getCurrentUser = cache(async () => {
+export async function getCurrentUser() {
   const userId = await getSessionUserId();
 
   if (!userId) {
@@ -179,7 +178,7 @@ export const getCurrentUser = cache(async () => {
 
     throw error;
   }
-});
+}
 
 export async function requireUser(returnTo?: string) {
   const user = await getCurrentUser();

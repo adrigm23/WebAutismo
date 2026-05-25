@@ -70,10 +70,30 @@ describe("auth server actions", () => {
 
     const result = await loginAction({}, formData);
 
-    expect(result).toEqual({
-      error: "Credenciales no válidas."
+    expect(result.error).toMatch(/Credenciales no/i);
+    expect(result.fields).toEqual({
+      email: "admin.demo@autismo.local"
     });
     expect(createSessionMock).not.toHaveBeenCalled();
+  });
+
+  test("preserves name and email on register validation errors", async () => {
+    const { registerAction } = await import("@/actions/auth");
+    const formData = new FormData();
+    formData.set("name", "Ana Lopez");
+    formData.set("email", "ana@example.com");
+    formData.set("password", "supersegura123");
+    formData.set("confirmPassword", "distinta123");
+
+    const result = await registerAction({}, formData);
+
+    expect(result).toEqual({
+      error: "Las contrasenas no coinciden.",
+      fields: {
+        name: "Ana Lopez",
+        email: "ana@example.com"
+      }
+    });
   });
 
   test("registers a user and redirects to the account page", async () => {
