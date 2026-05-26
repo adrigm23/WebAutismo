@@ -1,10 +1,7 @@
 import {
-  getObjectStorageProviderEnv,
   hasEnv,
-  isHostedDeploymentEnv,
-  isLocalDevelopmentEnv
 } from "@/lib/env";
-import { getObjectStorageProvider } from "@/lib/object-storage";
+import { getObjectStorageWriteReadiness } from "@/lib/object-storage";
 import { getDb } from "@/lib/prisma";
 import { getStripeRuntimeState } from "@/lib/stripe";
 
@@ -43,61 +40,30 @@ async function checkDatabaseReadiness() {
   }
 }
 
-function isLocalHostname(value: string) {
-  return value === "localhost" || value === "127.0.0.1" || value === "::1";
-}
-
-function canUseImplicitDatabaseStorageReadiness() {
-  if (isLocalDevelopmentEnv()) {
-    return true;
-  }
-
-  if (isHostedDeploymentEnv()) {
-    return false;
-  }
-
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL?.trim();
-
-  if (!siteUrl) {
-    return false;
-  }
-
-  try {
-    return isLocalHostname(new URL(siteUrl).hostname);
-  } catch {
-    return false;
-  }
-}
-
 function checkStorageReadiness() {
-  const configuredProvider = getObjectStorageProviderEnv();
-  const effectiveProvider = getObjectStorageProvider();
+  const readiness = getObjectStorageWriteReadiness();
 
-  if (!configuredProvider) {
-    if (effectiveProvider === "database" && canUseImplicitDatabaseStorageReadiness()) {
-      return buildOkCheck({
-        configuredProvider: null,
-        effectiveProvider,
-        mode: "implicit-local-database-fallback",
-        warning: "Set OBJECT_STORAGE_PROVIDER explicitly in deployed environments."
-      });
-    }
-
-    return buildFailedCheck("storage-provider-not-explicit", {
-      effectiveProvider,
-      requiredInDeployedEnvironments: true
+  if (readiness.ok) {
+    return buildOkCheck({
+      configuredProvider: readiness.configuredProvider,
+      effectiveProvider: readiness.effectiveProvider,
+      ...(readiness.mode === "implicit-local-database-fallback"
+        ? {
+            mode: readiness.mode,
+            warning: "Set OBJECT_STORAGE_PROVIDER explicitly in deployed environments."
+          }
+        : {})
     });
   }
 
-  if (configuredProvider === "vercel-blob" && !hasEnv("BLOB_READ_WRITE_TOKEN")) {
-    return buildFailedCheck("blob-token-missing", {
-      configuredProvider
-    });
-  }
-
-  return buildOkCheck({
-    configuredProvider,
-    effectiveProvider
+  return buildFailedCheck(readiness.reason, {
+    configuredProvider: readiness.configuredProvider,
+    effectiveProvider: readiness.effectiveProvider,
+    ...(readiness.reason === "storage-provider-not-explicit"
+      ? {
+          requiredInDeployedEnvironments: true
+        }
+      : {})
   });
 }
 

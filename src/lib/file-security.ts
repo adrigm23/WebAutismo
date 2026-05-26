@@ -51,6 +51,18 @@ export const FORUM_ATTACHMENT_UPLOAD_POLICY: UploadPolicy = {
   maxFileSizeBytes: 8 * 1024 * 1024
 };
 
+function formatFileSize(sizeInBytes: number) {
+  if (sizeInBytes >= 1024 * 1024) {
+    return `${(sizeInBytes / (1024 * 1024)).toFixed(sizeInBytes % (1024 * 1024) === 0 ? 0 : 1)} MB`;
+  }
+
+  if (sizeInBytes >= 1024) {
+    return `${Math.ceil(sizeInBytes / 1024)} KB`;
+  }
+
+  return `${sizeInBytes} B`;
+}
+
 function buildAllowedExtensionSet(policy: UploadPolicy) {
   return new Set<string>(
     policy.allowedMimeTypes.flatMap((mimeType) => MIME_EXTENSION_MAP[mimeType] ?? [])
@@ -89,8 +101,18 @@ export function ensureFileNameExtension(fileName: string, mimeType: string | nul
 }
 
 export function validateFileUpload(file: File, policy: UploadPolicy) {
-  if (!(file instanceof File) || file.size <= 0 || file.size > policy.maxFileSizeBytes) {
-    throw new Error(`${policy.label} no es valido o supera el tamano maximo permitido.`);
+  if (!(file instanceof File)) {
+    throw new Error(`${policy.label} no es valido.`);
+  }
+
+  if (file.size <= 0) {
+    throw new Error(`${policy.label} esta vacio.`);
+  }
+
+  if (file.size > policy.maxFileSizeBytes) {
+    throw new Error(
+      `${policy.label} supera el tamano maximo permitido de ${formatFileSize(policy.maxFileSizeBytes)}.`
+    );
   }
 
   const normalizedName = normalizeFileName(file.name);
@@ -98,11 +120,15 @@ export function validateFileUpload(file: File, policy: UploadPolicy) {
   const allowedExtensions = buildAllowedExtensionSet(policy);
 
   if (!extension || !allowedExtensions.has(extension)) {
-    throw new Error(`${policy.label} debe usar una extension permitida.`);
+    throw new Error(
+      `${policy.label} debe usar una extension permitida como .pdf, .docx, .xlsx, .pptx, .jpg o .png.`
+    );
   }
 
   if (!policy.allowedMimeTypes.includes(file.type as AllowedMimeType)) {
-    throw new Error(`${policy.label} tiene un tipo no permitido.`);
+    throw new Error(
+      `${policy.label} tiene un tipo MIME no permitido${file.type ? ` (${file.type})` : ""}.`
+    );
   }
 
   return {

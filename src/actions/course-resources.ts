@@ -2,6 +2,8 @@
 
 import { Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
+import { isRedirectError } from "next/dist/client/components/redirect-error";
+import { redirect } from "next/navigation";
 import { z } from "zod";
 import { getCurrentUser } from "@/lib/auth";
 import { writeAuditLog } from "@/lib/audit";
@@ -143,6 +145,10 @@ function getCourseResourceActionError(error: unknown, fallbackMessage: string) {
   return fallbackMessage;
 }
 
+function isRedirectSignal(error: unknown) {
+  return isRedirectError(error) || (error instanceof Error && error.message.startsWith("REDIRECT:"));
+}
+
 export async function createCourseResourceAction(
   _: CourseResourceFormState,
   formData: FormData
@@ -282,14 +288,12 @@ export async function createCourseResourceAction(
     if (resource.type === "EXERCISE") {
       revalidateCourseTrackingView(course.slug);
     }
-
-    return {
-      success:
-        parsed.data.type === "EXERCISE"
-          ? "Ejercicio publicado correctamente."
-          : "Recurso publicado correctamente."
-    };
+    redirect(buildCourseResourcesHref(course.slug, `resource-${resource.id}`));
   } catch (error) {
+    if (isRedirectSignal(error)) {
+      throw error;
+    }
+
     return {
       error: getCourseResourceActionError(error, "No se ha podido publicar el recurso.")
     };
@@ -525,11 +529,12 @@ export async function updateCourseResourceAction(
     if (resource.type === "EXERCISE") {
       revalidateCourseTrackingView(course.slug);
     }
-
-    return {
-      success: "Recurso actualizado correctamente."
-    };
+    redirect(buildCourseResourcesHref(course.slug, `resource-${updatedResource.id}`));
   } catch (error) {
+    if (isRedirectSignal(error)) {
+      throw error;
+    }
+
     return {
       error: getCourseResourceActionError(error, "No se ha podido actualizar el recurso.")
     };

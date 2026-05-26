@@ -2,6 +2,30 @@ import type { NotificationCategory } from "@prisma/client";
 
 export type CourseWorkspaceTab = "content" | "resources" | "support";
 
+export const COURSE_RESOURCE_TARGET_PREFIX = "resource-";
+export const COURSE_RESOURCE_MANAGER_TARGET_ID = "resource-manager-top";
+export const LEGACY_RESOURCE_MANAGER_RESOURCE_ID = "manager-top";
+
+export function getCourseResourceIdFromTargetId(targetId: string | null | undefined) {
+  if (
+    !targetId ||
+    !targetId.startsWith(COURSE_RESOURCE_TARGET_PREFIX) ||
+    targetId === COURSE_RESOURCE_MANAGER_TARGET_ID
+  ) {
+    return null;
+  }
+
+  return targetId.slice(COURSE_RESOURCE_TARGET_PREFIX.length) || null;
+}
+
+export function normalizeCourseResourceQueryValue(resourceId: string | null | undefined) {
+  if (!resourceId || resourceId === LEGACY_RESOURCE_MANAGER_RESOURCE_ID) {
+    return null;
+  }
+
+  return resourceId;
+}
+
 function buildWorkspaceHref(input: {
   courseSlug: string;
   tab: CourseWorkspaceTab;
@@ -52,9 +76,7 @@ export function buildCourseContentHref(
 }
 
 export function buildCourseResourcesHref(courseSlug: string, targetId = "resources-panel") {
-  const resourceId = targetId.startsWith("resource-")
-    ? targetId.slice("resource-".length)
-    : null;
+  const resourceId = getCourseResourceIdFromTargetId(targetId);
 
   return buildWorkspaceHref({
     courseSlug,

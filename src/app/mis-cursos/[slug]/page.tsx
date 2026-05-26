@@ -11,6 +11,12 @@ import {
 } from "@/lib/course-community";
 import { canViewCourseProgress } from "@/lib/course-permissions";
 import { getCampusResources } from "@/lib/course-resources";
+import {
+  buildCourseResourcesHref,
+  COURSE_RESOURCE_MANAGER_TARGET_ID,
+  LEGACY_RESOURCE_MANAGER_RESOURCE_ID,
+  normalizeCourseResourceQueryValue,
+} from "@/lib/course-navigation";
 import { getForumCategories } from "@/lib/forum";
 import { firstValue } from "@/lib/utils";
 
@@ -96,14 +102,24 @@ export default async function MyCoursePage({
 
   const canModerate = canModerateCourse(access.role);
   const requestedTab = getSidebarTab(tab);
+  const rawFocusedResourceId = firstValue(resource);
 
   if (requestedTab === "support") {
     redirect(`/mis-cursos/${course.slug}/foro`);
   }
 
+  if (
+    requestedTab === "resources" &&
+    rawFocusedResourceId === LEGACY_RESOURCE_MANAGER_RESOURCE_ID
+  ) {
+    redirect(buildCourseResourcesHref(course.slug, COURSE_RESOURCE_MANAGER_TARGET_ID));
+  }
+
   const activeTab = requestedTab;
   const focusedResourceId =
-    activeTab === "resources" ? (firstValue(resource) ?? null) : null;
+    activeTab === "resources"
+      ? normalizeCourseResourceQueryValue(rawFocusedResourceId)
+      : null;
   const progressPromise = getCourseProgressDetailsForUser({
     userId: user.id,
     course,

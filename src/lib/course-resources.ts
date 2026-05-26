@@ -22,6 +22,7 @@ import {
   validateFileUpload
 } from "@/lib/file-security";
 import { createLogger } from "@/lib/logger";
+import { assertObjectStorageWriteReady } from "@/lib/object-storage";
 import { getDb } from "@/lib/prisma";
 import { upsertStoredAsset } from "@/lib/stored-assets";
 
@@ -401,6 +402,7 @@ export async function createCourseResource(input: {
       throw new Error("Selecciona un archivo valido.");
     }
 
+    assertObjectStorageWriteReady();
     const validatedFile = validateFileUpload(input.file, COURSE_RESOURCE_UPLOAD_POLICY);
     const safeName = sanitizeFileSegment(validatedFile.fileName);
     const storedFileName = `${randomUUID()}-${safeName}`;
@@ -500,6 +502,7 @@ export async function updateCourseResource(input: {
   let sizeInBytes = existing.sizeInBytes;
 
   if (existing.source === "FILE" && input.file && input.file.size > 0) {
+    assertObjectStorageWriteReady();
     const validatedFile = validateFileUpload(input.file, COURSE_RESOURCE_UPLOAD_POLICY);
     const safeName = sanitizeFileSegment(validatedFile.fileName);
     const storedFileName = `${randomUUID()}-${safeName}`;
@@ -659,6 +662,7 @@ export async function upsertCourseResourceSubmission(input: {
   let sizeInBytes: number | null = existing?.sizeInBytes ?? null;
 
   if (input.file && input.file.size > 0) {
+    assertObjectStorageWriteReady();
     const validatedFile = validateFileUpload(input.file, COURSE_SUBMISSION_UPLOAD_POLICY);
     const safeName = sanitizeFileSegment(validatedFile.fileName);
     const storedFileName = `${randomUUID()}-${safeName}`;

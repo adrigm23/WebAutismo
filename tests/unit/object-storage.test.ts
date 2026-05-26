@@ -49,4 +49,33 @@ describe("object storage provider resolution", () => {
 
     expect(env.isDatabaseStorageFallbackAllowed()).toBe(false);
   });
+
+  test("marks hosted uploads as not ready when provider is implicit", async () => {
+    process.env.NODE_ENV = "production";
+    process.env.VERCEL = "1";
+    process.env.VERCEL_ENV = "production";
+
+    const objectStorage = await import("@/lib/object-storage");
+    const readiness = objectStorage.getObjectStorageWriteReadiness();
+
+    expect(readiness).toMatchObject({
+      ok: false,
+      reason: "storage-provider-not-explicit",
+      effectiveProvider: "database"
+    });
+  });
+
+  test("marks blob uploads as not ready when the write token is missing", async () => {
+    process.env.OBJECT_STORAGE_PROVIDER = "vercel-blob";
+
+    const objectStorage = await import("@/lib/object-storage");
+    const readiness = objectStorage.getObjectStorageWriteReadiness();
+
+    expect(readiness).toMatchObject({
+      ok: false,
+      reason: "blob-token-missing",
+      configuredProvider: "vercel-blob",
+      effectiveProvider: "vercel-blob"
+    });
+  });
 });

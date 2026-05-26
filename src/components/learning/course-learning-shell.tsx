@@ -15,7 +15,11 @@ import type {
   SidebarTab,
 } from "@/components/learning/course-learning-shell/types";
 import type { CampusResourceItem } from "@/lib/course-resources";
-import { buildCourseResourcesHref } from "@/lib/course-navigation";
+import {
+  buildCourseResourcesHref,
+  getCourseResourceIdFromTargetId,
+  normalizeCourseResourceQueryValue,
+} from "@/lib/course-navigation";
 import { cn } from "@/lib/utils";
 
 export type {
@@ -226,9 +230,7 @@ export function CourseLearningShell({
 
   function handleResourceWorkspaceOpen(targetId?: string) {
     const nextTargetId = targetId ?? primaryResourceTargetId;
-    const nextFocusedResourceId = nextTargetId.startsWith("resource-")
-      ? nextTargetId.slice("resource-".length)
-      : null;
+    const nextFocusedResourceId = getCourseResourceIdFromTargetId(nextTargetId);
 
     setFocusedResourceId(nextFocusedResourceId);
 
@@ -303,7 +305,7 @@ export function CourseLearningShell({
       }
 
       const params = new URLSearchParams(window.location.search);
-      const resourceId = params.get("resource");
+      const resourceId = normalizeCourseResourceQueryValue(params.get("resource"));
       setFocusedResourceId(resourceId);
     }
 

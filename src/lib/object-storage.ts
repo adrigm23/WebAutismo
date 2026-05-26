@@ -8,7 +8,10 @@ import {
 } from "@/lib/legacy-stored-assets";
 import {
   getObjectStorageProviderEnv,
-  isDatabaseStorageFallbackAllowed
+  hasEnv,
+  isDatabaseStorageFallbackAllowed,
+  isHostedDeploymentEnv,
+  isLocalDevelopmentEnv
 } from "@/lib/env";
 import { captureOperationalWarning } from "@/lib/monitoring";
 import {
@@ -18,6 +21,20 @@ import {
 } from "@/lib/project-paths";
 
 export type ObjectStorageProvider = "vercel-blob" | "filesystem" | "database";
+export type ObjectStorageWriteReadiness =
+  | {
+      ok: true;
+      configuredProvider: ObjectStorageProvider | null;
+      effectiveProvider: ObjectStorageProvider;
+      mode: "configured" | "implicit-local-database-fallback";
+    }
+  | {
+      ok: false;
+      reason: "storage-provider-not-explicit" | "blob-token-missing";
+      configuredProvider: ObjectStorageProvider | null;
+      effectiveProvider: ObjectStorageProvider;
+      message: string;
+    };
 
 function getConfiguredObjectStorageProvider(): ObjectStorageProvider {
   const configuredProvider = getObjectStorageProviderEnv();
@@ -37,6 +54,83 @@ function getConfiguredObjectStorageProvider(): ObjectStorageProvider {
 
 export function getObjectStorageProvider() {
   return getConfiguredObjectStorageProvider();
+}
+
+function isLocalHostname(value: string) {
+  return value === "localhost" || value === "127.0.0.1" || value === "::1";
+}
+
+function canUseImplicitDatabaseStorageWrite() {
+  if (isLocalDevelopmentEnv()) {
+    return true;
+  }
+
+  if (isHostedDeploymentEnv()) {
+    return false;
+  }
+
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL?.trim();
+
+  if (!siteUrl) {
+    return false;
+  }
+
+  try {
+    return isLocalHostname(new URL(siteUrl).hostname);
+  } catch {
+    return false;
+  }
+}
+
+export function getObjectStorageWriteReadiness(): ObjectStorageWriteReadiness {
+  const configuredProvider = getObjectStorageProviderEnv();
+  const effectiveProvider = getObjectStorageProvider();
+
+  if (!configuredProvider) {
+    if (effectiveProvider === "database" && canUseImplicitDatabaseStorageWrite()) {
+      return {
+        ok: true,
+        configuredProvider: null,
+        effectiveProvider,
+        mode: "implicit-local-database-fallback"
+      };
+    }
+
+    return {
+      ok: false,
+      reason: "storage-provider-not-explicit",
+      configuredProvider: null,
+      effectiveProvider,
+      message:
+        "La subida de archivos no esta disponible ahora mismo porque OBJECT_STORAGE_PROVIDER no esta configurado en este entorno."
+    };
+  }
+
+  if (configuredProvider === "vercel-blob" && !hasEnv("BLOB_READ_WRITE_TOKEN")) {
+    return {
+      ok: false,
+      reason: "blob-token-missing",
+      configuredProvider,
+      effectiveProvider,
+      message:
+        "La subida de archivos no esta disponible ahora mismo porque falta BLOB_READ_WRITE_TOKEN para el almacenamiento configurado."
+    };
+  }
+
+  return {
+    ok: true,
+    configuredProvider,
+    effectiveProvider,
+    mode: "configured"
+  };
+}
+
+export function assertObjectStorageWriteReady() {
+  const readiness = getObjectStorageWriteReadiness();
+
+  if (!readiness.ok) {
+    throw new Error(readiness.message);
+  }
 }
 
 function getFilesystemRoot() {
