@@ -99,7 +99,7 @@ export function ForumShell({
         showTrackingNav={showTrackingNav}
       />
 
-      <div className="site-container min-h-[calc(100vh-74px)] py-5 lg:grid lg:grid-cols-[14.75rem_minmax(0,1fr)] lg:gap-7 lg:py-7">
+      <div className="app-container min-h-[calc(100vh-74px)] py-5 lg:grid lg:grid-cols-[13.5rem_minmax(0,1fr)] lg:gap-6 lg:py-7 xl:grid-cols-[14.25rem_minmax(0,1fr)] xl:gap-7">
         <aside className="hidden lg:sticky lg:top-[7.4rem] lg:block lg:self-start">
           <div className="flex flex-col gap-3">
             <SurfaceCard

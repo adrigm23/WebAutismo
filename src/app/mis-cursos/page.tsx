@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { Bell, CircleHelp, Settings2 } from "lucide-react";
 import { AccountAuthHeader } from "@/components/account/account-auth-header";
 import { CourseArtwork } from "@/components/course-artwork";
 import { Badge } from "@/components/ui/badge";
@@ -20,7 +19,6 @@ import {
 import { canViewCourseProgress } from "@/lib/course-permissions";
 import { getCourseProgressDetailsMapForUser } from "@/lib/course-progress";
 import { isStaffCourseRole } from "@/lib/course-roles";
-import { siteConfig } from "@/lib/site";
 import { formatRelativeTime } from "@/lib/utils";
 
 export const metadata: Metadata = {
@@ -133,22 +131,9 @@ export default async function MyCoursesPage() {
           label: "Explorar catalogo",
           href: "/cursos",
         };
-  const forumHref = primaryStudentCourse
-    ? buildCourseForumHref(primaryStudentCourse.space.course.slug)
-    : primaryStaffCourse
-      ? buildCourseForumHref(primaryStaffCourse.space.course.slug)
-      : "/cursos";
-  const activityHref = studentSpaces.length
-    ? "#student-courses-heading"
-    : staffSpaces.length
-      ? "#staff-courses-heading"
-      : "/mis-cursos";
   const navItems = [
     { label: "Mi cuenta", href: "/mi-cuenta" },
     { label: "Mis cursos", href: "/mis-cursos", active: true },
-    ...(primaryStudentCourse || staffSpaces[0]
-      ? [{ label: "Foro", href: forumHref }]
-      : []),
   ];
   const studentGridEntries = primaryStudentCourse
     ? studentCourseEntries.filter(
@@ -162,25 +147,6 @@ export default async function MyCoursesPage() {
   return (
     <div className="min-h-screen bg-[linear-gradient(180deg,#faf7f2_0%,#f5f7fa_48%,#fbf9f5_100%)] pb-20">
       <AccountAuthHeader
-        contextAction={primaryAction}
-        contextItems={[
-          {
-            label: "Actividad",
-            href: activityHref,
-            icon: <Bell className="h-4 w-4" />,
-          },
-          {
-            label: "Preferencias",
-            href: "/mi-cuenta#preferencias",
-            icon: <Settings2 className="h-4 w-4" />,
-          },
-          {
-            label: "Soporte",
-            href: `mailto:${siteConfig.supportEmail}`,
-            icon: <CircleHelp className="h-4 w-4" />,
-            external: true,
-          },
-        ]}
         fullName={user.name}
         initials={initials}
         navItems={navItems}

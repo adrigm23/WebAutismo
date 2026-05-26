@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { LogOut } from "lucide-react";
 import { logoutAction } from "@/actions/session";
-import { Button, ButtonLink, type ButtonVariant } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { siteConfig } from "@/lib/site";
 import { cn } from "@/lib/utils";
 
@@ -14,27 +14,11 @@ type AuthNavItem = {
   active?: boolean;
 };
 
-type AuthContextItem = {
-  label: string;
-  href: string;
-  icon?: ReactNode;
-  badge?: ReactNode;
-  external?: boolean;
-};
-
-type AuthContextAction = {
-  label: string;
-  href: string;
-  variant?: ButtonVariant;
-};
-
 type AccountAuthHeaderProps = {
   fullName: string;
   initials: string;
   roleLabel: string;
   navItems: AuthNavItem[];
-  contextItems?: AuthContextItem[];
-  contextAction?: AuthContextAction | null;
   footerContent?: ReactNode;
 };
 
@@ -43,12 +27,8 @@ export function AccountAuthHeader({
   initials,
   roleLabel,
   navItems,
-  contextItems = [],
-  contextAction = null,
   footerContent = null,
 }: AccountAuthHeaderProps) {
-  const hasContextRow = contextItems.length > 0 || Boolean(contextAction);
-
   return (
     <header className="sticky top-0 z-40 border-b border-[rgba(12,113,195,0.14)] bg-[rgba(255,255,255,0.92)] backdrop-blur-md">
       <div className="site-container py-4">
@@ -107,52 +87,6 @@ export function AccountAuthHeader({
               </form>
             </div>
           </div>
-
-          {hasContextRow ? (
-            <div className="flex flex-col gap-3 border-t border-[rgba(12,113,195,0.08)] pt-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
-              <div
-                aria-label="Acciones contextuales"
-                className="flex flex-wrap items-center gap-2"
-              >
-                {contextItems.map((item) =>
-                  item.external ? (
-                    <a
-                      className="inline-flex min-h-10 items-center justify-center rounded-[var(--radius-pill)] px-3 py-2 text-sm font-semibold text-[var(--color-ink)] transition hover:bg-[var(--color-primary-soft)] hover:text-[var(--color-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:ring-offset-2 focus:ring-offset-[var(--color-surface-canvas)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-surface-canvas)]"
-                      href={item.href}
-                      key={`${item.label}-${item.href}`}
-                    >
-                      {item.icon ? (
-                        <span className="mr-2">{item.icon}</span>
-                      ) : null}
-                      {item.label}
-                      {item.badge}
-                    </a>
-                  ) : (
-                    <Link
-                      className="inline-flex min-h-10 items-center justify-center rounded-[var(--radius-pill)] px-3 py-2 text-sm font-semibold text-[var(--color-ink)] transition hover:bg-[var(--color-primary-soft)] hover:text-[var(--color-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:ring-offset-2 focus:ring-offset-[var(--color-surface-canvas)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-surface-canvas)]"
-                      href={item.href}
-                      key={`${item.label}-${item.href}`}
-                    >
-                      {item.icon ? (
-                        <span className="mr-2">{item.icon}</span>
-                      ) : null}
-                      {item.label}
-                      {item.badge}
-                    </Link>
-                  ),
-                )}
-              </div>
-
-              {contextAction ? (
-                <ButtonLink
-                  href={contextAction.href}
-                  variant={contextAction.variant ?? "primary"}
-                >
-                  {contextAction.label}
-                </ButtonLink>
-              ) : null}
-            </div>
-          ) : null}
 
           {footerContent}
         </div>

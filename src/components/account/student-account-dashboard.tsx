@@ -1,13 +1,11 @@
 import Link from "next/link";
 import { Suspense } from "react";
 import {
-  Bell,
   CircleHelp,
   Compass,
   FileCheck2,
   GraduationCap,
   MessageSquareText,
-  Settings2,
 } from "lucide-react";
 import { AccountAuthHeader } from "@/components/account/account-auth-header";
 import {
@@ -19,7 +17,6 @@ import {
   StudentPreferencesCard,
   StudentRecentActivitySection,
   StudentSectionSkeleton,
-  StudentUnreadBadge,
 } from "@/components/account/student-dashboard-shared";
 import { CourseArtwork } from "@/components/course-artwork";
 import { Badge } from "@/components/ui/badge";
@@ -94,43 +91,11 @@ export function StudentAccountDashboard({
   const navItems = [
     { label: "Mi cuenta", href: "/mi-cuenta", active: true },
     { label: "Mis cursos", href: "/mis-cursos" },
-    ...(primaryCourse ? [{ label: "Foro", href: forumHref }] : []),
   ];
 
   return (
     <div className="min-h-screen bg-[linear-gradient(180deg,#faf7f2_0%,#f5f7fa_48%,#fbf9f5_100%)] pb-24">
       <AccountAuthHeader
-        contextAction={
-          primaryCourse
-            ? {
-                label: "Continuar leccion",
-                href: buildCourseContentHref(primaryCourse.space.course.slug),
-              }
-            : null
-        }
-        contextItems={[
-          {
-            label: "Avisos",
-            href: "#actividad-reciente",
-            icon: <Bell className="h-4 w-4" />,
-            badge: (
-              <Suspense fallback={null}>
-                <StudentUnreadBadge notificationSnapshotPromise={notificationSnapshotPromise} />
-              </Suspense>
-            ),
-          },
-          {
-            label: "Preferencias",
-            href: "#preferencias",
-            icon: <Settings2 className="h-4 w-4" />,
-          },
-          {
-            label: "Soporte",
-            href: `mailto:${siteConfig.supportEmail}`,
-            icon: <CircleHelp className="h-4 w-4" />,
-            external: true,
-          },
-        ]}
         fullName={fullName}
         initials={initials}
         navItems={navItems}

@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { Suspense, type ComponentType } from "react";
 import {
-  Bell,
   BookOpenCheck,
   CircleHelp,
   FileClock,
@@ -9,7 +8,6 @@ import {
   GraduationCap,
   LineChart,
   MessageSquareText,
-  Settings2
 } from "lucide-react";
 import { AccountAuthHeader } from "@/components/account/account-auth-header";
 import {
@@ -23,7 +21,6 @@ import {
   TeacherPreferencesCard,
   TeacherRecentActivitySection,
   TeacherSectionSkeleton,
-  TeacherUnreadBadge
 } from "@/components/account/teacher-dashboard-shared";
 import { CourseArtwork } from "@/components/course-artwork";
 import { Badge } from "@/components/ui/badge";
@@ -108,51 +105,14 @@ export function TeacherAccountDashboard({
   const totalSubmissions = getTotalSubmissionsCount(teacherCourses);
   const reviewRate =
     totalSubmissions > 0 ? Math.round((reviewedSubmissions / totalSubmissions) * 100) : 0;
-  const primaryAction = primaryCourse
-    ? {
-        label:
-          primaryCourse.pendingReviewItems.length > 0 ? "Revisar entregas" : "Ver seguimiento",
-        href: paths.trackingHref
-      }
-    : null;
   const navItems = [
     { label: "Mi cuenta", href: "/mi-cuenta", active: true },
     { label: "Mis cursos", href: "/mis-cursos" },
-    ...(primaryCourse
-      ? [
-          { label: "Seguimiento", href: paths.trackingHref },
-          { label: "Foro", href: paths.forumHref }
-        ]
-      : [])
   ];
 
   return (
     <div className="min-h-screen bg-[linear-gradient(180deg,#f8f6f1_0%,#f4f7fb_52%,#fbfaf8_100%)] pb-24">
       <AccountAuthHeader
-        contextAction={primaryAction}
-        contextItems={[
-          {
-            label: "Avisos",
-            href: "#actividad-docente",
-            icon: <Bell className="h-4 w-4" />,
-            badge: (
-              <Suspense fallback={null}>
-                <TeacherUnreadBadge notificationSnapshotPromise={notificationSnapshotPromise} />
-              </Suspense>
-            )
-          },
-          {
-            label: "Preferencias",
-            href: "#preferencias",
-            icon: <Settings2 className="h-4 w-4" />
-          },
-          {
-            label: "Soporte",
-            href: `mailto:${siteConfig.supportEmail}`,
-            icon: <CircleHelp className="h-4 w-4" />,
-            external: true
-          }
-        ]}
         fullName={fullName}
         initials={initials}
         navItems={navItems}
