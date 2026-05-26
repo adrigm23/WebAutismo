@@ -71,16 +71,17 @@ test.describe("authenticated admin flows", () => {
     "Set E2E_ADMIN_EMAIL and E2E_ADMIN_PASSWORD to run admin flows."
   );
 
-  test("admin dashboard is reachable after login", async ({ page }) => {
+  test("admin login lands on the admin dashboard and mi cuenta remains reachable", async ({ page }) => {
     await page.goto("/acceder");
     await loginFromAccessPanel(page, adminEmail!, adminPassword!);
-
-    if (!/\/admin(?:$|[/?#])/.test(page.url())) {
-      await page.goto("/admin");
-    }
 
     await page.waitForURL(/\/admin/, { timeout: 10_000 });
     await expect(page.getByRole("main")).toBeVisible();
     await expect(page.getByRole("heading", { name: /dashboard general|admin/i })).toBeVisible();
+
+    await page.goto("/mi-cuenta");
+    await page.waitForURL(/\/mi-cuenta(?:$|[?#])/, { timeout: 10_000 });
+    await expect(page.getByRole("heading", { name: /hola/i })).toBeVisible();
+    await expect(page.getByRole("link", { name: /abrir administracion/i })).toBeVisible();
   });
 });

@@ -73,6 +73,24 @@ function getDefaultPrivateRedirect(globalRole: "STUDENT" | "TEACHER" | "ADMIN") 
   return globalRole === "ADMIN" ? "/admin" : "/mi-cuenta";
 }
 
+function getPostLoginRedirect(
+  target: string | null | undefined,
+  globalRole: "STUDENT" | "TEACHER" | "ADMIN"
+) {
+  const fallback = getDefaultPrivateRedirect(globalRole);
+  const safeTarget = getSafeRedirect(target, fallback);
+
+  if (globalRole !== "ADMIN") {
+    return safeTarget;
+  }
+
+  if (/^\/mi-cuenta(?:$|[?#])/.test(safeTarget)) {
+    return "/admin";
+  }
+
+  return safeTarget;
+}
+
 function createAuthLogger(input: {
   requestHeaders: Headers;
   action: "register" | "login";
@@ -420,9 +438,7 @@ export async function loginAction(
         result: "logged-in-demo",
         durationMs: Date.now() - startedAt
       });
-      redirect(
-        getSafeRedirect(parsed.data.next, getDefaultPrivateRedirect(demoUser.globalRole))
-      );
+      redirect(getPostLoginRedirect(parsed.data.next, demoUser.globalRole));
     }
 
     const user = await getUserForLogin(normalizedEmail);
@@ -513,7 +529,7 @@ export async function loginAction(
       result: "logged-in",
       durationMs: Date.now() - startedAt
     });
-    redirect(getSafeRedirect(parsed.data.next, getDefaultPrivateRedirect(globalRole)));
+    redirect(getPostLoginRedirect(parsed.data.next, globalRole));
   } catch (error) {
     if (isRedirectSignal(error)) {
       throw error;

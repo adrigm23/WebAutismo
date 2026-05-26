@@ -153,6 +153,80 @@ describe("auth server actions", () => {
     expect(verifyPasswordMock).toHaveBeenCalledWith("supersegura123", "hashed-password");
   });
 
+  test("redirects admins to /admin when next points to /mi-cuenta", async () => {
+    const db = {
+      user: {
+        findUnique: vi.fn(async () => ({
+          id: "admin-1",
+          email: "admin@example.com",
+          passwordHash: "hashed-password",
+          globalRole: "ADMIN",
+          isActive: true
+        }))
+      }
+    };
+
+    getDbMock.mockReturnValue(db);
+    ensureBootstrapAdminMock.mockResolvedValue("ADMIN");
+
+    const { loginAction } = await import("@/actions/auth");
+    const formData = new FormData();
+    formData.set("email", "admin@example.com");
+    formData.set("password", "supersegura123");
+    formData.set("next", "/mi-cuenta");
+
+    await expect(loginAction({}, formData)).rejects.toThrow("REDIRECT:/admin");
+  });
+
+  test("preserves explicit private targets for admins on login", async () => {
+    const db = {
+      user: {
+        findUnique: vi.fn(async () => ({
+          id: "admin-1",
+          email: "admin@example.com",
+          passwordHash: "hashed-password",
+          globalRole: "ADMIN",
+          isActive: true
+        }))
+      }
+    };
+
+    getDbMock.mockReturnValue(db);
+    ensureBootstrapAdminMock.mockResolvedValue("ADMIN");
+
+    const { loginAction } = await import("@/actions/auth");
+    const formData = new FormData();
+    formData.set("email", "admin@example.com");
+    formData.set("password", "supersegura123");
+    formData.set("next", "/admin/usuarios");
+
+    await expect(loginAction({}, formData)).rejects.toThrow("REDIRECT:/admin/usuarios");
+  });
+
+  test("keeps /mi-cuenta as the default login redirect for students", async () => {
+    const db = {
+      user: {
+        findUnique: vi.fn(async () => ({
+          id: "student-1",
+          email: "student@example.com",
+          passwordHash: "hashed-password",
+          globalRole: "STUDENT",
+          isActive: true
+        }))
+      }
+    };
+
+    getDbMock.mockReturnValue(db);
+    ensureBootstrapAdminMock.mockResolvedValue("STUDENT");
+
+    const { loginAction } = await import("@/actions/auth");
+    const formData = new FormData();
+    formData.set("email", "student@example.com");
+    formData.set("password", "supersegura123");
+
+    await expect(loginAction({}, formData)).rejects.toThrow("REDIRECT:/mi-cuenta");
+  });
+
   test("redirects bootstrap admins directly to the admin panel on register", async () => {
     const db = {
       user: {
