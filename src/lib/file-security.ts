@@ -1,6 +1,9 @@
 import path from "node:path";
+import { MAX_APP_UPLOAD_SIZE_BYTES } from "@/lib/upload-limits";
 
-export const MAX_STORED_ASSET_SIZE_BYTES = 10 * 1024 * 1024;
+// App-level upload cap for course resources and submissions. Files above this limit
+// must return a controlled validation error even if the transport layer accepts them.
+export const MAX_STORED_ASSET_SIZE_BYTES = MAX_APP_UPLOAD_SIZE_BYTES;
 
 const MIME_EXTENSION_MAP = {
   "application/msword": [".doc"],

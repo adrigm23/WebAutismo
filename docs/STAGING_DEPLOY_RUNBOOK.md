@@ -185,6 +185,16 @@ Si `OBJECT_STORAGE_PROVIDER=vercel-blob`:
   - adjuntos de foro
   - adjuntos de entregas
 
+Límites reales de subida para recursos y entregas del campus:
+
+- Límite técnico de request en Next.js: `serverActions.bodySizeLimit=30mb` y `proxyClientMaxBodySize=30mb`.
+- Límite funcional de la aplicación para archivos de recursos y entregas: `10 MB`.
+- Comportamiento esperado:
+  - hasta `10 MB`: la subida debe procesarse normalmente
+  - más de `10 MB` y hasta `30mb`: la acción debe devolver error controlado de validación
+  - por encima de `30mb`: Next.js/Vercel puede rechazar la request antes de entrar en la acción
+- No subir el límite funcional sin revisar `src/lib/file-security.ts`, storage y QA de producción.
+
 Si aún existen blobs binarios en `StoredAsset` y se quiere salir de MySQL:
 
 ```bash

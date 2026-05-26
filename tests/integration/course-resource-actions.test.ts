@@ -1,3 +1,5 @@
+import { MAX_STORED_ASSET_SIZE_BYTES } from "@/lib/file-security";
+
 const redirectMock = vi.fn((target: string) => {
   throw new Error(`REDIRECT:${target}`);
 });
@@ -129,5 +131,28 @@ describe("course resource actions", () => {
       "REDIRECT:/mis-cursos/curso-demo?tab=resources&resource=res-1#resource-res-1"
     );
     expect(revalidatePathMock).toHaveBeenCalledWith("/mis-cursos/curso-demo");
+  });
+
+  test("returns a controlled error when the uploaded file exceeds the app size limit", async () => {
+    const { createCourseResourceAction } = await import("@/actions/course-resources");
+    const formData = new FormData();
+    formData.set("courseSlug", "curso-demo");
+    formData.set("type", "MATERIAL");
+    formData.set("source", "FILE");
+    formData.set("title", "Guia PDF");
+    formData.set(
+      "file",
+      new File([new Uint8Array(MAX_STORED_ASSET_SIZE_BYTES + 1)], "guia.pdf", {
+        type: "application/pdf"
+      })
+    );
+
+    const result = await createCourseResourceAction({}, formData);
+
+    expect(result).toEqual({
+      error: "El archivo supera el tamano maximo permitido de 10 MB."
+    });
+    expect(createCourseResourceMock).not.toHaveBeenCalled();
+    expect(redirectMock).not.toHaveBeenCalled();
   });
 });

@@ -1,6 +1,7 @@
 import type { NextConfig } from "next";
 
 const isDev = process.env.NODE_ENV === "development";
+const uploadTransportBodySizeLimit = "30mb";
 
 const securityHeaders = [
   {
@@ -45,6 +46,14 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   allowedDevOrigins: ["127.0.0.1"],
+  experimental: {
+    // Keep the Next.js request buffering limit aligned with the Server Action body cap.
+    // This app uses proxy, so both limits must stay above the app-level 10 MB validation.
+    proxyClientMaxBodySize: uploadTransportBodySizeLimit,
+    serverActions: {
+      bodySizeLimit: uploadTransportBodySizeLimit
+    }
+  },
   async headers() {
     return [
       {
