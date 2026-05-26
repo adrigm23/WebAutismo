@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { redirect } from "next/navigation";
 import {
   Bell,
   BookOpen,
@@ -57,10 +56,6 @@ export const metadata: Metadata = {
 export default async function AccountPage() {
   const user = await requireUser("/mi-cuenta");
 
-  if (user.globalRole === "ADMIN") {
-    redirect("/admin");
-  }
-
   const isDemoUser = isDemoUserId(user.id);
   const spaces = await getUserCourseSpaces({
     userId: user.id,
@@ -78,7 +73,7 @@ export default async function AccountPage() {
     courseSlugs: spaces.map((space) => space.course.slug),
   });
 
-  if (staffSpaces.length > 0 || user.globalRole === "TEACHER") {
+  if (user.globalRole !== "ADMIN" && (staffSpaces.length > 0 || user.globalRole === "TEACHER")) {
     const learnerSummariesByCourse =
       await getLearnerProgressSummariesForCatalogCourses(
         staffSpaces.map((space) => space.course),
@@ -182,7 +177,9 @@ export default async function AccountPage() {
               Hola, {firstName}
             </h1>
             <p className="mt-4 text-[1.18rem] leading-10 text-[var(--color-ink)]/84">
-              {staffSpaces.length
+              {user.globalRole === "ADMIN"
+                ? "Aqui tienes una vista resumida de tu cuenta, tus accesos internos al campus y un atajo directo a la administracion."
+                : staffSpaces.length
                 ? "Aqui tienes tus accesos al campus, tus espacios docentes y la configuracion operativa de tu cuenta."
                 : "Aqui tienes tu acceso actual al campus, tus avisos recientes y la configuracion operativa de tu cuenta."}
             </p>

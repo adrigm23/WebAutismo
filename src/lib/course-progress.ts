@@ -109,34 +109,6 @@ function getDemoProgressRecords(input: {
   }));
 }
 
-function buildDemoLearnerProgressRowsForCourse(course: CourseProgressCourseShape) {
-  const demoStudent = getDemoUserById("demo-student");
-
-  if (!demoStudent) {
-    return [] as CourseLearnerProgressRow[];
-  }
-
-  const summary = normalizeCourseProgress(
-    course,
-    getDemoProgressRecords({
-      userId: demoStudent.id,
-      course
-    })
-  );
-
-  return [
-    {
-      userId: demoStudent.id,
-      learnerName: demoStudent.name,
-      learnerEmail: demoStudent.email,
-      completedModules: summary.completedModules,
-      totalModules: summary.totalModules,
-      completionRate: summary.completionRate,
-      lastCompletedAt: summary.lastCompletedAt
-    }
-  ] satisfies CourseLearnerProgressRow[];
-}
-
 function getModuleFromLegacyIndex(course: CourseProgressCourseShape, moduleIndex: number | null) {
   if (moduleIndex === null || moduleIndex < 0 || moduleIndex >= course.modules.length) {
     return null;

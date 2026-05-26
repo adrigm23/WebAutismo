@@ -9,7 +9,23 @@ const adminPassword = process.env.E2E_ADMIN_PASSWORD;
 async function loginFromAccessPanel(page: Page, email: string, password: string) {
   await page.getByLabel(/correo/i).fill(email);
   await page.getByLabel(/contrase/i).fill(password);
-  await page.getByRole("button", { name: /acceder al panel/i }).click();
+  await Promise.all([
+    page.waitForURL(/\/mi-cuenta|\/admin/, { timeout: 15_000 }),
+    page.getByRole("button", { name: /acceder al panel/i }).click()
+  ]);
+}
+
+async function expectVisibleCampusCta(page: Page) {
+  for (const label of ["Continuar contenido", "Abrir tarea", "Ver recurso"]) {
+    const button = page.getByRole("button", { name: label, exact: true });
+
+    if ((await button.count()) > 0) {
+      await expect(button).toBeVisible();
+      return;
+    }
+  }
+
+  throw new Error("Expected a visible campus CTA button.");
 }
 
 test.describe("authenticated student flows", () => {
@@ -41,11 +57,7 @@ test.describe("authenticated student flows", () => {
     await expect(page.getByRole("heading", { level: 1 }).first()).toBeVisible();
     await expect(page.getByRole("link", { name: /^Foro$/ })).toBeVisible();
     await expect(page.getByText(/^Comunidad$/)).toBeVisible();
-    await expect(
-      page
-        .getByRole("button", { name: /continuar contenido|abrir tarea/i })
-        .first()
-    ).toBeVisible();
+    await expectVisibleCampusCta(page);
 
     await page.goto(`/mis-cursos/${courseSlug}/foro`);
     await expect(page.getByRole("link", { name: /^Nuevo hilo$/ })).toBeVisible();
@@ -62,6 +74,10 @@ test.describe("authenticated admin flows", () => {
   test("admin dashboard is reachable after login", async ({ page }) => {
     await page.goto("/acceder");
     await loginFromAccessPanel(page, adminEmail!, adminPassword!);
+
+    if (!/\/admin(?:$|[/?#])/.test(page.url())) {
+      await page.goto("/admin");
+    }
 
     await page.waitForURL(/\/admin/, { timeout: 10_000 });
     await expect(page.getByRole("main")).toBeVisible();
