@@ -1,3 +1,5 @@
+"use client";
+
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { LogOut } from "lucide-react";
@@ -33,6 +35,7 @@ type AccountAuthHeaderProps = {
   navItems: AuthNavItem[];
   contextItems?: AuthContextItem[];
   contextAction?: AuthContextAction | null;
+  footerContent?: ReactNode;
 };
 
 export function AccountAuthHeader({
@@ -41,7 +44,8 @@ export function AccountAuthHeader({
   roleLabel,
   navItems,
   contextItems = [],
-  contextAction = null
+  contextAction = null,
+  footerContent = null,
 }: AccountAuthHeaderProps) {
   const hasContextRow = contextItems.length > 0 || Boolean(contextAction);
 
@@ -70,7 +74,7 @@ export function AccountAuthHeader({
                     "inline-flex min-h-11 items-center justify-center rounded-[var(--radius-pill)] px-3.5 py-2 text-sm font-semibold whitespace-nowrap transition focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:ring-offset-2 focus:ring-offset-[var(--color-surface-canvas)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-surface-canvas)]",
                     item.active
                       ? "border border-[var(--color-primary)] bg-white text-[var(--color-primary)] shadow-[var(--shadow-inset-soft)]"
-                      : "text-[var(--color-ink)] hover:bg-[var(--color-primary-soft)] hover:text-[var(--color-primary)]"
+                      : "text-[var(--color-ink)] hover:bg-[var(--color-primary-soft)] hover:text-[var(--color-primary)]",
                   )}
                   href={item.href}
                   key={item.label}
@@ -86,8 +90,12 @@ export function AccountAuthHeader({
                   {initials}
                 </div>
                 <div className="min-w-0 overflow-hidden">
-                  <p className="truncate text-sm font-semibold text-[var(--color-ink)]">{fullName}</p>
-                  <p className="truncate text-xs text-[var(--color-muted)]">{roleLabel}</p>
+                  <p className="truncate text-sm font-semibold text-[var(--color-ink)]">
+                    {fullName}
+                  </p>
+                  <p className="truncate text-xs text-[var(--color-muted)]">
+                    {roleLabel}
+                  </p>
                 </div>
               </div>
 
@@ -113,7 +121,9 @@ export function AccountAuthHeader({
                       href={item.href}
                       key={`${item.label}-${item.href}`}
                     >
-                      {item.icon ? <span className="mr-2">{item.icon}</span> : null}
+                      {item.icon ? (
+                        <span className="mr-2">{item.icon}</span>
+                      ) : null}
                       {item.label}
                       {item.badge}
                     </a>
@@ -123,11 +133,13 @@ export function AccountAuthHeader({
                       href={item.href}
                       key={`${item.label}-${item.href}`}
                     >
-                      {item.icon ? <span className="mr-2">{item.icon}</span> : null}
+                      {item.icon ? (
+                        <span className="mr-2">{item.icon}</span>
+                      ) : null}
                       {item.label}
                       {item.badge}
                     </Link>
-                  )
+                  ),
                 )}
               </div>
 
@@ -141,6 +153,8 @@ export function AccountAuthHeader({
               ) : null}
             </div>
           ) : null}
+
+          {footerContent}
         </div>
       </div>
     </header>

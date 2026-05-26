@@ -28,8 +28,10 @@ export function CourseLearningShell({
   forumCategories,
   resources,
   progress,
+  viewerName,
   roleLabel,
   canModerate,
+  showTrackingNav,
   editionLabel,
   initialActiveTab,
   initialFocusedResourceId = null,
@@ -350,6 +352,7 @@ export function CourseLearningShell({
         canModerate={canModerate}
         courseSlug={course.slug}
         courseTitle={course.title}
+        fullName={viewerName}
         onResourcesClick={() =>
           isFocusedTaskWorkspace
             ? clearFocusedTaskWorkspace()
@@ -357,6 +360,7 @@ export function CourseLearningShell({
         }
         onTabChange={handleTabChange}
         roleLabel={roleLabel}
+        showTrackingNav={showTrackingNav}
       />
 
       <div className="site-container py-5 xl:py-7">
@@ -368,8 +372,12 @@ export function CourseLearningShell({
           <div
             className={cn(
               "space-y-4",
-              !canModerate && activeTab === "content" && "mx-auto max-w-[72rem]",
-              !canModerate && activeTab === "resources" && "mx-auto max-w-[76rem]",
+              !canModerate &&
+                activeTab === "content" &&
+                "mx-auto max-w-[72rem]",
+              !canModerate &&
+                activeTab === "resources" &&
+                "mx-auto max-w-[76rem]",
             )}
           >
             {isFocusedTaskWorkspace ? (

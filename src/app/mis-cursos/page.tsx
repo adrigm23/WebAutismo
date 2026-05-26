@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { Bell, CircleHelp, Settings2 } from "lucide-react";
 import { AccountAuthHeader } from "@/components/account/account-auth-header";
 import { CourseArtwork } from "@/components/course-artwork";
@@ -16,7 +15,9 @@ import {
   buildCourseContentHref,
   buildCourseForumHref,
   buildCourseResourcesHref,
+  buildCourseTrackingHref,
 } from "@/lib/course-navigation";
+import { canViewCourseProgress } from "@/lib/course-permissions";
 import { getCourseProgressDetailsMapForUser } from "@/lib/course-progress";
 import { isStaffCourseRole } from "@/lib/course-roles";
 import { siteConfig } from "@/lib/site";
@@ -51,7 +52,9 @@ export default async function MyCoursesPage() {
     userIsActive: user.isActive,
   });
 
-  const studentSpaces = spaces.filter((space) => !isStaffCourseRole(space.role));
+  const studentSpaces = spaces.filter(
+    (space) => !isStaffCourseRole(space.role),
+  );
   const staffSpaces = spaces.filter((space) => isStaffCourseRole(space.role));
   const progressByCourse = await getCourseProgressDetailsMapForUser({
     userId: user.id,
@@ -68,6 +71,20 @@ export default async function MyCoursesPage() {
     space,
     progress: progressByCourse.get(space.course.slug) ?? null,
   }));
+  const staffCourseEntries = staffSpaces.map((space) => {
+    const showTrackingNav = canViewCourseProgress({
+      globalRole: user.globalRole,
+      viewerRole: space.role,
+    });
+
+    return {
+      space,
+      showTrackingNav,
+      teachingHref: showTrackingNav
+        ? buildCourseTrackingHref({ courseSlug: space.course.slug })
+        : buildCourseContentHref(space.course.slug),
+    };
+  });
   const primaryStudentCourse =
     [...studentCourseEntries].sort((left, right) => {
       const leftStarted =
@@ -87,8 +104,12 @@ export default async function MyCoursesPage() {
         return rightStarted - leftStarted;
       }
 
-      return (right.progress?.completionRate ?? 0) - (left.progress?.completionRate ?? 0);
+      return (
+        (right.progress?.completionRate ?? 0) -
+        (left.progress?.completionRate ?? 0)
+      );
     })[0] ?? null;
+  const primaryStaffCourse = staffCourseEntries[0] ?? null;
   const averageCompletion =
     studentCourseEntries.length > 0
       ? Math.round(
@@ -103,10 +124,10 @@ export default async function MyCoursesPage() {
         label: "Continuar leccion",
         href: buildCourseContentHref(primaryStudentCourse.space.course.slug),
       }
-    : staffSpaces[0]
+    : primaryStaffCourse
       ? {
           label: "Abrir docencia",
-          href: buildCourseContentHref(staffSpaces[0].course.slug),
+          href: primaryStaffCourse.teachingHref,
         }
       : {
           label: "Explorar catalogo",
@@ -114,8 +135,8 @@ export default async function MyCoursesPage() {
         };
   const forumHref = primaryStudentCourse
     ? buildCourseForumHref(primaryStudentCourse.space.course.slug)
-    : staffSpaces[0]
-      ? buildCourseForumHref(staffSpaces[0].course.slug)
+    : primaryStaffCourse
+      ? buildCourseForumHref(primaryStaffCourse.space.course.slug)
       : "/cursos";
   const activityHref = studentSpaces.length
     ? "#student-courses-heading"
@@ -125,13 +146,18 @@ export default async function MyCoursesPage() {
   const navItems = [
     { label: "Mi cuenta", href: "/mi-cuenta" },
     { label: "Mis cursos", href: "/mis-cursos", active: true },
-    ...((primaryStudentCourse || staffSpaces[0]) ? [{ label: "Foro", href: forumHref }] : []),
+    ...(primaryStudentCourse || staffSpaces[0]
+      ? [{ label: "Foro", href: forumHref }]
+      : []),
   ];
   const studentGridEntries = primaryStudentCourse
     ? studentCourseEntries.filter(
-        ({ space }) => space.course.slug !== primaryStudentCourse.space.course.slug,
+        ({ space }) =>
+          space.course.slug !== primaryStudentCourse.space.course.slug,
       )
     : studentCourseEntries;
+  const isTeacherOnlyView =
+    studentSpaces.length === 0 && staffCourseEntries.length > 0;
 
   return (
     <div className="min-h-screen bg-[linear-gradient(180deg,#faf7f2_0%,#f5f7fa_48%,#fbf9f5_100%)] pb-20">
@@ -165,13 +191,19 @@ export default async function MyCoursesPage() {
         <section className="grid gap-8 xl:grid-cols-[minmax(0,1.25fr)_minmax(18rem,0.75fr)]">
           <div>
             <SectionHeader
-              description="Retoma la leccion correcta, abre tareas pendientes y revisa tus accesos activos desde un area privada mas clara y continua."
+              description={
+                isTeacherOnlyView
+                  ? "Separamos tus cursos como alumno de tus asignaciones docentes para que cada acceso tenga contexto y no haya mensajes contradictorios."
+                  : "Retoma la leccion correcta, abre tareas pendientes y revisa tus accesos activos desde un area privada mas clara y continua."
+              }
               eyebrow="Area privada"
               title="Mis cursos"
             />
 
             <div className="mt-6 flex flex-wrap gap-3">
-              <ButtonLink href={primaryAction.href}>{primaryAction.label}</ButtonLink>
+              <ButtonLink href={primaryAction.href}>
+                {primaryAction.label}
+              </ButtonLink>
               <ButtonLink href="/mi-cuenta" variant="neutral">
                 Volver a mi cuenta
               </ButtonLink>
@@ -181,7 +213,9 @@ export default async function MyCoursesPage() {
               <SurfaceCard className="mt-8" padding="md" variant="muted">
                 <div className="flex flex-wrap items-center gap-2">
                   <Badge tone="brand">Leccion a continuar</Badge>
-                  <Badge tone="outline">{primaryStudentCourse.space.course.level}</Badge>
+                  <Badge tone="outline">
+                    {primaryStudentCourse.space.course.level}
+                  </Badge>
                 </div>
 
                 <h2 className="font-premium mt-4 text-display-md font-semibold text-[var(--color-ink)]">
@@ -191,6 +225,22 @@ export default async function MyCoursesPage() {
                   {primaryStudentCourse.progress
                     ? `${primaryStudentCourse.progress.completedModules} de ${primaryStudentCourse.progress.totalModules} modulos revisados y ${primaryStudentCourse.progress.pendingModules} pendientes.`
                     : "Curso listo para empezar en el campus."}
+                </p>
+              </SurfaceCard>
+            ) : isTeacherOnlyView && primaryStaffCourse ? (
+              <SurfaceCard className="mt-8" padding="md" variant="muted">
+                <div className="flex flex-wrap items-center gap-2">
+                  <Badge tone="info">Docencia activa</Badge>
+                  <Badge tone="outline">Sin cursos como alumno</Badge>
+                </div>
+
+                <h2 className="font-premium mt-4 text-display-md font-semibold text-[var(--color-ink)]">
+                  {primaryStaffCourse.space.course.title}
+                </h2>
+                <p className="mt-3 max-w-3xl text-body-md text-[var(--color-ink-soft)]">
+                  Tienes cursos asignados como docente. Abre la operativa del
+                  curso desde aqui o entra en la seccion docente para ver el
+                  resto de asignaciones.
                 </p>
               </SurfaceCard>
             ) : null}
@@ -250,10 +300,12 @@ export default async function MyCoursesPage() {
                           Progreso
                         </p>
                         <p className="mt-3 text-heading-lg font-semibold text-[var(--color-ink)]">
-                          {primaryStudentCourse.progress?.completionRate ?? 0}% completado
+                          {primaryStudentCourse.progress?.completionRate ?? 0}%
+                          completado
                         </p>
                         <p className="mt-2 text-body-sm text-[var(--color-muted)]">
-                          {primaryStudentCourse.progress?.pendingModules ?? 0} modulos pendientes.
+                          {primaryStudentCourse.progress?.pendingModules ?? 0}{" "}
+                          modulos pendientes.
                         </p>
                       </div>
                     </div>
@@ -271,12 +323,16 @@ export default async function MyCoursesPage() {
 
                       <div className="mt-4 flex flex-wrap gap-3">
                         <ButtonLink
-                          href={buildCourseContentHref(primaryStudentCourse.space.course.slug)}
+                          href={buildCourseContentHref(
+                            primaryStudentCourse.space.course.slug,
+                          )}
                         >
                           Continuar leccion
                         </ButtonLink>
                         <ButtonLink
-                          href={buildCourseResourcesHref(primaryStudentCourse.space.course.slug)}
+                          href={buildCourseResourcesHref(
+                            primaryStudentCourse.space.course.slug,
+                          )}
                           variant="neutral"
                         >
                           Ver tareas
@@ -303,7 +359,10 @@ export default async function MyCoursesPage() {
               title="Como alumno"
             />
 
-            <div className="mt-8 grid gap-5 lg:grid-cols-2" id="student-courses-heading">
+            <div
+              className="mt-8 grid gap-5 lg:grid-cols-2"
+              id="student-courses-heading"
+            >
               {studentGridEntries.length ? (
                 studentGridEntries.map(({ space, progress }) => {
                   const completion = progress?.completionRate ?? 0;
@@ -320,13 +379,15 @@ export default async function MyCoursesPage() {
 
                           <div className="flex flex-col p-5 lg:p-6">
                             <p className="text-label-sm font-medium text-[var(--color-muted)]">
-                              {space.course.activeEdition?.label ?? "Matricula activa"}
+                              {space.course.activeEdition?.label ??
+                                "Matricula activa"}
                             </p>
                             <h3 className="font-premium mt-2 text-heading-lg font-semibold text-[var(--color-ink)]">
                               {space.course.title}
                             </h3>
                             <p className="mt-2 text-body-sm text-[var(--color-muted)]">
-                              Progreso: {Math.round(completion)}% · {progress?.completedModules ?? 0}/
+                              Progreso: {Math.round(completion)}% ·{" "}
+                              {progress?.completedModules ?? 0}/
                               {progress?.totalModules ?? 0} modulos
                             </p>
 
@@ -338,7 +399,10 @@ export default async function MyCoursesPage() {
                             </div>
 
                             <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm text-[var(--color-muted)]">
-                              <span>{progress?.pendingModules ?? 0} modulos pendientes</span>
+                              <span>
+                                {progress?.pendingModules ?? 0} modulos
+                                pendientes
+                              </span>
                               <span>
                                 {progress?.lastCompletedAt
                                   ? `Actividad ${formatRelativeTime(progress.lastCompletedAt)}`
@@ -347,11 +411,17 @@ export default async function MyCoursesPage() {
                             </div>
 
                             <div className="mt-5 flex flex-wrap gap-3">
-                              <ButtonLink href={buildCourseContentHref(space.course.slug)}>
-                                {completion > 0 ? "Continuar leccion" : "Abrir leccion"}
+                              <ButtonLink
+                                href={buildCourseContentHref(space.course.slug)}
+                              >
+                                {completion > 0
+                                  ? "Continuar leccion"
+                                  : "Abrir leccion"}
                               </ButtonLink>
                               <ButtonLink
-                                href={buildCourseResourcesHref(space.course.slug)}
+                                href={buildCourseResourcesHref(
+                                  space.course.slug,
+                                )}
                                 variant="neutral"
                               >
                                 Ver tareas
@@ -369,15 +439,21 @@ export default async function MyCoursesPage() {
                     Este curso ya esta destacado arriba como acceso principal.
                   </p>
                   <p className="mt-2 text-body-sm text-[var(--color-muted)]">
-                    Cuando tengas mas matriculas activas, apareceran aqui con progreso, actividad y
-                    accesos directos adicionales.
+                    Cuando tengas mas matriculas activas, apareceran aqui con
+                    progreso, actividad y accesos directos adicionales.
                   </p>
                   <div className="mt-5 flex flex-wrap gap-3">
-                    <ButtonLink href={buildCourseContentHref(primaryStudentCourse.space.course.slug)}>
+                    <ButtonLink
+                      href={buildCourseContentHref(
+                        primaryStudentCourse.space.course.slug,
+                      )}
+                    >
                       Continuar leccion
                     </ButtonLink>
                     <ButtonLink
-                      href={buildCourseResourcesHref(primaryStudentCourse.space.course.slug)}
+                      href={buildCourseResourcesHref(
+                        primaryStudentCourse.space.course.slug,
+                      )}
                       variant="neutral"
                     >
                       Ver tareas
@@ -386,6 +462,27 @@ export default async function MyCoursesPage() {
                 </Card>
               ) : null}
             </div>
+          </section>
+        ) : staffCourseEntries.length ? (
+          <section aria-labelledby="student-courses-heading" className="mt-14">
+            <SectionHeader
+              actions={
+                <ButtonLink href="/cursos" variant="ghost">
+                  Ver catalogo
+                </ButtonLink>
+              }
+              description="Tus cursos asignados como docente aparecen separados justo debajo para que el recorrido no mezcle aprendizaje y operativa."
+              eyebrow="Aprendizaje"
+              title="Como alumno"
+            />
+
+            <EmptyState
+              action={<ButtonLink href="/cursos">Ver catalogo</ButtonLink>}
+              align="center"
+              className="mt-8"
+              description="Cuando te matricules en un curso, aparecera aqui sin mezclarse con tu espacio docente."
+              title="No tienes cursos activos como alumno"
+            />
           </section>
         ) : (
           <EmptyState
@@ -405,22 +502,67 @@ export default async function MyCoursesPage() {
                   Abrir panel docente
                 </ButtonLink>
               }
+              description="Accesos operativos separados del recorrido de alumno para abrir campus, seguimiento y foro con el contexto correcto."
               eyebrow="Docencia"
               id="staff-courses-heading"
-              title="Como docente"
+              title="Cursos asignados como docente"
             />
 
             <div className="mt-6 grid gap-4 md:grid-cols-2">
-              {staffSpaces.map((space) => (
-                <Link
-                  className="ui-card-base ui-card-interactive block rounded-[var(--radius-lg)] p-5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2"
-                  href={buildCourseContentHref(space.course.slug)}
-                  key={space.course.slug}
-                >
-                  <p className="text-xs font-medium text-[var(--color-muted)]">Gestion docente</p>
-                  <p className="mt-2 font-semibold text-[var(--color-ink)]">{space.course.title}</p>
-                </Link>
-              ))}
+              {staffCourseEntries.map(
+                ({ space, showTrackingNav, teachingHref }) => (
+                  <Card
+                    className="p-5"
+                    key={space.course.slug}
+                    variant="elevated"
+                  >
+                    <div className="flex h-full flex-col gap-4">
+                      <div>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <Badge tone="info">Docencia</Badge>
+                          <Badge tone="outline">
+                            {showTrackingNav
+                              ? "Seguimiento operativo"
+                              : "Campus docente"}
+                          </Badge>
+                        </div>
+                        <p className="mt-3 text-xs font-medium text-[var(--color-muted)]">
+                          {space.course.activeEdition?.label ??
+                            "Curso asignado"}
+                        </p>
+                        <p className="mt-2 font-semibold text-[var(--color-ink)]">
+                          {space.course.title}
+                        </p>
+                        <p className="mt-2 text-sm leading-6 text-[var(--color-muted)]">
+                          {showTrackingNav
+                            ? "Abre seguimiento para revisar alumnado y usa campus o foro sin salir del mismo curso."
+                            : "Abre el campus docente del curso y manten el acceso operativo separado del area de alumno."}
+                        </p>
+                      </div>
+
+                      <div className="mt-auto flex flex-wrap gap-3">
+                        <ButtonLink href={teachingHref}>
+                          {showTrackingNav ? "Abrir docencia" : "Abrir campus"}
+                        </ButtonLink>
+                        {showTrackingNav ? (
+                          <ButtonLink
+                            href={buildCourseContentHref(space.course.slug)}
+                            variant="neutral"
+                          >
+                            Abrir campus
+                          </ButtonLink>
+                        ) : null}
+                        <ButtonLink
+                          href={buildCourseForumHref(space.course.slug)}
+                          variant="ghost"
+                        >
+                          Abrir foro
+                        </ButtonLink>
+                      </div>
+                    </div>
+                  </Card>
+                ),
+              )}
             </div>
           </section>
         ) : null}

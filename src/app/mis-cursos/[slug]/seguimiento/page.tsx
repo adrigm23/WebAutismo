@@ -1,13 +1,9 @@
 import type { Metadata } from "next";
 import type { CourseEnrollmentStatus } from "@prisma/client";
-import {
-  BarChart3,
-  FileClock,
-} from "lucide-react";
+import { BarChart3, FileClock } from "lucide-react";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { AccountAuthHeader } from "@/components/account/account-auth-header";
-import { getTeacherDashboardInitials } from "@/components/account/teacher-dashboard-shared";
+import { CoursePrivateHeader } from "@/components/learning/course-private-header";
 import { CourseExerciseReviewForm } from "@/components/learning/course-exercise-review-form";
 import { Badge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button";
@@ -429,7 +425,6 @@ export default async function CourseTrackingPage({
   );
   const forumHref = buildCourseForumHref(slug);
   const teacherFullName = user.name ?? user.email;
-  const teacherInitials = getTeacherDashboardInitials(teacherFullName);
   const roleLabel = getRoleLabel(access.role);
   const firstReviewHref = reviewQueue[0]
     ? `#submission-${reviewQueue[0].submission.id}`
@@ -442,21 +437,12 @@ export default async function CourseTrackingPage({
 
   return (
     <div className="min-h-screen bg-[linear-gradient(180deg,#f8f6f1_0%,#f4f7fb_52%,#fbfaf8_100%)] pb-24">
-      <AccountAuthHeader
+      <CoursePrivateHeader
+        activeSection="tracking"
+        courseSlug={slug}
         fullName={teacherFullName}
-        initials={teacherInitials}
-        navItems={[
-          { label: "Mi cuenta", href: "/mi-cuenta" },
-          { label: "Mis cursos", href: "/mis-cursos" },
-          { label: "Campus", href: campusContentHref },
-          {
-            label: "Seguimiento",
-            href: `/mis-cursos/${slug}/seguimiento`,
-            active: true,
-          },
-          { label: "Foro", href: forumHref },
-        ]}
         roleLabel={roleLabel}
+        showTrackingNav
       />
 
       <main className="site-container pt-6 sm:pt-8">
@@ -561,7 +547,11 @@ export default async function CourseTrackingPage({
                 </div>
               </div>
               {firstReviewHref ? (
-                <ButtonLink className="mt-4" href={firstReviewHref} variant="secondary">
+                <ButtonLink
+                  className="mt-4"
+                  href={firstReviewHref}
+                  variant="secondary"
+                >
                   Ir a la primera revisión
                 </ButtonLink>
               ) : null}

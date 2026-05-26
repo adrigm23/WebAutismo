@@ -6,8 +6,9 @@ import { getCatalogCourseBySlug } from "@/lib/course-catalog";
 import {
   canAccessCourseCommunity,
   canModerateCourse,
-  getRoleLabel
+  getRoleLabel,
 } from "@/lib/course-community";
+import { canViewCourseProgress } from "@/lib/course-permissions";
 import { getForumCategories, getUserForumNotifications } from "@/lib/forum";
 
 type ForumLayoutProps = {
@@ -15,7 +16,10 @@ type ForumLayoutProps = {
   params: Promise<{ slug: string }>;
 };
 
-export default async function ForumLayout({ children, params }: ForumLayoutProps) {
+export default async function ForumLayout({
+  children,
+  params,
+}: ForumLayoutProps) {
   const { slug } = await params;
   const course = await getCatalogCourseBySlug(slug);
 
@@ -29,7 +33,7 @@ export default async function ForumLayout({ children, params }: ForumLayoutProps
     email: user.email,
     courseSlug: course.slug,
     userGlobalRole: user.globalRole,
-    userIsActive: user.isActive
+    userIsActive: user.isActive,
   });
 
   if (!access.allowed) {
@@ -41,8 +45,8 @@ export default async function ForumLayout({ children, params }: ForumLayoutProps
     getUserForumNotifications({
       userId: user.id,
       courseSlugs: [course.slug],
-      limit: 5
-    })
+      limit: 5,
+    }),
   ]);
 
   return (
@@ -52,6 +56,10 @@ export default async function ForumLayout({ children, params }: ForumLayoutProps
       course={course}
       forumNotifications={forumNotifications}
       roleLabel={getRoleLabel(access.role)}
+      showTrackingNav={canViewCourseProgress({
+        globalRole: user.globalRole,
+        viewerRole: access.role,
+      })}
       user={user}
     >
       {children}

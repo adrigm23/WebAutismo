@@ -20,8 +20,10 @@ export type LearningShellProps = {
   forumCategories: LearningShellForumCategory[];
   resources: CampusResourceItem[];
   progress: CourseProgressDetails;
+  viewerName: string;
   roleLabel: string;
   canModerate: boolean;
+  showTrackingNav: boolean;
   editionLabel?: string | null;
   accessUntil?: Date | null;
   initialActiveTab: SidebarTab;
