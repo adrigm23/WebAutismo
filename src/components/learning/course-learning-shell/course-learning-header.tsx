@@ -54,7 +54,7 @@ export function CourseLearningHeader({
   onTabChange,
 }: CourseLearningHeaderProps) {
   return (
-    <div className="border-b border-[rgba(22,60,88,0.08)] bg-[linear-gradient(180deg,#fbfaf7_0%,#f7f5fb_100%)]">
+    <div className="border-b border-[rgba(22,60,88,0.08)] bg-[linear-gradient(180deg,#fbfaf8_0%,#f7f5fb_62%,#f6f5fa_100%)]">
       <CoursePrivateHeader
         activeSection="campus"
         courseSlug={courseSlug}
@@ -64,28 +64,34 @@ export function CourseLearningHeader({
       />
 
       <section>
-        <div className="app-container py-7 sm:py-8">
-          <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start">
+        <div className="app-container py-5 sm:py-6">
+          <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start">
             <div className="min-w-0">
-              <div className="flex flex-wrap items-center gap-3 text-[0.95rem] text-[var(--color-ink-soft)]">
+              <div className="flex flex-wrap items-center gap-2.5 text-[0.92rem] text-[var(--color-ink-soft)]">
                 <span>Mis cursos</span>
-                <ChevronRight className="h-4 w-4" />
+                <ChevronRight className="h-3.5 w-3.5" />
                 <span className="truncate">{courseTitle}</span>
               </div>
 
-              <h1 className="font-premium mt-5 max-w-[18ch] text-[clamp(2.2rem,4.4vw,3.5rem)] leading-[1.02] font-semibold tracking-[-0.06em] text-[var(--color-primary)] text-balance">
+              <h1 className="font-premium mt-3 max-w-[19ch] text-[clamp(2rem,3.5vw,3rem)] leading-[1.03] font-semibold tracking-[-0.055em] text-[var(--color-primary)] text-balance">
                 {courseTitle}
               </h1>
-              <p className="mt-4 max-w-[54rem] text-[1.08rem] leading-8 text-[var(--color-ink)]/88">
+              <p className="mt-3 max-w-[58rem] text-[1rem] leading-7 text-[var(--color-ink)]/86">
                 {getHeroDescription(activeTab)}
               </p>
-              <Badge className="mt-5" tone="outline">
+              <Badge className="mt-4" tone="outline">
                 {statusLabel}
               </Badge>
             </div>
 
-            <div className="lg:pt-2">
-              <Button onClick={onPrimaryAction} size="lg" type="button" variant="neutral">
+            <div className="self-start lg:pt-1">
+              <Button
+                className="border-[rgba(22,60,88,0.12)] bg-white/62 px-4 shadow-none hover:bg-white/88"
+                onClick={onPrimaryAction}
+                size="md"
+                type="button"
+                variant="subtle"
+              >
                 {primaryActionLabel}
                 <ChevronRight className="h-4 w-4" />
               </Button>
@@ -94,12 +100,12 @@ export function CourseLearningHeader({
 
           <nav
             aria-label="Secciones del curso"
-            className="mt-8 flex items-center gap-8 border-b border-[rgba(22,60,88,0.08)]"
+            className="mt-6 flex items-center gap-6 border-b border-[rgba(22,60,88,0.08)]"
           >
             {tabItems.map((item) => (
               <button
                 className={cn(
-                  "border-b-2 px-0 pb-3 text-[1.02rem] font-medium tracking-[-0.02em] transition",
+                  "border-b-2 px-0 pb-2.5 text-[1rem] font-medium tracking-[-0.02em] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-surface-canvas)]",
                   item.value === activeTab
                     ? "border-[var(--color-ink)] text-[var(--color-ink)]"
                     : "border-transparent text-[var(--color-ink-soft)] hover:border-[rgba(22,60,88,0.18)] hover:text-[var(--color-ink)]",

@@ -386,9 +386,9 @@ export function CourseLearningShell({
         <div
           className={cn(
             "space-y-4",
-            !canModerate && activeTab === "content" && "mx-auto max-w-[74rem]",
-            !canModerate && activeTab === "resources" && "mx-auto max-w-[82rem]",
-            !canModerate && activeTab === "support" && "mx-auto max-w-[78rem]",
+            !canModerate && activeTab === "content" && "mx-auto max-w-[78rem]",
+            !canModerate && activeTab === "resources" && "mx-auto max-w-[88rem]",
+            !canModerate && activeTab === "support" && "mx-auto max-w-[84rem]",
           )}
         >
           {isFocusedTaskWorkspace ? (

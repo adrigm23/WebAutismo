@@ -18,15 +18,15 @@ type ForumShellCategoryNavProps = {
 
 export function ForumShellCategoryDesktopNav({
   categories,
-  courseSlug
+  courseSlug,
 }: ForumShellCategoryNavProps) {
   const pathname = usePathname();
   const forumRootPath = `/mis-cursos/${courseSlug}/foro`;
 
   return (
-    <nav className="rounded-[var(--radius-lg)] border border-[rgba(22,60,88,0.07)] bg-white/74 p-2.5 shadow-[var(--shadow-soft)]">
-      <p className="px-3 pb-1.5 text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--color-muted)]">
-        Categorías
+    <nav className="rounded-[1rem] border border-[rgba(22,60,88,0.08)] bg-white/56 p-1.5">
+      <p className="px-3 pb-1 text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--color-muted)]">
+        Categorias
       </p>
       {categories.length ? (
         categories.map((category) => {
@@ -40,8 +40,8 @@ export function ForumShellCategoryDesktopNav({
               className={cn(
                 "flex items-center gap-3 rounded-[var(--radius-md)] px-3 py-2.5 text-sm font-medium transition",
                 isActive
-                  ? "bg-[rgba(22,60,88,0.08)] text-[var(--color-primary)] shadow-[inset_0_0_0_1px_rgba(22,60,88,0.08)]"
-                  : "text-[var(--color-ink)] hover:bg-[rgba(22,60,88,0.04)]"
+                  ? "bg-[rgba(22,60,88,0.07)] text-[var(--color-primary)]"
+                  : "text-[var(--color-ink)] hover:bg-[rgba(22,60,88,0.04)]",
               )}
               href={href}
               key={category.id}
@@ -50,7 +50,7 @@ export function ForumShellCategoryDesktopNav({
               <div
                 className={cn(
                   "grid h-8 w-8 shrink-0 place-items-center rounded-xl",
-                  isActive ? "bg-white" : preset.softClass
+                  isActive ? "bg-white" : preset.softClass,
                 )}
               >
                 <Icon className="h-4 w-4" />
@@ -64,7 +64,7 @@ export function ForumShellCategoryDesktopNav({
         })
       ) : (
         <div className="ui-empty-state px-4 py-5 text-sm leading-7 text-[var(--color-muted)]">
-          No hay categorías visibles en este curso.
+          No hay categorias visibles en este curso.
         </div>
       )}
     </nav>
@@ -76,7 +76,7 @@ type ForumShellDesktopModerationLinksProps = {
 };
 
 export function ForumShellDesktopModerationLinks({
-  courseSlug
+  courseSlug,
 }: ForumShellDesktopModerationLinksProps) {
   const pathname = usePathname();
   const forumRootPath = `/mis-cursos/${courseSlug}/foro`;
@@ -87,20 +87,20 @@ export function ForumShellDesktopModerationLinks({
         className={cn(
           "flex items-center gap-3 rounded-[var(--radius-md)] px-3 py-2.5 text-sm font-medium transition",
           pathname.startsWith(`${forumRootPath}/moderacion`)
-            ? "bg-[rgba(22,60,88,0.08)] text-[var(--color-primary)]"
-            : "text-[var(--color-ink)] hover:bg-[rgba(22,60,88,0.04)]"
+            ? "bg-[rgba(22,60,88,0.07)] text-[var(--color-primary)]"
+            : "text-[var(--color-ink)] hover:bg-[rgba(22,60,88,0.04)]",
         )}
         href={`${forumRootPath}/moderacion`}
       >
         <ShieldCheck className="h-4 w-4" />
-        <span>Panel de moderación</span>
+        <span>Panel de moderacion</span>
       </Link>
       <Link
         className={cn(
           "flex items-center gap-3 rounded-[var(--radius-md)] px-3 py-2.5 text-sm font-medium transition",
           pathname.startsWith(`${forumRootPath}/historico`)
-            ? "bg-[rgba(22,60,88,0.08)] text-[var(--color-primary)]"
-            : "text-[var(--color-ink)] hover:bg-[rgba(22,60,88,0.04)]"
+            ? "bg-[rgba(22,60,88,0.07)] text-[var(--color-primary)]"
+            : "text-[var(--color-ink)] hover:bg-[rgba(22,60,88,0.04)]",
         )}
         href={`${forumRootPath}/historico`}
       >
@@ -113,7 +113,7 @@ export function ForumShellDesktopModerationLinks({
 
 export function ForumShellMobileCategoryList({
   categories,
-  courseSlug
+  courseSlug,
 }: ForumShellCategoryNavProps) {
   const pathname = usePathname();
   const forumRootPath = `/mis-cursos/${courseSlug}/foro`;
@@ -121,7 +121,7 @@ export function ForumShellMobileCategoryList({
   if (!categories.length) {
     return (
       <div className="ui-empty-state mt-3 px-4 py-5 text-sm text-[var(--color-muted)]">
-        No hay categorías visibles en este curso.
+        No hay categorias visibles en este curso.
       </div>
     );
   }
@@ -139,8 +139,8 @@ export function ForumShellMobileCategoryList({
             className={cn(
               "inline-flex max-w-full min-w-0 items-center gap-2 rounded-[var(--radius-pill)] border px-3 py-2 text-sm font-medium transition",
               isActive
-                ? "border-[rgba(22,60,88,0.18)] bg-white text-[var(--color-primary)]"
-                : "border-[rgba(22,60,88,0.1)] bg-[#faf8f4] text-[var(--color-ink)]"
+                ? "border-[rgba(22,60,88,0.16)] bg-white text-[var(--color-primary)]"
+                : "border-[rgba(22,60,88,0.08)] bg-[#faf8f4] text-[var(--color-ink)]",
             )}
             href={href}
             key={category.id}
