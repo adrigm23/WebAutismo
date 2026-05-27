@@ -1,49 +1,14 @@
+import type { UserGlobalRole } from "@prisma/client";
 import type { Metadata } from "next";
-import {
-  Bell,
-  BookOpen,
-  GraduationCap,
-  Settings2,
-  ShieldCheck,
-} from "lucide-react";
-import {
-  cancelEnrollmentAction,
-  markAllUserNotificationsReadAction,
-  markUserNotificationReadAction,
-  updateNotificationPreferencesAction,
-} from "@/actions/account";
-import {
-  markAllForumNotificationsReadAction,
-  markForumNotificationReadAction,
-} from "@/actions/forum";
-import { StudentAccountDashboard } from "@/components/account/student-account-dashboard";
-import { TeacherAccountDashboard } from "@/components/account/teacher-account-dashboard";
-import { CourseArtwork } from "@/components/course-artwork";
-import { Badge } from "@/components/ui/badge";
-import { Button, ButtonLink } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { AccountSettingsPage, accountQuickLinkIcons } from "@/components/account/account-settings-page";
 import { isDemoUserId } from "@/lib/demo-auth";
 import { requireUser } from "@/lib/auth";
-import {
-  getDashboardNotificationSnapshot,
-  getStudentDashboardPendingSources,
-  getTeacherDashboardCourseSummaries,
-} from "@/lib/account-dashboard";
-import {
-  buildCourseContentHref,
-  buildCourseForumHref,
-  buildCourseResourcesHref,
-  buildCourseTrackingHref,
-  resolvePlatformNotificationHref,
-} from "@/lib/course-navigation";
-import {
-  getCourseProgressDetailsMapForUser,
-  getLearnerProgressSummariesForCatalogCourses,
-  getCourseProgressSummariesForUser,
-} from "@/lib/course-progress";
-import { getRoleLabel, getUserCourseSpaces } from "@/lib/course-community";
+import { getDashboardNotificationSnapshot } from "@/lib/account-dashboard";
+import { buildCourseForumHref, buildCourseTrackingHref } from "@/lib/course-navigation";
+import { getUserCourseSpaces, type UserCourseSpace } from "@/lib/course-community";
 import { isStaffCourseRole } from "@/lib/course-roles";
-import { formatDate, formatDateTime } from "@/lib/utils";
+import { getDb } from "@/lib/prisma";
+import { getCurrentSessionId } from "@/lib/user-sessions";
 
 export const metadata: Metadata = {
   title: "Mi cuenta",
@@ -53,9 +18,131 @@ export const metadata: Metadata = {
   },
 };
 
+function getPrimaryCta(globalRole: UserGlobalRole) {
+  if (globalRole === "ADMIN") {
+    return {
+      href: "/admin",
+      label: "Abrir administracion",
+    };
+  }
+
+  return globalRole === "TEACHER"
+    ? {
+        href: "/mis-cursos",
+        label: "Abrir docencia",
+      }
+    : {
+        href: "/mis-cursos",
+        label: "Ver mis cursos",
+      };
+}
+
+function sortSpaces(spaces: UserCourseSpace[]) {
+  return [...spaces].sort((left, right) => {
+    const leftState =
+      left.accessState === "active"
+        ? 3
+        : left.accessState === "scheduled"
+          ? 2
+          : left.accessState === "inactive"
+            ? 1
+            : 0;
+    const rightState =
+      right.accessState === "active"
+        ? 3
+        : right.accessState === "scheduled"
+          ? 2
+          : right.accessState === "inactive"
+            ? 1
+            : 0;
+
+    if (leftState !== rightState) {
+      return rightState - leftState;
+    }
+
+    const leftActivity =
+      left.enrollment?.accessStartsAt.getTime() ?? left.purchase?.createdAt.getTime() ?? 0;
+    const rightActivity =
+      right.enrollment?.accessStartsAt.getTime() ?? right.purchase?.createdAt.getTime() ?? 0;
+
+    return rightActivity - leftActivity;
+  });
+}
+
+function getPrimarySpace(input: {
+  globalRole: UserGlobalRole;
+  staffSpaces: UserCourseSpace[];
+  studentSpaces: UserCourseSpace[];
+}) {
+  if (input.globalRole === "ADMIN" || input.globalRole === "TEACHER") {
+    return sortSpaces(input.staffSpaces)[0] ?? sortSpaces(input.studentSpaces)[0] ?? null;
+  }
+
+  return sortSpaces(input.studentSpaces)[0] ?? sortSpaces(input.staffSpaces)[0] ?? null;
+}
+
+function buildQuickLinks(input: {
+  globalRole: UserGlobalRole;
+  primaryForumHref: string | null;
+  teachingHref: string | null;
+  hasCourseArea: boolean;
+}) {
+  const items: Array<{
+    href: string;
+    title: string;
+    description: string;
+    icon: (typeof accountQuickLinkIcons)[keyof typeof accountQuickLinkIcons];
+    badge?: string;
+  }> = [];
+
+  if (input.globalRole !== "ADMIN" || input.hasCourseArea) {
+    items.push({
+      href: "/mis-cursos",
+      title: "Mis cursos",
+      description: "Abre tu area operativa real sin mezclarla con ajustes de cuenta.",
+      icon: accountQuickLinkIcons.courses,
+    });
+  }
+
+  if (input.primaryForumHref) {
+    items.push({
+      href: input.primaryForumHref,
+      title: "Foro",
+      description: "Entra en el foro privado asociado a tu curso con contexto disponible.",
+      icon: accountQuickLinkIcons.forum,
+    });
+  }
+
+  if (input.globalRole === "TEACHER" && input.teachingHref) {
+    items.push({
+      href: input.teachingHref,
+      title: "Docencia",
+      description: "Vuelve al seguimiento y a las rutas docentes del curso prioritario.",
+      icon: accountQuickLinkIcons.teaching,
+    });
+  }
+
+  if (input.globalRole === "ADMIN") {
+    items.push({
+      href: "/admin",
+      title: "Administracion",
+      description: "Abre la consola de administracion sin cambiar permisos ni rutas.",
+      icon: accountQuickLinkIcons.admin,
+    });
+  }
+
+  items.push({
+    href: "/soporte",
+    title: "Soporte",
+    description: "Consulta ayuda y canales de contacto del campus privado.",
+    icon: accountQuickLinkIcons.support,
+  });
+
+  return items;
+}
+
 export default async function AccountPage() {
   const user = await requireUser("/mi-cuenta");
-
   const isDemoUser = isDemoUserId(user.id);
   const spaces = await getUserCourseSpaces({
     userId: user.id,
@@ -63,668 +150,82 @@ export default async function AccountPage() {
     userGlobalRole: user.globalRole,
     userIsActive: user.isActive,
   });
-  const firstName = user.name.split(" ")[0] || user.name;
   const staffSpaces = spaces.filter((space) => isStaffCourseRole(space.role));
-  const studentSpaces = spaces.filter(
-    (space) => !isStaffCourseRole(space.role),
-  );
+  const studentSpaces = spaces.filter((space) => !isStaffCourseRole(space.role));
+  const primarySpace = getPrimarySpace({
+    globalRole: user.globalRole,
+    staffSpaces,
+    studentSpaces,
+  });
+  const primaryForumHref = primarySpace ? buildCourseForumHref(primarySpace.course.slug) : null;
+  const teachingHref =
+    user.globalRole === "TEACHER" && primarySpace
+      ? buildCourseTrackingHref({ courseSlug: primarySpace.course.slug })
+      : user.globalRole === "TEACHER"
+        ? "/mis-cursos"
+        : null;
   const notificationSnapshotPromise = getDashboardNotificationSnapshot({
     userId: user.id,
     courseSlugs: spaces.map((space) => space.course.slug),
   });
-
-  if (user.globalRole !== "ADMIN" && (staffSpaces.length > 0 || user.globalRole === "TEACHER")) {
-    const learnerSummariesByCourse =
-      await getLearnerProgressSummariesForCatalogCourses(
-        staffSpaces.map((space) => space.course),
-      );
-    const teacherCourses = await getTeacherDashboardCourseSummaries({
-      spaces: staffSpaces,
-      learnerSummariesByCourse,
-    });
-
-    return (
-      <TeacherAccountDashboard
-        firstName={firstName}
-        fullName={user.name}
-        hasTeacherRoleWithoutCourses={
-          user.globalRole === "TEACHER" && staffSpaces.length === 0
-        }
-        isDemoUser={isDemoUser}
-        notificationSnapshotPromise={notificationSnapshotPromise}
-        teacherCourses={teacherCourses}
-      />
-    );
-  }
-
-  if (user.globalRole === "STUDENT") {
-    const [progressByCourse, pendingSources] = await Promise.all([
-      getCourseProgressDetailsMapForUser({
-        userId: user.id,
-        courses: studentSpaces.map((space) => space.course),
-      }),
-      getStudentDashboardPendingSources({
-        spaces: studentSpaces,
-        userId: user.id,
-      }),
-    ]);
-    const studentCourses = studentSpaces.map((space) => ({
-      space,
-      progress: progressByCourse.get(space.course.slug),
-    }));
-
-    return (
-      <StudentAccountDashboard
-        firstName={firstName}
-        fullName={user.name}
-        isDemoUser={isDemoUser}
-        notificationSnapshotPromise={notificationSnapshotPromise}
-        pendingSources={pendingSources}
-        studentCourses={studentCourses
-          .filter((course) => Boolean(course.progress))
-          .map((course) => ({
-            ...course,
-            progress: course.progress!,
-          }))}
-      />
-    );
-  }
-
-  const notificationSnapshot = await notificationSnapshotPromise;
-  const preference = notificationSnapshot.preference;
-  const forumNotifications = notificationSnapshot.forumNotifications;
-  const platformNotifications = notificationSnapshot.platformNotifications;
-
-  const progressByCourse = await getCourseProgressSummariesForUser({
-    userId: user.id,
-    courseSlugs: studentSpaces.map((space) => space.course.slug),
+  const activeSessionsPromise = getDb().userSession.findMany({
+    where: {
+      userId: user.id,
+      revokedAt: null,
+      expiresAt: {
+        gt: new Date(),
+      },
+    },
+    orderBy: [{ lastSeenAt: "desc" }, { createdAt: "desc" }],
+    select: {
+      id: true,
+      createdAt: true,
+      expiresAt: true,
+      ipAddress: true,
+      lastSeenAt: true,
+      userAgent: true,
+    },
   });
 
+  const [notificationSnapshot, currentSessionId, activeSessions] = await Promise.all([
+    notificationSnapshotPromise,
+    getCurrentSessionId(),
+    activeSessionsPromise,
+  ]);
+
+  const sessions = activeSessions
+    .map((session) => ({
+      ...session,
+      isCurrent: session.id === currentSessionId,
+    }))
+    .sort((left, right) => {
+      if (left.isCurrent !== right.isCurrent) {
+        return left.isCurrent ? -1 : 1;
+      }
+
+      const leftActivity = left.lastSeenAt?.getTime() ?? left.createdAt.getTime();
+      const rightActivity = right.lastSeenAt?.getTime() ?? right.createdAt.getTime();
+
+      return rightActivity - leftActivity;
+    });
+
   return (
-    <div className="pb-24 pt-14 lg:pt-16">
-      <div className="site-container">
-        <div className="mb-8 flex flex-wrap items-center justify-between gap-3 rounded-[28px] border border-[rgba(12,113,195,0.14)] bg-white px-5 py-4 shadow-[0_18px_32px_rgba(34,34,33,0.05)]">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-muted)]">
-              Campus privado
-            </p>
-            <p className="mt-1 text-sm text-[var(--color-ink)]">
-              Navegacion rapida para cuenta, cursos y coordinacion.
-            </p>
-          </div>
-
-          <div className="flex flex-wrap gap-3">
-            <ButtonLink href="#acceso-rapido" variant="secondary">
-              Accesos
-            </ButtonLink>
-            <ButtonLink href="#cursos" variant="ghost">
-              Cursos
-            </ButtonLink>
-            {staffSpaces.length ? (
-              <ButtonLink href="#coordinacion" variant="ghost">
-                Coordinacion
-              </ButtonLink>
-            ) : null}
-            <ButtonLink href="#preferencias" variant="ghost">
-              Preferencias
-            </ButtonLink>
-          </div>
-        </div>
-
-        <div className="flex flex-wrap items-start justify-between gap-6">
-          <div className="max-w-4xl">
-            <h1 className="text-[4.2rem] font-semibold tracking-[-0.08em] text-[var(--color-ink)]">
-              Hola, {firstName}
-            </h1>
-            <p className="mt-4 text-[1.18rem] leading-10 text-[var(--color-ink)]/84">
-              {user.globalRole === "ADMIN"
-                ? "Aqui tienes una vista resumida de tu cuenta, tus accesos internos al campus y un atajo directo a la administracion."
-                : staffSpaces.length
-                ? "Aqui tienes tus accesos al campus, tus espacios docentes y la configuracion operativa de tu cuenta."
-                : "Aqui tienes tu acceso actual al campus, tus avisos recientes y la configuracion operativa de tu cuenta."}
-            </p>
-          </div>
-
-          {user.globalRole === "ADMIN" ? (
-            <ButtonLink href="/admin" variant="secondary">
-              Abrir administracion
-            </ButtonLink>
-          ) : null}
-        </div>
-
-        <section className="mt-12" id="acceso-rapido">
-          <div className="mb-6 flex items-center gap-4">
-            <GraduationCap className="h-7 w-7 text-[var(--color-primary)]" />
-            <h2 className="text-[3rem] font-semibold tracking-[-0.06em] text-[var(--color-ink)]">
-              Acceso rapido al campus
-            </h2>
-          </div>
-
-          {spaces.length ? (
-            <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
-              {spaces.map((space) => {
-                const isStaff = isStaffCourseRole(space.role);
-                const progress = isStaff
-                  ? null
-                  : progressByCourse.get(space.course.slug);
-
-                return (
-                  <Card
-                    className="p-6"
-                    key={`quick-${space.course.slug}-${space.role}`}
-                  >
-                    <div className="flex flex-wrap items-center gap-3">
-                      <Badge tone={isStaff ? "teacher" : "student"}>
-                        {isStaff ? getRoleLabel(space.role) : "Alumno"}
-                      </Badge>
-                      <Badge tone="muted">{space.course.level}</Badge>
-                    </div>
-
-                    <h3 className="mt-4 text-[1.55rem] font-semibold leading-tight text-[var(--color-ink)]">
-                      {space.course.title}
-                    </h3>
-
-                    <p className="mt-3 text-sm leading-7 text-[var(--color-muted)]">
-                      {isStaff
-                        ? "Abre el campus del curso o entra al seguimiento del alumnado desde tu espacio docente."
-                        : progress
-                          ? `${progress.completedModules} de ${progress.totalModules} módulos marcados como revisados.`
-                          : "Accede al contenido, recursos y foro privado del curso."}
-                    </p>
-
-                    <div className="mt-6 flex flex-wrap gap-3">
-                      <ButtonLink
-                        href={buildCourseContentHref(space.course.slug)}
-                      >
-                        {isStaff ? "Entrar al campus" : "Abrir curso"}
-                      </ButtonLink>
-                      {isStaff ? (
-                        <ButtonLink
-                          href={buildCourseTrackingHref({
-                            courseSlug: space.course.slug,
-                          })}
-                          variant="secondary"
-                        >
-                          Ver seguimiento
-                        </ButtonLink>
-                      ) : (
-                        <ButtonLink
-                          href={buildCourseResourcesHref(space.course.slug)}
-                          variant="secondary"
-                        >
-                          Ver tareas
-                        </ButtonLink>
-                      )}
-                    </div>
-                  </Card>
-                );
-              })}
-            </div>
-          ) : (
-            <Card className="p-8">
-              <p className="text-[1.04rem] leading-8 text-[var(--color-ink)]/84">
-                Todavía no tienes cursos asociados. Cuando completes una compra
-                o te asignen un curso, aparecerán aquí con su estado de acceso
-                real.
-              </p>
-              <ButtonLink className="mt-6" href="/cursos">
-                Explorar cursos
-              </ButtonLink>
-            </Card>
-          )}
-        </section>
-
-        <section className="mt-16" id="avisos-plataforma">
-          {isDemoUser ? (
-            <Card className="mb-8 border-[#f0d098] bg-[#fff1cf] p-6">
-              <p className="text-lg font-semibold text-[#7c5300]">
-                Modo demo activo
-              </p>
-              <p className="mt-2 text-base leading-7 text-[#805c16]">
-                Estas navegando con una cuenta de prueba sin base de datos.
-                Puedes revisar las vistas por rol, pero los cambios no se
-                guardan.
-              </p>
-            </Card>
-          ) : null}
-
-          <div className="mb-6 flex items-center justify-between gap-4">
-            <div className="flex items-center gap-4">
-              <Bell className="h-7 w-7 text-[var(--color-primary)]" />
-              <h2 className="text-[3rem] font-semibold tracking-[-0.06em] text-[var(--color-ink)]">
-                Notificaciones de plataforma
-              </h2>
-            </div>
-            {platformNotifications.unreadCount ? (
-              <form action={markAllUserNotificationsReadAction}>
-                <input name="nextPath" type="hidden" value="/mi-cuenta" />
-                <Button type="submit" variant="ghost">
-                  Marcar todas como leidas
-                </Button>
-              </form>
-            ) : null}
-          </div>
-
-          {platformNotifications.notifications.length ? (
-            <div className="space-y-4">
-              {platformNotifications.notifications.map((notification) => (
-                <Card
-                  className="flex flex-col gap-5 p-6 md:flex-row md:items-center md:justify-between"
-                  key={notification.id}
-                >
-                  <div className="min-w-0">
-                    <div className="flex flex-wrap items-center gap-3">
-                      <Badge tone={notification.readAt ? "muted" : "accent"}>
-                        {notification.readAt ? "Leida" : "Nueva"}
-                      </Badge>
-                      <p className="text-xs uppercase tracking-[0.18em] text-[var(--color-muted)]">
-                        {formatDateTime(notification.createdAt)}
-                      </p>
-                    </div>
-                    <p className="mt-4 text-[1.3rem] font-semibold text-[var(--color-ink)]">
-                      {notification.title}
-                    </p>
-                    <p className="mt-2 text-[1rem] leading-8 text-[var(--color-muted)]">
-                      {notification.body}
-                    </p>
-                  </div>
-
-                  <div className="flex flex-wrap items-center gap-3">
-                    <ButtonLink
-                      href={resolvePlatformNotificationHref({
-                        category: notification.category,
-                        linkPath: notification.linkPath,
-                        metadataJson: notification.metadataJson,
-                      })}
-                      variant="secondary"
-                    >
-                      Abrir
-                    </ButtonLink>
-                    {!notification.readAt ? (
-                      <form action={markUserNotificationReadAction}>
-                        <input
-                          name="notificationId"
-                          type="hidden"
-                          value={notification.id}
-                        />
-                        <input
-                          name="nextPath"
-                          type="hidden"
-                          value="/mi-cuenta"
-                        />
-                        <Button type="submit" variant="ghost">
-                          Marcar leida
-                        </Button>
-                      </form>
-                    ) : null}
-                  </div>
-                </Card>
-              ))}
-            </div>
-          ) : (
-            <Card className="p-8">
-              <p className="text-[1.04rem] leading-8 text-[var(--color-ink)]/84">
-                Todavia no tienes avisos generales de compra, acceso o campus.
-              </p>
-            </Card>
-          )}
-        </section>
-
-        <section className="mt-16" id="avisos-foro">
-          <div className="mb-6 flex items-center justify-between gap-4">
-            <div className="flex items-center gap-4">
-              <Bell className="h-7 w-7 text-[var(--color-primary)]" />
-              <h2 className="text-[3rem] font-semibold tracking-[-0.06em] text-[var(--color-ink)]">
-                Notificaciones del foro
-              </h2>
-            </div>
-            {forumNotifications.unreadCount ? (
-              <form action={markAllForumNotificationsReadAction}>
-                <input name="nextPath" type="hidden" value="/mi-cuenta" />
-                <Button type="submit" variant="ghost">
-                  Marcar todas como leidas
-                </Button>
-              </form>
-            ) : null}
-          </div>
-
-          {forumNotifications.notifications.length ? (
-            <div className="space-y-4">
-              {forumNotifications.notifications.map((notification) => (
-                <Card
-                  className="flex flex-col gap-5 p-6 md:flex-row md:items-center md:justify-between"
-                  key={notification.id}
-                >
-                  <div className="min-w-0">
-                    <div className="flex flex-wrap items-center gap-3">
-                      <Badge tone={notification.readAt ? "muted" : "accent"}>
-                        {notification.readAt ? "Leida" : "Nueva"}
-                      </Badge>
-                      <p className="text-xs uppercase tracking-[0.18em] text-[var(--color-muted)]">
-                        {formatDateTime(notification.createdAt)}
-                      </p>
-                    </div>
-                    <p className="mt-4 text-[1.3rem] font-semibold text-[var(--color-ink)]">
-                      {notification.title}
-                    </p>
-                    <p className="mt-2 text-[1rem] leading-8 text-[var(--color-muted)]">
-                      {notification.body}
-                    </p>
-                  </div>
-
-                  <div className="flex flex-wrap items-center gap-3">
-                    <ButtonLink
-                      href={notification.linkPath}
-                      variant="secondary"
-                    >
-                      Abrir
-                    </ButtonLink>
-                    {!notification.readAt ? (
-                      <form action={markForumNotificationReadAction}>
-                        <input
-                          name="notificationId"
-                          type="hidden"
-                          value={notification.id}
-                        />
-                        <input
-                          name="nextPath"
-                          type="hidden"
-                          value="/mi-cuenta"
-                        />
-                        <Button type="submit" variant="ghost">
-                          Marcar leida
-                        </Button>
-                      </form>
-                    ) : null}
-                  </div>
-                </Card>
-              ))}
-            </div>
-          ) : (
-            <Card className="p-8">
-              <p className="text-[1.04rem] leading-8 text-[var(--color-ink)]/84">
-                Todavía no tienes avisos del foro. Cuando haya respuestas,
-                anuncios docentes o acciones relevantes aparecerán aquí.
-              </p>
-            </Card>
-          )}
-        </section>
-
-        <section className="mt-16" id="cursos">
-          <div className="mb-6 flex items-center gap-4">
-            <GraduationCap className="h-7 w-7 text-[var(--color-primary)]" />
-            <h2 className="text-[3rem] font-semibold tracking-[-0.06em] text-[var(--color-ink)]">
-              Cursos con acceso
-            </h2>
-          </div>
-
-          {spaces.length ? (
-            <div className="grid gap-6 xl:grid-cols-3">
-              {spaces.map((space) => {
-                const isStaff = isStaffCourseRole(space.role);
-                const progress = isStaff
-                  ? null
-                  : progressByCourse.get(space.course.slug);
-
-                return (
-                  <Card
-                    className="overflow-hidden p-0"
-                    key={`${space.course.slug}-${space.role}`}
-                  >
-                    <div className="relative">
-                      <CourseArtwork
-                        className="h-44 w-full rounded-none border-0"
-                        course={space.course}
-                      />
-                      <div className="absolute right-4 top-4 rounded-full bg-white px-3 py-1 text-xs font-semibold text-[var(--color-primary)] shadow-sm">
-                        {isStaff
-                          ? getRoleLabel(space.role)
-                          : `Acceso ${space.accessState}`}
-                      </div>
-                    </div>
-
-                    <div className="p-6">
-                      <Badge tone={isStaff ? "teacher" : "student"}>
-                        {isStaff
-                          ? "Espacio de coordinación"
-                          : "Curso disponible"}
-                      </Badge>
-
-                      <h3 className="mt-4 text-[2rem] font-semibold leading-tight tracking-[-0.05em] text-[var(--color-ink)]">
-                        {space.course.title}
-                      </h3>
-
-                      <div className="mt-8 rounded-[24px] border border-[rgba(12,113,195,0.12)] bg-[var(--color-surface)] p-4">
-                        <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[var(--color-muted)]">
-                          {isStaff ? "Seguimiento" : "Progreso real"}
-                        </p>
-                        {!isStaff && progress ? (
-                          <div className="mt-4 h-3 overflow-hidden rounded-full bg-white">
-                            <div
-                              aria-hidden="true"
-                              className="h-full rounded-full bg-[var(--color-primary)] transition-[width]"
-                              style={{ width: `${progress.completionRate}%` }}
-                            />
-                          </div>
-                        ) : null}
-                        <p className="mt-2 text-sm leading-7 text-[var(--color-ink)]">
-                          {isStaff
-                            ? "Este espacio corresponde a tu rol de coordinación. Desde aquí puedes abrir el campus y, si procede, el panel de seguimiento del alumnado."
-                            : progress
-                              ? progress.isCompleted
-                                ? `Has marcado ${progress.completedModules} de ${progress.totalModules} módulos. Curso completado en tu seguimiento manual.`
-                                : progress.hasStarted
-                                  ? `Has marcado ${progress.completedModules} de ${progress.totalModules} módulos. Quedan ${progress.pendingModules} pendientes por revisar.`
-                                  : `Aún no has marcado módulos como revisados. Tienes ${progress.totalModules} módulos disponibles en el campus.`
-                              : "Todavía no hay seguimiento registrado para este curso."}
-                        </p>
-                        {space.enrollment?.accessUntil ? (
-                          <p className="mt-2 text-xs uppercase tracking-[0.16em] text-[var(--color-muted)]">
-                            Acceso hasta{" "}
-                            {formatDate(space.enrollment.accessUntil)}
-                          </p>
-                        ) : null}
-                        {!isStaff && progress?.lastCompletedAt ? (
-                          <p className="mt-2 text-xs uppercase tracking-[0.16em] text-[var(--color-muted)]">
-                            Ultima marca: {formatDate(progress.lastCompletedAt)}
-                          </p>
-                        ) : null}
-                      </div>
-
-                      <div className="mt-8 flex flex-wrap items-center justify-between gap-4">
-                        <p className="text-sm text-[var(--color-muted)]">
-                          {space.purchase
-                            ? `Operacion ${space.purchase.status.toLowerCase()} del ${formatDate(space.purchase.createdAt)}`
-                            : `Rol ${getRoleLabel(space.role)}`}
-                        </p>
-                        <div className="flex flex-wrap gap-3">
-                          {!isStaff ? (
-                            <ButtonLink
-                              href={buildCourseForumHref(space.course.slug)}
-                              variant="secondary"
-                            >
-                              Ir al foro
-                            </ButtonLink>
-                          ) : null}
-                          <ButtonLink
-                            href={buildCourseContentHref(space.course.slug)}
-                          >
-                            {isStaff ? "Entrar al campus" : "Abrir curso"}
-                          </ButtonLink>
-                        </div>
-                      </div>
-
-                      {!isStaff && space.enrollment ? (
-                        <form action={cancelEnrollmentAction} className="mt-4">
-                          <input
-                            name="enrollmentId"
-                            type="hidden"
-                            value={space.enrollment.id}
-                          />
-                          <Button type="submit" variant="ghost">
-                            Dar de baja esta matricula
-                          </Button>
-                        </form>
-                      ) : null}
-                    </div>
-                  </Card>
-                );
-              })}
-            </div>
-          ) : (
-            <Card className="p-8">
-              <p className="text-[1.04rem] leading-8 text-[var(--color-ink)]/84">
-                Todavía no tienes cursos asociados. Cuando completes una compra
-                o te asignen un curso, aparecerán aquí con su estado de acceso
-                real.
-              </p>
-              <ButtonLink className="mt-6" href="/cursos">
-                Explorar cursos
-              </ButtonLink>
-            </Card>
-          )}
-        </section>
-
-        <section className="mt-20" id="coordinacion">
-          <div className="mb-6 flex items-center gap-4">
-            <ShieldCheck className="h-7 w-7 text-[var(--color-accent)]" />
-            <h2 className="text-[3rem] font-semibold tracking-[-0.06em] text-[var(--color-ink)]">
-              Roles y coordinacion
-            </h2>
-          </div>
-
-          {staffSpaces.length ? (
-            <div className="space-y-4">
-              {staffSpaces.map((space) => (
-                <Card
-                  className="flex flex-col gap-5 p-6 md:flex-row md:items-center md:justify-between"
-                  key={`staff-${space.course.slug}`}
-                >
-                  <div className="flex items-center gap-5">
-                    <div className="grid h-16 w-16 place-items-center rounded-2xl bg-[var(--color-surface)] text-[var(--color-primary)]">
-                      <ShieldCheck className="h-7 w-7" />
-                    </div>
-                    <div>
-                      <p className="text-[1.35rem] font-medium text-[var(--color-ink)]">
-                        {space.course.title}
-                      </p>
-                      <p className="mt-2 text-[1rem] text-[var(--color-muted)]">
-                        Rol actual: {getRoleLabel(space.role)}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-wrap gap-3">
-                    <ButtonLink
-                      href={buildCourseContentHref(space.course.slug)}
-                      variant="secondary"
-                    >
-                      Abrir espacio
-                    </ButtonLink>
-                    <ButtonLink
-                      href={buildCourseTrackingHref({
-                        courseSlug: space.course.slug,
-                      })}
-                    >
-                      Ver progreso
-                    </ButtonLink>
-                  </div>
-                </Card>
-              ))}
-            </div>
-          ) : (
-            <Card className="p-8">
-              <p className="text-[1.04rem] leading-8 text-[var(--color-ink)]/84">
-                No tienes roles de docencia o administracion asignados en este
-                momento.
-              </p>
-            </Card>
-          )}
-        </section>
-
-        <section className="mt-20" id="preferencias">
-          <div className="mb-6 flex items-center gap-4">
-            <Settings2 className="h-7 w-7 text-[var(--color-primary)]" />
-            <h2 className="text-[3rem] font-semibold tracking-[-0.06em] text-[var(--color-ink)]">
-              Preferencias de notificacion
-            </h2>
-          </div>
-
-          <Card className="p-8">
-            <p className="text-[1.04rem] leading-8 text-[var(--color-ink)]/84">
-              Configura como quieres recibir avisos de compra, acceso, campus y
-              foro.
-            </p>
-
-            <div className="mt-6 grid gap-4 md:grid-cols-3">
-              {[
-                {
-                  title: "Solo email",
-                  emailEnabled: true,
-                  webEnabled: false,
-                },
-                {
-                  title: "Solo web",
-                  emailEnabled: false,
-                  webEnabled: true,
-                },
-                {
-                  title: "Email y web",
-                  emailEnabled: true,
-                  webEnabled: true,
-                },
-              ].map((option) => {
-                const isSelected =
-                  preference.emailEnabled === option.emailEnabled &&
-                  preference.webEnabled === option.webEnabled;
-
-                return (
-                  <form
-                    action={updateNotificationPreferencesAction}
-                    key={option.title}
-                  >
-                    <input
-                      name="emailEnabled"
-                      type="hidden"
-                      value={option.emailEnabled ? "true" : "false"}
-                    />
-                    <input
-                      name="webEnabled"
-                      type="hidden"
-                      value={option.webEnabled ? "true" : "false"}
-                    />
-                    <Button
-                      className="w-full"
-                      type="submit"
-                      variant={isSelected ? "primary" : "secondary"}
-                    >
-                      {option.title}
-                    </Button>
-                  </form>
-                );
-              })}
-            </div>
-          </Card>
-        </section>
-
-        {studentSpaces.length ? (
-          <section className="mt-20">
-            <div className="mb-6 flex items-center gap-4">
-              <BookOpen className="h-7 w-7 text-[var(--color-primary)]" />
-              <h2 className="text-[3rem] font-semibold tracking-[-0.06em] text-[var(--color-ink)]">
-                Transparencia del campus
-              </h2>
-            </div>
-            <Card className="p-8">
-              <p className="text-[1.04rem] leading-8 text-[var(--color-ink)]/84">
-                El campus ya permite marcar módulos revisados de forma manual y
-                guardar ese seguimiento en tu cuenta. No se infiere visionado,
-                tiempo de estudio ni certificados automaticamente.
-              </p>
-            </Card>
-          </section>
-        ) : null}
-      </div>
-    </div>
+    <AccountSettingsPage
+      email={user.email}
+      emailVerifiedAt={user.emailVerifiedAt}
+      firstName={user.name.split(" ")[0] || user.name}
+      fullName={user.name}
+      globalRole={user.globalRole}
+      isDemoUser={isDemoUser}
+      notificationSnapshot={notificationSnapshot}
+      primaryCta={getPrimaryCta(user.globalRole)}
+      quickLinks={buildQuickLinks({
+        globalRole: user.globalRole,
+        primaryForumHref,
+        teachingHref,
+        hasCourseArea: spaces.length > 0,
+      })}
+      sessions={sessions}
+    />
   );
 }

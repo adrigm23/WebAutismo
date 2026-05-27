@@ -44,7 +44,7 @@ test.describe("authenticated student flows", () => {
       page
         .getByRole("main")
         .getByRole("link", {
-          name: /continuar leccion|abrir docencia|explorar catalogo/i
+          name: /ver mis cursos|abrir docencia|abrir administracion|explorar catalogo/i
         })
         .first()
     ).toBeVisible();
