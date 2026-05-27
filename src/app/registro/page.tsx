@@ -5,7 +5,7 @@ import { AuthForm } from "@/components/auth/auth-form";
 import { StateBanner } from "@/components/ui/state-banner";
 import { getCurrentUser } from "@/lib/auth";
 import { isDemoAuthEnabled } from "@/lib/env";
-import { getSafeRedirect } from "@/lib/redirect";
+import { getDefaultPrivateRedirect, getSafeRedirect } from "@/lib/redirect";
 import { firstValue } from "@/lib/utils";
 
 export const metadata: Metadata = {
@@ -25,10 +25,11 @@ export default async function RegisterPage({
 }: RegisterPageProps) {
   const user = await getCurrentUser();
   const { next } = await searchParams;
-  const safeNext = getSafeRedirect(firstValue(next), "/mi-cuenta");
+  const requestedNext = firstValue(next);
+  const safeNext = requestedNext ? getSafeRedirect(requestedNext, "/mis-cursos") : undefined;
 
   if (user) {
-    redirect(safeNext);
+    redirect(safeNext ?? getDefaultPrivateRedirect(user.globalRole));
   }
 
   return (

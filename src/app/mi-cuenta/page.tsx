@@ -26,15 +26,10 @@ function getPrimaryCta(globalRole: UserGlobalRole) {
     };
   }
 
-  return globalRole === "TEACHER"
-    ? {
-        href: "/mis-cursos",
-        label: "Abrir docencia",
-      }
-    : {
-        href: "/mis-cursos",
-        label: "Ver mis cursos",
-      };
+  return {
+    href: "/mis-cursos",
+    label: "Ir a mis cursos",
+  };
 }
 
 function sortSpaces(spaces: UserCourseSpace[]) {
@@ -114,19 +109,19 @@ function buildQuickLinks(input: {
   }
 
   if (input.globalRole === "TEACHER" && input.teachingHref) {
-    items.push({
-      href: input.teachingHref,
-      title: "Docencia",
-      description: "Vuelve al seguimiento y a las rutas docentes del curso prioritario.",
-      icon: accountQuickLinkIcons.teaching,
-    });
-  }
+      items.push({
+        href: input.teachingHref,
+        title: "Seguimiento",
+        description: "Vuelve al seguimiento docente del curso que tienes activo ahora.",
+        icon: accountQuickLinkIcons.teaching,
+      });
+    }
 
   if (input.globalRole === "ADMIN") {
     items.push({
       href: "/admin",
       title: "Administracion",
-      description: "Abre la consola de administracion sin cambiar permisos ni rutas.",
+      description: "Entra en el backoffice separado sin mezclarlo con tus ajustes personales.",
       icon: accountQuickLinkIcons.admin,
     });
   }

@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { SplitAuthPanel } from "@/components/auth/split-auth-panel";
 import { getCurrentUser } from "@/lib/auth";
 import { isDemoAuthEnabled } from "@/lib/env";
-import { getSafeRedirect } from "@/lib/redirect";
+import { getDefaultPrivateRedirect, getSafeRedirect } from "@/lib/redirect";
 import { firstValue } from "@/lib/utils";
 
 export const metadata: Metadata = {
@@ -25,12 +25,13 @@ type LoginPageProps = {
 export default async function LoginPage({ searchParams }: LoginPageProps) {
   const user = await getCurrentUser();
   const { next, verify, reset } = await searchParams;
-  const safeNext = getSafeRedirect(firstValue(next), "/mi-cuenta");
+  const requestedNext = firstValue(next);
+  const safeNext = requestedNext ? getSafeRedirect(requestedNext, "/mis-cursos") : undefined;
   const showVerificationMessage = firstValue(verify) === "1";
   const showResetMessage = firstValue(reset) === "1";
 
   if (user) {
-    redirect(safeNext);
+    redirect(safeNext ?? getDefaultPrivateRedirect(user.globalRole));
   }
 
   return (

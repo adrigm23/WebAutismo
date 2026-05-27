@@ -96,7 +96,7 @@ describe("auth server actions", () => {
     });
   });
 
-  test("registers a user and redirects to the account page", async () => {
+  test("registers a user and redirects to my courses", async () => {
     const db = {
       user: {
         findUnique: vi.fn(async () => null),
@@ -118,7 +118,7 @@ describe("auth server actions", () => {
     formData.set("password", "supersegura123");
     formData.set("confirmPassword", "supersegura123");
 
-    await expect(registerAction({}, formData)).rejects.toThrow("REDIRECT:/mi-cuenta");
+    await expect(registerAction({}, formData)).rejects.toThrow("REDIRECT:/mis-cursos");
 
     expect(db.user.create).toHaveBeenCalled();
     expect(hashPasswordMock).toHaveBeenCalledWith("supersegura123");
@@ -203,7 +203,7 @@ describe("auth server actions", () => {
     await expect(loginAction({}, formData)).rejects.toThrow("REDIRECT:/admin/usuarios");
   });
 
-  test("keeps /mi-cuenta as the default login redirect for students", async () => {
+  test("uses /mis-cursos as the default login redirect for students", async () => {
     const db = {
       user: {
         findUnique: vi.fn(async () => ({
@@ -224,7 +224,7 @@ describe("auth server actions", () => {
     formData.set("email", "student@example.com");
     formData.set("password", "supersegura123");
 
-    await expect(loginAction({}, formData)).rejects.toThrow("REDIRECT:/mi-cuenta");
+    await expect(loginAction({}, formData)).rejects.toThrow("REDIRECT:/mis-cursos");
   });
 
   test("redirects bootstrap admins directly to the admin panel on register", async () => {

@@ -25,7 +25,7 @@ export async function updateCourseModuleProgressAction(formData: FormData) {
   });
 
   if (!parsed.success) {
-    redirect("/mi-cuenta");
+    redirect("/mis-cursos");
   }
 
   const user = await getCurrentUser();

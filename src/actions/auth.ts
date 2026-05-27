@@ -18,7 +18,11 @@ import { isEmailVerificationRequired } from "@/lib/env";
 import { createRequestLogger, getRequestIdFromHeaders } from "@/lib/logger";
 import { getDb } from "@/lib/prisma";
 import { buildRequestFingerprint } from "@/lib/request-client";
-import { getSafeRedirect } from "@/lib/redirect";
+import {
+  getDefaultPrivateRedirect,
+  getPostLoginRedirect,
+  getSafeRedirect,
+} from "@/lib/redirect";
 import { consumeRateLimit } from "@/lib/rate-limit";
 
 export type AuthFormState = {
@@ -67,28 +71,6 @@ function getLoginFieldState(formData: FormData): NonNullable<AuthFormState["fiel
   return {
     email: getOptionalString(formData, "email") ?? ""
   };
-}
-
-function getDefaultPrivateRedirect(globalRole: "STUDENT" | "TEACHER" | "ADMIN") {
-  return globalRole === "ADMIN" ? "/admin" : "/mi-cuenta";
-}
-
-function getPostLoginRedirect(
-  target: string | null | undefined,
-  globalRole: "STUDENT" | "TEACHER" | "ADMIN"
-) {
-  const fallback = getDefaultPrivateRedirect(globalRole);
-  const safeTarget = getSafeRedirect(target, fallback);
-
-  if (globalRole !== "ADMIN") {
-    return safeTarget;
-  }
-
-  if (/^\/mi-cuenta(?:$|[?#])/.test(safeTarget)) {
-    return "/admin";
-  }
-
-  return safeTarget;
 }
 
 function createAuthLogger(input: {

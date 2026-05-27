@@ -19,6 +19,7 @@ import {
 import { canViewCourseProgress } from "@/lib/course-permissions";
 import { getCourseProgressDetailsMapForUser } from "@/lib/course-progress";
 import { isStaffCourseRole } from "@/lib/course-roles";
+import { getPrivateNavItems } from "@/lib/private-navigation";
 import { formatRelativeTime } from "@/lib/utils";
 
 export const metadata: Metadata = {
@@ -131,10 +132,6 @@ export default async function MyCoursesPage() {
           label: "Explorar catalogo",
           href: "/cursos",
         };
-  const navItems = [
-    { label: "Mi cuenta", href: "/mi-cuenta" },
-    { label: "Mis cursos", href: "/mis-cursos", active: true },
-  ];
   const studentGridEntries = primaryStudentCourse
     ? studentCourseEntries.filter(
         ({ space }) =>
@@ -149,7 +146,7 @@ export default async function MyCoursesPage() {
       <AccountAuthHeader
         fullName={user.name}
         initials={initials}
-        navItems={navItems}
+        navItems={getPrivateNavItems("courses")}
         roleLabel={roleLabel}
       />
 

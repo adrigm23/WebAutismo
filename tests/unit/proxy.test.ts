@@ -75,7 +75,7 @@ describe("proxy route protection", () => {
     expect(jwtVerifyMock).toHaveBeenCalledTimes(2);
   });
 
-  test("redirects authenticated guests away from guest-only routes", async () => {
+  test("lets authenticated users reach guest-only routes so the server can resolve role redirects", async () => {
     jwtVerifyMock.mockResolvedValue({
       payload: {
         sub: "user-1"
@@ -92,8 +92,7 @@ describe("proxy route protection", () => {
 
     const response = await proxy(request);
 
-    expect(response.status).toBe(307);
-    expect(response.headers.get("location")).toBe("https://example.com/mi-cuenta");
+    expect(response.status).toBe(200);
   });
 
   test("normalizes SESSION_SECRET before verifying session cookies", async () => {

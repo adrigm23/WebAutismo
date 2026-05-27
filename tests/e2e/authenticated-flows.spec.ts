@@ -10,7 +10,7 @@ async function loginFromAccessPanel(page: Page, email: string, password: string)
   await page.getByLabel(/correo/i).fill(email);
   await page.getByLabel(/contrase/i).fill(password);
   await Promise.all([
-    page.waitForURL(/\/mi-cuenta|\/admin/, { timeout: 15_000 }),
+    page.waitForURL(/\/mis-cursos|\/admin/, { timeout: 15_000 }),
     page.getByRole("button", { name: /acceder al panel/i }).click()
   ]);
 }
@@ -38,16 +38,9 @@ test.describe("authenticated student flows", () => {
     await page.goto("/acceder");
     await loginFromAccessPanel(page, studentEmail!, studentPassword!);
 
-    await expect(page).toHaveURL(/\/mi-cuenta/);
+    await expect(page).toHaveURL(/\/mis-cursos/);
     await expect(page.getByRole("link", { name: /^Mis cursos$/ })).toBeVisible();
-    await expect(
-      page
-        .getByRole("main")
-        .getByRole("link", {
-          name: /ver mis cursos|abrir docencia|abrir administracion|explorar catalogo/i
-        })
-        .first()
-    ).toBeVisible();
+    await expect(page.getByRole("heading", { name: /^Mis cursos$/ })).toBeVisible();
 
     await page.goto("/mis-cursos");
     await expect(page.getByRole("heading", { name: /^Mis cursos$/ })).toBeVisible();

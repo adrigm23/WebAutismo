@@ -5,7 +5,6 @@ import type { NextRequest } from "next/server";
 const SESSION_COOKIE = "academy_session";
 
 const protectedPrefixes = ["/mi-cuenta", "/mis-cursos", "/admin"];
-const guestOnlyPrefixes = ["/acceder", "/registro"];
 
 function getSessionSecret() {
   const secret = process.env.SESSION_SECRET?.trim();
@@ -46,15 +45,6 @@ export async function proxy(request: NextRequest) {
     loginUrl.searchParams.set("next", `${pathname}${request.nextUrl.search}`);
     return NextResponse.redirect(loginUrl);
   }
-
-  const isGuestOnly = guestOnlyPrefixes.some(
-    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`)
-  );
-
-  if (isGuestOnly && isAuthenticated) {
-    return NextResponse.redirect(new URL("/mi-cuenta", request.url));
-  }
-
   return NextResponse.next();
 }
 

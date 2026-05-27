@@ -57,8 +57,8 @@ export default function ErrorPage({ error, reset }: ErrorPageProps) {
           <Button onClick={reset} type="button">
             Reintentar
           </Button>
-          <Button onClick={() => window.location.assign("/mi-cuenta")} type="button" variant="secondary">
-            Volver a mi cuenta
+          <Button onClick={() => window.location.assign("/mis-cursos")} type="button" variant="secondary">
+            Volver a mis cursos
           </Button>
         </div>
       </div>
