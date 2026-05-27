@@ -40,11 +40,12 @@ test.describe("authenticated student flows", () => {
 
     await expect(page).toHaveURL(/\/mis-cursos/);
     await expect(page.getByRole("link", { name: /^Mis cursos$/ })).toBeVisible();
-    await expect(page.getByRole("heading", { name: /^Mis cursos$/ })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /^Hola,/ })).toBeVisible();
 
     await page.goto("/mis-cursos");
-    await expect(page.getByRole("heading", { name: /^Mis cursos$/ })).toBeVisible();
-    await expect(page.getByRole("link", { name: /^Mi cuenta$/ })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /^Hola,/ })).toBeVisible();
+    await expect(page.getByRole("link", { name: /^Comunidad$/ })).toBeVisible();
+    await expect(page.getByRole("link", { name: /^Soporte$/ })).toBeVisible();
 
     await page.goto(`/mis-cursos/${courseSlug}`);
     await expect(page.getByRole("heading", { level: 1 }).first()).toBeVisible();
