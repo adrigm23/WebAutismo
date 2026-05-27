@@ -1,9 +1,10 @@
 "use client";
 
-import { FolderOpen, LayoutPanelTop, MessageSquareText } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { CoursePrivateHeader } from "@/components/learning/course-private-header";
-import { WorkspaceTabButton } from "./primitives";
+import { cn } from "@/lib/utils";
 import type { SidebarTab } from "./types";
 
 type CourseLearningHeaderProps = {
@@ -11,26 +12,49 @@ type CourseLearningHeaderProps = {
   courseSlug: string;
   courseTitle: string;
   roleLabel: string;
-  canModerate: boolean;
   showTrackingNav: boolean;
   activeTab: SidebarTab;
+  statusLabel: string;
+  primaryActionLabel: string;
+  onPrimaryAction: () => void;
   onTabChange: (tab: SidebarTab) => void;
-  onResourcesClick: () => void;
 };
+
+function getHeroDescription(tab: SidebarTab) {
+  if (tab === "resources") {
+    return "Material complementario, guias practicas y plantillas descargables para apoyar el proceso de aprendizaje.";
+  }
+
+  if (tab === "support") {
+    return "Conversacion del curso, dudas abiertas y soporte contextual dentro del mismo recorrido.";
+  }
+
+  return "Retoma el contenido activo y mantente dentro del mismo hilo de aprendizaje.";
+}
+
+const tabItems: Array<{
+  label: string;
+  value: SidebarTab;
+}> = [
+  { label: "Contenido", value: "content" },
+  { label: "Recursos", value: "resources" },
+  { label: "Comunidad", value: "support" },
+];
 
 export function CourseLearningHeader({
   fullName,
   courseSlug,
   courseTitle,
   roleLabel,
-  canModerate,
   showTrackingNav,
   activeTab,
+  statusLabel,
+  primaryActionLabel,
+  onPrimaryAction,
   onTabChange,
-  onResourcesClick,
 }: CourseLearningHeaderProps) {
   return (
-    <div>
+    <div className="border-b border-[rgba(22,60,88,0.08)] bg-[linear-gradient(180deg,#fbfaf7_0%,#f7f5fb_100%)]">
       <CoursePrivateHeader
         activeSection="campus"
         courseSlug={courseSlug}
@@ -39,62 +63,55 @@ export function CourseLearningHeader({
         showTrackingNav={showTrackingNav}
       />
 
-      <section className="border-b border-[var(--color-border-subtle)] bg-[rgba(250,247,242,0.88)]">
-        <div className="site-container py-3">
-          <div className="flex flex-col gap-3">
-            <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
-              <div className="min-w-0 flex-1">
-                <div className="flex flex-wrap items-center gap-2">
-                  <Badge tone={canModerate ? "info" : "warning"}>
-                    {roleLabel}
-                  </Badge>
-                  <Badge tone="outline">Campus</Badge>
-                </div>
-                <h1 className="font-premium mt-3 text-display-sm font-semibold text-[var(--color-ink)]">
-                  {courseTitle}
-                </h1>
-                <p className="mt-2 max-w-3xl text-body-sm text-[var(--color-muted)]">
-                  {canModerate
-                    ? "Empieza por lo pendiente y usa el contenido como apoyo."
-                    : "Sigue la leccion activa, abre la tarea cuando toque y mantente dentro del mismo hilo de aprendizaje."}
-                </p>
+      <section>
+        <div className="app-container py-7 sm:py-8">
+          <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start">
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-3 text-[0.95rem] text-[var(--color-ink-soft)]">
+                <span>Mis cursos</span>
+                <ChevronRight className="h-4 w-4" />
+                <span className="truncate">{courseTitle}</span>
               </div>
 
-              <div className="flex flex-wrap items-center gap-2">
-                {showTrackingNav ? (
-                  <Badge tone="info">Docencia integrada</Badge>
-                ) : (
-                  <Badge tone="outline">Ruta privada</Badge>
-                )}
-              </div>
+              <h1 className="font-premium mt-5 max-w-[18ch] text-[clamp(2.2rem,4.4vw,3.5rem)] leading-[1.02] font-semibold tracking-[-0.06em] text-[var(--color-primary)] text-balance">
+                {courseTitle}
+              </h1>
+              <p className="mt-4 max-w-[54rem] text-[1.08rem] leading-8 text-[var(--color-ink)]/88">
+                {getHeroDescription(activeTab)}
+              </p>
+              <Badge className="mt-5" tone="outline">
+                {statusLabel}
+              </Badge>
             </div>
 
-            <div className="border-t border-[var(--color-border-subtle)] pt-2.5">
-              <nav
-                aria-label="Navegacion del campus"
-                className="flex flex-wrap items-center gap-1.5"
-              >
-                <WorkspaceTabButton
-                  active={activeTab === "content"}
-                  icon={LayoutPanelTop}
-                  label="Contenido"
-                  onClick={() => onTabChange("content")}
-                />
-                <WorkspaceTabButton
-                  active={activeTab === "resources"}
-                  icon={FolderOpen}
-                  label="Recursos"
-                  onClick={onResourcesClick}
-                />
-                <WorkspaceTabButton
-                  active={activeTab === "support"}
-                  icon={MessageSquareText}
-                  label="Comunidad"
-                  onClick={() => onTabChange("support")}
-                />
-              </nav>
+            <div className="lg:pt-2">
+              <Button onClick={onPrimaryAction} size="lg" type="button" variant="neutral">
+                {primaryActionLabel}
+                <ChevronRight className="h-4 w-4" />
+              </Button>
             </div>
           </div>
+
+          <nav
+            aria-label="Secciones del curso"
+            className="mt-8 flex items-center gap-8 border-b border-[rgba(22,60,88,0.08)]"
+          >
+            {tabItems.map((item) => (
+              <button
+                className={cn(
+                  "border-b-2 px-0 pb-3 text-[1.02rem] font-medium tracking-[-0.02em] transition",
+                  item.value === activeTab
+                    ? "border-[var(--color-ink)] text-[var(--color-ink)]"
+                    : "border-transparent text-[var(--color-ink-soft)] hover:border-[rgba(22,60,88,0.18)] hover:text-[var(--color-ink)]",
+                )}
+                key={item.value}
+                onClick={() => onTabChange(item.value)}
+                type="button"
+              >
+                {item.label}
+              </button>
+            ))}
+          </nav>
         </div>
       </section>
     </div>

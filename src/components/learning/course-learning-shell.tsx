@@ -346,108 +346,117 @@ export function CourseLearningShell({
 
   const showCompactContentHeader =
     activeTab === "content" && !isFocusedTaskWorkspace;
+  const headerStatusLabel = canModerate
+    ? "Docencia activa"
+    : progress.isCompleted
+      ? "Completado"
+      : progress.hasStarted
+        ? "En progreso"
+        : "Listo para empezar";
+  const headerPrimaryActionLabel =
+    activeTab === "content" ? "Abrir recursos" : "Ver guia de inicio";
 
   return (
     <div className="campus-calm-bg min-h-screen">
       <CourseLearningHeader
         activeTab={activeTab}
-        canModerate={canModerate}
         courseSlug={course.slug}
         courseTitle={course.title}
         fullName={viewerName}
-        onResourcesClick={() =>
-          isFocusedTaskWorkspace
-            ? clearFocusedTaskWorkspace()
-            : handleTabChange("resources")
-        }
+        onPrimaryAction={() => {
+          if (activeTab === "content") {
+            handleResourceWorkspaceOpen();
+            return;
+          }
+
+          openWorkspaceTarget("content", "content-current-module");
+        }}
         onTabChange={handleTabChange}
+        primaryActionLabel={headerPrimaryActionLabel}
         roleLabel={roleLabel}
         showTrackingNav={showTrackingNav}
+        statusLabel={headerStatusLabel}
       />
 
-      <div className="site-container py-5 xl:py-7">
+      <div className="app-container py-4 sm:py-5 xl:py-6">
         <CampusOnboarding
           courseSlug={course.slug}
           showInitially={showOnboarding}
         />
-        <div className="mt-4 grid gap-5 xl:grid-cols-1">
-          <div
-            className={cn(
-              "space-y-4",
-              !canModerate &&
-                activeTab === "content" &&
-                "mx-auto max-w-[72rem]",
-              !canModerate &&
-                activeTab === "resources" &&
-                "mx-auto max-w-[76rem]",
-            )}
-          >
-            {isFocusedTaskWorkspace ? (
-              <FocusedTaskIntro
-                courseSlug={course.slug}
-                onClearFocus={clearFocusedTaskWorkspace}
-              />
-            ) : showCompactContentHeader ? (
-              <CompactLessonHeader
-                canModerate={canModerate}
-                course={course}
-                currentModule={currentModule}
-                currentModuleExercises={currentModuleExercises}
-                currentModuleMaterials={currentModuleMaterials}
-                currentModulePrimaryMaterial={currentModulePrimaryMaterial}
-                editionLabel={editionLabel}
-                nextReviewSubmissionId={nextReviewSubmissionId}
-                onOpenCurrentExercise={() => {
-                  if (currentModuleExercises[0]) {
-                    handleResourceWorkspaceOpen(
-                      `resource-${currentModuleExercises[0].id}`,
-                    );
-                  }
-                }}
-                onOpenCurrentLesson={() =>
-                  openWorkspaceTarget("content", "content-current-module")
+        <div
+          className={cn(
+            "space-y-4",
+            !canModerate && activeTab === "content" && "mx-auto max-w-[74rem]",
+            !canModerate && activeTab === "resources" && "mx-auto max-w-[82rem]",
+            !canModerate && activeTab === "support" && "mx-auto max-w-[78rem]",
+          )}
+        >
+          {isFocusedTaskWorkspace ? (
+            <FocusedTaskIntro
+              courseSlug={course.slug}
+              onClearFocus={clearFocusedTaskWorkspace}
+            />
+          ) : showCompactContentHeader ? (
+            <CompactLessonHeader
+              canModerate={canModerate}
+              course={course}
+              currentModule={currentModule}
+              currentModuleExercises={currentModuleExercises}
+              currentModuleMaterials={currentModuleMaterials}
+              currentModulePrimaryMaterial={currentModulePrimaryMaterial}
+              editionLabel={editionLabel}
+              nextReviewSubmissionId={nextReviewSubmissionId}
+              onOpenCurrentExercise={() => {
+                if (currentModuleExercises[0]) {
+                  handleResourceWorkspaceOpen(
+                    `resource-${currentModuleExercises[0].id}`,
+                  );
                 }
-                onOpenResources={() => handleResourceWorkspaceOpen()}
-                onOpenSupport={() => handleTabChange("support")}
-                roleLabel={roleLabel}
-              />
-            ) : null}
+              }}
+              onOpenCurrentLesson={() =>
+                openWorkspaceTarget("content", "content-current-module")
+              }
+              onOpenResources={() => handleResourceWorkspaceOpen()}
+              onOpenSupport={() => handleTabChange("support")}
+              roleLabel={roleLabel}
+            />
+          ) : null}
 
-            {activeTab === "content" ? (
-              <CourseLearningContentTab
-                canModerate={canModerate}
-                course={course}
-                currentModule={currentModule}
-                currentModuleExercises={currentModuleExercises}
-                currentModuleMaterials={currentModuleMaterials}
-                currentModulePrimaryMaterial={currentModulePrimaryMaterial}
-                managedResourcesByModuleId={managedResourcesByModuleId}
-                onOpenResourceWorkspace={handleResourceWorkspaceOpen}
-                onSelectModule={selectModule}
-                progress={progress}
-                selectedModuleIndex={selectedModuleIndex}
-              />
-            ) : null}
+          {activeTab === "content" ? (
+            <CourseLearningContentTab
+              canModerate={canModerate}
+              course={course}
+              currentModule={currentModule}
+              currentModuleExercises={currentModuleExercises}
+              currentModuleMaterials={currentModuleMaterials}
+              currentModulePrimaryMaterial={currentModulePrimaryMaterial}
+              managedResourcesByModuleId={managedResourcesByModuleId}
+              onOpenResourceWorkspace={handleResourceWorkspaceOpen}
+              onSelectModule={selectModule}
+              progress={progress}
+              selectedModuleIndex={selectedModuleIndex}
+            />
+          ) : null}
 
-            {activeTab === "resources" ? (
-              <CourseLearningResourcesTab
-                canModerate={canModerate}
-                course={course}
-                focusedStudentExerciseId={focusedStudentExercise?.id ?? null}
-                isFocusedTaskWorkspace={isFocusedTaskWorkspace}
-                onExitFocus={clearFocusedTaskWorkspace}
-                resources={resources}
-                roleLabel={roleLabel}
-              />
-            ) : null}
+          {activeTab === "resources" ? (
+            <CourseLearningResourcesTab
+              canModerate={canModerate}
+              course={course}
+              focusedStudentExerciseId={focusedStudentExercise?.id ?? null}
+              isFocusedTaskWorkspace={isFocusedTaskWorkspace}
+              onExitFocus={clearFocusedTaskWorkspace}
+              onOpenResourceWorkspace={handleResourceWorkspaceOpen}
+              resources={resources}
+              roleLabel={roleLabel}
+            />
+          ) : null}
 
-            {activeTab === "support" ? (
-              <CourseLearningSupportTab
-                courseSlug={course.slug}
-                forumCategories={forumCategories}
-              />
-            ) : null}
-          </div>
+          {activeTab === "support" ? (
+            <CourseLearningSupportTab
+              courseSlug={course.slug}
+              forumCategories={forumCategories}
+            />
+          ) : null}
         </div>
       </div>
     </div>

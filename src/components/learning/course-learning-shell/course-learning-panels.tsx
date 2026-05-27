@@ -2,6 +2,15 @@
 
 import Link from "next/link";
 import dynamic from "next/dynamic";
+import {
+  ArrowUpRight,
+  ClipboardList,
+  Download,
+  FileSpreadsheet,
+  FileText,
+  Link2,
+  PlayCircle,
+} from "lucide-react";
 import { CourseProgressToggleForm } from "@/components/learning/course-progress-toggle-form";
 import { Badge } from "@/components/ui/badge";
 import { Button, ButtonLink } from "@/components/ui/button";
@@ -14,7 +23,7 @@ import {
 import type { CatalogCourse } from "@/lib/course-catalog";
 import type { CampusResourceItem } from "@/lib/course-resources";
 import { siteConfig } from "@/lib/site";
-import { cn, formatDate } from "@/lib/utils";
+import { cn, formatDate, formatDateTime } from "@/lib/utils";
 import { ModuleLessonPreview } from "./resource-preview";
 import {
   InfoPanel,
@@ -82,6 +91,7 @@ type CourseLearningResourcesTabProps = {
   roleLabel: string;
   focusedStudentExerciseId: string | null;
   isFocusedTaskWorkspace: boolean;
+  onOpenResourceWorkspace: (targetId?: string) => void;
   onExitFocus: () => void;
 };
 
@@ -547,8 +557,19 @@ export function CourseLearningResourcesTab({
   roleLabel,
   focusedStudentExerciseId,
   isFocusedTaskWorkspace,
+  onOpenResourceWorkspace,
   onExitFocus,
 }: CourseLearningResourcesTabProps) {
+  if (!canModerate && !isFocusedTaskWorkspace) {
+    return (
+      <StudentEditorialResourcesList
+        course={course}
+        onOpenResourceWorkspace={onOpenResourceWorkspace}
+        resources={resources}
+      />
+    );
+  }
+
   return (
     <SurfaceCard
       className="scroll-mt-36"
@@ -571,6 +592,266 @@ export function CourseLearningResourcesTab({
         roleLabel={roleLabel}
       />
     </SurfaceCard>
+  );
+}
+
+function getStudentResourceStateLabel(resource: CampusResourceItem) {
+  if (!resource.isExercise) {
+    return resource.createdAt ? "Nuevo" : null;
+  }
+
+  if (!resource.viewerSubmission && !resource.isSubmissionClosed) {
+    return "Pendiente";
+  }
+
+  if (!resource.viewerSubmission) {
+    return "Cerrado";
+  }
+
+  if (resource.viewerSubmission.status === "CHANGES_REQUESTED") {
+    return "Cambios";
+  }
+
+  if (resource.viewerSubmission.status === "SUBMITTED") {
+    return "En revision";
+  }
+
+  return "Visto";
+}
+
+function getStudentResourceStateTone(resource: CampusResourceItem) {
+  if (!resource.isExercise) {
+    return "outline" as const;
+  }
+
+  if (!resource.viewerSubmission && !resource.isSubmissionClosed) {
+    return "brand" as const;
+  }
+
+  if (!resource.viewerSubmission) {
+    return "outline" as const;
+  }
+
+  if (resource.viewerSubmission.status === "CHANGES_REQUESTED") {
+    return "warning" as const;
+  }
+
+  if (resource.viewerSubmission.status === "SUBMITTED") {
+    return "outline" as const;
+  }
+
+  return "info" as const;
+}
+
+function getStudentResourceMeta(resource: CampusResourceItem) {
+  if (resource.isExercise && resource.dueAt) {
+    return `Entrega ${formatDate(resource.dueAt)}`;
+  }
+
+  if (resource.isExternal) {
+    return "Enlace externo";
+  }
+
+  if (resource.mimeType?.includes("pdf")) {
+    return "PDF";
+  }
+
+  if (
+    resource.mimeType?.includes("sheet") ||
+    resource.mimeType?.includes("excel") ||
+    resource.mimeType?.includes("csv")
+  ) {
+    return "Excel";
+  }
+
+  if (resource.mimeType?.includes("video")) {
+    return "Video";
+  }
+
+  return resource.resourceTypeLabel;
+}
+
+function getStudentResourceIcon(resource: CampusResourceItem) {
+  if (resource.isExercise) {
+    return ClipboardList;
+  }
+
+  if (resource.isExternal) {
+    return Link2;
+  }
+
+  if (
+    resource.mimeType?.includes("sheet") ||
+    resource.mimeType?.includes("excel") ||
+    resource.mimeType?.includes("csv")
+  ) {
+    return FileSpreadsheet;
+  }
+
+  if (resource.mimeType?.includes("video")) {
+    return PlayCircle;
+  }
+
+  return FileText;
+}
+
+function StudentResourceGlyph(input: { resource: CampusResourceItem }) {
+  const icon = getStudentResourceIcon(input.resource);
+
+  if (icon === ClipboardList) {
+    return <ClipboardList className="h-5 w-5" />;
+  }
+
+  if (icon === Link2) {
+    return <Link2 className="h-5 w-5" />;
+  }
+
+  if (icon === FileSpreadsheet) {
+    return <FileSpreadsheet className="h-5 w-5" />;
+  }
+
+  if (icon === PlayCircle) {
+    return <PlayCircle className="h-5 w-5" />;
+  }
+
+  return <FileText className="h-5 w-5" />;
+}
+
+function buildStudentResourceGroups(course: CatalogCourse, resources: CampusResourceItem[]) {
+  const managedResources = resources.filter((resource) => resource.isManaged);
+
+  const orderedGroups = course.modules
+    .map((module, index) => ({
+      key: module.id,
+      title: `Modulo ${index + 1}: ${module.title}`,
+      items: managedResources.filter((resource) => resource.moduleId === module.id),
+    }))
+    .filter((group) => group.items.length > 0);
+
+  const ungrouped = managedResources.filter((resource) => !resource.moduleId);
+
+  if (ungrouped.length) {
+    orderedGroups.push({
+      key: "ungrouped",
+      title: "Recursos generales",
+      items: ungrouped,
+    });
+  }
+
+  return orderedGroups;
+}
+
+function StudentEditorialResourcesList(input: {
+  course: CatalogCourse;
+  resources: CampusResourceItem[];
+  onOpenResourceWorkspace: (targetId?: string) => void;
+}) {
+  const groups = buildStudentResourceGroups(input.course, input.resources);
+
+  if (!groups.length) {
+    return (
+      <div className="rounded-[1.35rem] border border-dashed border-[rgba(22,60,88,0.16)] bg-white/78 px-5 py-8">
+        <p className="font-premium text-[1.4rem] font-semibold tracking-[-0.04em] text-[var(--color-ink)]">
+          Recursos
+        </p>
+        <p className="mt-3 max-w-[42rem] text-sm leading-7 text-[var(--color-muted)]">
+          Cuando haya materiales o actividades publicados para este curso apareceran aqui, agrupados por modulo.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <section className="space-y-9" id="resources-panel">
+      {groups.map((group) => (
+        <div key={group.key}>
+          <h2 className="text-[1.05rem] font-semibold tracking-[0.08em] uppercase text-[var(--color-ink)]">
+            {group.title}
+          </h2>
+          <div className="mt-4 overflow-hidden rounded-[1rem] border border-[rgba(22,60,88,0.12)] bg-white">
+            {group.items.map((resource, index) => (
+              <StudentResourceRow
+                isLast={index === group.items.length - 1}
+                key={resource.id}
+                onOpenResourceWorkspace={input.onOpenResourceWorkspace}
+                resource={resource}
+              />
+            ))}
+          </div>
+        </div>
+      ))}
+    </section>
+  );
+}
+
+function StudentResourceRow(input: {
+  resource: CampusResourceItem;
+  isLast: boolean;
+  onOpenResourceWorkspace: (targetId?: string) => void;
+}) {
+  const stateLabel = getStudentResourceStateLabel(input.resource);
+  const stateTone = getStudentResourceStateTone(input.resource);
+  const meta = getStudentResourceMeta(input.resource);
+  const rightMeta = input.resource.createdAt ? formatDateTime(input.resource.createdAt) : null;
+
+  function handleClick() {
+    if (input.resource.isExercise) {
+      input.onOpenResourceWorkspace(`resource-${input.resource.id}`);
+      return;
+    }
+
+    if (input.resource.href && typeof window !== "undefined") {
+      window.open(
+        input.resource.href,
+        input.resource.isExternal ? "_blank" : "_self",
+        input.resource.isExternal ? "noopener,noreferrer" : undefined,
+      );
+    }
+  }
+
+  return (
+    <button
+      className={cn(
+        "flex w-full items-center gap-4 px-5 py-4 text-left transition hover:bg-[rgba(248,246,241,0.72)]",
+        !input.isLast && "border-b border-[rgba(22,60,88,0.08)]",
+      )}
+      onClick={handleClick}
+      type="button"
+    >
+      <div className="grid h-11 w-11 shrink-0 place-items-center rounded-[0.8rem] bg-[rgba(243,242,252,0.9)] text-[var(--color-primary)]">
+        <StudentResourceGlyph resource={input.resource} />
+      </div>
+
+      <div className="min-w-0 flex-1">
+        <div className="flex flex-wrap items-center gap-2">
+          <p className="truncate text-[1.05rem] font-medium tracking-[-0.02em] text-[var(--color-ink)]">
+            {input.resource.title}
+          </p>
+          {stateLabel ? <Badge tone={stateTone}>{stateLabel}</Badge> : null}
+        </div>
+        <div className="mt-1 flex flex-wrap items-center gap-3 text-sm text-[var(--color-muted)]">
+          <span>{meta}</span>
+          {rightMeta ? <span>{rightMeta}</span> : null}
+        </div>
+      </div>
+
+      <div className="flex items-center gap-4 text-[var(--color-ink-soft)]">
+        {!input.resource.isExercise ? (
+          <span className="hidden text-sm sm:inline">
+            {input.resource.isExternal ? "Abrir" : "Descargar"}
+          </span>
+        ) : (
+          <span className="hidden text-sm sm:inline">Ver</span>
+        )}
+        {input.resource.isExternal ? (
+          <ArrowUpRight className="h-5 w-5 shrink-0" />
+        ) : input.resource.isExercise ? (
+          <ArrowUpRight className="h-5 w-5 shrink-0" />
+        ) : (
+          <Download className="h-5 w-5 shrink-0" />
+        )}
+      </div>
+    </button>
   );
 }
 

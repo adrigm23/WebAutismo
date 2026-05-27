@@ -2,17 +2,19 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import type { UserGlobalRole } from "@prisma/client";
 import {
-  ArrowUpRight,
+  ArrowRight,
   Bell,
   BookOpen,
-  Eye,
+  CircleHelp,
   GraduationCap,
   Languages,
+  LayoutGrid,
   LifeBuoy,
   Mail,
   MessageSquareText,
   Monitor,
   Palette,
+  Settings2,
   Shield,
   UserCircle2,
 } from "lucide-react";
@@ -21,10 +23,7 @@ import { updateNotificationPreferencesAction } from "@/actions/account";
 import { AccountAuthHeader } from "@/components/account/account-auth-header";
 import { Badge } from "@/components/ui/badge";
 import { Button, ButtonLink } from "@/components/ui/button";
-import { EmptyState } from "@/components/ui/empty-state";
-import { SectionHeader } from "@/components/ui/section-header";
 import { StateBanner } from "@/components/ui/state-banner";
-import { SurfaceCard } from "@/components/ui/surface-card";
 import type { DashboardNotificationSnapshot } from "@/lib/account-dashboard";
 import { resolvePlatformNotificationHref } from "@/lib/course-navigation";
 import { getGlobalRoleLabel } from "@/lib/course-permissions";
@@ -49,6 +48,17 @@ type ActiveSessionItem = {
   isCurrent: boolean;
 };
 
+export type AccountOverviewPanel = {
+  title: string;
+  value: string;
+  detail: string;
+  progressPercent: number | null;
+  sectionLabel: string;
+  items: string[];
+  actionHref?: string;
+  actionLabel?: string;
+};
+
 type AccountSettingsPageProps = {
   email: string;
   emailVerifiedAt: Date | null;
@@ -57,6 +67,7 @@ type AccountSettingsPageProps = {
   globalRole: UserGlobalRole;
   isDemoUser: boolean;
   notificationSnapshot: DashboardNotificationSnapshot;
+  overviewPanel: AccountOverviewPanel;
   primaryCta: {
     href: string;
     label: string;
@@ -70,6 +81,16 @@ type PreferenceOption = {
   description: string;
   emailEnabled: boolean;
   webEnabled: boolean;
+};
+
+type RecentItem = {
+  id: string;
+  href: string;
+  title: string;
+  description: string;
+  createdAt: Date;
+  sourceLabel: string;
+  sourceTone: "info" | "brand";
 };
 
 const notificationPreferenceOptions: PreferenceOption[] = [
@@ -93,6 +114,43 @@ const notificationPreferenceOptions: PreferenceOption[] = [
   },
 ];
 
+const railPrimaryItems = [
+  {
+    label: "Panel",
+    href: "/mis-cursos",
+    icon: LayoutGrid,
+  },
+  {
+    label: "Perfil",
+    href: "/mi-cuenta",
+    icon: UserCircle2,
+    active: true,
+  },
+  {
+    label: "Seguridad",
+    href: "#seguridad",
+    icon: Shield,
+  },
+  {
+    label: "Notificaciones",
+    href: "#preferencias",
+    icon: Bell,
+  },
+];
+
+const railSecondaryItems = [
+  {
+    label: "Ajustes",
+    href: "#preferencias",
+    icon: Settings2,
+  },
+  {
+    label: "Ayuda",
+    href: "/soporte",
+    icon: CircleHelp,
+  },
+];
+
 function getInitials(name: string) {
   const parts = name.trim().split(/\s+/).filter(Boolean).slice(0, 2);
 
@@ -107,14 +165,22 @@ function getRoleTone(role: UserGlobalRole) {
   return role === "TEACHER" ? "brand" : "warning";
 }
 
+function getRoleEyebrow(role: UserGlobalRole) {
+  if (role === "ADMIN") {
+    return "Campus privado";
+  }
+
+  return role === "TEACHER" ? "Docente senior" : "Estudiante senior";
+}
+
 function getRoleDescription(role: UserGlobalRole) {
   if (role === "ADMIN") {
-    return "Gestiona tus ajustes personales y entra en administracion solo cuando necesites operativa global.";
+    return "Gestiona seguridad, acceso e informacion personal sin convertir esta zona en un panel operativo.";
   }
 
   return role === "TEACHER"
-    ? "Configura perfil, seguridad y avisos sin convertir esta zona en un segundo panel docente."
-    : "Consulta perfil, seguridad y preferencias sin salir del recorrido privado.";
+    ? "Gestiona perfil, seguridad y avisos del campus privado con una composicion compacta y util."
+    : "Gestiona tus preferencias, seguridad e informacion personal desde una sola vista clara.";
 }
 
 function getSessionDeviceLabel(userAgent: string | null) {
@@ -161,10 +227,11 @@ function getSessionDescription(session: ActiveSessionItem) {
     segments.push(`IP ${session.ipAddress}`);
   }
 
-  return segments.join(" · ");
+  return segments.join(" - ");
 }
 
 function buildRecentItems(snapshot: DashboardNotificationSnapshot) {
+  const items: RecentItem[] = [];
   const platformItems = snapshot.platformNotifications.notifications.map((notification) => ({
     id: `platform-${notification.id}`,
     href: resolvePlatformNotificationHref({
@@ -189,9 +256,11 @@ function buildRecentItems(snapshot: DashboardNotificationSnapshot) {
     sourceTone: "brand" as const,
   }));
 
-  return [...platformItems, ...forumItems]
+  items.push(...platformItems, ...forumItems);
+
+  return items
     .sort((left, right) => right.createdAt.getTime() - left.createdAt.getTime())
-    .slice(0, 4);
+    .slice(0, 3);
 }
 
 function getNotificationPreferenceTitle(snapshot: DashboardNotificationSnapshot) {
@@ -204,24 +273,44 @@ function getNotificationPreferenceTitle(snapshot: DashboardNotificationSnapshot)
   return currentOption?.title ?? "Email y web";
 }
 
-function AccountValueTile(input: {
+function RailLink(input: {
+  href: string;
+  label: string;
+  icon: typeof LayoutGrid;
+  active?: boolean;
+}) {
+  return (
+    <Link
+      aria-current={input.active ? "page" : undefined}
+      className={cn(
+        "flex items-center gap-3 rounded-[1rem] px-3.5 py-3 text-[0.98rem] font-medium transition",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2",
+        input.active
+          ? "bg-[rgba(22,60,88,0.82)] text-white shadow-[0_14px_28px_-20px_rgba(13,38,56,0.8)]"
+          : "text-[var(--color-ink)] hover:bg-white hover:text-[var(--color-primary)]",
+      )}
+      href={input.href}
+    >
+      <input.icon className="h-5 w-5 shrink-0" />
+      <span>{input.label}</span>
+    </Link>
+  );
+}
+
+function InfoField(input: {
   label: string;
   value: ReactNode;
   description?: ReactNode;
   action?: ReactNode;
-  className?: string;
 }) {
   return (
-    <div
-      className={cn(
-        "rounded-[1.25rem] border border-[var(--color-border-subtle)] bg-white/82 px-4 py-4 shadow-[var(--shadow-xs)]",
-        input.className,
-      )}
-    >
-      <p className="text-meta-xs text-[var(--color-muted)]">{input.label}</p>
+    <div className="rounded-[1.15rem] border border-[var(--color-border-subtle)] bg-white px-4 py-4 shadow-[0_6px_18px_rgba(15,34,52,0.04)]">
+      <p className="text-[0.72rem] font-medium tracking-[0.12em] text-[var(--color-muted)] uppercase">
+        {input.label}
+      </p>
       <div className="mt-3 flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-base font-semibold leading-6 text-[var(--color-ink)]">
+          <p className="text-[1.06rem] font-semibold leading-7 text-[var(--color-ink)]">
             {input.value}
           </p>
           {input.description ? (
@@ -236,84 +325,9 @@ function AccountValueTile(input: {
   );
 }
 
-function ContextStrip(input: {
-  icon: typeof Languages;
-  label: string;
-  value: ReactNode;
-  description: ReactNode;
-}) {
-  return (
-    <div className="rounded-[1.2rem] border border-[var(--color-border-subtle)] bg-white/76 px-4 py-4 shadow-[var(--shadow-xs)]">
-      <div className="flex items-start gap-3">
-        <div className="grid h-10 w-10 shrink-0 place-items-center rounded-[0.95rem] bg-[var(--color-brand-soft)] text-[var(--color-primary)]">
-          <input.icon className="h-5 w-5" />
-        </div>
-        <div className="min-w-0">
-          <p className="text-meta-xs text-[var(--color-muted)]">{input.label}</p>
-          <p className="mt-2 text-sm font-semibold text-[var(--color-ink)]">{input.value}</p>
-          <p className="mt-1.5 text-sm leading-6 text-[var(--color-muted)]">
-            {input.description}
-          </p>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function QuickLinkTile(input: QuickLinkItem) {
-  return (
-    <Link
-      className="group rounded-[1.25rem] border border-[var(--color-border-subtle)] bg-[linear-gradient(180deg,rgba(255,255,255,0.96)_0%,rgba(248,246,241,0.96)_100%)] px-4 py-4 shadow-[var(--shadow-xs)] transition duration-[var(--motion-duration-base)] hover:-translate-y-[1px] hover:border-[var(--color-border-strong)] hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2"
-      href={input.href}
-    >
-      <div className="flex items-start justify-between gap-3">
-        <div className="grid h-11 w-11 shrink-0 place-items-center rounded-[1rem] bg-[var(--color-brand-soft)] text-[var(--color-primary)] transition group-hover:scale-[1.02]">
-          <input.icon className="h-5 w-5" />
-        </div>
-        <ArrowUpRight className="mt-1 h-4 w-4 shrink-0 text-[var(--color-primary)] transition group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-      </div>
-      <div className="mt-5">
-        <div className="flex flex-wrap items-center gap-2">
-          <p className="text-sm font-semibold text-[var(--color-ink)]">{input.title}</p>
-          {input.badge ? (
-            <Badge shape="rounded" size="sm" tone="outline">
-              {input.badge}
-            </Badge>
-          ) : null}
-        </div>
-        <p className="mt-2 text-sm leading-6 text-[var(--color-muted)]">{input.description}</p>
-      </div>
-    </Link>
-  );
-}
-
-function SecurityStatusRow(input: {
-  icon: typeof Shield;
-  label: string;
-  value: ReactNode;
-  description: ReactNode;
-}) {
-  return (
-    <div className="rounded-[1.15rem] border border-white/12 bg-white/8 px-4 py-4 backdrop-blur-sm">
-      <div className="flex items-start gap-3">
-        <div className="grid h-10 w-10 shrink-0 place-items-center rounded-[0.95rem] bg-white/10 text-white">
-          <input.icon className="h-5 w-5" />
-        </div>
-        <div className="min-w-0">
-          <p className="text-[0.68rem] font-semibold tracking-[0.12em] text-white/58 uppercase">
-            {input.label}
-          </p>
-          <p className="mt-2 text-sm font-semibold text-white">{input.value}</p>
-          <p className="mt-1.5 text-sm leading-6 text-white/70">{input.description}</p>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function NotificationPreferenceCard(input: {
-  isSelected: boolean;
+function PreferenceRow(input: {
   option: PreferenceOption;
+  isSelected: boolean;
 }) {
   return (
     <form action={updateNotificationPreferencesAction}>
@@ -329,47 +343,67 @@ function NotificationPreferenceCard(input: {
       />
       <button
         className={cn(
-          "w-full rounded-[1.25rem] border px-4 py-4 text-left transition duration-[var(--motion-duration-base)]",
+          "flex w-full items-center justify-between gap-4 rounded-[1rem] border px-4 py-3 text-left transition",
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2",
           input.isSelected
-            ? "border-[rgba(22,60,88,0.18)] bg-[linear-gradient(180deg,rgba(223,234,243,0.84)_0%,rgba(255,255,255,0.94)_100%)] shadow-[0_10px_22px_rgba(22,60,88,0.08)]"
-            : "border-[var(--color-border-subtle)] bg-white/78 hover:border-[var(--color-border-strong)] hover:bg-white",
+            ? "border-[rgba(22,60,88,0.18)] bg-[rgba(243,242,252,0.92)]"
+            : "border-[var(--color-border-subtle)] bg-white hover:border-[rgba(22,60,88,0.16)]",
         )}
         type="submit"
       >
-        <div className="flex items-start justify-between gap-4">
-          <div className="min-w-0">
-            <p className="text-sm font-semibold text-[var(--color-ink)]">{input.option.title}</p>
-            <p className="mt-2 text-sm leading-6 text-[var(--color-muted)]">
-              {input.option.description}
-            </p>
-          </div>
-          <div
-            aria-hidden="true"
-            className={cn(
-              "mt-1 grid h-5 w-5 shrink-0 place-items-center rounded-full border transition",
-              input.isSelected
-                ? "border-[var(--color-primary)] bg-[var(--color-primary)]"
-                : "border-[rgba(22,60,88,0.2)] bg-white",
-            )}
-          >
-            <div
-              className={cn(
-                "h-2 w-2 rounded-full transition",
-                input.isSelected ? "bg-white" : "bg-transparent",
-              )}
-            />
-          </div>
+        <div className="min-w-0">
+          <p className="text-sm font-semibold text-[var(--color-ink)]">{input.option.title}</p>
+          <p className="mt-1 text-sm leading-6 text-[var(--color-muted)]">
+            {input.option.description}
+          </p>
         </div>
-        <div className="mt-4 flex flex-wrap items-center gap-2">
-          <Badge tone={input.option.emailEnabled ? "brand" : "outline"}>Email</Badge>
-          <Badge tone={input.option.webEnabled ? "brand" : "outline"}>Web</Badge>
-          <Badge tone={input.isSelected ? "brand" : "outline"}>
-            {input.isSelected ? "Activa" : "Disponible"}
-          </Badge>
+        <div
+          aria-hidden="true"
+          className={cn(
+            "flex h-7 w-12 shrink-0 items-center rounded-full p-1 transition",
+            input.isSelected ? "bg-[var(--color-primary)]" : "bg-[rgba(91,108,126,0.28)]",
+          )}
+        >
+          <div
+            className={cn(
+              "h-5 w-5 rounded-full bg-white transition",
+              input.isSelected ? "translate-x-5" : "translate-x-0",
+            )}
+          />
         </div>
       </button>
     </form>
+  );
+}
+
+function QuickAccessTile(input: QuickLinkItem) {
+  return (
+    <Link
+      className="group rounded-[1rem] border border-[var(--color-border-subtle)] bg-white px-4 py-4 transition hover:border-[rgba(22,60,88,0.16)] hover:bg-[rgba(248,247,243,0.86)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2"
+      href={input.href}
+    >
+      <div className="grid h-11 w-11 place-items-center rounded-[0.95rem] bg-[rgba(243,242,252,0.92)] text-[var(--color-primary)]">
+        <input.icon className="h-5 w-5" />
+      </div>
+      <div className="mt-4 flex items-center justify-between gap-3">
+        <p className="text-sm font-semibold text-[var(--color-ink)]">{input.title}</p>
+        <ArrowRight className="h-4 w-4 text-[var(--color-primary)] transition group-hover:translate-x-0.5" />
+      </div>
+      {input.badge ? (
+        <Badge className="mt-3" size="sm" tone="outline">
+          {input.badge}
+        </Badge>
+      ) : null}
+    </Link>
+  );
+}
+
+function OverviewItem(input: { text: string }) {
+  return (
+    <li className="flex items-start gap-3 text-sm leading-6 text-white/82">
+      <span className="mt-1.5 h-3.5 w-3.5 shrink-0 rounded-full border border-[rgba(95,247,239,0.82)]" />
+      <span>{input.text}</span>
+    </li>
   );
 }
 
@@ -381,6 +415,7 @@ export function AccountSettingsPage({
   globalRole,
   isDemoUser,
   notificationSnapshot,
+  overviewPanel,
   primaryCta,
   quickLinks,
   sessions,
@@ -393,7 +428,7 @@ export function AccountSettingsPage({
   const currentPreferenceTitle = getNotificationPreferenceTitle(notificationSnapshot);
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(223,234,243,0.72),transparent_32%),linear-gradient(180deg,#faf7f2_0%,#f5f4f8_54%,#fbf9f5_100%)] pb-16">
+    <div className="min-h-screen bg-[linear-gradient(180deg,#fbfaf7_0%,#f7f5ef_100%)] pb-10">
       <AccountAuthHeader
         fullName={fullName}
         initials={initials}
@@ -405,439 +440,393 @@ export function AccountSettingsPage({
         {isDemoUser ? (
           <StateBanner
             className="mb-6"
-            description="Estas navegando con una cuenta de prueba. La vista refleja el rol actual, pero los cambios no se guardan."
+            description="Estas navegando con una cuenta de prueba. La composicion refleja el rol actual, pero los cambios no se guardan."
             title="Modo demo activo"
             tone="warning"
           />
         ) : null}
 
-        <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_19.5rem] xl:items-start">
-          <div className="space-y-6">
-            <section className="relative overflow-hidden rounded-[2rem] border border-[rgba(22,60,88,0.1)] bg-[linear-gradient(135deg,rgba(255,255,255,0.98)_0%,rgba(247,244,239,0.94)_56%,rgba(239,245,249,0.9)_100%)] px-5 py-5 shadow-[var(--shadow-medium)] sm:px-6 sm:py-6 lg:px-7">
-              <div className="absolute inset-x-0 top-0 h-px bg-[linear-gradient(90deg,transparent,rgba(22,60,88,0.18),transparent)]" />
-              <div className="absolute -left-10 top-0 h-32 w-32 rounded-full bg-[rgba(223,234,243,0.7)] blur-3xl" />
-              <div className="absolute right-0 top-6 h-40 w-40 rounded-full bg-[rgba(211,154,31,0.12)] blur-3xl" />
+        <div className="overflow-hidden rounded-[2rem] border border-[rgba(22,60,88,0.1)] bg-white shadow-[0_24px_70px_-42px_rgba(18,42,61,0.22)]">
+          <div className="xl:grid xl:grid-cols-[15.5rem_minmax(0,1fr)_21rem]">
+            <aside className="hidden border-r border-[rgba(22,60,88,0.08)] bg-[linear-gradient(180deg,#f6f4fb_0%,#f3f1fb_100%)] xl:flex xl:min-h-[calc(100vh-13rem)] xl:flex-col xl:justify-between xl:px-4 xl:py-7">
+              <nav aria-label="Secciones de cuenta" className="space-y-2">
+                {railPrimaryItems.map((item) => (
+                  <RailLink
+                    active={item.active}
+                    href={item.href}
+                    icon={item.icon}
+                    key={item.label}
+                    label={item.label}
+                  />
+                ))}
+              </nav>
 
-              <div className="relative grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(15.5rem,18rem)] lg:items-center">
+              <div className="border-t border-[rgba(22,60,88,0.08)] pt-5">
+                <nav aria-label="Ayuda y ajustes" className="space-y-2">
+                  {railSecondaryItems.map((item) => (
+                    <RailLink href={item.href} icon={item.icon} key={item.label} label={item.label} />
+                  ))}
+                </nav>
+              </div>
+            </aside>
+
+            <div className="min-w-0 p-5 sm:p-6 lg:p-7 xl:p-8">
+              <nav
+                aria-label="Secciones de cuenta en movil"
+                className="mb-5 flex gap-2 overflow-x-auto pb-1 xl:hidden"
+              >
+                {[...railPrimaryItems, ...railSecondaryItems].map((item) => (
+                  <Link
+                    aria-current={("active" in item && item.active) ? "page" : undefined}
+                    className={cn(
+                      "inline-flex min-h-10 shrink-0 items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition",
+                      ("active" in item && item.active)
+                        ? "border-[var(--color-primary)] bg-[var(--color-primary)] text-white"
+                        : "border-[rgba(22,60,88,0.08)] bg-[rgba(247,245,239,0.9)] text-[var(--color-ink)]",
+                    )}
+                    href={item.href}
+                    key={`mobile-${item.label}`}
+                  >
+                    <item.icon className="h-4 w-4" />
+                    <span>{item.label}</span>
+                  </Link>
+                ))}
+              </nav>
+
+              <section className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_19rem] lg:items-center">
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
                     <Badge tone={getRoleTone(globalRole)}>{roleLabel}</Badge>
                     <Badge tone="success">Cuenta activa</Badge>
-                    {notificationSnapshot.unreadCount ? (
-                      <Badge tone="outline">
-                        {notificationSnapshot.unreadCount} avisos pendientes
-                      </Badge>
-                    ) : null}
                   </div>
 
-                  <div className="mt-5 flex items-start gap-4">
-                    <div className="grid h-16 w-16 shrink-0 place-items-center rounded-[1.35rem] border border-white/70 bg-white/78 text-lg font-semibold text-[var(--color-primary)] shadow-[0_14px_30px_rgba(22,60,88,0.08)]">
-                      {initials}
-                    </div>
+                  <p className="mt-5 text-[0.82rem] font-medium tracking-[0.14em] text-[var(--color-ink-soft)] uppercase">
+                    {getRoleEyebrow(globalRole)}
+                  </p>
+                  <h1 className="font-premium mt-3 text-[clamp(2.6rem,5vw,4rem)] leading-[0.96] font-semibold tracking-[-0.06em] text-[var(--color-ink)] text-balance">
+                    Hola, {firstName}
+                  </h1>
+                  <p className="mt-4 max-w-[42rem] text-[1.05rem] leading-8 text-[var(--color-muted)]">
+                    {getRoleDescription(globalRole)}
+                  </p>
+                </div>
+
+                <div className="lg:justify-self-end">
+                  <Link
+                    className="group flex min-h-[5.25rem] items-center justify-between gap-4 rounded-[1.15rem] bg-[linear-gradient(180deg,#09283a_0%,#072334_100%)] px-5 py-4 text-white shadow-[0_18px_36px_-24px_rgba(7,35,52,0.82)] transition hover:translate-y-[-1px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2"
+                    href={primaryCta.href}
+                  >
                     <div className="min-w-0">
-                      <p className="text-meta-xs text-[var(--color-ink-soft)]">Hub de cuenta</p>
-                      <h1 className="font-premium mt-2 text-display-xl font-semibold text-[var(--color-ink)] text-balance">
-                        Hola, {firstName}
-                      </h1>
-                      <p className="mt-3 max-w-[60ch] text-body-sm text-[var(--color-muted)] sm:text-body-md">
-                        {getRoleDescription(globalRole)}{" "}
-                        {notificationSnapshot.unreadCount
-                          ? `Hay ${notificationSnapshot.unreadCount} avisos por revisar cuando vuelvas al campus.`
-                          : "Ahora mismo no tienes avisos pendientes."}
-                      </p>
-                      <div className="mt-4 flex flex-wrap gap-x-4 gap-y-2 text-sm text-[var(--color-ink-soft)]">
-                        <span className="inline-flex items-center gap-2">
-                          <UserCircle2 className="h-4 w-4 text-[var(--color-primary)]" />
-                          {roleLabel}
-                        </span>
-                        <span className="inline-flex items-center gap-2 break-all">
-                          <Mail className="h-4 w-4 text-[var(--color-primary)]" />
-                          {email}
-                        </span>
-                        <span className="inline-flex items-center gap-2">
-                          <Shield className="h-4 w-4 text-[var(--color-primary)]" />
-                          {emailVerifiedAt ? "Correo verificado" : "Correo principal activo"}
-                        </span>
+                      <p className="text-sm font-semibold text-white/92">Continuar</p>
+                      <p className="mt-1 truncate text-base text-white/80">{primaryCta.label}</p>
+                    </div>
+                    <ArrowRight className="h-5 w-5 shrink-0 transition group-hover:translate-x-0.5" />
+                  </Link>
+                </div>
+              </section>
+
+              <div className="mt-7 border-t border-[rgba(22,60,88,0.08)] pt-7">
+                <section className="rounded-[1.6rem] border border-[var(--color-border-subtle)] bg-white p-5 shadow-[0_10px_24px_-22px_rgba(18,42,61,0.24)] sm:p-6">
+                  <div className="flex flex-wrap items-start justify-between gap-4">
+                    <div className="flex items-start gap-4">
+                      <div className="grid h-14 w-14 place-items-center rounded-[1rem] bg-[rgba(243,242,252,0.92)] text-[var(--color-primary)]">
+                        <UserCircle2 className="h-6 w-6" />
+                      </div>
+                      <div className="min-w-0">
+                        <h2 className="font-premium text-[1.9rem] font-semibold tracking-[-0.04em] text-[var(--color-ink)]">
+                          Perfil y cuenta
+                        </h2>
+                        <p className="mt-1 text-[1.02rem] text-[var(--color-muted)]">
+                          Informacion personal y acceso
+                        </p>
                       </div>
                     </div>
-                  </div>
-                </div>
 
-                <div className="lg:pl-2">
-                  <div className="rounded-[1.55rem] border border-[rgba(255,255,255,0.12)] bg-[linear-gradient(180deg,#163c58_0%,#0d2638_100%)] p-4 text-white shadow-[0_24px_54px_-28px_rgba(13,38,56,0.72)]">
-                    <p className="text-[0.68rem] font-semibold tracking-[0.12em] text-white/60 uppercase">
-                      Continuar
-                    </p>
-                    <p className="mt-2 text-lg font-semibold">{primaryCta.label}</p>
-                    <p className="mt-2 text-sm leading-6 text-white/72">
-                      Vuelve al recorrido privado sin convertir esta vista en un panel operativo.
-                    </p>
-                    <ButtonLink
-                      className="mt-4 justify-between bg-white text-[var(--color-primary)] hover:bg-white hover:text-[var(--color-primary)] focus-visible:ring-white/60 focus-visible:ring-offset-[rgba(12,38,56,0.9)]"
-                      href={primaryCta.href}
-                      variant="neutral"
-                    >
-                      <span>{primaryCta.label}</span>
-                      <ArrowUpRight className="h-4 w-4" />
-                    </ButtonLink>
                     <Link
-                      className="mt-3 inline-flex items-center gap-2 text-sm text-white/76 transition hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[rgba(12,38,56,0.9)]"
-                      href="/soporte"
+                      className="text-base font-medium text-[var(--color-ink)] transition hover:text-[var(--color-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2"
+                      href="#preferencias"
                     >
-                      Soporte contextual
-                      <ArrowUpRight className="h-4 w-4" />
+                      Editar
                     </Link>
                   </div>
-                </div>
-              </div>
-            </section>
 
-            <SurfaceCard className="overflow-hidden p-0 lg:p-0" padding="md">
-              <div className="grid gap-0 lg:grid-cols-[minmax(0,1fr)_19rem]">
-                <div className="p-5 lg:p-6">
-                  <SectionHeader
-                    description="Informacion principal de perfil y acceso organizada como una sola composicion, sin fragmentar la cuenta en tarjetas de relleno."
-                    eyebrow="Cuenta"
-                    size="md"
-                    title="Perfil y acceso"
-                  />
-
-                  <div className="mt-5 grid gap-4 sm:grid-cols-2">
-                    <AccountValueTile
-                      description="Nombre visible en el campus privado."
+                  <div className="mt-6 grid gap-4 md:grid-cols-2">
+                    <InfoField
+                      description="Nombre visible dentro del campus privado."
                       label="Nombre completo"
                       value={fullName}
                     />
-                    <AccountValueTile
+                    <InfoField
                       description={
                         emailVerifiedAt
                           ? `Direccion verificada ${formatRelativeTime(emailVerifiedAt)}.`
                           : "Direccion principal para acceso y avisos."
                       }
-                      label="Correo de acceso"
+                      label="Correo electronico"
                       value={<span className="break-all">{email}</span>}
                     />
-                    <AccountValueTile
-                      description="Rol actual asociado a esta cuenta dentro del campus."
-                      label="Rol en el campus"
-                      value={roleLabel}
-                    />
-                    <AccountValueTile
+                    <InfoField
                       action={
                         <ButtonLink href="/recuperar-contrasena" size="sm" variant="neutral">
                           Restablecer
                         </ButtonLink>
                       }
-                      description="El cambio de contrasena se resuelve por correo para mantener el flujo seguro y simple."
+                      description="El acceso se mantiene protegido desde recuperacion por correo."
                       label="Acceso protegido"
-                      value="Contrasena gestionada por recuperacion"
+                      value="Contrasena gestionada"
                     />
-                  </div>
-                </div>
-
-                <div className="border-t border-[rgba(22,60,88,0.08)] bg-[linear-gradient(180deg,rgba(245,243,238,0.96)_0%,rgba(255,255,255,0.88)_100%)] p-5 lg:border-t-0 lg:border-l lg:p-6">
-                  <p className="text-meta-xs text-[var(--color-primary)]">Resumen operativo</p>
-                  <div className="mt-4 space-y-3">
-                    <AccountValueTile
-                      className="bg-white/88"
-                      description="La cuenta esta disponible para uso privado."
-                      label="Estado"
-                      value="Cuenta activa"
-                    />
-                    <AccountValueTile
-                      className="bg-white/88"
-                      description="Canal principal seleccionado para avisos reales del campus."
-                      label="Notificaciones"
+                    <InfoField
+                      description="Canal principal activo para avisos del campus."
+                      label="Avisos"
                       value={currentPreferenceTitle}
                     />
-                    <AccountValueTile
-                      className="bg-white/88"
-                      description={
-                        currentSession
-                          ? `Sesion actual en ${getSessionDeviceLabel(currentSession.userAgent)}.`
-                          : "La navegacion actual seguira apareciendo aqui."
-                      }
-                      label="Sesion actual"
-                      value={currentSession ? "Acceso en curso" : "Sin detalle adicional"}
-                    />
                   </div>
-                </div>
-              </div>
-            </SurfaceCard>
+                </section>
 
-            <SurfaceCard padding="md">
-              <SectionHeader
-                description="Preferencias reales disponibles hoy, con mas densidad util y menos bloques aislados."
-                eyebrow="Preferencias"
-                size="md"
-                title="Notificaciones y experiencia"
-              />
-
-              <div className="mt-5 grid gap-5 lg:grid-cols-[minmax(0,1.02fr)_minmax(0,0.98fr)]">
-                <div className="space-y-3">
-                  <p className="text-meta-xs font-semibold text-[var(--color-muted)]">Canal de avisos</p>
-                  {notificationPreferenceOptions.map((option) => {
-                    const isSelected =
-                      notificationSnapshot.preference.emailEnabled === option.emailEnabled &&
-                      notificationSnapshot.preference.webEnabled === option.webEnabled;
-
-                    return (
-                      <NotificationPreferenceCard
-                        isSelected={isSelected}
-                        key={option.title}
-                        option={option}
-                      />
-                    );
-                  })}
-                </div>
-
-                <div className="rounded-[1.6rem] border border-[var(--color-border-subtle)] bg-[linear-gradient(180deg,rgba(255,255,255,0.94)_0%,rgba(247,244,239,0.92)_100%)] p-4 lg:p-5">
-                  <div className="flex flex-wrap items-center justify-between gap-3">
-                    <div>
-                      <p className="text-meta-xs text-[var(--color-primary)]">Contexto del campus</p>
-                      <h3 className="mt-2 text-heading-md font-semibold text-[var(--color-ink)]">
-                        Preferencias del entorno privado
-                      </h3>
-                    </div>
-                    <Badge tone="outline">Sin duplicar ajustes</Badge>
-                  </div>
-
-                  <div className="mt-4 space-y-3">
-                    <ContextStrip
-                      description="La interfaz privada se sirve en espanol para esta cuenta."
-                      icon={Languages}
-                      label="Idioma"
-                      value="Espanol (Espana)"
-                    />
-                    <ContextStrip
-                      description="Todavia no hay ajustes personales guardados para contraste, zoom o reduccion de movimiento."
-                      icon={Eye}
-                      label="Accesibilidad"
-                      value="Preferencias globales del campus"
-                    />
-                    <ContextStrip
-                      description="La zona privada mantiene un unico tema visual para no fragmentar la experiencia."
-                      icon={Palette}
-                      label="Visual"
-                      value="Tema claro del campus"
-                    />
-                  </div>
-                </div>
-              </div>
-            </SurfaceCard>
-
-            <SurfaceCard padding="md">
-              <SectionHeader
-                actions={
-                  hasOtherSessions ? (
-                    <form action={logoutEverywhereAction}>
-                      <Button size="sm" type="submit" variant="neutral">
-                        Cerrar todas las sesiones
-                      </Button>
-                    </form>
-                  ) : null
-                }
-                description="Visibilidad del acceso actual sin convertir esta pantalla en tu home operativa."
-                eyebrow="Sesiones"
-                size="md"
-                title="Dispositivos activos"
-              />
-
-              <div className="mt-5">
-                {sessions.length ? (
-                  <div className="divide-y divide-[rgba(22,60,88,0.08)] rounded-[1.4rem] border border-[var(--color-border-subtle)] bg-white/82 px-4">
-                    {sessions.map((session) => (
-                      <div
-                        className="flex flex-col gap-3 py-4 sm:flex-row sm:items-start sm:justify-between"
-                        key={session.id}
-                      >
-                        <div className="flex min-w-0 items-start gap-3">
-                          <div className="grid h-10 w-10 shrink-0 place-items-center rounded-[0.95rem] bg-[var(--color-brand-soft)] text-[var(--color-primary)]">
-                            <Monitor className="h-5 w-5" />
-                          </div>
-                          <div className="min-w-0">
-                            <p className="text-sm font-semibold text-[var(--color-ink)]">
-                              {getSessionDeviceLabel(session.userAgent)}
-                            </p>
-                            <p className="mt-1 text-sm leading-6 text-[var(--color-muted)]">
-                              {getSessionDescription(session)}
-                            </p>
-                          </div>
-                        </div>
-                        <Badge
-                          className="self-start"
-                          tone={session.isCurrent ? "brand" : "outline"}
-                        >
-                          {session.isCurrent ? "Actual" : "Activa"}
-                        </Badge>
+                <div className="mt-5 grid gap-5 lg:grid-cols-2">
+                  <section
+                    className="rounded-[1.5rem] border border-[var(--color-border-subtle)] bg-white p-5 shadow-[0_10px_24px_-22px_rgba(18,42,61,0.22)] sm:p-6"
+                    id="preferencias"
+                  >
+                    <div className="flex items-start gap-4">
+                      <div className="grid h-14 w-14 place-items-center rounded-[1rem] bg-[rgba(243,242,252,0.92)] text-[var(--color-primary)]">
+                        <Settings2 className="h-6 w-6" />
                       </div>
-                    ))}
+                      <div>
+                        <h2 className="font-premium text-[1.65rem] font-semibold tracking-[-0.04em] text-[var(--color-ink)]">
+                          Preferencias
+                        </h2>
+                        <p className="mt-1 text-base text-[var(--color-muted)]">
+                          Notificaciones e idioma principal
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="mt-6 space-y-3">
+                      {notificationPreferenceOptions.map((option) => {
+                        const isSelected =
+                          notificationSnapshot.preference.emailEnabled === option.emailEnabled &&
+                          notificationSnapshot.preference.webEnabled === option.webEnabled;
+
+                        return (
+                          <PreferenceRow isSelected={isSelected} key={option.title} option={option} />
+                        );
+                      })}
+                    </div>
+
+                    <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                      <div className="rounded-[1rem] bg-[rgba(248,246,241,0.94)] px-4 py-3">
+                        <p className="text-[0.72rem] font-medium tracking-[0.12em] text-[var(--color-muted)] uppercase">
+                          Idioma
+                        </p>
+                        <p className="mt-2 inline-flex items-center gap-2 text-sm font-semibold text-[var(--color-ink)]">
+                          <Languages className="h-4 w-4 text-[var(--color-primary)]" />
+                          Espanol
+                        </p>
+                      </div>
+                      <div className="rounded-[1rem] bg-[rgba(248,246,241,0.94)] px-4 py-3">
+                        <p className="text-[0.72rem] font-medium tracking-[0.12em] text-[var(--color-muted)] uppercase">
+                          Experiencia
+                        </p>
+                        <p className="mt-2 inline-flex items-center gap-2 text-sm font-semibold text-[var(--color-ink)]">
+                          <Palette className="h-4 w-4 text-[var(--color-primary)]" />
+                          Tema claro del campus
+                        </p>
+                      </div>
+                    </div>
+                  </section>
+
+                  <section
+                    className="rounded-[1.5rem] border border-[var(--color-border-subtle)] bg-white p-5 shadow-[0_10px_24px_-22px_rgba(18,42,61,0.22)] sm:p-6"
+                    id="seguridad"
+                  >
+                    <div className="flex items-start gap-4">
+                      <div className="grid h-14 w-14 place-items-center rounded-[1rem] bg-[rgba(243,242,252,0.92)] text-[var(--color-primary)]">
+                        <Shield className="h-6 w-6" />
+                      </div>
+                      <div>
+                        <h2 className="font-premium text-[1.65rem] font-semibold tracking-[-0.04em] text-[var(--color-ink)]">
+                          Seguridad
+                        </h2>
+                        <p className="mt-1 text-base text-[var(--color-muted)]">
+                          Correo, sesion actual y acceso
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="mt-6 space-y-4">
+                      <div className="rounded-[1rem] bg-[rgba(243,242,252,0.94)] px-4 py-4">
+                        <p className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--color-ink)]">
+                          <Mail className="h-4 w-4 text-[var(--color-primary)]" />
+                          {emailVerifiedAt ? "Correo verificado" : "Correo principal activo"}
+                        </p>
+                        <p className="mt-2 text-sm leading-6 text-[var(--color-muted)]">
+                          {emailVerifiedAt
+                            ? `Verificado ${formatRelativeTime(emailVerifiedAt)} para acceso y avisos.`
+                            : "Disponible como direccion principal del campus privado."}
+                        </p>
+                      </div>
+
+                      <div className="rounded-[1rem] border border-[var(--color-border-subtle)] bg-white px-4 py-4">
+                        <p className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--color-ink)]">
+                          <Monitor className="h-4 w-4 text-[var(--color-primary)]" />
+                          {currentSession
+                            ? getSessionDeviceLabel(currentSession.userAgent)
+                            : "Sesion actual"}
+                        </p>
+                        <p className="mt-2 text-sm leading-6 text-[var(--color-muted)]">
+                          {currentSession
+                            ? getSessionDescription(currentSession)
+                            : "La navegacion actual aparecera aqui cuando exista trazabilidad adicional."}
+                        </p>
+                      </div>
+
+                      <div className="flex flex-wrap gap-3">
+                        <ButtonLink href="/recuperar-contrasena" variant="neutral">
+                          Restablecer contrasena
+                        </ButtonLink>
+                        {hasOtherSessions ? (
+                          <form action={logoutEverywhereAction}>
+                            <Button type="submit" variant="subtle">
+                              Cerrar otras sesiones
+                            </Button>
+                          </form>
+                        ) : null}
+                      </div>
+                    </div>
+                  </section>
+                </div>
+              </div>
+            </div>
+
+            <aside className="border-t border-[rgba(22,60,88,0.08)] bg-[linear-gradient(180deg,#fcfbf8_0%,#f8f6f1_100%)] p-5 sm:p-6 xl:border-t-0 xl:border-l xl:p-6">
+              <section className="overflow-hidden rounded-[1.5rem] bg-[linear-gradient(180deg,#123d58_0%,#0b2b40_100%)] p-5 text-white shadow-[0_24px_50px_-28px_rgba(11,43,64,0.8)]">
+                <p className="font-premium text-[2.15rem] leading-[1] font-semibold tracking-[-0.05em] text-white">
+                  {overviewPanel.title}
+                </p>
+                <p className="mt-4 text-[2rem] leading-[1.02] font-semibold tracking-[-0.05em] text-white">
+                  {overviewPanel.value}
+                </p>
+                <p className="mt-2 text-sm leading-6 text-white/72">{overviewPanel.detail}</p>
+
+                {overviewPanel.progressPercent !== null ? (
+                  <div className="mt-5">
+                    <div className="h-2 overflow-hidden rounded-full bg-white/16">
+                      <div
+                        aria-hidden="true"
+                        className="h-full rounded-full bg-[rgba(91,247,239,0.96)]"
+                        style={{
+                          width: `${Math.max(0, Math.min(100, overviewPanel.progressPercent))}%`,
+                        }}
+                      />
+                    </div>
                   </div>
-                ) : (
-                  <EmptyState
-                    className="px-5 py-6"
-                    description="La sesion actual seguira visible aqui cuando exista trazabilidad adicional de acceso."
-                    title="Sin sesiones adicionales"
-                    tone="subtle"
-                  />
-                )}
-              </div>
-            </SurfaceCard>
-          </div>
-
-          <aside className="space-y-4 xl:sticky xl:top-28 xl:self-start">
-            <section className="overflow-hidden rounded-[1.75rem] bg-[linear-gradient(180deg,#163c58_0%,#0c2638_100%)] p-5 text-white shadow-[0_28px_60px_-28px_rgba(12,38,56,0.76)]">
-              <p className="text-[0.68rem] font-semibold tracking-[0.12em] text-white/58 uppercase">
-                Estado de acceso
-              </p>
-              <h2 className="font-premium mt-3 text-display-md font-semibold text-white">
-                Seguridad y sesion actual
-              </h2>
-              <p className="mt-2 text-sm leading-6 text-white/70">
-                Panel compacto con el estado real de la cuenta, sin widgets de relleno.
-              </p>
-
-              <div className="mt-5 space-y-3">
-                <SecurityStatusRow
-                  description={
-                    emailVerifiedAt
-                      ? `Correo verificado ${formatRelativeTime(emailVerifiedAt)}.`
-                      : "Correo principal listo para acceso y avisos."
-                  }
-                  icon={Mail}
-                  label="Correo"
-                  value={emailVerifiedAt ? "Verificado" : "Principal"}
-                />
-                <SecurityStatusRow
-                  description={
-                    currentSession
-                      ? getSessionDescription(currentSession)
-                      : "La navegacion actual seguira apareciendo aqui."
-                  }
-                  icon={Monitor}
-                  label="Sesion actual"
-                  value={
-                    currentSession
-                      ? getSessionDeviceLabel(currentSession.userAgent)
-                      : "Navegador actual"
-                  }
-                />
-                <SecurityStatusRow
-                  description={
-                    hasOtherSessions
-                      ? "Hay otras sesiones activas y puedes cerrarlas desde aqui."
-                      : "Solo detectamos esta sesion activa en este momento."
-                  }
-                  icon={Shield}
-                  label="Sesiones"
-                  value={`${sessions.length || 1} activas`}
-                />
-              </div>
-
-              <div className="mt-5 grid gap-2">
-                <ButtonLink
-                  className="border-white/14 bg-white/10 text-white hover:bg-white/16 hover:text-white"
-                  href="/recuperar-contrasena"
-                  variant="neutral"
-                >
-                  Restablecer contrasena
-                </ButtonLink>
-                {hasOtherSessions ? (
-                  <form action={logoutEverywhereAction}>
-                    <Button
-                      className="w-full border-white/14 bg-white/10 text-white hover:bg-white/16 hover:text-white"
-                      type="submit"
-                      variant="neutral"
-                    >
-                      Cerrar otras sesiones
-                    </Button>
-                  </form>
                 ) : null}
-              </div>
-            </section>
 
-            <SurfaceCard padding="md">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <div>
-                  <p className="text-meta-xs text-[var(--color-primary)]">Rutas utiles</p>
-                  <h2 className="mt-2 text-heading-md font-semibold text-[var(--color-ink)]">
-                    Accesos rapidos
-                  </h2>
+                <div className="mt-5">
+                  <p className="text-[0.74rem] font-medium tracking-[0.12em] text-white/58 uppercase">
+                    {overviewPanel.sectionLabel}
+                  </p>
+                  <ul className="mt-3 space-y-3">
+                    {overviewPanel.items.map((item) => (
+                      <OverviewItem key={item} text={item} />
+                    ))}
+                  </ul>
                 </div>
-                <Badge tone="outline">Directos</Badge>
-              </div>
 
-              <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-2">
-                {quickLinks.map((item) => (
-                  <QuickLinkTile
-                    badge={item.badge}
-                    description={item.description}
-                    href={item.href}
-                    icon={item.icon}
-                    key={item.title}
-                    title={item.title}
-                  />
-                ))}
-              </div>
-            </SurfaceCard>
-
-            <SurfaceCard padding="md" variant="muted">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <div>
-                  <p className="text-meta-xs text-[var(--color-primary)]">Soporte</p>
-                  <h2 className="mt-2 text-heading-md font-semibold text-[var(--color-ink)]">
-                    Ayuda y avisos
-                  </h2>
-                </div>
-                {notificationSnapshot.unreadCount ? (
-                  <Badge tone="brand">{notificationSnapshot.unreadCount} sin leer</Badge>
+                {overviewPanel.actionHref && overviewPanel.actionLabel ? (
+                  <ButtonLink
+                    className="mt-5 w-full justify-between bg-white text-[var(--color-primary)] hover:bg-white hover:text-[var(--color-primary)] focus-visible:ring-white/55 focus-visible:ring-offset-[rgba(12,38,56,0.9)]"
+                    href={overviewPanel.actionHref}
+                    variant="neutral"
+                  >
+                    <span>{overviewPanel.actionLabel}</span>
+                    <ArrowRight className="h-4 w-4" />
+                  </ButtonLink>
                 ) : null}
-              </div>
+              </section>
 
-              <Link
-                className="mt-4 flex items-center justify-between rounded-[1.15rem] border border-[var(--color-border-subtle)] bg-white/82 px-4 py-3 text-sm font-semibold text-[var(--color-ink)] transition hover:-translate-y-[1px] hover:border-[var(--color-border-strong)] hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2"
-                href="/soporte"
-              >
-                <span>Abrir soporte del campus</span>
-                <ArrowUpRight className="h-4 w-4 text-[var(--color-primary)]" />
-              </Link>
+              <section className="mt-5 rounded-[1.5rem] border border-[var(--color-border-subtle)] bg-white p-5 shadow-[0_10px_24px_-22px_rgba(18,42,61,0.22)]">
+                <p className="text-[0.74rem] font-medium tracking-[0.12em] text-[var(--color-muted)] uppercase">
+                  Accesos rapidos
+                </p>
 
-              <div className="mt-4 space-y-3">
-                {recentItems.length ? (
-                  recentItems.slice(0, 2).map((item) => (
-                    <Link
-                      className="block rounded-[1.15rem] border border-[var(--color-border-subtle)] bg-white/76 px-4 py-3 transition hover:-translate-y-[1px] hover:border-[var(--color-border-strong)] hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2"
+                <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-2">
+                  {quickLinks.map((item) => (
+                    <QuickAccessTile
+                      badge={item.badge}
+                      description={item.description}
                       href={item.href}
-                      key={item.id}
+                      icon={item.icon}
+                      key={item.title}
+                      title={item.title}
+                    />
+                  ))}
+                </div>
+
+                <div className="mt-5 border-t border-[rgba(22,60,88,0.08)] pt-5">
+                  <div className="rounded-[1rem] bg-[rgba(248,246,241,0.94)] px-4 py-3">
+                    <p className="text-[0.72rem] font-medium tracking-[0.12em] text-[var(--color-muted)] uppercase">
+                      Sesion actual
+                    </p>
+                    <p className="mt-2 text-sm font-semibold text-[var(--color-ink)]">
+                      {currentSession
+                        ? getSessionDeviceLabel(currentSession.userAgent)
+                        : "Navegador actual"}
+                    </p>
+                    <p className="mt-1 text-sm leading-6 text-[var(--color-muted)]">
+                      {currentSession
+                        ? currentSession.lastSeenAt
+                          ? `Ultima actividad ${formatRelativeTime(currentSession.lastSeenAt)}`
+                          : "Sesion iniciada hace poco."
+                        : "La trazabilidad aparecera aqui cuando este disponible."}
+                    </p>
+                  </div>
+
+                  <Link
+                    className="mt-3 flex items-center justify-between rounded-[1rem] border border-[var(--color-border-subtle)] bg-[rgba(248,246,241,0.86)] px-4 py-3 text-sm font-semibold text-[var(--color-ink)] transition hover:border-[rgba(22,60,88,0.16)] hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2"
+                    href="/soporte"
+                  >
+                    <span>Soporte contextual</span>
+                    <LifeBuoy className="h-4 w-4 text-[var(--color-primary)]" />
+                  </Link>
+
+                  {recentItems[0] ? (
+                    <Link
+                      className="mt-3 block rounded-[1rem] border border-[var(--color-border-subtle)] bg-white px-4 py-3 transition hover:border-[rgba(22,60,88,0.16)] hover:bg-[rgba(248,246,241,0.86)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2"
+                      href={recentItems[0].href}
                     >
                       <div className="flex flex-wrap items-center gap-2">
-                        <Badge tone={item.sourceTone}>{item.sourceLabel}</Badge>
-                        <span className="text-meta-xs text-[var(--color-muted)]">
-                          {formatRelativeTime(item.createdAt)}
+                        <Badge tone={recentItems[0].sourceTone}>{recentItems[0].sourceLabel}</Badge>
+                        <span className="text-[0.74rem] text-[var(--color-muted)]">
+                          {formatRelativeTime(recentItems[0].createdAt)}
                         </span>
                       </div>
                       <p className="mt-3 text-sm font-semibold text-[var(--color-ink)]">
-                        {item.title}
+                        {recentItems[0].title}
                       </p>
-                      <p className="mt-1.5 text-sm leading-6 text-[var(--color-muted)]">
-                        {item.description}
+                      <p className="mt-1 text-sm leading-6 text-[var(--color-muted)]">
+                        {recentItems[0].description}
                       </p>
                     </Link>
-                  ))
-                ) : (
-                  <div className="rounded-[1.15rem] border border-[var(--color-border-subtle)] bg-white/76 px-4 py-4">
-                    <p className="text-sm font-semibold text-[var(--color-ink)]">
-                      Sin avisos recientes
-                    </p>
-                    <p className="mt-1.5 text-sm leading-6 text-[var(--color-muted)]">
-                      Cuando haya movimiento en la plataforma o el foro, aparecera aqui en formato compacto.
-                    </p>
-                  </div>
-                )}
-              </div>
-            </SurfaceCard>
-          </aside>
+                  ) : null}
+                </div>
+              </section>
+            </aside>
+          </div>
         </div>
+
+        <footer className="mt-5 flex flex-col gap-3 border-t border-[rgba(22,60,88,0.08)] px-1 pt-4 text-sm text-[var(--color-muted)] sm:flex-row sm:items-center sm:justify-between">
+          <p className="font-medium text-[var(--color-ink)]">Autismo Cordoba</p>
+          <div className="flex flex-wrap items-center gap-4">
+            <Link className="transition hover:text-[var(--color-primary)]" href="/legal">
+              Legal y privacidad
+            </Link>
+            <Link className="transition hover:text-[var(--color-primary)]" href="/soporte">
+              Soporte
+            </Link>
+          </div>
+        </footer>
       </main>
     </div>
   );
