@@ -1,9 +1,12 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
+import type { LucideIcon } from "lucide-react";
 import type { UserGlobalRole } from "@prisma/client";
 import {
   ArrowRight,
+  Award,
   Bell,
+  BookCopy,
   BookOpen,
   CircleHelp,
   GraduationCap,
@@ -11,31 +14,29 @@ import {
   LayoutGrid,
   LifeBuoy,
   Mail,
+  Menu,
   MessageSquareText,
   Monitor,
-  Palette,
   Settings2,
   Shield,
-  UserCircle2,
+  UserRound,
 } from "lucide-react";
-import { logoutEverywhereAction } from "@/actions/session";
+import { logoutAction, logoutEverywhereAction } from "@/actions/session";
 import { updateNotificationPreferencesAction } from "@/actions/account";
-import { AccountAuthHeader } from "@/components/account/account-auth-header";
-import { Badge } from "@/components/ui/badge";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { StateBanner } from "@/components/ui/state-banner";
 import type { DashboardNotificationSnapshot } from "@/lib/account-dashboard";
-import { resolvePlatformNotificationHref } from "@/lib/course-navigation";
 import { getGlobalRoleLabel } from "@/lib/course-permissions";
-import { getPrivateNavItems } from "@/lib/private-navigation";
+import { siteConfig } from "@/lib/site";
 import { cn, formatDateTime, formatRelativeTime } from "@/lib/utils";
 
 type QuickLinkItem = {
-  href: string;
+  href?: string;
   title: string;
   description: string;
-  icon: typeof BookOpen;
+  icon: LucideIcon;
   badge?: string;
+  disabled?: boolean;
 };
 
 type ActiveSessionItem = {
@@ -76,45 +77,7 @@ type AccountSettingsPageProps = {
   sessions: ActiveSessionItem[];
 };
 
-type PreferenceOption = {
-  title: string;
-  description: string;
-  emailEnabled: boolean;
-  webEnabled: boolean;
-};
-
-type RecentItem = {
-  id: string;
-  href: string;
-  title: string;
-  description: string;
-  createdAt: Date;
-  sourceLabel: string;
-  sourceTone: "info" | "brand";
-};
-
-const notificationPreferenceOptions: PreferenceOption[] = [
-  {
-    title: "Solo email",
-    description: "Recibe avisos en tu correo y reduce ruido dentro de la cuenta.",
-    emailEnabled: true,
-    webEnabled: false,
-  },
-  {
-    title: "Solo web",
-    description: "Centraliza avisos del campus y del foro dentro de esta cuenta.",
-    emailEnabled: false,
-    webEnabled: true,
-  },
-  {
-    title: "Email y web",
-    description: "Mantiene correo y zona privada sincronizados para no perder contexto.",
-    emailEnabled: true,
-    webEnabled: true,
-  },
-];
-
-const railPrimaryItems = [
+const desktopSidebarPrimaryItems = [
   {
     label: "Panel",
     href: "/mis-cursos",
@@ -122,8 +85,8 @@ const railPrimaryItems = [
   },
   {
     label: "Perfil",
-    href: "/mi-cuenta",
-    icon: UserCircle2,
+    href: "#perfil-cuenta",
+    icon: UserRound,
     active: true,
   },
   {
@@ -136,9 +99,9 @@ const railPrimaryItems = [
     href: "#preferencias",
     icon: Bell,
   },
-];
+] as const;
 
-const railSecondaryItems = [
+const desktopSidebarSecondaryItems = [
   {
     label: "Ajustes",
     href: "#preferencias",
@@ -149,38 +112,29 @@ const railSecondaryItems = [
     href: "/soporte",
     icon: CircleHelp,
   },
-];
+] as const;
 
 function getInitials(name: string) {
   const parts = name.trim().split(/\s+/).filter(Boolean).slice(0, 2);
-
   return parts.map((part) => part[0]?.toUpperCase() ?? "").join("") || "U";
 }
 
-function getRoleTone(role: UserGlobalRole) {
+function getHeroEyebrow(role: UserGlobalRole) {
   if (role === "ADMIN") {
-    return "info";
+    return "ADMINISTRACION";
   }
 
-  return role === "TEACHER" ? "brand" : "warning";
+  return role === "TEACHER" ? "DOCENTE SENIOR" : "ESTUDIANTE SENIOR";
 }
 
-function getRoleEyebrow(role: UserGlobalRole) {
+function getHeroDescription(role: UserGlobalRole) {
   if (role === "ADMIN") {
-    return "Campus privado";
-  }
-
-  return role === "TEACHER" ? "Docente senior" : "Estudiante senior";
-}
-
-function getRoleDescription(role: UserGlobalRole) {
-  if (role === "ADMIN") {
-    return "Gestiona seguridad, acceso e informacion personal sin convertir esta zona en un panel operativo.";
+    return "Gestiona tus preferencias, seguridad e informacion personal.";
   }
 
   return role === "TEACHER"
-    ? "Gestiona perfil, seguridad y avisos del campus privado con una composicion compacta y util."
-    : "Gestiona tus preferencias, seguridad e informacion personal desde una sola vista clara.";
+    ? "Gestiona tus preferencias, seguridad e informacion personal."
+    : "Gestiona tus preferencias, seguridad e informacion personal.";
 }
 
 function getSessionDeviceLabel(userAgent: string | null) {
@@ -219,7 +173,7 @@ function getSessionDescription(session: ActiveSessionItem) {
   const segments = [
     session.lastSeenAt
       ? `Ultima actividad ${formatRelativeTime(session.lastSeenAt)}`
-      : "Sesion recien creada",
+      : "Sesion iniciada hace poco",
     `Caduca ${formatDateTime(session.expiresAt)}`,
   ];
 
@@ -230,93 +184,195 @@ function getSessionDescription(session: ActiveSessionItem) {
   return segments.join(" - ");
 }
 
-function buildRecentItems(snapshot: DashboardNotificationSnapshot) {
-  const items: RecentItem[] = [];
-  const platformItems = snapshot.platformNotifications.notifications.map((notification) => ({
-    id: `platform-${notification.id}`,
-    href: resolvePlatformNotificationHref({
-      category: notification.category,
-      linkPath: notification.linkPath,
-      metadataJson: notification.metadataJson,
-    }),
-    title: notification.title,
-    description: notification.body,
-    createdAt: notification.createdAt,
-    sourceLabel: "Plataforma",
-    sourceTone: "info" as const,
-  }));
-
-  const forumItems = snapshot.forumNotifications.notifications.map((notification) => ({
-    id: `forum-${notification.id}`,
-    href: notification.linkPath,
-    title: notification.title,
-    description: notification.body,
-    createdAt: notification.createdAt,
-    sourceLabel: "Foro",
-    sourceTone: "brand" as const,
-  }));
-
-  items.push(...platformItems, ...forumItems);
-
-  return items
-    .sort((left, right) => right.createdAt.getTime() - left.createdAt.getTime())
-    .slice(0, 3);
-}
-
 function getNotificationPreferenceTitle(snapshot: DashboardNotificationSnapshot) {
-  const currentOption = notificationPreferenceOptions.find(
-    (option) =>
-      option.emailEnabled === snapshot.preference.emailEnabled &&
-      option.webEnabled === snapshot.preference.webEnabled,
-  );
+  if (snapshot.preference.emailEnabled && snapshot.preference.webEnabled) {
+    return "Correo y area privada";
+  }
 
-  return currentOption?.title ?? "Email y web";
+  if (snapshot.preference.emailEnabled) {
+    return "Solo correo";
+  }
+
+  if (snapshot.preference.webEnabled) {
+    return "Solo area privada";
+  }
+
+  return "Avisos minimizados";
 }
 
-function RailLink(input: {
+function DesktopSidebarLink(input: {
   href: string;
   label: string;
-  icon: typeof LayoutGrid;
+  icon: LucideIcon;
   active?: boolean;
 }) {
+  const Icon = input.icon;
+
   return (
     <Link
       aria-current={input.active ? "page" : undefined}
       className={cn(
-        "flex items-center gap-3 rounded-[1rem] px-3.5 py-3 text-[0.98rem] font-medium transition",
-        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2",
+        "flex items-center gap-3 rounded-[1rem] px-4 py-3 text-[1.02rem] font-medium transition",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[#f4f1ff]",
         input.active
-          ? "bg-[rgba(22,60,88,0.82)] text-white shadow-[0_14px_28px_-20px_rgba(13,38,56,0.8)]"
-          : "text-[var(--color-ink)] hover:bg-white hover:text-[var(--color-primary)]",
+          ? "bg-[#173c56] text-white shadow-[0_14px_32px_-24px_rgba(23,60,86,0.72)]"
+          : "text-[var(--color-ink)] hover:bg-white hover:text-[#173c56]",
       )}
       href={input.href}
     >
-      <input.icon className="h-5 w-5 shrink-0" />
+      <Icon className="h-5 w-5 shrink-0" />
       <span>{input.label}</span>
     </Link>
   );
 }
 
-function InfoField(input: {
+function AccountHeader(input: {
+  initials: string;
+  forumHref?: string;
+  unreadCount: number;
+}) {
+  const logoWords = siteConfig.shortName.split(" ");
+
+  return (
+    <header className="sticky top-0 z-40 border-b border-[rgba(21,39,58,0.1)] bg-[rgba(252,251,255,0.94)] backdrop-blur-xl">
+      <div className="mx-auto flex max-w-[1480px] items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8 xl:px-10">
+        <div className="flex items-center gap-3 lg:hidden">
+          <details className="relative">
+            <summary className="flex h-11 w-11 cursor-pointer list-none items-center justify-center rounded-full border border-[rgba(21,39,58,0.1)] bg-white text-[var(--color-ink)] marker:hidden transition hover:border-[rgba(23,60,86,0.2)]">
+              <Menu className="h-5 w-5" />
+            </summary>
+            <div className="absolute left-0 top-[calc(100%+0.75rem)] w-[16rem] rounded-[1.3rem] border border-[rgba(21,39,58,0.1)] bg-white p-3 shadow-[0_28px_60px_-34px_rgba(17,35,56,0.34)]">
+              <nav className="space-y-1.5" aria-label="Navegacion de cuenta">
+                {desktopSidebarPrimaryItems.map((item) => (
+                  <DesktopSidebarLink
+                    active={"active" in item ? item.active : undefined}
+                    href={item.href}
+                    icon={item.icon}
+                    key={`mobile-primary-${item.label}`}
+                    label={item.label}
+                  />
+                ))}
+                <div className="my-3 border-t border-[rgba(21,39,58,0.08)]" />
+                <Link
+                  className="flex items-center gap-3 rounded-[1rem] px-4 py-3 text-[1rem] font-medium text-[var(--color-ink)] transition hover:bg-[#f6f3ff]"
+                  href="/mis-cursos"
+                >
+                  <GraduationCap className="h-5 w-5" />
+                  <span>Mis cursos</span>
+                </Link>
+                <Link
+                  className="flex items-center gap-3 rounded-[1rem] px-4 py-3 text-[1rem] font-medium text-[var(--color-ink)] transition hover:bg-[#f6f3ff]"
+                  href={input.forumHref ?? "/mis-cursos"}
+                >
+                  <MessageSquareText className="h-5 w-5" />
+                  <span>Foro</span>
+                </Link>
+                <Link
+                  className="flex items-center gap-3 rounded-[1rem] px-4 py-3 text-[1rem] font-medium text-[var(--color-ink)] transition hover:bg-[#f6f3ff]"
+                  href="/soporte"
+                >
+                  <LifeBuoy className="h-5 w-5" />
+                  <span>Soporte</span>
+                </Link>
+                <form action={logoutAction}>
+                  <button
+                    className="mt-2 flex w-full items-center gap-3 rounded-[1rem] px-4 py-3 text-left text-[1rem] font-medium text-[var(--color-ink)] transition hover:bg-[#f6f3ff]"
+                    type="submit"
+                  >
+                    <ArrowRight className="h-5 w-5" />
+                    <span>Cerrar sesion</span>
+                  </button>
+                </form>
+              </nav>
+            </div>
+          </details>
+        </div>
+
+        <Link
+          className="min-w-0 shrink-0 text-[var(--color-ink)]"
+          href="/mis-cursos"
+        >
+          <span className="hidden text-[1rem] font-semibold leading-[0.95] tracking-[-0.05em] lg:block xl:text-[1.05rem]">
+            <span className="block">{logoWords[0] ?? "Autismo"}</span>
+            <span className="mt-1 block">{logoWords.slice(1).join(" ") || "Cordoba"}</span>
+          </span>
+          <span className="text-[1.95rem] font-semibold tracking-[-0.06em] lg:hidden">
+            {siteConfig.shortName}
+          </span>
+        </Link>
+
+        <nav
+          aria-label="Navegacion principal privada"
+          className="hidden items-center gap-8 lg:flex"
+        >
+          <Link
+            className="text-[1rem] font-medium text-[var(--color-ink)] transition hover:text-[#173c56]"
+            href="/mis-cursos"
+          >
+            Mis cursos
+          </Link>
+          <Link
+            className="text-[1rem] font-medium text-[var(--color-ink)] transition hover:text-[#173c56]"
+            href={input.forumHref ?? "/mis-cursos"}
+          >
+            Foro
+          </Link>
+          <Link
+            className="text-[1rem] font-medium text-[var(--color-ink)] transition hover:text-[#173c56]"
+            href="/soporte"
+          >
+            Soporte
+          </Link>
+        </nav>
+
+        <div className="flex items-center gap-3 sm:gap-4">
+          <Link
+            aria-label="Notificaciones"
+            className="relative flex h-11 w-11 items-center justify-center rounded-full border border-[rgba(21,39,58,0.1)] bg-white text-[var(--color-ink)] transition hover:border-[rgba(23,60,86,0.2)] hover:text-[#173c56]"
+            href="#preferencias"
+          >
+            <Bell className="h-5 w-5" />
+            {input.unreadCount > 0 ? (
+              <span className="absolute right-2.5 top-2.5 h-2.5 w-2.5 rounded-full bg-[#d54b3d]" />
+            ) : null}
+          </Link>
+
+          <div className="grid h-11 w-11 place-items-center rounded-full bg-[#d8e8fb] text-sm font-semibold text-[#173c56]">
+            {input.initials}
+          </div>
+
+          <form action={logoutAction} className="hidden lg:block">
+            <button
+              className="text-[1rem] font-medium text-[var(--color-ink)] transition hover:text-[#173c56]"
+              type="submit"
+            >
+              Cerrar sesion
+            </button>
+          </form>
+        </div>
+      </div>
+    </header>
+  );
+}
+
+function ProfileField(input: {
   label: string;
   value: ReactNode;
-  description?: ReactNode;
+  meta?: ReactNode;
   action?: ReactNode;
 }) {
   return (
-    <div className="rounded-[1.15rem] border border-[var(--color-border-subtle)] bg-white px-4 py-4 shadow-[0_6px_18px_rgba(15,34,52,0.04)]">
-      <p className="text-[0.72rem] font-medium tracking-[0.12em] text-[var(--color-muted)] uppercase">
+    <div className="space-y-2">
+      <p className="text-[0.78rem] font-medium uppercase tracking-[0.14em] text-[var(--color-muted)]">
         {input.label}
       </p>
-      <div className="mt-3 flex items-start justify-between gap-3">
+      <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
-          <p className="text-[1.06rem] font-semibold leading-7 text-[var(--color-ink)]">
+          <p className="text-[1.18rem] font-medium leading-8 text-[var(--color-ink)]">
             {input.value}
           </p>
-          {input.description ? (
-            <p className="mt-2 text-sm leading-6 text-[var(--color-muted)]">
-              {input.description}
-            </p>
+          {input.meta ? (
+            <p className="mt-1 text-sm leading-6 text-[var(--color-muted)]">{input.meta}</p>
           ) : null}
         </div>
         {input.action ? <div className="shrink-0">{input.action}</div> : null}
@@ -325,85 +381,110 @@ function InfoField(input: {
   );
 }
 
-function PreferenceRow(input: {
-  option: PreferenceOption;
-  isSelected: boolean;
+function PreferenceSwitchRow(input: {
+  title: string;
+  description: string;
+  enabled: boolean;
+  emailEnabled: boolean;
+  webEnabled: boolean;
 }) {
   return (
     <form action={updateNotificationPreferencesAction}>
-      <input
-        name="emailEnabled"
-        type="hidden"
-        value={input.option.emailEnabled ? "true" : "false"}
-      />
-      <input
-        name="webEnabled"
-        type="hidden"
-        value={input.option.webEnabled ? "true" : "false"}
-      />
+      <input name="emailEnabled" type="hidden" value={input.emailEnabled ? "true" : "false"} />
+      <input name="webEnabled" type="hidden" value={input.webEnabled ? "true" : "false"} />
       <button
-        className={cn(
-          "flex w-full items-center justify-between gap-4 rounded-[1rem] border px-4 py-3 text-left transition",
-          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2",
-          input.isSelected
-            ? "border-[rgba(22,60,88,0.18)] bg-[rgba(243,242,252,0.92)]"
-            : "border-[var(--color-border-subtle)] bg-white hover:border-[rgba(22,60,88,0.16)]",
-        )}
+        className="flex w-full items-center justify-between gap-4 rounded-[1rem] py-1 text-left transition hover:opacity-85 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2"
         type="submit"
       >
         <div className="min-w-0">
-          <p className="text-sm font-semibold text-[var(--color-ink)]">{input.option.title}</p>
-          <p className="mt-1 text-sm leading-6 text-[var(--color-muted)]">
-            {input.option.description}
-          </p>
+          <p className="text-[1rem] font-medium text-[var(--color-ink)]">{input.title}</p>
+          <p className="mt-1 text-sm leading-6 text-[var(--color-muted)]">{input.description}</p>
         </div>
-        <div
+        <span
           aria-hidden="true"
           className={cn(
-            "flex h-7 w-12 shrink-0 items-center rounded-full p-1 transition",
-            input.isSelected ? "bg-[var(--color-primary)]" : "bg-[rgba(91,108,126,0.28)]",
+            "flex h-8 w-14 shrink-0 items-center rounded-full p-1 transition",
+            input.enabled ? "bg-[#173c56]" : "bg-[rgba(90,108,126,0.25)]",
           )}
         >
-          <div
+          <span
             className={cn(
-              "h-5 w-5 rounded-full bg-white transition",
-              input.isSelected ? "translate-x-5" : "translate-x-0",
+              "h-6 w-6 rounded-full bg-white transition",
+              input.enabled ? "translate-x-6" : "translate-x-0",
             )}
           />
-        </div>
+        </span>
       </button>
     </form>
   );
 }
 
-function QuickAccessTile(input: QuickLinkItem) {
+function StaticSwitchRow(input: {
+  title: string;
+  description: string;
+  meta: string;
+}) {
   return (
-    <Link
-      className="group rounded-[1rem] border border-[var(--color-border-subtle)] bg-white px-4 py-4 transition hover:border-[rgba(22,60,88,0.16)] hover:bg-[rgba(248,247,243,0.86)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2"
-      href={input.href}
-    >
-      <div className="grid h-11 w-11 place-items-center rounded-[0.95rem] bg-[rgba(243,242,252,0.92)] text-[var(--color-primary)]">
-        <input.icon className="h-5 w-5" />
+    <div className="flex items-center justify-between gap-4 rounded-[1rem] py-1">
+      <div className="min-w-0">
+        <p className="text-[1rem] font-medium text-[var(--color-ink)]">{input.title}</p>
+        <p className="mt-1 text-sm leading-6 text-[var(--color-muted)]">{input.description}</p>
       </div>
-      <div className="mt-4 flex items-center justify-between gap-3">
-        <p className="text-sm font-semibold text-[var(--color-ink)]">{input.title}</p>
-        <ArrowRight className="h-4 w-4 text-[var(--color-primary)] transition group-hover:translate-x-0.5" />
+      <div className="flex items-center gap-3">
+        <span className="hidden text-xs font-medium uppercase tracking-[0.12em] text-[var(--color-muted)] sm:inline">
+          {input.meta}
+        </span>
+        <span
+          aria-hidden="true"
+          className="flex h-8 w-14 shrink-0 items-center rounded-full bg-[rgba(90,108,126,0.16)] p-1"
+        >
+          <span className="h-6 w-6 rounded-full bg-white" />
+        </span>
       </div>
-      {input.badge ? (
-        <Badge className="mt-3" size="sm" tone="outline">
-          {input.badge}
-        </Badge>
-      ) : null}
-    </Link>
+    </div>
   );
 }
 
-function OverviewItem(input: { text: string }) {
+function ProgressItem(input: { text: string }) {
   return (
-    <li className="flex items-start gap-3 text-sm leading-6 text-white/82">
-      <span className="mt-1.5 h-3.5 w-3.5 shrink-0 rounded-full border border-[rgba(95,247,239,0.82)]" />
+    <li className="flex items-start gap-3 text-sm leading-6 text-white/84">
+      <span className="mt-1.5 h-3.5 w-3.5 shrink-0 rounded-full border border-[rgba(109,244,235,0.94)]" />
       <span>{input.text}</span>
     </li>
+  );
+}
+
+function QuickAccessTile(input: QuickLinkItem) {
+  const Icon = input.icon;
+  const sharedClassName =
+    "rounded-[1.1rem] border border-[rgba(21,39,58,0.1)] bg-white p-4 transition";
+
+  const content = (
+    <>
+      <div className="grid h-12 w-12 place-items-center rounded-[0.95rem] bg-[#f3f0ff] text-[#173c56]">
+        <Icon className="h-5 w-5" />
+      </div>
+      <p className="mt-4 text-[1rem] font-medium text-[var(--color-ink)]">{input.title}</p>
+      <p className="mt-1 text-sm leading-6 text-[var(--color-muted)]">{input.description}</p>
+      {input.badge ? (
+        <p className="mt-3 text-xs font-medium uppercase tracking-[0.12em] text-[var(--color-muted)]">
+          {input.badge}
+        </p>
+      ) : null}
+    </>
+  );
+
+  if (!input.href || input.disabled) {
+    return <div className={`${sharedClassName} opacity-90`}>{content}</div>;
+  }
+
+  return (
+    <Link
+      className={`${sharedClassName} hover:border-[rgba(23,60,86,0.18)] hover:bg-[#fcfbff] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2`}
+      href={input.href}
+    >
+      {content}
+    </Link>
   );
 }
 
@@ -420,39 +501,46 @@ export function AccountSettingsPage({
   quickLinks,
   sessions,
 }: AccountSettingsPageProps) {
-  const roleLabel = getGlobalRoleLabel(globalRole);
   const initials = getInitials(fullName);
-  const recentItems = buildRecentItems(notificationSnapshot);
+  const roleLabel = getGlobalRoleLabel(globalRole);
   const currentSession = sessions.find((session) => session.isCurrent) ?? sessions[0] ?? null;
   const hasOtherSessions = sessions.some((session) => !session.isCurrent);
   const currentPreferenceTitle = getNotificationPreferenceTitle(notificationSnapshot);
+  const forumQuickLink = quickLinks.find((item) => item.title === "Foro");
+  const quickAccessItems = quickLinks.slice(0, 4);
+  const progressValue =
+    overviewPanel.progressPercent !== null
+      ? `${Math.max(0, Math.min(100, overviewPanel.progressPercent))}`
+      : null;
 
   return (
-    <div className="min-h-screen bg-[linear-gradient(180deg,#fbfaf7_0%,#f7f5ef_100%)] pb-10">
-      <AccountAuthHeader
-        fullName={fullName}
+    <div className="min-h-screen bg-[#fcfbff]">
+      <AccountHeader
+        forumHref={forumQuickLink?.href}
         initials={initials}
-        navItems={getPrivateNavItems("account")}
-        roleLabel={roleLabel}
+        unreadCount={notificationSnapshot.unreadCount}
       />
 
-      <main className="site-container pt-6 lg:pt-8">
-        {isDemoUser ? (
-          <StateBanner
-            className="mb-6"
-            description="Estas navegando con una cuenta de prueba. La composicion refleja el rol actual, pero los cambios no se guardan."
-            title="Modo demo activo"
-            tone="warning"
-          />
-        ) : null}
+      <div className="mx-auto max-w-[1480px] lg:grid lg:grid-cols-[16.25rem_minmax(0,1fr)]">
+        <aside className="hidden border-r border-[rgba(21,39,58,0.08)] bg-[#f4f1ff] lg:block">
+          <div className="sticky top-[5rem] flex min-h-[calc(100dvh-5rem)] flex-col justify-between px-5 py-8">
+            <nav aria-label="Secciones de cuenta" className="space-y-2.5">
+              {desktopSidebarPrimaryItems.map((item) => (
+                <DesktopSidebarLink
+                  active={"active" in item ? item.active : undefined}
+                  href={item.href}
+                  icon={item.icon}
+                  key={item.label}
+                  label={item.label}
+                />
+              ))}
+            </nav>
 
-        <div className="overflow-hidden rounded-[2rem] border border-[rgba(22,60,88,0.1)] bg-white shadow-[0_24px_70px_-42px_rgba(18,42,61,0.22)]">
-          <div className="xl:grid xl:grid-cols-[15.5rem_minmax(0,1fr)_21rem]">
-            <aside className="hidden border-r border-[rgba(22,60,88,0.08)] bg-[linear-gradient(180deg,#f6f4fb_0%,#f3f1fb_100%)] xl:flex xl:min-h-[calc(100vh-13rem)] xl:flex-col xl:justify-between xl:px-4 xl:py-7">
-              <nav aria-label="Secciones de cuenta" className="space-y-2">
-                {railPrimaryItems.map((item) => (
-                  <RailLink
-                    active={item.active}
+            <div className="space-y-4">
+              <div className="border-t border-[rgba(21,39,58,0.08)]" />
+              <nav aria-label="Ayuda y ajustes" className="space-y-2.5">
+                {desktopSidebarSecondaryItems.map((item) => (
+                  <DesktopSidebarLink
                     href={item.href}
                     icon={item.icon}
                     key={item.label}
@@ -460,283 +548,272 @@ export function AccountSettingsPage({
                   />
                 ))}
               </nav>
+            </div>
+          </div>
+        </aside>
 
-              <div className="border-t border-[rgba(22,60,88,0.08)] pt-5">
-                <nav aria-label="Ayuda y ajustes" className="space-y-2">
-                  {railSecondaryItems.map((item) => (
-                    <RailLink href={item.href} icon={item.icon} key={item.label} label={item.label} />
-                  ))}
-                </nav>
-              </div>
-            </aside>
+        <main className="min-w-0 px-4 py-6 sm:px-6 lg:px-8 lg:py-8 xl:px-10">
+          {isDemoUser ? (
+            <StateBanner
+              className="mb-6"
+              description="Estas navegando con una cuenta de prueba. La composicion refleja el estado actual, pero los cambios no se guardan."
+              title="Modo demo activo"
+              tone="warning"
+            />
+          ) : null}
 
-            <div className="min-w-0 p-5 sm:p-6 lg:p-7 xl:p-8">
-              <nav
-                aria-label="Secciones de cuenta en movil"
-                className="mb-5 flex gap-2 overflow-x-auto pb-1 xl:hidden"
+          <section className="grid gap-6 border-b border-[rgba(21,39,58,0.08)] pb-8 xl:grid-cols-[minmax(0,1fr)_22rem] xl:items-start">
+            <div className="min-w-0">
+              <p className="text-[0.84rem] font-medium uppercase tracking-[0.18em] text-[var(--color-ink-soft)]">
+                {getHeroEyebrow(globalRole)}
+              </p>
+              <h1 className="mt-4 text-[clamp(3rem,5vw,4.6rem)] font-semibold leading-[0.92] tracking-[-0.07em] text-[var(--color-ink)] text-balance">
+                Hola, {firstName}
+              </h1>
+              <p className="mt-4 max-w-[44rem] text-[1.08rem] leading-8 text-[var(--color-muted)]">
+                {getHeroDescription(globalRole)}
+              </p>
+            </div>
+
+            <div className="xl:pt-8">
+              <Link
+                className="group flex min-h-[4.9rem] w-full items-center justify-between gap-4 rounded-[1.15rem] bg-[#091f31] px-5 py-4 text-white shadow-[0_22px_40px_-32px_rgba(9,31,49,0.92)] transition hover:translate-y-[-1px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2"
+                href={primaryCta.href}
               >
-                {[...railPrimaryItems, ...railSecondaryItems].map((item) => (
-                  <Link
-                    aria-current={("active" in item && item.active) ? "page" : undefined}
-                    className={cn(
-                      "inline-flex min-h-10 shrink-0 items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition",
-                      ("active" in item && item.active)
-                        ? "border-[var(--color-primary)] bg-[var(--color-primary)] text-white"
-                        : "border-[rgba(22,60,88,0.08)] bg-[rgba(247,245,239,0.9)] text-[var(--color-ink)]",
-                    )}
-                    href={item.href}
-                    key={`mobile-${item.label}`}
-                  >
-                    <item.icon className="h-4 w-4" />
-                    <span>{item.label}</span>
-                  </Link>
-                ))}
-              </nav>
-
-              <section className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_19rem] lg:items-center">
                 <div className="min-w-0">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <Badge tone={getRoleTone(globalRole)}>{roleLabel}</Badge>
-                    <Badge tone="success">Cuenta activa</Badge>
-                  </div>
-
-                  <p className="mt-5 text-[0.82rem] font-medium tracking-[0.14em] text-[var(--color-ink-soft)] uppercase">
-                    {getRoleEyebrow(globalRole)}
-                  </p>
-                  <h1 className="font-premium mt-3 text-[clamp(2.6rem,5vw,4rem)] leading-[0.96] font-semibold tracking-[-0.06em] text-[var(--color-ink)] text-balance">
-                    Hola, {firstName}
-                  </h1>
-                  <p className="mt-4 max-w-[42rem] text-[1.05rem] leading-8 text-[var(--color-muted)]">
-                    {getRoleDescription(globalRole)}
+                  <p className="truncate text-[1.02rem] font-semibold text-white/92">
+                    {`Continuar: ${primaryCta.label}`}
                   </p>
                 </div>
+                <ArrowRight className="h-5 w-5 shrink-0 transition group-hover:translate-x-0.5" />
+              </Link>
+            </div>
+          </section>
 
-                <div className="lg:justify-self-end">
-                  <Link
-                    className="group flex min-h-[5.25rem] items-center justify-between gap-4 rounded-[1.15rem] bg-[linear-gradient(180deg,#09283a_0%,#072334_100%)] px-5 py-4 text-white shadow-[0_18px_36px_-24px_rgba(7,35,52,0.82)] transition hover:translate-y-[-1px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2"
-                    href={primaryCta.href}
-                  >
-                    <div className="min-w-0">
-                      <p className="text-sm font-semibold text-white/92">Continuar</p>
-                      <p className="mt-1 truncate text-base text-white/80">{primaryCta.label}</p>
+          <div className="mt-8 xl:grid xl:grid-cols-[minmax(0,1fr)_21rem] xl:gap-8">
+            <div className="min-w-0 space-y-6">
+              <section
+                className="rounded-[1.6rem] border border-[rgba(21,39,58,0.1)] bg-white px-5 py-6 shadow-[0_14px_34px_-30px_rgba(18,35,55,0.26)] sm:px-7 sm:py-7"
+                id="perfil-cuenta"
+              >
+                <div className="flex flex-wrap items-start justify-between gap-4">
+                  <div className="flex items-start gap-4">
+                    <div className="grid h-14 w-14 place-items-center rounded-[1rem] bg-[#f3f0ff] text-[#173c56]">
+                      <UserRound className="h-6 w-6" />
                     </div>
-                    <ArrowRight className="h-5 w-5 shrink-0 transition group-hover:translate-x-0.5" />
+                    <div>
+                      <h2 className="text-[2rem] font-semibold tracking-[-0.05em] text-[var(--color-ink)]">
+                        Perfil y cuenta
+                      </h2>
+                      <p className="mt-1 text-[1rem] text-[var(--color-muted)]">
+                        Informacion personal y acceso
+                      </p>
+                    </div>
+                  </div>
+
+                  <Link
+                    className="text-[1rem] font-medium text-[var(--color-ink)] transition hover:text-[#173c56] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2"
+                    href="#preferencias"
+                  >
+                    Editar
                   </Link>
+                </div>
+
+                <div className="mt-8 grid gap-x-12 gap-y-8 md:grid-cols-2">
+                  <ProfileField
+                    label="Nombre completo"
+                    meta={`Rol activo: ${roleLabel}`}
+                    value={fullName}
+                  />
+                  <ProfileField
+                    label="Correo electronico"
+                    meta={
+                      emailVerifiedAt
+                        ? `Verificado ${formatRelativeTime(emailVerifiedAt)}.`
+                        : "Direccion principal para acceso y avisos."
+                    }
+                    value={<span className="break-all">{email}</span>}
+                  />
+                  <ProfileField
+                    action={
+                      <ButtonLink href="/recuperar-contrasena" size="sm" variant="neutral">
+                        Restablecer
+                      </ButtonLink>
+                    }
+                    label="Contrasena"
+                    meta="El acceso se mantiene protegido por recuperacion con correo."
+                    value="••••••••••••"
+                  />
+                  <ProfileField
+                    label="Idioma principal"
+                    meta={`Avisos actuales: ${currentPreferenceTitle}.`}
+                    value="Espanol (ES)"
+                  />
                 </div>
               </section>
 
-              <div className="mt-7 border-t border-[rgba(22,60,88,0.08)] pt-7">
-                <section className="rounded-[1.6rem] border border-[var(--color-border-subtle)] bg-white p-5 shadow-[0_10px_24px_-22px_rgba(18,42,61,0.24)] sm:p-6">
-                  <div className="flex flex-wrap items-start justify-between gap-4">
-                    <div className="flex items-start gap-4">
-                      <div className="grid h-14 w-14 place-items-center rounded-[1rem] bg-[rgba(243,242,252,0.92)] text-[var(--color-primary)]">
-                        <UserCircle2 className="h-6 w-6" />
-                      </div>
-                      <div className="min-w-0">
-                        <h2 className="font-premium text-[1.9rem] font-semibold tracking-[-0.04em] text-[var(--color-ink)]">
-                          Perfil y cuenta
-                        </h2>
-                        <p className="mt-1 text-[1.02rem] text-[var(--color-muted)]">
-                          Informacion personal y acceso
-                        </p>
-                      </div>
+              <div className="grid gap-6 lg:grid-cols-2">
+                <section
+                  className="rounded-[1.5rem] border border-[rgba(21,39,58,0.1)] bg-white px-5 py-6 shadow-[0_14px_34px_-30px_rgba(18,35,55,0.24)] sm:px-6"
+                  id="preferencias"
+                >
+                  <div className="flex items-start gap-4">
+                    <div className="grid h-14 w-14 place-items-center rounded-[1rem] bg-[#f3f0ff] text-[#173c56]">
+                      <Settings2 className="h-6 w-6" />
                     </div>
-
-                    <Link
-                      className="text-base font-medium text-[var(--color-ink)] transition hover:text-[var(--color-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2"
-                      href="#preferencias"
-                    >
-                      Editar
-                    </Link>
+                    <div>
+                      <h2 className="text-[1.9rem] font-semibold tracking-[-0.05em] text-[var(--color-ink)]">
+                        Preferencias
+                      </h2>
+                      <p className="mt-1 text-[1rem] text-[var(--color-muted)]">
+                        Idioma, avisos y legibilidad
+                      </p>
+                    </div>
                   </div>
 
-                  <div className="mt-6 grid gap-4 md:grid-cols-2">
-                    <InfoField
-                      description="Nombre visible dentro del campus privado."
-                      label="Nombre completo"
-                      value={fullName}
+                  <div className="mt-7 space-y-4">
+                    <PreferenceSwitchRow
+                      description="Muestra avisos del campus dentro de tu cuenta."
+                      emailEnabled={notificationSnapshot.preference.emailEnabled}
+                      enabled={notificationSnapshot.preference.webEnabled}
+                      title="Notificaciones push"
+                      webEnabled={!notificationSnapshot.preference.webEnabled}
                     />
-                    <InfoField
-                      description={
-                        emailVerifiedAt
-                          ? `Direccion verificada ${formatRelativeTime(emailVerifiedAt)}.`
-                          : "Direccion principal para acceso y avisos."
-                      }
-                      label="Correo electronico"
-                      value={<span className="break-all">{email}</span>}
+                    <PreferenceSwitchRow
+                      description="Recibe recordatorios y actividad relevante por correo."
+                      emailEnabled={!notificationSnapshot.preference.emailEnabled}
+                      enabled={notificationSnapshot.preference.emailEnabled}
+                      title="Correos semanales"
+                      webEnabled={notificationSnapshot.preference.webEnabled}
                     />
-                    <InfoField
-                      action={
-                        <ButtonLink href="/recuperar-contrasena" size="sm" variant="neutral">
-                          Restablecer
-                        </ButtonLink>
-                      }
-                      description="El acceso se mantiene protegido desde recuperacion por correo."
-                      label="Acceso protegido"
-                      value="Contrasena gestionada"
+                    <StaticSwitchRow
+                      description="Disponible cuando exista un modo de lectura adaptado para toda la plataforma."
+                      meta="Proximo"
+                      title="Alto contraste"
                     />
-                    <InfoField
-                      description="Canal principal activo para avisos del campus."
-                      label="Avisos"
-                      value={currentPreferenceTitle}
-                    />
+                  </div>
+
+                  <div className="mt-7 rounded-[1rem] bg-[#f8f6ff] px-4 py-4">
+                    <p className="text-[0.78rem] font-medium uppercase tracking-[0.12em] text-[var(--color-muted)]">
+                      Idioma
+                    </p>
+                    <p className="mt-2 inline-flex items-center gap-2 text-sm font-medium text-[var(--color-ink)]">
+                      <Languages className="h-4 w-4 text-[#173c56]" />
+                      Espanol (ES)
+                    </p>
                   </div>
                 </section>
 
-                <div className="mt-5 grid gap-5 lg:grid-cols-2">
-                  <section
-                    className="rounded-[1.5rem] border border-[var(--color-border-subtle)] bg-white p-5 shadow-[0_10px_24px_-22px_rgba(18,42,61,0.22)] sm:p-6"
-                    id="preferencias"
-                  >
-                    <div className="flex items-start gap-4">
-                      <div className="grid h-14 w-14 place-items-center rounded-[1rem] bg-[rgba(243,242,252,0.92)] text-[var(--color-primary)]">
-                        <Settings2 className="h-6 w-6" />
-                      </div>
-                      <div>
-                        <h2 className="font-premium text-[1.65rem] font-semibold tracking-[-0.04em] text-[var(--color-ink)]">
-                          Preferencias
-                        </h2>
-                        <p className="mt-1 text-base text-[var(--color-muted)]">
-                          Notificaciones e idioma principal
-                        </p>
-                      </div>
+                <section
+                  className="rounded-[1.5rem] border border-[rgba(21,39,58,0.1)] bg-white px-5 py-6 shadow-[0_14px_34px_-30px_rgba(18,35,55,0.24)] sm:px-6"
+                  id="seguridad"
+                >
+                  <div className="flex items-start gap-4">
+                    <div className="grid h-14 w-14 place-items-center rounded-[1rem] bg-[#f3f0ff] text-[#173c56]">
+                      <Shield className="h-6 w-6" />
+                    </div>
+                    <div>
+                      <h2 className="text-[1.9rem] font-semibold tracking-[-0.05em] text-[var(--color-ink)]">
+                        Seguridad
+                      </h2>
+                      <p className="mt-1 text-[1rem] text-[var(--color-muted)]">
+                        Proteccion de acceso y sesion actual
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="mt-7 space-y-4">
+                    <div className="rounded-[1rem] bg-[#f4f1ff] px-4 py-4">
+                      <p className="inline-flex items-center gap-2 text-[1rem] font-semibold text-[var(--color-ink)]">
+                        <Mail className="h-4 w-4 text-[#173c56]" />
+                        2FA y verificacion
+                      </p>
+                      <p className="mt-2 text-sm leading-6 text-[var(--color-muted)]">
+                        {emailVerifiedAt
+                          ? "Tu cuenta usa correo verificado y recuperacion segura. La autenticacion en dos pasos aun no esta disponible."
+                          : "Tu correo principal sigue siendo la capa de recuperacion activa. La autenticacion en dos pasos aun no esta disponible."}
+                      </p>
                     </div>
 
-                    <div className="mt-6 space-y-3">
-                      {notificationPreferenceOptions.map((option) => {
-                        const isSelected =
-                          notificationSnapshot.preference.emailEnabled === option.emailEnabled &&
-                          notificationSnapshot.preference.webEnabled === option.webEnabled;
-
-                        return (
-                          <PreferenceRow isSelected={isSelected} key={option.title} option={option} />
-                        );
-                      })}
+                    <div className="rounded-[1rem] border border-[rgba(21,39,58,0.1)] px-4 py-4">
+                      <p className="inline-flex items-center gap-2 text-[1rem] font-semibold text-[var(--color-ink)]">
+                        <Monitor className="h-4 w-4 text-[#173c56]" />
+                        Sesion actual
+                      </p>
+                      <p className="mt-2 text-sm leading-6 text-[var(--color-muted)]">
+                        {currentSession
+                          ? getSessionDeviceLabel(currentSession.userAgent)
+                          : "Navegador actual"}
+                      </p>
+                      <p className="mt-1 text-sm leading-6 text-[var(--color-muted)]">
+                        {currentSession
+                          ? getSessionDescription(currentSession)
+                          : "La trazabilidad de esta sesion aparecera aqui cuando este disponible."}
+                      </p>
                     </div>
+                  </div>
 
-                    <div className="mt-5 grid gap-3 sm:grid-cols-2">
-                      <div className="rounded-[1rem] bg-[rgba(248,246,241,0.94)] px-4 py-3">
-                        <p className="text-[0.72rem] font-medium tracking-[0.12em] text-[var(--color-muted)] uppercase">
-                          Idioma
-                        </p>
-                        <p className="mt-2 inline-flex items-center gap-2 text-sm font-semibold text-[var(--color-ink)]">
-                          <Languages className="h-4 w-4 text-[var(--color-primary)]" />
-                          Espanol
-                        </p>
-                      </div>
-                      <div className="rounded-[1rem] bg-[rgba(248,246,241,0.94)] px-4 py-3">
-                        <p className="text-[0.72rem] font-medium tracking-[0.12em] text-[var(--color-muted)] uppercase">
-                          Experiencia
-                        </p>
-                        <p className="mt-2 inline-flex items-center gap-2 text-sm font-semibold text-[var(--color-ink)]">
-                          <Palette className="h-4 w-4 text-[var(--color-primary)]" />
-                          Tema claro del campus
-                        </p>
-                      </div>
-                    </div>
-                  </section>
-
-                  <section
-                    className="rounded-[1.5rem] border border-[var(--color-border-subtle)] bg-white p-5 shadow-[0_10px_24px_-22px_rgba(18,42,61,0.22)] sm:p-6"
-                    id="seguridad"
-                  >
-                    <div className="flex items-start gap-4">
-                      <div className="grid h-14 w-14 place-items-center rounded-[1rem] bg-[rgba(243,242,252,0.92)] text-[var(--color-primary)]">
-                        <Shield className="h-6 w-6" />
-                      </div>
-                      <div>
-                        <h2 className="font-premium text-[1.65rem] font-semibold tracking-[-0.04em] text-[var(--color-ink)]">
-                          Seguridad
-                        </h2>
-                        <p className="mt-1 text-base text-[var(--color-muted)]">
-                          Correo, sesion actual y acceso
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="mt-6 space-y-4">
-                      <div className="rounded-[1rem] bg-[rgba(243,242,252,0.94)] px-4 py-4">
-                        <p className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--color-ink)]">
-                          <Mail className="h-4 w-4 text-[var(--color-primary)]" />
-                          {emailVerifiedAt ? "Correo verificado" : "Correo principal activo"}
-                        </p>
-                        <p className="mt-2 text-sm leading-6 text-[var(--color-muted)]">
-                          {emailVerifiedAt
-                            ? `Verificado ${formatRelativeTime(emailVerifiedAt)} para acceso y avisos.`
-                            : "Disponible como direccion principal del campus privado."}
-                        </p>
-                      </div>
-
-                      <div className="rounded-[1rem] border border-[var(--color-border-subtle)] bg-white px-4 py-4">
-                        <p className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--color-ink)]">
-                          <Monitor className="h-4 w-4 text-[var(--color-primary)]" />
-                          {currentSession
-                            ? getSessionDeviceLabel(currentSession.userAgent)
-                            : "Sesion actual"}
-                        </p>
-                        <p className="mt-2 text-sm leading-6 text-[var(--color-muted)]">
-                          {currentSession
-                            ? getSessionDescription(currentSession)
-                            : "La navegacion actual aparecera aqui cuando exista trazabilidad adicional."}
-                        </p>
-                      </div>
-
-                      <div className="flex flex-wrap gap-3">
-                        <ButtonLink href="/recuperar-contrasena" variant="neutral">
-                          Restablecer contrasena
-                        </ButtonLink>
-                        {hasOtherSessions ? (
-                          <form action={logoutEverywhereAction}>
-                            <Button type="submit" variant="subtle">
-                              Cerrar otras sesiones
-                            </Button>
-                          </form>
-                        ) : null}
-                      </div>
-                    </div>
-                  </section>
-                </div>
+                  <div className="mt-6 flex flex-wrap gap-3">
+                    <ButtonLink href="/recuperar-contrasena" variant="neutral">
+                      Restablecer contrasena
+                    </ButtonLink>
+                    {hasOtherSessions ? (
+                      <form action={logoutEverywhereAction}>
+                        <Button type="submit" variant="subtle">
+                          Cerrar otras sesiones
+                        </Button>
+                      </form>
+                    ) : null}
+                  </div>
+                </section>
               </div>
             </div>
 
-            <aside className="border-t border-[rgba(22,60,88,0.08)] bg-[linear-gradient(180deg,#fcfbf8_0%,#f8f6f1_100%)] p-5 sm:p-6 xl:border-t-0 xl:border-l xl:p-6">
-              <section className="overflow-hidden rounded-[1.5rem] bg-[linear-gradient(180deg,#123d58_0%,#0b2b40_100%)] p-5 text-white shadow-[0_24px_50px_-28px_rgba(11,43,64,0.8)]">
-                <p className="font-premium text-[2.15rem] leading-[1] font-semibold tracking-[-0.05em] text-white">
+            <aside className="mt-6 flex min-w-0 flex-col gap-6 xl:mt-0">
+              <section className="order-2 rounded-[1.5rem] bg-[linear-gradient(180deg,#123d58_0%,#0b2b40_100%)] px-5 py-6 text-white shadow-[0_28px_52px_-34px_rgba(11,43,64,0.78)] xl:order-1">
+                <p className="text-[2.05rem] font-semibold tracking-[-0.05em] text-white">
                   {overviewPanel.title}
                 </p>
-                <p className="mt-4 text-[2rem] leading-[1.02] font-semibold tracking-[-0.05em] text-white">
-                  {overviewPanel.value}
-                </p>
+                {progressValue ? (
+                  <div className="mt-5 flex items-end gap-2">
+                    <span className="text-[3.2rem] font-semibold leading-none tracking-[-0.07em] text-white">
+                      {progressValue}
+                    </span>
+                    <span className="pb-2 text-[1.1rem] text-white/64">% completado</span>
+                  </div>
+                ) : (
+                  <p className="mt-5 text-[2.15rem] font-semibold leading-[1.05] tracking-[-0.05em] text-white">
+                    {overviewPanel.value}
+                  </p>
+                )}
                 <p className="mt-2 text-sm leading-6 text-white/72">{overviewPanel.detail}</p>
 
-                {overviewPanel.progressPercent !== null ? (
-                  <div className="mt-5">
-                    <div className="h-2 overflow-hidden rounded-full bg-white/16">
-                      <div
-                        aria-hidden="true"
-                        className="h-full rounded-full bg-[rgba(91,247,239,0.96)]"
-                        style={{
-                          width: `${Math.max(0, Math.min(100, overviewPanel.progressPercent))}%`,
-                        }}
-                      />
-                    </div>
-                  </div>
-                ) : null}
+                <div className="mt-6 h-2 overflow-hidden rounded-full bg-white/14">
+                  <div
+                    aria-hidden="true"
+                    className="h-full rounded-full bg-[rgba(103,241,232,0.98)]"
+                    style={{
+                      width: `${Math.max(0, Math.min(100, overviewPanel.progressPercent ?? 0))}%`,
+                    }}
+                  />
+                </div>
 
-                <div className="mt-5">
-                  <p className="text-[0.74rem] font-medium tracking-[0.12em] text-white/58 uppercase">
+                <div className="mt-6">
+                  <p className="text-[0.78rem] font-medium uppercase tracking-[0.14em] text-white/58">
                     {overviewPanel.sectionLabel}
                   </p>
-                  <ul className="mt-3 space-y-3">
-                    {overviewPanel.items.map((item) => (
-                      <OverviewItem key={item} text={item} />
-                    ))}
+                  <ul className="mt-4 space-y-4">
+                    {overviewPanel.items.length ? (
+                      overviewPanel.items.slice(0, 3).map((item) => <ProgressItem key={item} text={item} />)
+                    ) : (
+                      <ProgressItem text="No hay bloqueos inmediatos en este momento." />
+                    )}
                   </ul>
                 </div>
 
                 {overviewPanel.actionHref && overviewPanel.actionLabel ? (
                   <ButtonLink
-                    className="mt-5 w-full justify-between bg-white text-[var(--color-primary)] hover:bg-white hover:text-[var(--color-primary)] focus-visible:ring-white/55 focus-visible:ring-offset-[rgba(12,38,56,0.9)]"
+                    className="mt-6 w-full justify-between border-transparent bg-white text-[#173c56] hover:bg-white hover:text-[#173c56] focus-visible:ring-white/50 focus-visible:ring-offset-[#0b2b40]"
                     href={overviewPanel.actionHref}
                     variant="neutral"
                   >
@@ -746,16 +823,19 @@ export function AccountSettingsPage({
                 ) : null}
               </section>
 
-              <section className="mt-5 rounded-[1.5rem] border border-[var(--color-border-subtle)] bg-white p-5 shadow-[0_10px_24px_-22px_rgba(18,42,61,0.22)]">
-                <p className="text-[0.74rem] font-medium tracking-[0.12em] text-[var(--color-muted)] uppercase">
+              <section
+                className="order-1 rounded-[1.5rem] border border-[rgba(21,39,58,0.1)] bg-white px-5 py-5 shadow-[0_14px_34px_-30px_rgba(18,35,55,0.24)] xl:order-2"
+                id="accesos-rapidos"
+              >
+                <p className="text-[0.82rem] font-medium uppercase tracking-[0.16em] text-[var(--color-muted)]">
                   Accesos rapidos
                 </p>
-
-                <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-2">
-                  {quickLinks.map((item) => (
+                <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                  {quickAccessItems.map((item) => (
                     <QuickAccessTile
                       badge={item.badge}
                       description={item.description}
+                      disabled={item.disabled}
                       href={item.href}
                       icon={item.icon}
                       key={item.title}
@@ -763,71 +843,11 @@ export function AccountSettingsPage({
                     />
                   ))}
                 </div>
-
-                <div className="mt-5 border-t border-[rgba(22,60,88,0.08)] pt-5">
-                  <div className="rounded-[1rem] bg-[rgba(248,246,241,0.94)] px-4 py-3">
-                    <p className="text-[0.72rem] font-medium tracking-[0.12em] text-[var(--color-muted)] uppercase">
-                      Sesion actual
-                    </p>
-                    <p className="mt-2 text-sm font-semibold text-[var(--color-ink)]">
-                      {currentSession
-                        ? getSessionDeviceLabel(currentSession.userAgent)
-                        : "Navegador actual"}
-                    </p>
-                    <p className="mt-1 text-sm leading-6 text-[var(--color-muted)]">
-                      {currentSession
-                        ? currentSession.lastSeenAt
-                          ? `Ultima actividad ${formatRelativeTime(currentSession.lastSeenAt)}`
-                          : "Sesion iniciada hace poco."
-                        : "La trazabilidad aparecera aqui cuando este disponible."}
-                    </p>
-                  </div>
-
-                  <Link
-                    className="mt-3 flex items-center justify-between rounded-[1rem] border border-[var(--color-border-subtle)] bg-[rgba(248,246,241,0.86)] px-4 py-3 text-sm font-semibold text-[var(--color-ink)] transition hover:border-[rgba(22,60,88,0.16)] hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2"
-                    href="/soporte"
-                  >
-                    <span>Soporte contextual</span>
-                    <LifeBuoy className="h-4 w-4 text-[var(--color-primary)]" />
-                  </Link>
-
-                  {recentItems[0] ? (
-                    <Link
-                      className="mt-3 block rounded-[1rem] border border-[var(--color-border-subtle)] bg-white px-4 py-3 transition hover:border-[rgba(22,60,88,0.16)] hover:bg-[rgba(248,246,241,0.86)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2"
-                      href={recentItems[0].href}
-                    >
-                      <div className="flex flex-wrap items-center gap-2">
-                        <Badge tone={recentItems[0].sourceTone}>{recentItems[0].sourceLabel}</Badge>
-                        <span className="text-[0.74rem] text-[var(--color-muted)]">
-                          {formatRelativeTime(recentItems[0].createdAt)}
-                        </span>
-                      </div>
-                      <p className="mt-3 text-sm font-semibold text-[var(--color-ink)]">
-                        {recentItems[0].title}
-                      </p>
-                      <p className="mt-1 text-sm leading-6 text-[var(--color-muted)]">
-                        {recentItems[0].description}
-                      </p>
-                    </Link>
-                  ) : null}
-                </div>
               </section>
             </aside>
           </div>
-        </div>
-
-        <footer className="mt-5 flex flex-col gap-3 border-t border-[rgba(22,60,88,0.08)] px-1 pt-4 text-sm text-[var(--color-muted)] sm:flex-row sm:items-center sm:justify-between">
-          <p className="font-medium text-[var(--color-ink)]">Autismo Cordoba</p>
-          <div className="flex flex-wrap items-center gap-4">
-            <Link className="transition hover:text-[var(--color-primary)]" href="/legal">
-              Legal y privacidad
-            </Link>
-            <Link className="transition hover:text-[var(--color-primary)]" href="/soporte">
-              Soporte
-            </Link>
-          </div>
-        </footer>
-      </main>
+        </main>
+      </div>
     </div>
   );
 }
@@ -839,4 +859,6 @@ export const accountQuickLinkIcons = {
   forum: MessageSquareText,
   support: LifeBuoy,
   notifications: Bell,
+  library: BookCopy,
+  certificates: Award,
 };

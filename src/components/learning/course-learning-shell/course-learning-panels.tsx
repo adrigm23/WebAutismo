@@ -92,7 +92,6 @@ type CourseLearningResourcesTabProps = {
   focusedStudentExerciseId: string | null;
   isFocusedTaskWorkspace: boolean;
   onOpenResourceWorkspace: (targetId?: string) => void;
-  onExitFocus: () => void;
 };
 
 type CourseLearningSupportTabProps = {
@@ -558,7 +557,6 @@ export function CourseLearningResourcesTab({
   focusedStudentExerciseId,
   isFocusedTaskWorkspace,
   onOpenResourceWorkspace,
-  onExitFocus,
 }: CourseLearningResourcesTabProps) {
   if (!canModerate && !isFocusedTaskWorkspace) {
     return (
@@ -566,6 +564,18 @@ export function CourseLearningResourcesTab({
         course={course}
         onOpenResourceWorkspace={onOpenResourceWorkspace}
         resources={resources}
+      />
+    );
+  }
+
+  if (!canModerate && isFocusedTaskWorkspace) {
+    return (
+      <DynamicCourseResourceManager
+        canModerate={canModerate}
+        course={course}
+        focusedResourceId={focusedStudentExerciseId}
+        resources={resources}
+        roleLabel={roleLabel}
       />
     );
   }
@@ -587,7 +597,6 @@ export function CourseLearningResourcesTab({
         canModerate={canModerate}
         course={course}
         focusedResourceId={focusedStudentExerciseId}
-        onExitFocus={onExitFocus}
         resources={resources}
         roleLabel={roleLabel}
       />

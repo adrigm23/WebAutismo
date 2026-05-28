@@ -72,24 +72,26 @@ export function CoursePrivateHeader({
 
   return (
     <header className="sticky top-0 z-40 border-b border-[rgba(22,60,88,0.08)] bg-[rgba(252,250,246,0.94)] backdrop-blur-xl">
-      <div className="app-container py-3 sm:py-4">
+      <div className="app-container py-2.5 sm:py-3">
         <div className="flex items-center justify-between gap-4">
-          <Link
-            className="shrink-0 text-[1.1rem] font-semibold tracking-[-0.05em] text-[var(--color-ink)] sm:text-[1.45rem]"
-            href="/mis-cursos"
-          >
-            {siteConfig.shortName}
+          <Link className="shrink-0 text-[var(--color-ink)]" href="/mis-cursos">
+            <span className="block text-[0.64rem] uppercase tracking-[0.18em] text-[var(--color-ink-soft)]">
+              Campus
+            </span>
+            <span className="mt-0.5 block text-[1rem] font-semibold tracking-[-0.04em] sm:text-[1.16rem]">
+              {siteConfig.shortName}
+            </span>
           </Link>
 
           <nav
             aria-label="Navegacion privada"
-            className="hidden items-center gap-8 lg:flex"
+            className="hidden items-center gap-6 lg:flex"
           >
             {navItems.map((item) => (
               <Link
                 aria-current={item.active ? "page" : undefined}
                 className={cn(
-                  "border-b-2 px-0.5 pb-1.5 text-[1.02rem] font-medium tracking-[-0.02em] transition",
+                  "border-b-2 px-0.5 pb-1 text-[0.95rem] font-medium tracking-[-0.02em] transition",
                   item.active
                     ? "border-[var(--color-ink)] text-[var(--color-ink)]"
                     : "border-transparent text-[var(--color-ink-soft)] hover:border-[rgba(22,60,88,0.18)] hover:text-[var(--color-ink)]",
@@ -111,7 +113,7 @@ export function CoursePrivateHeader({
             <UtilityLink href="/soporte" icon={CircleHelp} label="Abrir soporte" />
             <Link
               aria-label={`${fullName} - ${roleLabel}`}
-              className="grid h-10 w-10 place-items-center rounded-full bg-[linear-gradient(180deg,#d8b58a_0%,#6b4c37_100%)] text-sm font-semibold text-white shadow-[0_8px_18px_rgba(22,60,88,0.12)] transition hover:scale-[1.02] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2"
+              className="grid h-9 w-9 place-items-center rounded-full bg-[linear-gradient(180deg,#d8b58a_0%,#6b4c37_100%)] text-sm font-semibold text-white transition hover:scale-[1.02] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2"
               href="/mi-cuenta"
               title={`${fullName} - ${roleLabel}`}
             >
@@ -133,13 +135,13 @@ export function CoursePrivateHeader({
 
         <nav
           aria-label="Navegacion privada movil"
-          className="mt-3 flex items-center gap-5 overflow-x-auto pb-1 lg:hidden"
+          className="mt-2.5 flex items-center gap-4 overflow-x-auto pb-1 lg:hidden"
         >
           {navItems.map((item) => (
             <Link
               aria-current={item.active ? "page" : undefined}
               className={cn(
-                "shrink-0 border-b-2 px-0.5 pb-1.5 text-sm font-medium transition",
+                "shrink-0 border-b-2 px-0.5 pb-1 text-sm font-medium transition",
                 item.active
                   ? "border-[var(--color-ink)] text-[var(--color-ink)]"
                   : "border-transparent text-[var(--color-ink-soft)]",

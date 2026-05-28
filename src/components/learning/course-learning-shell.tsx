@@ -7,9 +7,11 @@ import {
   CourseLearningContentTab,
   CourseLearningResourcesTab,
   CourseLearningSupportTab,
-  FocusedTaskIntro,
 } from "@/components/learning/course-learning-shell/course-learning-panels";
-import { CourseLearningHeader } from "@/components/learning/course-learning-shell/course-learning-header";
+import {
+  CourseLearningHeader,
+  FocusedTaskHeader,
+} from "@/components/learning/course-learning-shell/course-learning-header";
 import type {
   LearningShellProps,
   SidebarTab,
@@ -355,30 +357,56 @@ export function CourseLearningShell({
         : "Listo para empezar";
   const headerPrimaryActionLabel =
     activeTab === "content" ? "Abrir recursos" : "Ver guia de inicio";
+  const focusedTaskStatusLabel = focusedStudentExercise
+    ? !focusedStudentExercise.viewerSubmission && !focusedStudentExercise.isSubmissionClosed
+      ? "Pendiente"
+      : !focusedStudentExercise.viewerSubmission
+        ? "Cerrada"
+        : focusedStudentExercise.viewerSubmission.status === "CHANGES_REQUESTED"
+          ? "Cambios solicitados"
+          : focusedStudentExercise.viewerSubmission.status === "SUBMITTED"
+            ? "En revision"
+            : "Revisada"
+    : "Pendiente";
 
   return (
     <div className="campus-calm-bg min-h-screen">
-      <CourseLearningHeader
-        activeTab={activeTab}
-        courseSlug={course.slug}
-        courseTitle={course.title}
-        fullName={viewerName}
-        onPrimaryAction={() => {
-          if (activeTab === "content") {
-            handleResourceWorkspaceOpen();
-            return;
-          }
+      {isFocusedTaskWorkspace && focusedStudentExercise ? (
+        <FocusedTaskHeader
+          courseTitle={course.title}
+          fullName={viewerName}
+          moduleTitle={focusedStudentExercise.moduleTitle}
+          onBack={clearFocusedTaskWorkspace}
+          statusLabel={focusedTaskStatusLabel}
+        />
+      ) : (
+        <CourseLearningHeader
+          activeTab={activeTab}
+          courseSlug={course.slug}
+          courseTitle={course.title}
+          fullName={viewerName}
+          onPrimaryAction={() => {
+            if (activeTab === "content") {
+              handleResourceWorkspaceOpen();
+              return;
+            }
 
-          openWorkspaceTarget("content", "content-current-module");
-        }}
-        onTabChange={handleTabChange}
-        primaryActionLabel={headerPrimaryActionLabel}
-        roleLabel={roleLabel}
-        showTrackingNav={showTrackingNav}
-        statusLabel={headerStatusLabel}
-      />
+            openWorkspaceTarget("content", "content-current-module");
+          }}
+          onTabChange={handleTabChange}
+          primaryActionLabel={headerPrimaryActionLabel}
+          roleLabel={roleLabel}
+          showTrackingNav={showTrackingNav}
+          statusLabel={headerStatusLabel}
+        />
+      )}
 
-      <div className="app-container py-4 sm:py-5 xl:py-6">
+      <div
+        className={cn(
+          "app-container",
+          isFocusedTaskWorkspace ? "py-6 sm:py-8 xl:py-10" : "py-4 sm:py-5 xl:py-6",
+        )}
+      >
         <CampusOnboarding
           courseSlug={course.slug}
           showInitially={showOnboarding}
@@ -387,16 +415,19 @@ export function CourseLearningShell({
           className={cn(
             "space-y-4",
             !canModerate && activeTab === "content" && "mx-auto max-w-[78rem]",
-            !canModerate && activeTab === "resources" && "mx-auto max-w-[88rem]",
+            !canModerate &&
+              activeTab === "resources" &&
+              !isFocusedTaskWorkspace &&
+              "mx-auto max-w-[84rem]",
             !canModerate && activeTab === "support" && "mx-auto max-w-[84rem]",
+            canModerate &&
+              activeTab === "resources" &&
+              !isFocusedTaskWorkspace &&
+              "mx-auto min-h-[calc(100dvh-13rem)] max-w-[84rem]",
+            isFocusedTaskWorkspace && "mx-auto max-w-[74rem]",
           )}
         >
-          {isFocusedTaskWorkspace ? (
-            <FocusedTaskIntro
-              courseSlug={course.slug}
-              onClearFocus={clearFocusedTaskWorkspace}
-            />
-          ) : showCompactContentHeader ? (
+          {showCompactContentHeader ? (
             <CompactLessonHeader
               canModerate={canModerate}
               course={course}
@@ -444,7 +475,6 @@ export function CourseLearningShell({
               course={course}
               focusedStudentExerciseId={focusedStudentExercise?.id ?? null}
               isFocusedTaskWorkspace={isFocusedTaskWorkspace}
-              onExitFocus={clearFocusedTaskWorkspace}
               onOpenResourceWorkspace={handleResourceWorkspaceOpen}
               resources={resources}
               roleLabel={roleLabel}

@@ -69,12 +69,89 @@ export function CourseManagedResourceControls({
           </Badge>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="sm:hidden">
+          <details className="group">
+            <summary className="inline-flex min-h-9 cursor-pointer list-none items-center rounded-[var(--radius-pill)] border border-[var(--color-border-subtle)] bg-white/84 px-3 text-sm font-medium text-[var(--color-ink-soft)] transition hover:border-[var(--color-border-strong)] hover:bg-white">
+              Mas acciones
+            </summary>
+
+            <div className="mt-2 grid gap-2 rounded-[var(--radius-md)] border border-[var(--color-border-subtle)] bg-white/94 p-2 shadow-[var(--shadow-soft)]">
+              <form action={moveCourseResourceAction}>
+                <input name="courseSlug" type="hidden" value={courseSlug} />
+                <input name="resourceId" type="hidden" value={resource.id} />
+                <input name="direction" type="hidden" value="up" />
+                <Button
+                  className="min-h-9 w-full justify-start px-3 text-sm"
+                  disabled={isFirst}
+                  size="sm"
+                  type="submit"
+                  variant="subtle"
+                >
+                  Subir
+                </Button>
+              </form>
+
+              <form action={moveCourseResourceAction}>
+                <input name="courseSlug" type="hidden" value={courseSlug} />
+                <input name="resourceId" type="hidden" value={resource.id} />
+                <input name="direction" type="hidden" value="down" />
+                <Button
+                  className="min-h-9 w-full justify-start px-3 text-sm"
+                  disabled={isLast}
+                  size="sm"
+                  type="submit"
+                  variant="subtle"
+                >
+                  Bajar
+                </Button>
+              </form>
+
+              <form action={toggleCourseResourcePublicationAction}>
+                <input name="courseSlug" type="hidden" value={courseSlug} />
+                <input name="resourceId" type="hidden" value={resource.id} />
+                <input
+                  name="publish"
+                  type="hidden"
+                  value={resource.isPublished ? "false" : "true"}
+                />
+                <Button
+                  className="min-h-9 w-full justify-start px-3 text-sm"
+                  size="sm"
+                  type="submit"
+                  variant="subtle"
+                >
+                  {resource.isPublished ? "Ocultar" : "Publicar"}
+                </Button>
+              </form>
+
+              <form action={deleteCourseResourceAction}>
+                <input name="courseSlug" type="hidden" value={courseSlug} />
+                <input name="resourceId" type="hidden" value={resource.id} />
+                <Button
+                  className="min-h-9 w-full justify-start px-3 text-sm"
+                  size="sm"
+                  type="submit"
+                  variant="subtle"
+                >
+                  Eliminar
+                </Button>
+              </form>
+            </div>
+          </details>
+        </div>
+
+        <div className="hidden flex-wrap items-center gap-2 sm:flex">
           <form action={moveCourseResourceAction}>
             <input name="courseSlug" type="hidden" value={courseSlug} />
             <input name="resourceId" type="hidden" value={resource.id} />
             <input name="direction" type="hidden" value="up" />
-            <Button disabled={isFirst} size="sm" type="submit" variant="subtle">
+            <Button
+              className="min-h-9 px-3 text-[0.82rem]"
+              disabled={isFirst}
+              size="sm"
+              type="submit"
+              variant="subtle"
+            >
               Subir
             </Button>
           </form>
@@ -83,7 +160,13 @@ export function CourseManagedResourceControls({
             <input name="courseSlug" type="hidden" value={courseSlug} />
             <input name="resourceId" type="hidden" value={resource.id} />
             <input name="direction" type="hidden" value="down" />
-            <Button disabled={isLast} size="sm" type="submit" variant="subtle">
+            <Button
+              className="min-h-9 px-3 text-[0.82rem]"
+              disabled={isLast}
+              size="sm"
+              type="submit"
+              variant="subtle"
+            >
               Bajar
             </Button>
           </form>
@@ -96,7 +179,12 @@ export function CourseManagedResourceControls({
               type="hidden"
               value={resource.isPublished ? "false" : "true"}
             />
-            <Button size="sm" type="submit" variant="subtle">
+            <Button
+              className="min-h-9 px-3 text-[0.82rem]"
+              size="sm"
+              type="submit"
+              variant="subtle"
+            >
               {resource.isPublished ? "Ocultar" : "Publicar"}
             </Button>
           </form>
@@ -104,7 +192,12 @@ export function CourseManagedResourceControls({
           <form action={deleteCourseResourceAction}>
             <input name="courseSlug" type="hidden" value={courseSlug} />
             <input name="resourceId" type="hidden" value={resource.id} />
-            <Button size="sm" type="submit" variant="subtle">
+            <Button
+              className="min-h-9 px-3 text-[0.82rem]"
+              size="sm"
+              type="submit"
+              variant="subtle"
+            >
               Eliminar
             </Button>
           </form>

@@ -14,7 +14,12 @@ import {
   getTeacherDashboardCourseSummaries,
   type DashboardNotificationSnapshot,
 } from "@/lib/account-dashboard";
-import { buildCourseForumHref, buildCourseTrackingHref } from "@/lib/course-navigation";
+import {
+  buildCourseContentHref,
+  buildCourseForumHref,
+  buildCourseResourcesHref,
+  buildCourseTrackingHref,
+} from "@/lib/course-navigation";
 import { getUserCourseSpaces, type UserCourseSpace } from "@/lib/course-community";
 import {
   getCourseProgressDetailsMapForUser,
@@ -48,8 +53,15 @@ function getPrimaryCta(input: {
     };
   }
 
+  if (input.globalRole === "TEACHER" && input.primarySpace) {
+    return {
+      href: buildCourseTrackingHref({ courseSlug: input.primarySpace.course.slug }),
+      label: input.primarySpace.course.title,
+    };
+  }
+
   return {
-    href: "/mis-cursos",
+    href: input.primarySpace ? buildCourseContentHref(input.primarySpace.course.slug) : "/mis-cursos",
     label: input.primarySpace?.course.title ?? "Ir a mis cursos",
   };
 }
@@ -186,7 +198,7 @@ function buildOverviewPanel(input: {
     ].filter((value): value is string => Boolean(value));
 
     return {
-      title: "Tu progreso",
+      title: "Tu Progreso",
       value: `${primaryStudentCourse.progress.completionRate}% completado`,
       detail: primaryStudentCourse.space.course.title,
       progressPercent: primaryStudentCourse.progress.completionRate,
@@ -220,7 +232,7 @@ function buildOverviewPanel(input: {
       value: primarySummary?.pendingReviewItems.length
         ? `${primarySummary.pendingReviewItems.length} revisiones abiertas`
         : "Sin revisiones pendientes",
-      detail: primarySummary?.space.course.title ?? "Seguimiento del campus privado",
+      detail: primarySummary?.space.course.title ?? "Seguimiento del curso activo",
       progressPercent: reviewCompletion,
       sectionLabel: primarySummary?.pendingReviewItems.length ? "Pendientes" : "Contexto actual",
       items: reviewTitles.slice(0, 3),
@@ -234,7 +246,7 @@ function buildOverviewPanel(input: {
     value: input.notificationSnapshot.unreadCount
       ? `${input.notificationSnapshot.unreadCount} avisos sin leer`
       : "Cuenta activa",
-    detail: "Seguridad, sesiones y soporte del campus privado.",
+    detail: "Seguridad, sesiones y soporte de tu cuenta.",
     progressPercent: null,
     sectionLabel: "Revision rapida",
     items: [
@@ -250,59 +262,63 @@ function buildOverviewPanel(input: {
 function buildQuickLinks(input: {
   globalRole: UserGlobalRole;
   primaryForumHref: string | null;
-  teachingHref: string | null;
+  libraryHref: string | null;
   hasCourseArea: boolean;
 }) {
   const items: Array<{
-    href: string;
+    href?: string;
     title: string;
     description: string;
     icon: (typeof accountQuickLinkIcons)[keyof typeof accountQuickLinkIcons];
     badge?: string;
+    disabled?: boolean;
   }> = [];
 
-  if (input.globalRole !== "ADMIN" || input.hasCourseArea) {
-    items.push({
-      href: "/mis-cursos",
-      title: "Mis cursos",
-      description: "Abre tu area operativa real sin mezclarla con ajustes de cuenta.",
-      icon: accountQuickLinkIcons.courses,
-    });
-  }
-
-  if (input.primaryForumHref) {
-    items.push({
-      href: input.primaryForumHref,
-      title: "Foro",
-      description: "Entra en el foro privado asociado a tu curso con contexto disponible.",
-      icon: accountQuickLinkIcons.forum,
-    });
-  }
-
-  if (input.globalRole === "TEACHER" && input.teachingHref) {
-    items.push({
-      href: input.teachingHref,
-      title: "Seguimiento",
-      description: "Vuelve al seguimiento docente del curso que tienes activo ahora.",
-      icon: accountQuickLinkIcons.teaching,
-    });
-  }
-
-  if (input.globalRole === "ADMIN") {
-    items.push({
-      href: "/admin",
-      title: "Administracion",
-      description: "Entra en el backoffice separado sin mezclarlo con tus ajustes personales.",
-      icon: accountQuickLinkIcons.admin,
-    });
-  }
+  items.push({
+    href: input.hasCourseArea ? "/mis-cursos" : undefined,
+    title: "Mis cursos",
+    description: input.hasCourseArea
+      ? "Continua desde tu area de aprendizaje."
+      : "Aparecera cuando tengas un curso activo.",
+    icon: accountQuickLinkIcons.courses,
+    disabled: !input.hasCourseArea,
+  });
 
   items.push({
-    href: "/soporte",
-    title: "Soporte",
-    description: "Consulta ayuda y canales de contacto del campus privado.",
-    icon: accountQuickLinkIcons.support,
+    href: input.primaryForumHref ?? undefined,
+    title: "Foro",
+    description: input.primaryForumHref
+      ? "Conversaciones del curso actual."
+      : "Se activa al entrar en un curso con comunidad.",
+    icon: accountQuickLinkIcons.forum,
+    disabled: !input.primaryForumHref,
   });
+
+  items.push({
+    href: input.libraryHref ?? undefined,
+    title: "Biblioteca",
+    description: input.libraryHref
+      ? "Materiales y recursos del recorrido activo."
+      : "Se mostrara cuando exista un curso con recursos.",
+    icon: accountQuickLinkIcons.library,
+    disabled: !input.libraryHref,
+  });
+
+  items.push({
+    title: "Certificados",
+    description: "Apareceran cuando completes una ruta evaluable.",
+    icon: accountQuickLinkIcons.certificates,
+    disabled: true,
+  });
+
+  if (input.globalRole === "ADMIN" && !input.hasCourseArea) {
+    items[0] = {
+      href: "/soporte",
+      title: "Soporte",
+      description: "Canal directo para incidencias de cuenta y acceso.",
+      icon: accountQuickLinkIcons.support,
+    };
+  }
 
   return items;
 }
@@ -324,12 +340,7 @@ export default async function AccountPage() {
     studentSpaces,
   });
   const primaryForumHref = primarySpace ? buildCourseForumHref(primarySpace.course.slug) : null;
-  const teachingHref =
-    user.globalRole === "TEACHER" && primarySpace
-      ? buildCourseTrackingHref({ courseSlug: primarySpace.course.slug })
-      : user.globalRole === "TEACHER"
-        ? "/mis-cursos"
-        : null;
+  const libraryHref = primarySpace ? buildCourseResourcesHref(primarySpace.course.slug) : null;
   const notificationSnapshotPromise = getDashboardNotificationSnapshot({
     userId: user.id,
     courseSlugs: spaces.map((space) => space.course.slug),
@@ -418,7 +429,7 @@ export default async function AccountPage() {
       quickLinks={buildQuickLinks({
         globalRole: user.globalRole,
         primaryForumHref,
-        teachingHref,
+        libraryHref,
         hasCourseArea: spaces.length > 0,
       })}
       sessions={sessions}

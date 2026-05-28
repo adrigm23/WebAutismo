@@ -140,32 +140,73 @@ function ReviewActionButtons(input: {
   const { pending } = useFormStatus();
 
   return (
-    <div className="flex w-full flex-wrap justify-stretch gap-2.5 sm:w-auto sm:justify-end">
-      <Button
-        className="flex-1 sm:flex-none"
-        disabled={pending}
-        name="status"
-        onClick={() => input.onIntentChange("CHANGES_REQUESTED")}
-        type="submit"
-        value="CHANGES_REQUESTED"
-        variant="neutral"
-      >
-        {pending && input.pendingIntent === "CHANGES_REQUESTED"
-          ? "Solicitando cambios..."
-          : "Solicitar cambios"}
-      </Button>
-      <Button
-        className="flex-1 sm:flex-none"
-        disabled={pending}
-        name="status"
-        onClick={() => input.onIntentChange("REVIEWED")}
-        type="submit"
-        value="REVIEWED"
-      >
-        {pending && input.pendingIntent === "REVIEWED"
-          ? "Guardando revision..."
-          : "Marcar revisada"}
-      </Button>
+    <div className="w-full sm:w-auto">
+      <details className="sm:hidden">
+        <summary className="inline-flex min-h-9 w-full cursor-pointer list-none items-center justify-center rounded-[var(--radius-pill)] border border-[var(--color-border-subtle)] bg-white/88 px-3 text-sm font-medium text-[var(--color-ink-soft)] transition hover:border-[var(--color-border-strong)] hover:bg-white">
+          Acciones de revision
+        </summary>
+
+        <div className="mt-2 grid gap-2 rounded-[var(--radius-md)] border border-[var(--color-border-subtle)] bg-white/94 p-2 shadow-[var(--shadow-soft)]">
+          <Button
+            className="min-h-9 w-full justify-start px-3 text-sm"
+            disabled={pending}
+            name="status"
+            onClick={() => input.onIntentChange("CHANGES_REQUESTED")}
+            size="sm"
+            type="submit"
+            value="CHANGES_REQUESTED"
+            variant="neutral"
+          >
+            {pending && input.pendingIntent === "CHANGES_REQUESTED"
+              ? "Solicitando cambios..."
+              : "Solicitar cambios"}
+          </Button>
+          <Button
+            className="min-h-9 w-full justify-start px-3 text-sm"
+            disabled={pending}
+            name="status"
+            onClick={() => input.onIntentChange("REVIEWED")}
+            size="sm"
+            type="submit"
+            value="REVIEWED"
+            variant="secondary"
+          >
+            {pending && input.pendingIntent === "REVIEWED"
+              ? "Guardando revision..."
+              : "Marcar revisada"}
+          </Button>
+        </div>
+      </details>
+
+      <div className="hidden flex-wrap justify-end gap-2.5 sm:flex">
+        <Button
+          className="min-h-9 px-3 text-[0.82rem]"
+          disabled={pending}
+          name="status"
+          onClick={() => input.onIntentChange("CHANGES_REQUESTED")}
+          size="sm"
+          type="submit"
+          value="CHANGES_REQUESTED"
+          variant="neutral"
+        >
+          {pending && input.pendingIntent === "CHANGES_REQUESTED"
+            ? "Solicitando cambios..."
+            : "Solicitar cambios"}
+        </Button>
+        <Button
+          className="min-h-9 px-3 text-[0.82rem]"
+          disabled={pending}
+          name="status"
+          onClick={() => input.onIntentChange("REVIEWED")}
+          size="sm"
+          type="submit"
+          value="REVIEWED"
+        >
+          {pending && input.pendingIntent === "REVIEWED"
+            ? "Guardando revision..."
+            : "Marcar revisada"}
+        </Button>
+      </div>
     </div>
   );
 }
