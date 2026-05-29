@@ -19,6 +19,7 @@ type CoursePrivateHeaderProps = {
   courseSlug: string;
   activeSection: CoursePrivateSection;
   showTrackingNav: boolean;
+  notificationsCount?: number;
 };
 
 function getUserInitials(name: string) {
@@ -31,14 +32,20 @@ function UtilityLink(input: {
   href: string;
   label: string;
   icon: typeof Bell;
+  count?: number;
 }) {
   return (
     <Link
       aria-label={input.label}
-      className="inline-flex h-10 w-10 items-center justify-center rounded-full text-[var(--color-ink)] transition hover:bg-[rgba(22,60,88,0.05)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2"
+      className="relative inline-flex h-10 w-10 items-center justify-center rounded-full text-[var(--color-ink)] transition hover:bg-[rgba(22,60,88,0.05)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2"
       href={input.href}
     >
       <input.icon className="h-5 w-5" />
+      {input.count ? (
+        <span className="absolute right-2 top-2 min-w-4 rounded-full bg-[var(--color-primary)] px-1 text-center text-[0.62rem] font-semibold leading-4 text-white">
+          {input.count > 9 ? "9+" : input.count}
+        </span>
+      ) : null}
     </Link>
   );
 }
@@ -49,6 +56,7 @@ export function CoursePrivateHeader({
   courseSlug,
   activeSection,
   showTrackingNav,
+  notificationsCount = 0,
 }: CoursePrivateHeaderProps) {
   const navItems = [
     {
@@ -106,11 +114,13 @@ export function CoursePrivateHeader({
 
           <div className="flex items-center gap-1.5 sm:gap-2">
             <UtilityLink
+              count={notificationsCount}
               href="/mi-cuenta#notificaciones"
               icon={Bell}
               label="Abrir notificaciones"
             />
             <UtilityLink href="/soporte" icon={CircleHelp} label="Abrir soporte" />
+
             <Link
               aria-label={`${fullName} - ${roleLabel}`}
               className="grid h-9 w-9 place-items-center rounded-full bg-[linear-gradient(180deg,#d8b58a_0%,#6b4c37_100%)] text-sm font-semibold text-white transition hover:scale-[1.02] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2"
