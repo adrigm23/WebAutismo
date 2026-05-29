@@ -2,7 +2,6 @@
 
 import { Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
-import { isRedirectError } from "next/dist/client/components/redirect-error";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { getCurrentUser } from "@/lib/auth";
@@ -40,6 +39,7 @@ import { getDb } from "@/lib/prisma";
 export type CourseResourceFormState = {
   error?: string;
   success?: string;
+  redirectUrl?: string;
 };
 
 export type CourseSubmissionFormState = {
@@ -64,7 +64,10 @@ const createCourseResourceSchema = z.object({
   description: z.string().max(2000).optional(),
   linkUrl: z.string().optional(),
   dueAt: z.string().optional(),
-  passingScore: z.string().optional()
+  passingScore: z.string().optional(),
+  storageKey: z.string().optional(),
+  mimeType: z.string().optional(),
+  sizeInBytes: z.string().optional()
 });
 
 const deleteCourseResourceSchema = z.object({
@@ -149,7 +152,14 @@ function getCourseResourceActionError(error: unknown, fallbackMessage: string) {
 }
 
 function isRedirectSignal(error: unknown) {
-  return isRedirectError(error) || (error instanceof Error && error.message.startsWith("REDIRECT:"));
+  if (typeof error !== "object" || error === null) {
+    return false;
+  }
+  const err = error as { digest?: string; message?: string };
+  return (
+    (err.digest && err.digest.startsWith("NEXT_REDIRECT;")) ||
+    (err.message && err.message.startsWith("REDIRECT:"))
+  );
 }
 
 export async function createCourseResourceAction(
@@ -166,7 +176,10 @@ export async function createCourseResourceAction(
     description: formData.get("description")?.toString() || undefined,
     linkUrl: formData.get("linkUrl")?.toString() || undefined,
     dueAt: formData.get("dueAt")?.toString() || undefined,
-    passingScore: formData.get("passingScore")?.toString() || undefined
+    passingScore: formData.get("passingScore")?.toString() || undefined,
+    storageKey: formData.get("storageKey")?.toString() || undefined,
+    mimeType: formData.get("mimeType")?.toString() || undefined,
+    sizeInBytes: formData.get("sizeInBytes")?.toString() || undefined
   });
 
   if (!parsed.success) {
@@ -203,20 +216,9 @@ export async function createCourseResourceAction(
     return { error: "El modulo seleccionado no pertenece a este curso." };
   }
 
-  const file = formData.get("file");
-
   if (parsed.data.source === "FILE") {
-    if (!(file instanceof File) || file.size <= 0) {
-      return { error: "Selecciona un archivo para publicar el recurso." };
-    }
-
-    try {
-      validateFileUpload(file, COURSE_RESOURCE_UPLOAD_POLICY);
-    } catch (error) {
-      return {
-        error:
-          error instanceof Error ? error.message : "El archivo del recurso no cumple la politica de seguridad."
-      };
+    if (!parsed.data.storageKey) {
+      return { error: "Sube un archivo antes de publicar el recurso." };
     }
   } else {
     const linkUrl = parsed.data.linkUrl?.trim();
@@ -268,7 +270,9 @@ export async function createCourseResourceAction(
       linkUrl: parsed.data.source === "LINK" ? parsed.data.linkUrl : null,
       dueAt,
       passingScore,
-      file: parsed.data.source === "FILE" && file instanceof File ? file : null
+      storageKey: parsed.data.storageKey ?? null,
+      mimeType: parsed.data.mimeType ?? null,
+      sizeInBytes: parsed.data.sizeInBytes ? Number(parsed.data.sizeInBytes) : null
     });
   } catch (error) {
     if (isRedirectSignal(error)) {
@@ -314,7 +318,10 @@ export async function createCourseResourceAction(
     });
   }
 
-  redirect(buildPublishedCourseResourceHref(course.slug, resource.id));
+  return {
+    success: "Recurso publicado con exito.",
+    redirectUrl: buildPublishedCourseResourceHref(course.slug, resource.id)
+  };
 }
 
 export async function deleteCourseResourceAction(formData: FormData) {
@@ -510,8 +517,9 @@ export async function updateCourseResourceAction(
     }
   }
 
+  let updatedResource;
   try {
-    const updatedResource = await updateCourseResource({
+    updatedResource = await updateCourseResource({
       resourceId: resource.id,
       moduleId,
       title: parsed.data.title,
@@ -546,7 +554,6 @@ export async function updateCourseResourceAction(
     if (resource.type === "EXERCISE") {
       revalidateCourseTrackingView(course.slug);
     }
-    redirect(buildCourseResourcesHref(course.slug, `resource-${updatedResource.id}`));
   } catch (error) {
     if (isRedirectSignal(error)) {
       throw error;
@@ -556,6 +563,8 @@ export async function updateCourseResourceAction(
       error: getCourseResourceActionError(error, "No se ha podido actualizar el recurso.")
     };
   }
+
+  redirect(buildCourseResourcesHref(course.slug, `resource-${updatedResource.id}`));
 }
 
 export async function toggleCourseResourcePublicationAction(formData: FormData) {

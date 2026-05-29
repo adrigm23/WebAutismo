@@ -379,7 +379,9 @@ export async function createCourseResource(input: {
   linkUrl?: string | null;
   dueAt?: Date | null;
   passingScore?: number | null;
-  file?: File | null;
+  storageKey?: string | null;
+  mimeType?: string | null;
+  sizeInBytes?: number | null;
 }) {
   const lastResource = await getDb().courseResource.findFirst({
     where: {
@@ -392,58 +394,6 @@ export async function createCourseResource(input: {
       sortOrder: true
     }
   });
-
-  let storageKey: string | null = null;
-  let mimeType: string | null = null;
-  let sizeInBytes: number | null = null;
-
-  if (input.source === "FILE") {
-    if (!input.file || input.file.size <= 0) {
-      throw new Error("Selecciona un archivo valido.");
-    }
-
-    try {
-      assertObjectStorageWriteReady();
-    } catch (error) {
-      throw new Error(
-        error instanceof Error 
-          ? error.message 
-          : "La subida de archivos no esta disponible en este momento."
-      );
-    }
-
-    const validatedFile = validateFileUpload(input.file, COURSE_RESOURCE_UPLOAD_POLICY);
-    const safeName = sanitizeFileSegment(validatedFile.fileName);
-    const storedFileName = `${randomUUID()}-${safeName}`;
-    storageKey = path.posix.join("course-resources", input.courseId, storedFileName);
-    mimeType = validatedFile.mimeType;
-    sizeInBytes = validatedFile.sizeInBytes;
-
-    try {
-      const fileBuffer = new Uint8Array(await input.file.arrayBuffer());
-      await upsertStoredAsset({
-        storageKey,
-        content: fileBuffer,
-        contentType: mimeType
-      });
-    } catch (error) {
-      throw new Error(
-        error instanceof Error
-          ? error.message
-          : "No se pudo subir el archivo al almacenamiento."
-      );
-    }
-
-    courseResourceLogger.info("Course resource file stored.", {
-      action: "createCourseResource",
-      userId: input.createdById,
-      courseId: input.courseId,
-      storageKey,
-      mimeType,
-      sizeInBytes,
-      result: "stored"
-    });
-  }
 
   return getDb().courseResource.create({
     data: {
@@ -460,9 +410,9 @@ export async function createCourseResource(input: {
           : null,
       dueAt: input.type === "EXERCISE" ? input.dueAt ?? null : null,
       passingScore: input.type === "EXERCISE" ? input.passingScore ?? null : null,
-      storageKey,
-      mimeType,
-      sizeInBytes,
+      storageKey: input.source === "FILE" ? input.storageKey : null,
+      mimeType: input.source === "FILE" ? input.mimeType : null,
+      sizeInBytes: input.source === "FILE" ? input.sizeInBytes : null,
       sortOrder: (lastResource?.sortOrder ?? -1) + 1
     }
   });

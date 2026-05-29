@@ -9,7 +9,7 @@ import {
   useState,
 } from "react";
 import dynamic from "next/dynamic";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import {
   ArrowUpRight,
   CircleAlert,
@@ -34,7 +34,6 @@ import { Input } from "@/components/ui/input";
 import { SectionHeader } from "@/components/ui/section-header";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StateBanner } from "@/components/ui/state-banner";
-import { SubmitButton } from "@/components/ui/submit-button";
 import { Textarea } from "@/components/ui/textarea";
 import type { CatalogCourse } from "@/lib/course-catalog";
 import {
@@ -172,10 +171,15 @@ export function CourseResourceManager({
   focusedResourceId = null,
 }: CourseResourceManagerProps) {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const [state, formAction] = useActionState(
     createCourseResourceAction,
     initialState,
   );
+  const [uploadStatus, setUploadStatus] = useState<
+    "idle" | "uploading" | "saving" | "success" | "error"
+  >("idle");
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [source, setSource] = useState<"FILE" | "LINK">("FILE");
   const [type, setType] = useState<"MATERIAL" | "EXERCISE">("MATERIAL");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -399,25 +403,88 @@ export function CourseResourceManager({
     setSelectedFileError(null);
   }
 
-  function handleCreateResourceSubmit(
+  async function handleCreateResourceSubmit(
     event: FormEvent<HTMLFormElement>,
   ) {
-    if (source !== "FILE") {
-      setSelectedFileError(null);
-      return;
+    event.preventDefault();
+    setSelectedFileError(null);
+    setErrorMessage(null);
+
+    if (source === "FILE") {
+      if (!selectedFile) {
+        setSelectedFileError("Selecciona un archivo para publicar el recurso.");
+        return;
+      }
+
+      const validationError = validateCourseUploadSelection(selectedFile);
+
+      if (validationError) {
+        setSelectedFileError(validationError);
+        return;
+      }
     }
 
-    if (!selectedFile) {
-      event.preventDefault();
-      setSelectedFileError("Selecciona un archivo para publicar el recurso.");
-      return;
-    }
+    setUploadStatus("uploading");
 
-    const validationError = validateCourseUploadSelection(selectedFile);
+    try {
+      let storageKey = "";
+      let mimeType = "";
+      let sizeInBytes = "";
 
-    if (validationError) {
-      event.preventDefault();
-      setSelectedFileError(validationError);
+      if (source === "FILE" && selectedFile) {
+        try {
+          const { upload } = await import("@vercel/blob/client");
+          const blob = await upload(selectedFile.name, selectedFile, {
+            access: "private",
+            handleUploadUrl: "/api/course-resources/upload-token",
+            clientPayload: JSON.stringify({
+              courseSlug: course.slug
+            })
+          });
+
+          storageKey = blob.pathname;
+          mimeType = blob.contentType;
+          sizeInBytes = String(selectedFile.size);
+        } catch (uploadErr) {
+          setUploadStatus("error");
+          setErrorMessage(
+            uploadErr instanceof Error 
+              ? `Error al subir el archivo: ${uploadErr.message}` 
+              : "No se ha podido subir el archivo a Vercel Blob."
+          );
+          return;
+        }
+      }
+
+      setUploadStatus("saving");
+
+      const target = event.currentTarget;
+      const data = new FormData(target);
+      
+      if (source === "FILE") {
+        data.set("storageKey", storageKey);
+        data.set("mimeType", mimeType);
+        data.set("sizeInBytes", sizeInBytes);
+      }
+
+      const result = await createCourseResourceAction(initialState, data);
+
+      if (result.error) {
+        setUploadStatus("error");
+        setErrorMessage(result.error);
+      } else {
+        setUploadStatus("success");
+        if (result.redirectUrl) {
+          router.push(result.redirectUrl);
+        }
+      }
+    } catch (err) {
+      setUploadStatus("error");
+      setErrorMessage(
+        err instanceof Error 
+          ? err.message 
+          : "Fallo inesperado al guardar el recurso."
+      );
     }
   }
 
@@ -1002,19 +1069,25 @@ export function CourseResourceManager({
 
             {state.success ? <StateBanner description={state.success} tone="success" /> : null}
 
+            {errorMessage ? <StateBanner description={errorMessage} tone="danger" /> : null}
+
             <div className="flex flex-wrap items-center justify-between gap-3">
               <p className="max-w-[38rem] text-sm leading-7 text-[var(--color-muted)]">
                 Los archivos se sirven solo a personas con acceso vigente al curso. Si publicas un ejercicio, la revision quedara disponible en esta misma vista.
               </p>
-              <SubmitButton
-                disabled={!canSubmitResource}
-                pendingLabel="Publicando..."
+              <Button
+                disabled={!canSubmitResource || uploadStatus === "uploading" || uploadStatus === "saving"}
                 variant="secondary"
+                type="submit"
               >
-                {type === "EXERCISE"
-                  ? "Publicar ejercicio"
-                  : "Publicar recurso"}
-              </SubmitButton>
+                {uploadStatus === "uploading"
+                  ? "Subiendo..."
+                  : uploadStatus === "saving"
+                    ? "Guardando recurso..."
+                    : type === "EXERCISE"
+                      ? "Publicar ejercicio"
+                      : "Publicar recurso"}
+              </Button>
             </div>
           </form>
           </section>
