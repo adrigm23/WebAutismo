@@ -4,23 +4,33 @@ import { siteConfig } from "@/lib/site";
 export function SiteFooter() {
   return (
     <footer className="mt-16 border-t border-[rgba(12,113,195,0.12)] bg-white/76">
-      <div className="site-container grid gap-10 py-14 lg:grid-cols-[1.5fr_1fr_1fr]">
-        <div className="space-y-5">
-          <p className="text-3xl font-bold tracking-[-0.04em] text-[var(--color-ink)]">
+      <div className="site-container grid gap-10 py-14 lg:grid-cols-[1.6fr_1fr_1fr_1fr]">
+        {/* Brand */}
+        <div className="space-y-4">
+          <p className="text-2xl font-bold tracking-[-0.04em] text-[var(--color-ink)]">
             {siteConfig.shortName}
           </p>
-          <p className="max-w-md text-base leading-8 text-[var(--color-muted)]">
+          <p className="max-w-xs text-sm leading-7 text-[var(--color-muted)]">
             Formación digital especializada en autismo para familias,
-            profesionales y entidades. Compra online, campus privado por curso y
-            acceso segun matricula y edicion.
+            profesionales y entidades. Campus privado, recursos protegidos
+            y comunidad moderada por expertos.
+          </p>
+          <p className="text-sm text-[var(--color-muted)]">
+            <a
+              className="hover:text-[var(--color-primary)]"
+              href={`mailto:${siteConfig.supportEmail}`}
+            >
+              {siteConfig.supportEmail}
+            </a>
           </p>
         </div>
 
+        {/* Plataforma */}
         <div className="space-y-4">
-          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[var(--color-muted)]">
-            Navegacion
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-muted)]">
+            Plataforma
           </p>
-          <div className="space-y-3 text-base text-[var(--color-ink)]">
+          <nav className="space-y-3 text-sm text-[var(--color-ink)]">
             <Link className="block hover:text-[var(--color-primary)]" href="/">
               Inicio
             </Link>
@@ -28,27 +38,82 @@ export function SiteFooter() {
               className="block hover:text-[var(--color-primary)]"
               href="/plataforma"
             >
-              Plataforma
+              Cómo funciona
             </Link>
+            <Link
+              className="block hover:text-[var(--color-primary)]"
+              href="/acceder"
+            >
+              Acceder al campus
+            </Link>
+            <Link
+              className="block hover:text-[var(--color-primary)]"
+              href="/registro"
+            >
+              Crear cuenta
+            </Link>
+          </nav>
+        </div>
+
+        {/* Cursos y comunidad */}
+        <div className="space-y-4">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-muted)]">
+            Cursos
+          </p>
+          <nav className="space-y-3 text-sm text-[var(--color-ink)]">
             <Link
               className="block hover:text-[var(--color-primary)]"
               href="/cursos"
             >
-              Cursos
+              Catálogo completo
             </Link>
-          </div>
+            <Link
+              className="block hover:text-[var(--color-primary)]"
+              href="/#comunidad"
+            >
+              Comunidad
+            </Link>
+            <Link
+              className="block hover:text-[var(--color-primary)]"
+              href="/mis-cursos"
+            >
+              Mi campus
+            </Link>
+          </nav>
         </div>
 
+        {/* Legal y soporte */}
         <div className="space-y-4">
-          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[var(--color-muted)]">
-            Soporte
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-muted)]">
+            Legal y soporte
           </p>
-          <div className="space-y-3 text-base text-[var(--color-ink)]">
-            <p>{siteConfig.supportEmail}</p>
-            <p>Contenidos y adjuntos privados bajo sesion.</p>
-            <p>Acceso segun matricula, edicion y ventana vigente.</p>
-          </div>
+          <nav className="space-y-3 text-sm text-[var(--color-ink)]">
+            <Link
+              className="block hover:text-[var(--color-primary)]"
+              href="/soporte"
+            >
+              Centro de ayuda
+            </Link>
+            <Link
+              className="block hover:text-[var(--color-primary)]"
+              href="/legal"
+            >
+              Aviso legal
+            </Link>
+            <Link
+              className="block hover:text-[var(--color-primary)]"
+              href="/legal#privacidad"
+            >
+              Privacidad y cookies
+            </Link>
+          </nav>
         </div>
+      </div>
+
+      <div className="site-container border-t border-[rgba(12,113,195,0.08)] py-5">
+        <p className="text-xs text-[var(--color-muted)]">
+          © {new Date().getFullYear()} {siteConfig.name}. Todos los derechos reservados.
+        </p>
       </div>
     </footer>
   );

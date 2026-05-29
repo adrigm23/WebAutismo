@@ -1,13 +1,13 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
+import { HomeCampusInside } from "@/components/platform/home/home-campus-inside";
+import { HomeCertificates } from "@/components/platform/home/home-certificates";
+import { HomeCommunity } from "@/components/platform/home/home-community";
 import { HomeFeaturedCourseCard } from "@/components/platform/home/home-featured-course-card";
 import { HomeHero } from "@/components/platform/home/home-hero";
 import { HomeSectionHeader } from "@/components/platform/home/home-section-header";
-import {
-  homeAudience,
-  homeSteps,
-  homeTrustItems
-} from "@/components/platform/home/content";
+import { HomeSocialProof } from "@/components/platform/home/home-social-proof";
+import { HomeTestimonials } from "@/components/platform/home/home-testimonials";
 import { ButtonLink } from "@/components/ui/button";
 import { getFeaturedCatalogCourses } from "@/lib/course-catalog";
 import "@/components/platform/home/home-landing.css";
@@ -19,6 +19,9 @@ export async function HomeLanding() {
     <div className="home-landing pb-8">
       <HomeHero />
 
+      <HomeSocialProof />
+
+      {/* Featured courses */}
       <section
         aria-labelledby="home-courses-heading"
         className="border-t border-[rgba(12,113,195,0.08)] py-16 sm:py-20"
@@ -26,16 +29,16 @@ export async function HomeLanding() {
         <div className="site-container">
           <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
             <HomeSectionHeader
-              description="Cursos claros, con programa, metodologia y docente visibles antes de decidir."
+              description="Programas completos con objetivos, metodología y docente visibles antes de decidir."
               eyebrow="Cursos destacados"
               headingId="home-courses-heading"
-              title="Explora el catalogo"
+              title="Explora el catálogo"
             />
             <Link
-              className="inline-flex shrink-0 items-center gap-1.5 text-sm font-semibold text-[var(--color-primary)] underline-offset-4 transition hover:underline"
+              className="inline-flex shrink-0 items-center gap-1.5 text-sm font-semibold text-[var(--color-primary)] underline-offset-4 transition hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2"
               href="/cursos"
             >
-              Ver catalogo completo
+              Ver catálogo completo
               <ArrowRight aria-hidden className="h-4 w-4" />
             </Link>
           </div>
@@ -50,74 +53,48 @@ export async function HomeLanding() {
         </div>
       </section>
 
+      <HomeCampusInside />
+
+      <HomeCommunity />
+
+      <HomeCertificates />
+
+      <HomeTestimonials />
+
+      {/* CTA final */}
       <section
-        aria-labelledby="home-flow-heading"
-        className="border-t border-[rgba(12,113,195,0.08)] py-16 sm:py-20"
-        id="home-steps"
+        aria-labelledby="home-cta-heading"
+        className="site-container py-16 sm:pb-24"
       >
-        <div className="site-container grid gap-10 lg:grid-cols-[minmax(0,0.88fr)_minmax(0,1.12fr)] lg:items-start">
-          <div>
-            <HomeSectionHeader
-              description="Del catalogo al campus, el recorrido mantiene una sola idea: entender bien el curso antes de entrar."
-              eyebrow="Como funciona"
-              headingId="home-flow-heading"
-              title="Una entrada mas clara al aprendizaje"
-            />
-
-            <p className="mt-8 max-w-xl text-sm leading-7 text-[var(--color-muted)]">
-              {homeTrustItems[0]}. {homeTrustItems[1]}. {homeTrustItems[2]}.
-            </p>
-            <p className="mt-4 max-w-xl text-sm leading-7 text-[var(--color-muted)]">
-              Pensado para {homeAudience.join(", ").toLowerCase()}.
-            </p>
-          </div>
-
-          <div className="divide-y divide-[rgba(12,113,195,0.12)] border-y border-[rgba(12,113,195,0.12)]">
-            {homeSteps.map((step, index) => (
-              <article className="grid gap-3 py-6 sm:grid-cols-[4rem_minmax(0,1fr)] sm:gap-5" key={step.title}>
-                <p className="text-[0.72rem] font-semibold uppercase tracking-[0.2em] text-[var(--color-primary)]">
-                  Paso {index + 1}
-                </p>
-                <div>
-                  <h3 className="text-[1.45rem] font-semibold leading-tight tracking-[-0.03em] text-[var(--color-ink)]">
-                    {step.title}
-                  </h3>
-                  <p className="mt-3 text-sm leading-7 text-[var(--color-muted)]">
-                    {step.description}
-                  </p>
-                </div>
-              </article>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section aria-labelledby="home-cta-heading" className="site-container py-16 sm:pb-24">
-        <div className="border-t border-[rgba(12,113,195,0.12)] pt-10">
-          <div className="max-w-2xl">
-            <p className="text-[0.7rem] font-semibold uppercase tracking-[0.2em] text-[var(--color-primary)]">
-              Empieza hoy
-            </p>
-            <h2
-              className="mt-3 text-balance text-3xl font-semibold tracking-[-0.04em] text-[var(--color-ink)] sm:text-4xl"
-              id="home-cta-heading"
+        <div className="rounded-[var(--radius-xl)] bg-[linear-gradient(135deg,var(--color-primary)_0%,var(--color-brand-strong)_100%)] px-8 py-12 text-center sm:px-12">
+          <p className="text-[0.7rem] font-semibold uppercase tracking-[0.2em] text-[rgba(255,255,255,0.65)]">
+            Empieza hoy
+          </p>
+          <h2
+            className="mt-3 text-balance text-3xl font-semibold tracking-[-0.04em] text-white sm:text-4xl"
+            id="home-cta-heading"
+          >
+            Formación que marca la diferencia
+          </h2>
+          <p className="mx-auto mt-4 max-w-xl text-base leading-7 text-[rgba(255,255,255,0.75)]">
+            Accede a cursos especializados, una comunidad activa y certificados
+            reconocidos. Todo en un campus privado diseñado para profesionales.
+          </p>
+          <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+            <ButtonLink
+              className="min-w-[11rem] justify-center"
+              href="/cursos"
+              variant="inverse"
             >
-              Explora la formacion y entra al campus con una sola cuenta
-            </h2>
-            <p className="mt-4 text-base leading-7 text-[var(--color-muted)]">
-              La home termina donde debe: en una decision clara para seguir viendo cursos.
-            </p>
-            <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:items-center">
-              <ButtonLink className="justify-center" href="/cursos">
-                Ver cursos
-              </ButtonLink>
-              <Link
-                className="inline-flex min-h-11 items-center text-sm font-semibold text-[var(--color-primary)] underline-offset-4 transition hover:underline"
-                href="/plataforma"
-              >
-                Conocer la plataforma
-              </Link>
-            </div>
+              Explorar cursos
+              <ArrowRight aria-hidden className="ml-2 h-4 w-4" />
+            </ButtonLink>
+            <Link
+              className="inline-flex min-h-11 items-center text-sm font-semibold text-white underline-offset-4 transition hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-primary)]"
+              href="/acceder"
+            >
+              Acceder al campus
+            </Link>
           </div>
         </div>
       </section>

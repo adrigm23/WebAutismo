@@ -28,7 +28,7 @@ export const homeSteps = [
   {
     title: "Crea tu cuenta e inscríbete",
     description:
-      "Completa el checkout con pago seguro o el modo demo local, claramente identificado."
+      "Completa el checkout con pago seguro, claramente identificado."
   },
   {
     title: "Accede al campus",
@@ -48,4 +48,50 @@ export const homeAudience = [
   "Familias y cuidadores",
   "Profesionales de la educación y la salud",
   "Equipos de centros y entidades"
+];
+
+export const homeSocialProof = [
+  { label: "Centros educativos", icon: "school" as const },
+  { label: "Profesionales sanitarios", icon: "health" as const },
+  { label: "Asociaciones", icon: "group" as const },
+  { label: "Familias", icon: "heart" as const }
+];
+
+export const homeTestimonials = [
+  {
+    quote:
+      "La formación es muy práctica y directa. Pude aplicar las estrategias de comunicación con mis alumnos desde la primera semana.",
+    name: "Laura M.",
+    role: "Maestra de Educación Especial",
+    detail: "Centro público, Sevilla"
+  },
+  {
+    quote:
+      "El campus está muy bien organizado. Los recursos del foro y el seguimiento por módulos hacen que no te pierdas en ningún momento.",
+    name: "Carlos R.",
+    role: "Logopeda",
+    detail: "Clínica privada, Madrid"
+  },
+  {
+    quote:
+      "Como familiar de una persona con autismo, encontrar formación rigurosa y accesible a la vez no es fácil. Aquí lo tienen muy bien resuelto.",
+    name: "Ana G.",
+    role: "Familiar",
+    detail: "Córdoba"
+  }
+];
+
+export const homeCampusCallouts = [
+  {
+    label: "Módulos estructurados",
+    description: "Contenido organizado por bloques progresivos con criterios claros de avance."
+  },
+  {
+    label: "Recursos descargables",
+    description: "Materiales, guías y ejercicios prácticos disponibles en tu campus privado."
+  },
+  {
+    label: "Seguimiento en tiempo real",
+    description: "Progreso visible por módulo, con entregas y feedback del docente."
+  }
 ];

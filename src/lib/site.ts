@@ -8,10 +8,10 @@ export const siteConfig = {
   supportEmail: "formacion@autismocordoba.org",
   donateUrl: "https://autismocordoba.org/",
   nav: [
-    { href: "/", label: "Inicio" },
-    { href: "/#home-steps", label: "Cómo funciona" },
     { href: "/cursos", label: "Cursos" },
-    { href: "/registro", label: "Registro" }
+    { href: "/plataforma", label: "Plataforma" },
+    { href: "/#comunidad", label: "Comunidad" },
+    { href: "/soporte", label: "Soporte" }
   ]
 };
 
