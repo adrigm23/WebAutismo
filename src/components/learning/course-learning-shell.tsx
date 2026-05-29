@@ -146,6 +146,7 @@ export function CourseLearningShell({
     [currentModuleResources],
   );
   const currentModulePrimaryMaterial = currentModuleMaterials[0] ?? null;
+  const currentModulePrimaryExercise = currentModuleExercises[0] ?? null;
 
   const primaryResourceTargetId = useMemo(() => {
     if (canModerate) {
@@ -356,7 +357,21 @@ export function CourseLearningShell({
         ? "En progreso"
         : "Listo para empezar";
   const headerPrimaryActionLabel =
-    activeTab === "content" ? "Abrir recursos" : "Ver guia de inicio";
+    canModerate
+      ? activeTab === "content"
+        ? "Abrir recursos"
+        : "Volver al contenido"
+      : activeTab === "content"
+        ? currentModulePrimaryMaterial
+          ? "Abrir material"
+          : currentModulePrimaryExercise
+            ? "Continuar actividad"
+            : "Abrir recursos"
+        : currentModulePrimaryMaterial
+          ? "Continuar leccion"
+          : currentModulePrimaryExercise
+            ? "Continuar actividad"
+            : "Volver al contenido";
   const focusedTaskStatusLabel = focusedStudentExercise
     ? !focusedStudentExercise.viewerSubmission && !focusedStudentExercise.isSubmissionClosed
       ? "Pendiente"
@@ -386,8 +401,44 @@ export function CourseLearningShell({
           courseTitle={course.title}
           fullName={viewerName}
           onPrimaryAction={() => {
+            if (canModerate) {
+              if (activeTab === "content") {
+                handleResourceWorkspaceOpen();
+                return;
+              }
+
+              openWorkspaceTarget("content", "content-current-module");
+              return;
+            }
+
             if (activeTab === "content") {
+              if (currentModulePrimaryMaterial) {
+                handleResourceWorkspaceOpen(
+                  `resource-${currentModulePrimaryMaterial.id}`,
+                );
+                return;
+              }
+
+              if (currentModulePrimaryExercise) {
+                handleResourceWorkspaceOpen(
+                  `resource-${currentModulePrimaryExercise.id}`,
+                );
+                return;
+              }
+
               handleResourceWorkspaceOpen();
+              return;
+            }
+
+            if (currentModulePrimaryMaterial) {
+              openWorkspaceTarget("content", "content-current-module");
+              return;
+            }
+
+            if (currentModulePrimaryExercise) {
+              handleResourceWorkspaceOpen(
+                `resource-${currentModulePrimaryExercise.id}`,
+              );
               return;
             }
 

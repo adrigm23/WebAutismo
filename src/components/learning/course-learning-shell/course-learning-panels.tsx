@@ -99,18 +99,96 @@ type CourseLearningSupportTabProps = {
   forumCategories: LearningShellForumCategory[];
 };
 
+type ActiveLearningContext = {
+  activeTitle: string;
+  activeDescription: string;
+  primaryActionLabel: string;
+  secondaryExerciseLabel: string | null;
+  teacherActiveTitle: string;
+  teacherViewLabel: string;
+  teacherContextSummary: string;
+  teacherContinueDescription: string;
+  teacherContinueCta: string | null;
+  contentPanelTitle: string;
+  contentPanelDescription: string;
+};
+
+function getCurrentLearningContext(input: {
+  currentModulePrimaryMaterial: CampusResourceItem | null;
+  currentModuleExercises: CampusResourceItem[];
+}) {
+  const hasPrimaryLesson = Boolean(input.currentModulePrimaryMaterial);
+  const hasExercise = Boolean(input.currentModuleExercises[0]);
+
+  if (hasPrimaryLesson) {
+    return {
+      activeTitle: "Leccion activa",
+      activeDescription:
+        "Continua desde la leccion activa y mantente dentro del mismo hilo de aprendizaje.",
+      primaryActionLabel: "Continuar leccion",
+      secondaryExerciseLabel: hasExercise ? "Ir a la entrega" : null,
+      teacherActiveTitle: "Leccion activa",
+      teacherViewLabel: "Ver leccion activa",
+      teacherContextSummary: "Seguimiento, materiales, actividades y comunidad.",
+      teacherContinueDescription: hasExercise
+        ? "La actividad evaluable del modulo queda disponible al terminar la leccion."
+        : "Continua desde seguimiento o desde el contenido del modulo.",
+      teacherContinueCta: hasExercise ? "Abrir actividad del modulo" : null,
+      contentPanelTitle: "Contenido de la leccion",
+      contentPanelDescription:
+        "Continua la leccion activa antes de pasar a actividades o materiales.",
+    } satisfies ActiveLearningContext;
+  }
+
+  if (hasExercise) {
+    return {
+      activeTitle: "Actividad activa",
+      activeDescription:
+        "Continua desde la actividad activa y registra tu entrega dentro del mismo recorrido.",
+      primaryActionLabel: "Continuar actividad",
+      secondaryExerciseLabel: null,
+      teacherActiveTitle: "Actividad activa",
+      teacherViewLabel: "Ver actividad activa",
+      teacherContextSummary: "Seguimiento, actividades, materiales y comunidad.",
+      teacherContinueDescription:
+        "Abre la actividad evaluable del modulo y revisa entregas desde el mismo flujo.",
+      teacherContinueCta: "Abrir actividad del modulo",
+      contentPanelTitle: "Actividad del modulo",
+      contentPanelDescription:
+        "Abre la actividad activa y gestiona la entrega dentro del mismo recorrido.",
+    } satisfies ActiveLearningContext;
+  }
+
+  return {
+    activeTitle: "Leccion activa",
+    activeDescription:
+      "Retoma el contenido activo y mantente dentro del mismo hilo de aprendizaje.",
+    primaryActionLabel: "Continuar leccion",
+    secondaryExerciseLabel: null,
+    teacherActiveTitle: "Contenido activo",
+    teacherViewLabel: "Ver contenido activo",
+    teacherContextSummary: "Seguimiento, materiales, actividades y comunidad.",
+    teacherContinueDescription:
+      "Continua desde seguimiento o desde el contenido del modulo.",
+    teacherContinueCta: null,
+    contentPanelTitle: "Contenido de la leccion",
+    contentPanelDescription:
+      "Continua la leccion activa antes de pasar a actividades o materiales.",
+  } satisfies ActiveLearningContext;
+}
+
 export function FocusedTaskIntro(input: {
   courseSlug: string;
   onClearFocus: () => void;
 }) {
   return (
     <SurfaceCard
-      description="Has abierto una tarea concreta para revisar o entregar sin salir del campus."
-      title="Entrega del ejercicio"
+      description="Has abierto una actividad evaluable para revisar o entregar sin salir del campus."
+      title="Entrega de la actividad"
     >
       <div className="flex flex-wrap items-center gap-3">
         <Button onClick={input.onClearFocus} type="button" variant="secondary">
-          Ver todas las tareas
+          Ver todas las actividades
         </Button>
         <ButtonLink
           href={buildCourseContentHref(input.courseSlug)}
@@ -146,6 +224,11 @@ export function CompactLessonHeader(input: {
   onOpenResources: () => void;
   onOpenSupport: () => void;
 }) {
+  const learningContext = getCurrentLearningContext({
+    currentModulePrimaryMaterial: input.currentModulePrimaryMaterial,
+    currentModuleExercises: input.currentModuleExercises,
+  });
+
   if (!input.canModerate) {
     const hasCurrentResources =
       input.currentModuleMaterials.length > 0 || input.currentModuleExercises.length > 0;
@@ -154,24 +237,24 @@ export function CompactLessonHeader(input: {
     );
     const primaryAction = input.currentModulePrimaryMaterial
       ? {
-          label: "Continuar contenido",
+          label: learningContext.primaryActionLabel,
           onClick: input.onOpenCurrentLesson,
         }
       : input.currentModuleExercises[0]
         ? {
-            label: "Abrir tarea",
+            label: learningContext.primaryActionLabel,
             onClick: input.onOpenCurrentExercise,
           }
         : {
-            label: "Ver recurso",
+            label: "Abrir material",
             onClick: input.onOpenResources,
           };
 
     return (
       <SurfaceCard
         className="overflow-hidden border-[var(--color-border-subtle)] bg-[linear-gradient(180deg,rgba(255,253,250,0.98),rgba(223,234,243,0.44))]"
-        description="Continua desde la leccion activa y mantente dentro del mismo hilo de aprendizaje."
-        title="Leccion activa"
+        description={learningContext.activeDescription}
+        title={learningContext.activeTitle}
       >
         <div className="grid gap-5 xl:grid-cols-[minmax(0,1.18fr)_minmax(18rem,0.82fr)]">
           <div className="space-y-5">
@@ -193,7 +276,7 @@ export function CompactLessonHeader(input: {
               <p className="mt-3 max-w-3xl text-body-md text-[var(--color-ink-soft)]">
                 {input.currentModule
                   ? input.currentModule.description
-                  : "Todavia no hay una leccion activa configurada para este curso."}
+                  : "Todavia no hay un contenido activo configurado para este curso."}
               </p>
             </div>
 
@@ -207,12 +290,12 @@ export function CompactLessonHeader(input: {
                   type="button"
                   variant="secondary"
                 >
-                  Abrir tarea
+                  {learningContext.secondaryExerciseLabel ?? "Ir a la entrega"}
                 </Button>
               ) : null}
               {hasCurrentResources ? (
                 <Button onClick={input.onOpenResources} type="button" variant="ghost">
-                  Ver recursos
+                  Ver materiales y actividades
                 </Button>
               ) : null}
             </div>
@@ -222,18 +305,20 @@ export function CompactLessonHeader(input: {
             <SummaryMetric
               detail={
                 input.currentModuleExercises[0]
-                  ? "Abre la actividad cuando termines el contenido."
+                  ? input.currentModulePrimaryMaterial
+                    ? "La actividad del modulo queda lista cuando termines la leccion."
+                    : "Abre la actividad y registra la entrega desde el mismo campus."
                   : "Continua con la secuencia del curso desde la siguiente leccion."
               }
               label="Que sigue"
               value={
                 input.currentModuleExercises[0]
-                  ? `${input.currentModuleExercises.length} tarea${input.currentModuleExercises.length === 1 ? "" : "s"}`
-                  : "Sin tarea inmediata"
+                  ? `${input.currentModuleExercises.length} actividades`
+                  : "Sin actividad inmediata"
               }
             />
             <SummaryMetric
-              detail="Materiales y ejercicios visibles sin salir del campus."
+              detail="Materiales y actividades visibles sin salir del campus."
               label="Recorrido"
               value={
                 input.currentModule
@@ -266,7 +351,7 @@ export function CompactLessonHeader(input: {
               Revisa lo pendiente
             </h2>
             <p className="mt-2 text-body-sm text-[var(--color-muted)]">
-              Seguimiento, recursos, comunidad y leccion activa.
+              {learningContext.teacherContextSummary}
             </p>
           </div>
           <div className="flex flex-wrap gap-2.5">
@@ -286,38 +371,38 @@ export function CompactLessonHeader(input: {
               Abrir comunidad
             </Button>
             <Button onClick={input.onOpenCurrentLesson} type="button" variant="ghost">
-              Ver leccion activa
+              {learningContext.teacherViewLabel}
             </Button>
           </div>
         </div>
 
         <div className="space-y-3">
           <div className="rounded-[var(--radius-lg)] border border-[var(--color-border-subtle)] bg-[var(--color-bg-subtle)] p-4">
-            <p className="text-meta-xs font-semibold text-[var(--color-muted)]">Leccion activa</p>
+            <p className="text-meta-xs font-semibold text-[var(--color-muted)]">
+              {learningContext.teacherActiveTitle}
+            </p>
             <p className="mt-3 text-heading-md font-semibold text-[var(--color-ink)]">
               {input.currentModule ? input.currentModule.title : input.course.title}
             </p>
             <p className="mt-2 text-body-sm text-[var(--color-muted)]">
               {input.currentModule
-                ? `${input.currentModule.estimatedTime} | ${input.currentModuleMaterials.length} materiales | ${input.currentModuleExercises.length} tareas.`
+                ? `${input.currentModule.estimatedTime} | ${input.currentModuleMaterials.length} materiales | ${input.currentModuleExercises.length} actividades.`
                 : "Todavia no hay un modulo activo configurado para este curso."}
             </p>
           </div>
           <div className="rounded-[var(--radius-lg)] border border-[var(--color-border-subtle)] bg-white p-4">
             <p className="text-meta-xs font-semibold text-[var(--color-muted)]">Donde continuar</p>
             <p className="mt-2 text-body-sm text-[var(--color-muted)]">
-              {input.currentModuleExercises[0]
-                ? "Abre la tarea del modulo desde recursos o desde el contenido."
-                : "Continua desde seguimiento o desde el contenido del modulo."}
+              {learningContext.teacherContinueDescription}
             </p>
-            {input.currentModuleExercises[0] ? (
+            {learningContext.teacherContinueCta ? (
               <div className="mt-4">
                 <Button
                   onClick={input.onOpenCurrentExercise}
                   type="button"
                   variant="secondary"
                 >
-                  Abrir tarea del modulo
+                  {learningContext.teacherContinueCta}
                 </Button>
               </div>
             ) : null}
@@ -342,17 +427,21 @@ export function CourseLearningContentTab({
   onSelectModule,
 }: CourseLearningContentTabProps) {
   const isStudentLessonFirst = !canModerate;
+  const learningContext = getCurrentLearningContext({
+    currentModulePrimaryMaterial,
+    currentModuleExercises,
+  });
 
   return (
     <>
       <SurfaceCard
         description={
           canModerate
-            ? "Contenido y tareas del modulo activo en el mismo recorrido."
-            : "Continua la leccion activa antes de pasar a tareas o recursos."
+            ? "Contenido y actividades del modulo activo en el mismo recorrido."
+            : learningContext.contentPanelDescription
         }
         id="content-current-module"
-        title={canModerate ? "Contenido del modulo" : "Contenido de la leccion"}
+        title={canModerate ? "Contenido del modulo" : learningContext.contentPanelTitle}
       >
         {currentModule ? (
           <div className="space-y-5">
@@ -383,7 +472,7 @@ export function CourseLearningContentTab({
                   type="button"
                   variant="secondary"
                 >
-                  Ver recurso principal
+                  Abrir material principal
                 </Button>
               ) : null}
               {currentModuleExercises[0] ? (
@@ -393,7 +482,7 @@ export function CourseLearningContentTab({
                   }
                   type="button"
                 >
-                  {canModerate ? "Abrir tarea del modulo" : "Abrir tarea"}
+                  {canModerate ? "Abrir actividad del modulo" : "Ir a la entrega"}
                 </Button>
               ) : null}
             </div>
@@ -435,12 +524,12 @@ export function CourseLearningContentTab({
                         : !resource.viewerSubmission
                           ? "Todavia no has registrado tu entrega en esta actividad."
                           : resource.viewerSubmission.status === "CHANGES_REQUESTED"
-                            ? "Hay cambios solicitados. Abre la tarea para revisar el feedback y enviar una nueva version."
+                            ? "Hay cambios solicitados. Abre la actividad para revisar el feedback y enviar una nueva version."
                             : resource.viewerSubmission.status === "SUBMITTED"
                               ? "La entrega ya esta enviada y espera revision docente."
                               : "La actividad ya tiene revision registrada dentro del campus."
                     }
-                    ctaLabel={canModerate ? "Abrir tarea del modulo" : "Abrir entrega"}
+                    ctaLabel={canModerate ? "Abrir actividad del modulo" : "Ir a la entrega"}
                     key={resource.id}
                     onClick={() => onOpenResourceWorkspace(`resource-${resource.id}`)}
                     title={resource.title}
@@ -451,7 +540,7 @@ export function CourseLearningContentTab({
                   <EmptyState
                     className="px-5 py-6"
                     description="Cuando se publiquen recursos o actividades para este modulo, apareceran aqui dentro de la misma secuencia."
-                    title="Este modulo todavia no tiene materiales ni tareas ligados de forma explicita."
+                    title="Este modulo todavia no tiene materiales ni actividades ligadas de forma explicita."
                     tone="subtle"
                   />
                 ) : null}
@@ -507,7 +596,7 @@ export function CourseLearningContentTab({
                 ? `${module.estimatedTime} | ${module.resourcesSummary}`
                 : `${module.estimatedTime} | ${module.resourcesSummary}${
                     moduleResources.length > 0
-                      ? ` | ${moduleMaterialsCount} materiales | ${moduleExercisesCount} tareas`
+                      ? ` | ${moduleMaterialsCount} materiales | ${moduleExercisesCount} actividades`
                       : ""
                   }`;
 
@@ -585,13 +674,13 @@ export function CourseLearningResourcesTab({
       className="scroll-mt-36"
       description={
         isFocusedTaskWorkspace
-          ? "Entrega, feedback y estado en la misma pagina."
+          ? "Actividad, entrega, feedback y estado dentro de la misma pagina."
           : canModerate
-            ? "Materiales, tareas y revisiones sin salir del curso."
-            : "Abre una tarea o consulta materiales sin salir del campus."
+            ? "Materiales, actividades y revisiones sin salir del curso."
+            : "Abre materiales o continua actividades evaluables sin salir del campus."
       }
       id="resources-panel"
-      title={isFocusedTaskWorkspace ? "Tarea abierta" : "Recursos"}
+      title={isFocusedTaskWorkspace ? "Actividad abierta" : "Recursos"}
     >
       <DynamicCourseResourceManager
         canModerate={canModerate}
@@ -850,7 +939,7 @@ function StudentResourceRow(input: {
             {input.resource.isExternal ? "Abrir" : "Descargar"}
           </span>
         ) : (
-          <span className="hidden text-sm sm:inline">Ver</span>
+          <span className="hidden text-sm sm:inline">Ir a la entrega</span>
         )}
         {input.resource.isExternal ? (
           <ArrowUpRight className="h-5 w-5 shrink-0" />
