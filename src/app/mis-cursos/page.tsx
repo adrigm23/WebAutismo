@@ -496,7 +496,11 @@ function StepIconShell(input: {
   );
 }
 
-export default async function MyCoursesPage() {
+export default async function MyCoursesPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
   const user = await requireUser("/mis-cursos");
   const spaces = await getUserCourseSpaces({
     userId: user.id,
@@ -574,10 +578,6 @@ export default async function MyCoursesPage() {
   const recentResources = buildRecentManagedResources({
     resourcesByCourse: studentResourcesByCourse,
   });
-  const courseRows =
-    studentCourses.length > 1 && primaryStudentCourse
-      ? studentCourses.filter((course) => course.space.course.slug !== primaryStudentCourse.space.course.slug)
-      : studentCourses;
   const roleLabel = getRoleLabel({
     studentCount: studentCourses.length,
     staffCount: teacherCourses.length,
@@ -619,6 +619,11 @@ export default async function MyCoursesPage() {
       : teacherCourses.length
         ? "Aquí está la actividad de tus cursos."
         : "Bienvenido de nuevo al campus.";
+  const { tab } = await searchParams;
+  const activeTab = tab === "completados" ? "completados" : "en-curso";
+  const inProgressCourses = studentCourses.filter((c) => !c.progress.isCompleted);
+  const completedCourses = studentCourses.filter((c) => c.progress.isCompleted);
+  const tabCourses = activeTab === "completados" ? completedCourses : inProgressCourses;
 
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(223,234,243,0.38),transparent_26%),linear-gradient(180deg,#faf7f2_0%,#f7f4ef_54%,#fbf9f5_100%)] pb-14">
@@ -743,119 +748,165 @@ export default async function MyCoursesPage() {
 
         <section className="mt-10 grid gap-8 xl:grid-cols-[minmax(0,1fr)_24rem] xl:items-start">
           <div>
-            <div className="flex items-end justify-between gap-4">
-              <div>
-                <h2 className="font-premium text-display-md font-semibold text-[var(--color-ink)]">
-                  {studentCourses.length ? "Tus cursos activos" : "Tus cursos asignados"}
-                </h2>
-                <p className="mt-2 text-body-sm text-[var(--color-ink-soft)]">
-                  {studentCourses.length
-                    ? "Recorridos activos con acceso directo al modulo adecuado y una lectura compacta del progreso."
-                    : teacherCourses.length
-                      ? "Cursos en los que ahora mismo tienes operativa docente sin convertir esta vista en un panel administrativo."
-                      : "Tu zona privada mostrara aqui los cursos que actives en el campus."}
-                </p>
-              </div>
+            {/* Section heading */}
+            <div>
+              <h2 className="font-premium text-display-md font-semibold text-[var(--color-ink)]">
+                Tu biblioteca de formación
+              </h2>
+              <p className="mt-1.5 text-body-sm text-[var(--color-ink-soft)]">
+                {studentCourses.length
+                  ? `${studentCourses.length} ${studentCourses.length === 1 ? "recorrido activo" : "recorridos activos"} en tu campus privado.`
+                  : teacherCourses.length
+                    ? "Cursos asignados como docente en tu zona privada."
+                    : "Tu zona privada mostrará aquí los cursos que actives."}
+              </p>
             </div>
 
-            <div className="mt-5 border-t border-[rgba(22,60,88,0.1)]">
-              {studentCourses.length ? (
-                (courseRows.length ? courseRows : studentCourses).map((course) => {
-                  const nextOpenModule = getNextModule(course);
-
-                  return (
-                    <Link
-                      className="group -mx-3 block rounded-[1.5rem] border-b border-[rgba(22,60,88,0.07)] px-3 py-5 transition hover:border-transparent hover:bg-white/70 hover:shadow-[var(--shadow-soft)] sm:py-6"
-                      href={buildCourseContentHref(course.space.course.slug, {
-                        moduleIndex: nextOpenModule?.index ?? 0,
-                      })}
-                      key={course.space.course.slug}
-                    >
-                      <article className="grid gap-4 sm:grid-cols-[11rem_minmax(0,1fr)] sm:items-center">
-                        <CourseArtwork
-                          className="h-28 w-full rounded-[1.2rem] border-[rgba(255,255,255,0.3)] sm:h-32"
-                          course={course.space.course}
-                          variant="thumb"
-                        />
-
-                        <div className="min-w-0">
-                          <div className="flex items-start justify-between gap-4">
-                            <div className="min-w-0">
-                              <h3 className="font-premium text-heading-lg font-semibold text-[var(--color-ink)] transition group-hover:text-[var(--color-primary)]">
-                                {course.space.course.title}
-                              </h3>
-                              <p className="mt-2 text-body-sm text-[var(--color-ink-soft)]">
-                                {getStudentCourseMeta(course)}
-                              </p>
-                            </div>
-                            <span className="hidden text-sm font-medium text-[var(--color-ink-soft)] sm:block">
-                              {course.progress.completionRate}%
-                            </span>
-                          </div>
-
-                          <div className="mt-4 flex items-center gap-3">
-                            <ProgressBar className="flex-1" value={course.progress.completionRate} />
-                            <span className="text-sm font-medium text-[var(--color-ink-soft)] sm:hidden">
-                              {course.progress.completionRate}%
-                            </span>
-                          </div>
-
-                          <p className="mt-3 text-sm text-[var(--color-ink-soft)]">
-                            {getStudentCourseDescription(course)}
-                          </p>
-                        </div>
-                      </article>
-                    </Link>
-                  );
-                })
-              ) : teacherCourses.length ? (
-                teacherCourses.map((course) => (
+            {/* Tabs — only for students */}
+            {studentCourses.length > 0 && (
+              <nav
+                aria-label="Filtrar cursos"
+                className="mt-6 flex w-fit gap-0.5 rounded-[var(--radius-md)] border border-[rgba(22,60,88,0.07)] bg-[var(--color-surface-muted)] p-1"
+              >
+                {([
+                  { value: "en-curso", label: "En curso", count: inProgressCourses.length },
+                  { value: "completados", label: "Completados", count: completedCourses.length },
+                ] as const).map((t) => (
                   <Link
-                    className="group -mx-3 block rounded-[1.5rem] border-b border-[rgba(22,60,88,0.07)] px-3 py-5 transition hover:border-transparent hover:bg-white/70 hover:shadow-[var(--shadow-soft)] sm:py-6"
+                    aria-current={activeTab === t.value ? "page" : undefined}
+                    className={cn(
+                      "flex items-center gap-2 rounded-[var(--radius-sm)] px-4 py-2 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-1",
+                      activeTab === t.value
+                        ? "bg-white shadow-[var(--shadow-xs)] text-[var(--color-ink)]"
+                        : "text-[var(--color-muted)] hover:text-[var(--color-ink-soft)]",
+                    )}
+                    href={`/mis-cursos?tab=${t.value}`}
+                    key={t.value}
+                  >
+                    {t.label}
+                    {t.count > 0 && (
+                      <span
+                        className={cn(
+                          "rounded-full px-1.5 py-0.5 text-[0.62rem] font-semibold leading-none",
+                          activeTab === t.value
+                            ? "bg-[var(--color-brand-soft)] text-[var(--color-primary)]"
+                            : "bg-[rgba(22,60,88,0.07)] text-[var(--color-muted)]",
+                        )}
+                      >
+                        {t.count}
+                      </span>
+                    )}
+                  </Link>
+                ))}
+              </nav>
+            )}
+
+            {/* Course card grid */}
+            {studentCourses.length > 0 ? (
+              tabCourses.length > 0 ? (
+                <div className="mt-6 grid gap-5 sm:grid-cols-2">
+                  {tabCourses.map((course) => {
+                    const nextOpenModule = getNextModule(course);
+                    return (
+                      <Link
+                        className="group flex flex-col overflow-hidden rounded-[1.75rem] border border-[rgba(22,60,88,0.08)] bg-white/90 shadow-[var(--shadow-soft)] transition hover:-translate-y-0.5 hover:shadow-[var(--shadow-medium)]"
+                        href={buildCourseContentHref(course.space.course.slug, {
+                          moduleIndex: nextOpenModule?.index ?? 0,
+                        })}
+                        key={course.space.course.slug}
+                      >
+                        <CourseArtwork
+                          className="h-44 w-full rounded-none border-0 sm:h-48"
+                          course={course.space.course}
+                          variant="card"
+                        />
+                        <div className="flex flex-1 flex-col gap-4 p-5">
+                          <div className="flex-1">
+                            {course.progress.isCompleted && (
+                              <Badge className="mb-2" tone="success">Completado</Badge>
+                            )}
+                            <h3 className="font-premium text-heading-md font-semibold text-[var(--color-ink)] transition group-hover:text-[var(--color-primary)]">
+                              {course.space.course.title}
+                            </h3>
+                            <p className="mt-1.5 text-body-sm text-[var(--color-ink-soft)]">
+                              {getStudentCourseMeta(course)}
+                            </p>
+                          </div>
+                          <div>
+                            <div className="mb-2 flex items-center justify-between">
+                              <span className="text-sm text-[var(--color-muted)]">
+                                {getStudentCourseDescription(course)}
+                              </span>
+                              <span className="text-sm font-semibold text-[var(--color-primary)]">
+                                {course.progress.completionRate}%
+                              </span>
+                            </div>
+                            <ProgressBar value={course.progress.completionRate} />
+                          </div>
+                        </div>
+                      </Link>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="mt-8 rounded-[1.5rem] border border-[rgba(22,60,88,0.08)] bg-white/60 px-6 py-10 text-center">
+                  <p className="font-premium text-heading-md font-semibold text-[var(--color-ink)]">
+                    {activeTab === "completados" ? "Aún no has completado ningún curso" : "No hay cursos en progreso"}
+                  </p>
+                  <p className="mx-auto mt-2 max-w-xs text-body-sm text-[var(--color-ink-soft)]">
+                    {activeTab === "completados"
+                      ? "Cuando termines un recorrido, aparecerá aquí."
+                      : "Tus cursos activos aparecerán en esta sección."}
+                  </p>
+                </div>
+              )
+            ) : teacherCourses.length > 0 ? (
+              <div className="mt-6 grid gap-5 sm:grid-cols-2">
+                {teacherCourses.map((course) => (
+                  <Link
+                    className="group flex flex-col overflow-hidden rounded-[1.75rem] border border-[rgba(22,60,88,0.08)] bg-white/90 shadow-[var(--shadow-soft)] transition hover:-translate-y-0.5 hover:shadow-[var(--shadow-medium)]"
                     href={course.teachingHref}
                     key={course.space.course.slug}
                   >
-                    <article className="grid gap-4 sm:grid-cols-[11rem_minmax(0,1fr)] sm:items-center">
-                      <CourseArtwork
-                        className="h-28 w-full rounded-[1.2rem] border-[rgba(255,255,255,0.3)] sm:h-32"
-                        course={course.space.course}
-                        variant="thumb"
-                      />
-
-                      <div className="min-w-0">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <Badge tone="info">Docencia</Badge>
-                          <Badge tone="outline">
-                            {course.space.course.activeEdition?.label ?? "Curso asignado"}
-                          </Badge>
-                        </div>
-                        <h3 className="font-premium mt-3 text-heading-lg font-semibold text-[var(--color-ink)] transition group-hover:text-[var(--color-primary)]">
-                          {course.space.course.title}
-                        </h3>
-                        <p className="mt-2 text-body-sm text-[var(--color-ink-soft)]">
-                          Abre seguimiento, campus y foro desde el mismo curso sin duplicar operativa.
-                        </p>
-                        <p className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-[var(--color-primary)]">
-                          Abrir seguimiento
-                          <ArrowRight className="h-4 w-4" />
-                        </p>
+                    <CourseArtwork
+                      className="h-44 w-full rounded-none border-0 sm:h-48"
+                      course={course.space.course}
+                      variant="card"
+                    />
+                    <div className="p-5">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Badge tone="info">Docencia</Badge>
+                        <Badge tone="outline">
+                          {course.space.course.activeEdition?.label ?? "Curso asignado"}
+                        </Badge>
                       </div>
-                    </article>
+                      <h3 className="font-premium mt-3 text-heading-md font-semibold text-[var(--color-ink)] transition group-hover:text-[var(--color-primary)]">
+                        {course.space.course.title}
+                      </h3>
+                      <p className="mt-2 text-body-sm text-[var(--color-ink-soft)]">
+                        Abre seguimiento, campus y foro desde el mismo curso.
+                      </p>
+                      <p className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-[var(--color-primary)]">
+                        Abrir seguimiento
+                        <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
+                      </p>
+                    </div>
                   </Link>
-                ))
-              ) : (
-                <div className="py-8">
-                  <p className="text-body-sm text-[var(--color-ink-soft)]">
-                    En cuanto actives una matricula, este listado se convertira en tu home operativa del campus.
-                  </p>
-                  <div className="mt-5">
-                    <ButtonLink href="/cursos" variant="neutral">
-                      Ver catalogo
-                    </ButtonLink>
-                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="mt-8 rounded-[1.5rem] border border-[rgba(22,60,88,0.08)] bg-white/60 px-6 py-10 text-center">
+                <p className="font-premium text-heading-md font-semibold text-[var(--color-ink)]">
+                  Tu biblioteca está vacía por ahora
+                </p>
+                <p className="mx-auto mt-2 max-w-xs text-body-sm text-[var(--color-ink-soft)]">
+                  Activa tu primera matrícula para empezar tu recorrido de aprendizaje.
+                </p>
+                <div className="mt-6">
+                  <ButtonLink href="/cursos">Explorar catálogo</ButtonLink>
                 </div>
-              )}
-            </div>
+              </div>
+            )}
           </div>
 
           <aside className="rounded-[1.75rem] border border-[rgba(22,60,88,0.08)] bg-white/88 p-5 shadow-[var(--shadow-soft)] sm:p-6 xl:sticky xl:top-28">
