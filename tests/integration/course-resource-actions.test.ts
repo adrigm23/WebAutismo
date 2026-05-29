@@ -1,5 +1,3 @@
-import { MAX_STORED_ASSET_SIZE_BYTES } from "@/lib/file-security";
-
 const redirectMock = vi.fn((target: string) => {
   throw new Error(`REDIRECT:${target}`);
 });
@@ -19,11 +17,6 @@ vi.mock("next/cache", () => ({
 
 vi.mock("next/navigation", () => ({
   redirect: redirectMock
-}));
-
-vi.mock("next/dist/client/components/redirect-error", () => ({
-  isRedirectError: (error: unknown) =>
-    error instanceof Error && error.message.startsWith("REDIRECT:")
 }));
 
 vi.mock("@/lib/auth", () => ({
@@ -98,7 +91,9 @@ describe("course resource actions", () => {
     formData.set("type", "MATERIAL");
     formData.set("source", "FILE");
     formData.set("title", "Guia PDF");
-    formData.set("file", new File(["pdf"], "guia.pdf", { type: "application/pdf" }));
+    formData.set("storageKey", "course-resources/course-1/some-file.pdf");
+    formData.set("mimeType", "application/pdf");
+    formData.set("sizeInBytes", "12345");
 
     const result = await createCourseResourceAction({}, formData);
 
@@ -109,7 +104,7 @@ describe("course resource actions", () => {
     expect(redirectMock).not.toHaveBeenCalled();
   });
 
-  test("redirects to the created resource after a successful publish", async () => {
+  test("returns success and redirectUrl after a successful publish", async () => {
     createCourseResourceMock.mockResolvedValue({
       id: "res-1",
       title: "Guia PDF",
@@ -125,11 +120,16 @@ describe("course resource actions", () => {
     formData.set("type", "MATERIAL");
     formData.set("source", "FILE");
     formData.set("title", "Guia PDF");
-    formData.set("file", new File(["pdf"], "guia.pdf", { type: "application/pdf" }));
+    formData.set("storageKey", "course-resources/course-1/some-file.pdf");
+    formData.set("mimeType", "application/pdf");
+    formData.set("sizeInBytes", "12345");
 
-    await expect(createCourseResourceAction({}, formData)).rejects.toThrow(
-      "REDIRECT:/mis-cursos/curso-demo?tab=resources&resource=res-1&resourcePublished=1#resource-res-1"
-    );
+    const result = await createCourseResourceAction({}, formData);
+
+    expect(result).toEqual({
+      success: "Recurso publicado con exito.",
+      redirectUrl: "/mis-cursos/curso-demo?tab=resources&resource=res-1&resourcePublished=1#resource-res-1"
+    });
     expect(revalidatePathMock).toHaveBeenCalledWith("/mis-cursos/curso-demo");
   });
 
@@ -151,36 +151,33 @@ describe("course resource actions", () => {
     formData.set("title", "Bibliografia");
     formData.set("linkUrl", "https://example.com/guia");
 
-    await expect(createCourseResourceAction({}, formData)).rejects.toThrow(
-      "REDIRECT:/mis-cursos/curso-demo?tab=resources&resource=res-link-1&resourcePublished=1#resource-res-link-1"
-    );
+    const result = await createCourseResourceAction({}, formData);
+
+    expect(result).toEqual({
+      success: "Recurso publicado con exito.",
+      redirectUrl: "/mis-cursos/curso-demo?tab=resources&resource=res-link-1&resourcePublished=1#resource-res-link-1"
+    });
     expect(createCourseResourceMock).toHaveBeenCalledWith(
       expect.objectContaining({
-        file: null,
+        storageKey: null,
         linkUrl: "https://example.com/guia",
         source: "LINK"
       })
     );
   });
 
-  test("returns a controlled error when the uploaded file exceeds the app size limit", async () => {
+  test("returns a controlled error when the uploaded file is missing", async () => {
     const { createCourseResourceAction } = await import("@/actions/course-resources");
     const formData = new FormData();
     formData.set("courseSlug", "curso-demo");
     formData.set("type", "MATERIAL");
     formData.set("source", "FILE");
     formData.set("title", "Guia PDF");
-    formData.set(
-      "file",
-      new File([new Uint8Array(MAX_STORED_ASSET_SIZE_BYTES + 1)], "guia.pdf", {
-        type: "application/pdf"
-      })
-    );
 
     const result = await createCourseResourceAction({}, formData);
 
     expect(result).toEqual({
-      error: "El archivo supera el tamano maximo permitido de 10 MB."
+      error: "Sube un archivo antes de publicar el recurso."
     });
     expect(createCourseResourceMock).not.toHaveBeenCalled();
     expect(redirectMock).not.toHaveBeenCalled();
