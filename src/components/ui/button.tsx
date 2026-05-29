@@ -8,6 +8,8 @@ const baseStyles =
 const variants = {
   primary:
     "[--button-fg:var(--color-surface-elevated)] [--button-fg-hover:var(--color-surface-elevated)] [--button-fg-disabled:color-mix(in_srgb,var(--color-surface-elevated)_78%,transparent)] bg-[linear-gradient(180deg,var(--color-primary)_0%,var(--color-primary-strong)_100%)] shadow-[0_8px_18px_rgba(22,60,88,0.14)] hover:-translate-y-[1px] hover:shadow-[0_12px_22px_rgba(22,60,88,0.17)] focus-visible:ring-[var(--color-primary)]",
+  inverse:
+    "[--button-fg:var(--color-surface-elevated)] [--button-fg-hover:var(--color-surface-elevated)] [--button-fg-disabled:color-mix(in_srgb,var(--color-surface-elevated)_78%,transparent)] bg-[var(--color-ink)] shadow-[0_14px_28px_rgba(23,32,44,0.14)] hover:-translate-y-[1px] hover:bg-[var(--color-primary-strong)] focus-visible:ring-[var(--color-primary)]",
   neutral:
     "[--button-fg:var(--color-ink)] [--button-fg-hover:var(--color-ink)] border border-[var(--color-border)] bg-[color:var(--color-surface-elevated)] shadow-[var(--shadow-inset-soft)] hover:-translate-y-[1px] hover:border-[var(--color-border-strong)] hover:bg-white focus-visible:ring-[var(--color-primary)]",
   subtle:
