@@ -64,37 +64,38 @@ export async function HomeLanding() {
       {/* CTA final */}
       <section
         aria-labelledby="home-cta-heading"
-        className="site-container py-16 sm:pb-24"
+        className="site-container py-14 sm:pb-24"
       >
-        <div className="rounded-[var(--radius-xl)] bg-[linear-gradient(135deg,var(--color-primary)_0%,var(--color-brand-strong)_100%)] px-8 py-12 text-center sm:px-12">
+        <div className="rounded-[var(--radius-xl)] bg-[linear-gradient(135deg,var(--color-primary)_0%,var(--color-brand-strong)_100%)] px-6 py-12 text-center sm:px-12">
           <p className="text-[0.7rem] font-semibold uppercase tracking-[0.2em] text-[rgba(255,255,255,0.65)]">
             Empieza hoy
           </p>
           <h2
-            className="mt-3 text-balance text-3xl font-semibold tracking-[-0.04em] text-white sm:text-4xl"
+            className="mt-3 text-balance text-2xl font-semibold tracking-[-0.04em] text-white sm:text-4xl"
             id="home-cta-heading"
           >
-            Formación que marca la diferencia
+            Empieza hoy tu formación especializada
           </h2>
           <p className="mx-auto mt-4 max-w-xl text-base leading-7 text-[rgba(255,255,255,0.75)]">
-            Accede a cursos especializados, una comunidad activa y certificados
-            reconocidos. Todo en un campus privado diseñado para profesionales.
+            Accede a cursos, recursos, comunidad y certificados diseñados
+            para profesionales y familias.
           </p>
           <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <ButtonLink
-              className="min-w-[11rem] justify-center"
+              className="w-full justify-center sm:w-auto sm:min-w-[11rem]"
               href="/cursos"
               variant="inverse"
             >
               Explorar cursos
               <ArrowRight aria-hidden className="ml-2 h-4 w-4" />
             </ButtonLink>
-            <Link
-              className="inline-flex min-h-11 items-center text-sm font-semibold text-white underline-offset-4 transition hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-primary)]"
-              href="/acceder"
+            <ButtonLink
+              className="w-full justify-center sm:w-auto [--button-fg:white] [--button-fg-hover:white] border-white/30 bg-white/10 hover:bg-white/20"
+              href="/registro"
+              variant="neutral"
             >
-              Acceder al campus
-            </Link>
+              Crear cuenta
+            </ButtonLink>
           </div>
         </div>
       </section>

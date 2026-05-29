@@ -41,7 +41,7 @@ export function HomeCampusInside() {
   return (
     <section
       aria-labelledby="home-campus-inside-heading"
-      className="border-t border-[rgba(12,113,195,0.08)] py-16 sm:py-24"
+      className="border-t border-[rgba(12,113,195,0.08)] py-14 sm:py-24"
     >
       <div className="site-container">
         <HomeSectionHeader
@@ -52,15 +52,15 @@ export function HomeCampusInside() {
           title="Todo lo que necesitas en un solo lugar"
         />
 
-        <div className="mt-12 grid gap-8 lg:grid-cols-[1fr_1.6fr] lg:items-start">
+        <div className="mt-10 grid gap-8 lg:grid-cols-[1fr_1.6fr] lg:items-start">
           {/* Callouts */}
-          <ul className="space-y-5">
+          <ul className="space-y-4">
             {homeCampusCallouts.map((item, i) => (
               <li
                 key={item.label}
-                className="flex gap-4 rounded-[var(--radius-lg)] border border-[var(--color-border-subtle)] bg-white p-5 shadow-[var(--shadow-soft)]"
+                className="flex gap-4 rounded-[var(--radius-lg)] border border-[var(--color-border-subtle)] bg-white p-4 shadow-[var(--shadow-soft)] sm:p-5"
               >
-                <span className="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-[var(--radius-md)] bg-[var(--color-brand-soft)] text-[var(--color-primary)] text-sm font-bold">
+                <span className="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-[var(--radius-md)] bg-[var(--color-brand-soft)] text-sm font-bold text-[var(--color-primary)]">
                   {i + 1}
                 </span>
                 <div>
@@ -83,32 +83,34 @@ export function HomeCampusInside() {
                   <span className="h-2.5 w-2.5 rounded-full bg-[color-mix(in_srgb,var(--color-warning-soft)_70%,var(--color-accent-warm)_30%)]" />
                   <span className="h-2.5 w-2.5 rounded-full bg-[color-mix(in_srgb,var(--color-success-soft)_70%,var(--color-success)_30%)]" />
                 </div>
-                <span className="flex-1 rounded-[var(--radius-sm)] bg-[var(--color-surface-muted)] px-3 py-1 text-[0.68rem] text-[var(--color-muted)]">
-                  campus.autismocordoba.org/mis-cursos/comunicacion-funcional
+                <span className="min-w-0 flex-1 truncate rounded-[var(--radius-sm)] bg-[var(--color-surface-muted)] px-3 py-1 text-[0.68rem] text-[var(--color-muted)]">
+                  campus.autismocordoba.org · comunicacion-funcional
                 </span>
               </div>
 
-              {/* Tabs */}
-              <div className="flex border-b border-[var(--color-border-subtle)] bg-[var(--color-bg-subtle)] px-4">
-                {["Materiales", "Ejercicios", "Comunidad", "Seguimiento"].map(
-                  (tab, i) => (
-                    <button
-                      key={tab}
-                      type="button"
-                      className={`px-3.5 py-3 text-[0.72rem] font-medium transition ${
-                        i === 0
-                          ? "border-b-2 border-[var(--color-primary)] text-[var(--color-primary)]"
-                          : "text-[var(--color-muted)]"
-                      }`}
-                    >
-                      {tab}
-                    </button>
-                  )
-                )}
+              {/* Tabs — scrollable on narrow screens */}
+              <div className="overflow-x-auto border-b border-[var(--color-border-subtle)] bg-[var(--color-bg-subtle)]">
+                <div className="flex min-w-max px-4">
+                  {["Materiales", "Ejercicios", "Comunidad", "Seguimiento"].map(
+                    (tab, i) => (
+                      <button
+                        key={tab}
+                        type="button"
+                        className={`px-3.5 py-3 text-[0.72rem] font-medium transition ${
+                          i === 0
+                            ? "border-b-2 border-[var(--color-primary)] text-[var(--color-primary)]"
+                            : "text-[var(--color-muted)]"
+                        }`}
+                      >
+                        {tab}
+                      </button>
+                    )
+                  )}
+                </div>
               </div>
 
               {/* Body */}
-              <div className="grid gap-4 p-5 sm:grid-cols-[11rem_1fr]">
+              <div className="grid gap-4 p-4 sm:grid-cols-[11rem_1fr] sm:p-5">
                 {/* Module list */}
                 <div>
                   <p className="mb-2 text-[0.6rem] font-semibold uppercase tracking-[0.14em] text-[var(--color-muted)]">

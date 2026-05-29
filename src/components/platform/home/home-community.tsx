@@ -90,12 +90,12 @@ export function HomeCommunity() {
               </div>
             </div>
 
-            {/* Messages */}
+            {/* Messages — 3rd reply hidden on small screens */}
             <div className="divide-y divide-[var(--color-border-subtle)]">
-              {mockThread.replies.map((reply) => (
+              {mockThread.replies.map((reply, idx) => (
                 <div
                   key={reply.author}
-                  className={`px-5 py-4 ${reply.isTeacher ? "bg-[var(--color-brand-soft)]" : ""}`}
+                  className={`px-5 py-4 ${reply.isTeacher ? "bg-[var(--color-brand-soft)]" : ""} ${idx === 2 ? "hidden sm:block" : ""}`}
                 >
                   <div className="mb-2 flex items-center gap-2">
                     <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-[var(--color-surface-muted)] text-[0.6rem] font-bold text-[var(--color-ink-soft)]">
