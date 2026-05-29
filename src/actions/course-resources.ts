@@ -255,8 +255,9 @@ export async function createCourseResourceAction(
     }
   }
 
+  let resource;
   try {
-    const resource = await createCourseResource({
+    resource = await createCourseResource({
       courseId: course.id,
       moduleId,
       createdById: user.id,
@@ -269,7 +270,17 @@ export async function createCourseResourceAction(
       passingScore,
       file: parsed.data.source === "FILE" && file instanceof File ? file : null
     });
+  } catch (error) {
+    if (isRedirectSignal(error)) {
+      throw error;
+    }
 
+    return {
+      error: getCourseResourceActionError(error, "No se ha podido publicar el recurso.")
+    };
+  }
+
+  try {
     await writeAuditLogSafely({
       actorId: user.id,
       action: "COURSE_RESOURCE_CREATED",
@@ -292,16 +303,18 @@ export async function createCourseResourceAction(
     if (resource.type === "EXERCISE") {
       revalidateCourseTrackingView(course.slug);
     }
-    redirect(buildPublishedCourseResourceHref(course.slug, resource.id));
   } catch (error) {
     if (isRedirectSignal(error)) {
       throw error;
     }
 
-    return {
-      error: getCourseResourceActionError(error, "No se ha podido publicar el recurso.")
-    };
+    captureOperationalWarning("Post-resource-creation operations failed, but resource was created successfully.", {
+      error: error instanceof Error ? error : new Error(String(error)),
+      resourceId: resource.id
+    });
   }
+
+  redirect(buildPublishedCourseResourceHref(course.slug, resource.id));
 }
 
 export async function deleteCourseResourceAction(formData: FormData) {

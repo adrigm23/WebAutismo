@@ -747,7 +747,6 @@ export function CourseResourceManager({
           >
             <input name="courseSlug" type="hidden" value={course.slug} />
             <input name="source" type="hidden" value={source} />
-            <input name="origin" type="hidden" value={source} />
 
             <div className="grid gap-4 md:grid-cols-2">
               <label className="block space-y-1.5">

@@ -402,18 +402,37 @@ export async function createCourseResource(input: {
       throw new Error("Selecciona un archivo valido.");
     }
 
-    assertObjectStorageWriteReady();
+    try {
+      assertObjectStorageWriteReady();
+    } catch (error) {
+      throw new Error(
+        error instanceof Error 
+          ? error.message 
+          : "La subida de archivos no esta disponible en este momento."
+      );
+    }
+
     const validatedFile = validateFileUpload(input.file, COURSE_RESOURCE_UPLOAD_POLICY);
     const safeName = sanitizeFileSegment(validatedFile.fileName);
     const storedFileName = `${randomUUID()}-${safeName}`;
     storageKey = path.posix.join("course-resources", input.courseId, storedFileName);
     mimeType = validatedFile.mimeType;
     sizeInBytes = validatedFile.sizeInBytes;
-    await upsertStoredAsset({
-      storageKey,
-      content: new Uint8Array(await input.file.arrayBuffer()),
-      contentType: mimeType
-    });
+
+    try {
+      const fileBuffer = new Uint8Array(await input.file.arrayBuffer());
+      await upsertStoredAsset({
+        storageKey,
+        content: fileBuffer,
+        contentType: mimeType
+      });
+    } catch (error) {
+      throw new Error(
+        error instanceof Error
+          ? error.message
+          : "No se pudo subir el archivo al almacenamiento."
+      );
+    }
 
     courseResourceLogger.info("Course resource file stored.", {
       action: "createCourseResource",
