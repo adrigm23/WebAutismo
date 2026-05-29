@@ -483,7 +483,7 @@ function StepIconShell(input: {
   return (
     <div
       className={cn(
-        "grid h-12 w-12 shrink-0 place-items-center rounded-full border",
+        "grid h-10 w-10 shrink-0 place-items-center rounded-[var(--radius-md)] border",
         input.tone === "warning"
           ? "border-[rgba(209,88,62,0.18)] bg-[rgba(252,238,233,0.9)] text-[var(--color-danger)]"
           : input.tone === "brand"
@@ -491,7 +491,7 @@ function StepIconShell(input: {
             : "border-[rgba(22,60,88,0.12)] bg-white text-[var(--color-primary)]",
       )}
     >
-      <input.icon className="h-5 w-5" />
+      <input.icon className="h-4 w-4" />
     </div>
   );
 }
@@ -612,9 +612,16 @@ export default async function MyCoursesPage() {
       : 0;
   const unreadCount = notificationSnapshot.unreadCount;
   const nextModule = primaryStudentCourse ? getNextModule(primaryStudentCourse) : null;
+  const heroSubtitle = primaryStudentCourse?.progress.hasStarted
+    ? "Continúa donde lo dejaste."
+    : primaryStudentCourse
+      ? "Todo listo para empezar."
+      : teacherCourses.length
+        ? "Aquí está la actividad de tus cursos."
+        : "Bienvenido de nuevo al campus.";
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(223,234,243,0.58),transparent_28%),linear-gradient(180deg,#faf7f2_0%,#f5f4f8_54%,#fbf9f5_100%)] pb-14">
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(223,234,243,0.38),transparent_26%),linear-gradient(180deg,#faf7f2_0%,#f7f4ef_54%,#fbf9f5_100%)] pb-14">
       <CampusPrivateHeader
         fullName={user.name}
         initials={getInitials(user.name)}
@@ -632,77 +639,87 @@ export default async function MyCoursesPage() {
           <h1 className="font-premium text-display-lg font-semibold text-[var(--color-ink)]">
             Hola, {user.name.split(" ")[0] || user.name}.
           </h1>
-          <p className="mt-3 max-w-[38rem] text-body-md text-[var(--color-ink-soft)]">
-            Tu espacio de aprendizaje y desarrollo profesional continuo.
+          <p className="mt-2 max-w-[38rem] text-body-md text-[var(--color-ink-soft)]">
+            {heroSubtitle}
           </p>
         </section>
 
         {heroCourse ? (
           <section className="mt-8">
-            <div className="overflow-hidden rounded-[2rem] bg-[linear-gradient(135deg,#082637_0%,#0c2e43_64%,#10324a_100%)] px-5 py-5 shadow-[0_28px_60px_-34px_rgba(8,38,55,0.78)] sm:px-7 sm:py-7">
-              <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_15rem] lg:items-center">
-                <div className="min-w-0">
-                  <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-white/68">
-                    {primaryStudentCourse ? "Continuar aprendiendo" : "Continuar docencia"}
-                  </p>
-                  <h2 className="font-premium mt-4 text-display-md font-semibold text-white">
-                    {heroCourse.space.course.title}
-                  </h2>
+            <div className="overflow-hidden rounded-[2rem] bg-[linear-gradient(135deg,#082637_0%,#0c2e43_64%,#10324a_100%)] px-5 py-6 shadow-[0_28px_60px_-34px_rgba(8,38,55,0.78)] sm:px-8 sm:py-8">
+              <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_14rem] lg:items-center lg:gap-10">
+                {/* Text + progress + CTA */}
+                <div className="flex min-w-0 flex-col gap-5">
+                  <div>
+                    <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-white/60">
+                      {primaryStudentCourse ? "Continuar aprendiendo" : "Continuar docencia"}
+                    </p>
+                    <h2 className="font-premium mt-3 text-display-md font-semibold text-white">
+                      {heroCourse.space.course.title}
+                    </h2>
 
-                  {primaryStudentCourse ? (
-                    <div className="mt-4 flex flex-wrap items-center gap-2 text-sm text-white/82">
-                      <span className="leading-6">
-                        {nextModule
-                          ? `Modulo ${nextModule.index + 1}: ${nextModule.title}`
-                          : "Curso listo para continuar"}
-                      </span>
-                      <Badge className="bg-white/14 text-white" tone="neutral">
-                        {primaryStudentCourse.progress.completionRate}% completado
-                      </Badge>
-                    </div>
-                  ) : (
-                    <div className="mt-4 flex flex-wrap items-center gap-2 text-sm text-white/82">
-                      <span className="leading-6">
-                        {heroCourse.space.course.activeEdition?.label ?? "Curso asignado"}
-                      </span>
-                      <Badge className="bg-white/14 text-white" tone="neutral">
-                        {primaryTeacherSummary?.pendingReviewItems.length ?? 0} entregas pendientes
-                      </Badge>
-                      {primaryTeacherSummary?.totalSubmissionCount ? (
-                        <Badge className="bg-white/14 text-white" tone="neutral">
-                          {teacherReviewCompletion}% revisado
+                    {primaryStudentCourse ? (
+                      <div className="mt-3 flex flex-wrap items-center gap-2 text-sm text-white/75">
+                        <span className="leading-6">
+                          {nextModule
+                            ? `Módulo ${nextModule.index + 1}: ${nextModule.title}`
+                            : "Curso listo para continuar"}
+                        </span>
+                        <Badge className="bg-white/12 text-white/90" shape="pill" tone="neutral">
+                          {primaryStudentCourse.progress.completionRate}% completado
                         </Badge>
-                      ) : null}
-                    </div>
-                  )}
+                      </div>
+                    ) : (
+                      <div className="mt-3 flex flex-wrap items-center gap-2 text-sm text-white/75">
+                        <span className="leading-6">
+                          {heroCourse.space.course.activeEdition?.label ?? "Curso asignado"}
+                        </span>
+                        <Badge className="bg-white/12 text-white/90" shape="pill" tone="neutral">
+                          {primaryTeacherSummary?.pendingReviewItems.length ?? 0} entregas pendientes
+                        </Badge>
+                        {primaryTeacherSummary?.totalSubmissionCount ? (
+                          <Badge className="bg-white/12 text-white/90" shape="pill" tone="neutral">
+                            {teacherReviewCompletion}% revisado
+                          </Badge>
+                        ) : null}
+                      </div>
+                    )}
+                  </div>
 
-                  <div className="mt-6">
-                    <ProgressBar
-                      tone="light"
-                      value={
+                  <ProgressBar
+                    tone="light"
+                    value={
+                      primaryStudentCourse
+                        ? primaryStudentCourse.progress.completionRate
+                        : teacherReviewCompletion
+                    }
+                  />
+
+                  <div>
+                    <ButtonLink
+                      className="w-full justify-between bg-white text-[var(--color-primary)] hover:bg-white hover:text-[var(--color-primary)] sm:w-auto sm:min-w-[13rem]"
+                      href={
                         primaryStudentCourse
-                          ? primaryStudentCourse.progress.completionRate
-                          : teacherReviewCompletion
+                          ? buildCourseContentHref(primaryStudentCourse.space.course.slug, {
+                              moduleIndex: nextModule?.index ?? 0,
+                            })
+                          : primaryTeacherCourse?.teachingHref ?? "/soporte"
                       }
-                    />
+                      variant="neutral"
+                    >
+                      <span>{primaryStudentCourse ? "Retomar módulo" : "Abrir seguimiento"}</span>
+                      <ArrowRight className="h-4 w-4" />
+                    </ButtonLink>
                   </div>
                 </div>
 
-                <div className="flex lg:justify-end">
-                  <ButtonLink
-                    className="w-full justify-between bg-white text-[var(--color-primary)] hover:bg-white hover:text-[var(--color-primary)] lg:w-auto lg:min-w-[14rem]"
-                    href={
-                      primaryStudentCourse
-                        ? buildCourseContentHref(primaryStudentCourse.space.course.slug, {
-                            moduleIndex: nextModule?.index ?? 0,
-                          })
-                        : primaryTeacherCourse?.teachingHref ?? "/soporte"
-                    }
-                    variant="neutral"
-                  >
-                    <span>{primaryStudentCourse ? "Retomar modulo" : "Abrir seguimiento"}</span>
-                    <ArrowRight className="h-4 w-4" />
-                  </ButtonLink>
+                {/* Course artwork — decorative, desktop only */}
+                <div aria-hidden="true" className="hidden lg:block">
+                  <CourseArtwork
+                    className="h-48 w-full rounded-[1.5rem]"
+                    course={heroCourse.space.course}
+                    variant="card"
+                  />
                 </div>
               </div>
             </div>
@@ -748,7 +765,7 @@ export default async function MyCoursesPage() {
 
                   return (
                     <Link
-                      className="group block border-b border-[rgba(22,60,88,0.08)] py-5 transition sm:py-6"
+                      className="group -mx-3 block rounded-[1.5rem] border-b border-[rgba(22,60,88,0.07)] px-3 py-5 transition hover:border-transparent hover:bg-white/70 hover:shadow-[var(--shadow-soft)] sm:py-6"
                       href={buildCourseContentHref(course.space.course.slug, {
                         moduleIndex: nextOpenModule?.index ?? 0,
                       })}
@@ -794,7 +811,7 @@ export default async function MyCoursesPage() {
               ) : teacherCourses.length ? (
                 teacherCourses.map((course) => (
                   <Link
-                    className="group block border-b border-[rgba(22,60,88,0.08)] py-5 transition sm:py-6"
+                    className="group -mx-3 block rounded-[1.5rem] border-b border-[rgba(22,60,88,0.07)] px-3 py-5 transition hover:border-transparent hover:bg-white/70 hover:shadow-[var(--shadow-soft)] sm:py-6"
                     href={course.teachingHref}
                     key={course.space.course.slug}
                   >
@@ -841,13 +858,13 @@ export default async function MyCoursesPage() {
             </div>
           </div>
 
-          <aside className="rounded-[1.75rem] border border-[rgba(22,60,88,0.08)] bg-[linear-gradient(180deg,rgba(244,242,251,0.96)_0%,rgba(248,246,255,0.92)_100%)] p-5 shadow-[var(--shadow-soft)] sm:p-6 xl:sticky xl:top-28">
+          <aside className="rounded-[1.75rem] border border-[rgba(22,60,88,0.08)] bg-white/88 p-5 shadow-[var(--shadow-soft)] sm:p-6 xl:sticky xl:top-28">
             <div className="flex items-start justify-between gap-3">
               <div>
-                <h2 className="font-premium text-display-md font-semibold text-[var(--color-ink)]">
-                  Proximos pasos
+                <h2 className="font-premium text-heading-lg font-semibold text-[var(--color-ink)]">
+                  Próximos pasos
                 </h2>
-                <p className="mt-2 text-body-sm text-[var(--color-ink-soft)]">
+                <p className="mt-1.5 text-body-sm text-[var(--color-ink-soft)]">
                   Acciones reales del campus para no perder continuidad.
                 </p>
               </div>

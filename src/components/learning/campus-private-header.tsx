@@ -123,7 +123,7 @@ export function CampusPrivateHeader({
 
             <div className="flex items-center gap-2">
               <Link
-                className="flex min-w-0 items-center gap-3 rounded-full border border-[rgba(22,60,88,0.08)] bg-[rgba(236,233,248,0.72)] px-3 py-2 shadow-[var(--shadow-inset-soft)] transition hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2 sm:pr-4"
+                className="flex min-w-0 items-center gap-3 rounded-full border border-[rgba(22,60,88,0.08)] bg-[rgba(223,234,243,0.52)] px-3 py-2 shadow-[var(--shadow-inset-soft)] transition hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2 sm:pr-4"
                 href={profileHref}
               >
                 <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[var(--color-primary-soft)] text-sm font-semibold text-[var(--color-primary)]">
