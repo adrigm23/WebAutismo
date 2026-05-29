@@ -128,9 +128,39 @@ describe("course resource actions", () => {
     formData.set("file", new File(["pdf"], "guia.pdf", { type: "application/pdf" }));
 
     await expect(createCourseResourceAction({}, formData)).rejects.toThrow(
-      "REDIRECT:/mis-cursos/curso-demo?tab=resources&resource=res-1#resource-res-1"
+      "REDIRECT:/mis-cursos/curso-demo?tab=resources&resource=res-1&resourcePublished=1#resource-res-1"
     );
     expect(revalidatePathMock).toHaveBeenCalledWith("/mis-cursos/curso-demo");
+  });
+
+  test("accepts origin for external resources without requiring a file", async () => {
+    createCourseResourceMock.mockResolvedValue({
+      id: "res-link-1",
+      title: "Bibliografia",
+      type: "MATERIAL",
+      source: "LINK",
+      dueAt: null,
+      passingScore: null
+    });
+
+    const { createCourseResourceAction } = await import("@/actions/course-resources");
+    const formData = new FormData();
+    formData.set("courseSlug", "curso-demo");
+    formData.set("type", "MATERIAL");
+    formData.set("origin", "LINK");
+    formData.set("title", "Bibliografia");
+    formData.set("linkUrl", "https://example.com/guia");
+
+    await expect(createCourseResourceAction({}, formData)).rejects.toThrow(
+      "REDIRECT:/mis-cursos/curso-demo?tab=resources&resource=res-link-1&resourcePublished=1#resource-res-link-1"
+    );
+    expect(createCourseResourceMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        file: null,
+        linkUrl: "https://example.com/guia",
+        source: "LINK"
+      })
+    );
   });
 
   test("returns a controlled error when the uploaded file exceeds the app size limit", async () => {

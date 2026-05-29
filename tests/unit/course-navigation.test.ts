@@ -1,5 +1,6 @@
 import {
   buildCourseResourcesHref,
+  buildPublishedCourseResourceHref,
   COURSE_RESOURCE_MANAGER_TARGET_ID,
   getCourseResourceIdFromTargetId,
   normalizeCourseResourceQueryValue
@@ -18,6 +19,12 @@ describe("course resource navigation", () => {
       "/mis-cursos/curso-demo?tab=resources&resource=res-1#resource-res-1"
     );
     expect(getCourseResourceIdFromTargetId("resource-res-1")).toBe("res-1");
+  });
+
+  test("adds a success flag after publishing a resource", () => {
+    expect(buildPublishedCourseResourceHref("curso-demo", "res-1")).toBe(
+      "/mis-cursos/curso-demo?tab=resources&resource=res-1&resourcePublished=1#resource-res-1"
+    );
   });
 
   test("drops the legacy manager-top resource query value", () => {

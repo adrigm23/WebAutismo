@@ -5,6 +5,7 @@ export type CourseWorkspaceTab = "content" | "resources" | "support";
 export const COURSE_RESOURCE_TARGET_PREFIX = "resource-";
 export const COURSE_RESOURCE_MANAGER_TARGET_ID = "resource-manager-top";
 export const LEGACY_RESOURCE_MANAGER_RESOURCE_ID = "manager-top";
+export const COURSE_RESOURCE_PUBLISH_FEEDBACK_QUERY = "resourcePublished";
 
 export function getCourseResourceIdFromTargetId(targetId: string | null | undefined) {
   if (
@@ -84,6 +85,18 @@ export function buildCourseResourcesHref(courseSlug: string, targetId = "resourc
     targetId,
     resourceId
   });
+}
+
+export function buildPublishedCourseResourceHref(
+  courseSlug: string,
+  resourceId: string,
+) {
+  const params = new URLSearchParams();
+  params.set("tab", "resources");
+  params.set("resource", resourceId);
+  params.set(COURSE_RESOURCE_PUBLISH_FEEDBACK_QUERY, "1");
+
+  return `/mis-cursos/${courseSlug}?${params.toString()}#resource-${resourceId}`;
 }
 
 export function buildCourseSupportHref(

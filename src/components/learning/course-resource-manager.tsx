@@ -1,14 +1,26 @@
 "use client";
 
-import { useActionState, useDeferredValue, useId, useState } from "react";
+import {
+  type FormEvent,
+  useActionState,
+  useDeferredValue,
+  useId,
+  useRef,
+  useState,
+} from "react";
 import dynamic from "next/dynamic";
+import { useSearchParams } from "next/navigation";
 import {
   ArrowUpRight,
+  CircleAlert,
   ClipboardList,
+  FileCheck2,
   FileUp,
   Files,
+  RefreshCw,
   Search,
   Users,
+  X,
 } from "lucide-react";
 import {
   createCourseResourceAction,
@@ -16,7 +28,7 @@ import {
 } from "@/actions/course-resources";
 import { CourseExerciseSubmissionForm } from "@/components/learning/course-exercise-submission-form";
 import { Badge } from "@/components/ui/badge";
-import { ButtonLink } from "@/components/ui/button";
+import { Button, ButtonLink } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import { SectionHeader } from "@/components/ui/section-header";
@@ -25,10 +37,18 @@ import { StateBanner } from "@/components/ui/state-banner";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { Textarea } from "@/components/ui/textarea";
 import type { CatalogCourse } from "@/lib/course-catalog";
+import {
+  COURSE_UPLOAD_ACCEPT,
+  COURSE_UPLOAD_HELP_TEXT,
+  formatUploadFileSize,
+  getCourseUploadTypeLabel,
+  validateCourseUploadSelection,
+} from "@/lib/course-upload";
 import type {
   CampusResourceItem,
   CampusResourceSubmissionItem,
 } from "@/lib/course-resources";
+import { COURSE_RESOURCE_PUBLISH_FEEDBACK_QUERY } from "@/lib/course-navigation";
 import { cn, formatDateTime } from "@/lib/utils";
 
 const initialState: CourseResourceFormState = {};
@@ -151,12 +171,17 @@ export function CourseResourceManager({
   roleLabel,
   focusedResourceId = null,
 }: CourseResourceManagerProps) {
+  const searchParams = useSearchParams();
   const [state, formAction] = useActionState(
     createCourseResourceAction,
     initialState,
   );
   const [source, setSource] = useState<"FILE" | "LINK">("FILE");
   const [type, setType] = useState<"MATERIAL" | "EXERCISE">("MATERIAL");
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [selectedFileError, setSelectedFileError] = useState<string | null>(
+    null,
+  );
   const [teacherSearchQuery, setTeacherSearchQuery] = useState("");
   const [teacherSearchScope, setTeacherSearchScope] =
     useState<TeacherSearchScope>("resources");
@@ -164,6 +189,7 @@ export function CourseResourceManager({
     teacherSearchQuery.trim().toLowerCase(),
   );
   const fileInputId = useId();
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const managedResources = resources.filter((resource) => resource.isManaged);
   const exerciseResources = managedResources.filter(
     (resource) => resource.isExercise,
@@ -336,6 +362,64 @@ export function CourseResourceManager({
       entry.submission.status === "SUBMITTED" ||
       entry.submission.status === "CHANGES_REQUESTED",
   ).length;
+  const showPublishSuccessBanner =
+    searchParams.get(COURSE_RESOURCE_PUBLISH_FEEDBACK_QUERY) === "1";
+  const canSubmitResource =
+    source === "LINK" || (Boolean(selectedFile) && !selectedFileError);
+
+  function clearSelectedFile() {
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+
+    setSelectedFile(null);
+    setSelectedFileError(null);
+  }
+
+  function handleSelectedFile(fileList: FileList | null) {
+    const nextFile = fileList?.[0] ?? null;
+
+    if (!nextFile) {
+      return;
+    }
+
+    const nextError = validateCourseUploadSelection(nextFile);
+
+    if (nextError) {
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+
+      setSelectedFile(null);
+      setSelectedFileError(nextError);
+      return;
+    }
+
+    setSelectedFile(nextFile);
+    setSelectedFileError(null);
+  }
+
+  function handleCreateResourceSubmit(
+    event: FormEvent<HTMLFormElement>,
+  ) {
+    if (source !== "FILE") {
+      setSelectedFileError(null);
+      return;
+    }
+
+    if (!selectedFile) {
+      event.preventDefault();
+      setSelectedFileError("Selecciona un archivo para publicar el recurso.");
+      return;
+    }
+
+    const validationError = validateCourseUploadSelection(selectedFile);
+
+    if (validationError) {
+      event.preventDefault();
+      setSelectedFileError(validationError);
+    }
+  }
 
   function getExternalHostLabel(url: string | null) {
     if (!url) {
@@ -655,8 +739,15 @@ export function CourseResourceManager({
             title="Publicar recurso del curso"
           />
 
-          <form action={formAction} className="mt-5 space-y-5">
+          <form
+            action={formAction}
+            className="mt-5 space-y-5"
+            encType="multipart/form-data"
+            onSubmit={handleCreateResourceSubmit}
+          >
             <input name="courseSlug" type="hidden" value={course.slug} />
+            <input name="source" type="hidden" value={source} />
+            <input name="origin" type="hidden" value={source} />
 
             <div className="grid gap-4 md:grid-cols-2">
               <label className="block space-y-1.5">
@@ -688,10 +779,14 @@ export function CourseResourceManager({
                 </span>
                 <select
                   className={selectClassName}
-                  name="source"
-                  onChange={(event) =>
-                    setSource(event.target.value as "FILE" | "LINK")
-                  }
+                  onChange={(event) => {
+                    const nextSource = event.target.value as "FILE" | "LINK";
+                    setSource(nextSource);
+
+                    if (nextSource === "LINK") {
+                      clearSelectedFile();
+                    }
+                  }}
                   value={source}
                 >
                   <option value="FILE">Archivo privado</option>
@@ -793,26 +888,91 @@ export function CourseResourceManager({
                   </span>
                 </div>
                 <input
+                  accept={COURSE_UPLOAD_ACCEPT}
                   className="sr-only"
                   id={fileInputId}
                   name="file"
-                  required
+                  onChange={(event) => handleSelectedFile(event.target.files)}
+                  ref={fileInputRef}
                   type="file"
                 />
                 <label
-                  className="group flex min-h-[9.75rem] cursor-pointer flex-col items-center justify-center rounded-[var(--radius-lg)] border border-dashed border-[var(--color-border-subtle)] bg-[rgba(248,246,241,0.5)] px-6 py-6 text-center transition hover:border-[var(--color-border-strong)] hover:bg-white focus-within:border-[var(--color-primary)]"
+                  className={cn(
+                    "group flex min-h-[9.75rem] cursor-pointer flex-col items-center justify-center rounded-[var(--radius-lg)] border border-dashed px-6 py-6 text-center transition hover:bg-white focus-within:border-[var(--color-primary)]",
+                    selectedFile
+                      ? "border-[rgba(23,98,79,0.22)] bg-[rgba(228,241,235,0.5)]"
+                      : selectedFileError
+                        ? "border-[rgba(159,69,46,0.22)] bg-[rgba(252,238,233,0.52)]"
+                        : "border-[var(--color-border-subtle)] bg-[rgba(248,246,241,0.5)] hover:border-[var(--color-border-strong)]",
+                  )}
                   htmlFor={fileInputId}
                 >
-                  <span className="grid h-11 w-11 place-items-center rounded-[var(--radius-md)] bg-white text-[var(--color-primary)] shadow-[var(--shadow-inset-soft)] transition group-hover:scale-[1.02]">
+                  <span
+                    className={cn(
+                      "grid h-11 w-11 place-items-center rounded-[var(--radius-md)] bg-white shadow-[var(--shadow-inset-soft)] transition group-hover:scale-[1.02]",
+                      selectedFile
+                        ? "text-[var(--color-success)]"
+                        : selectedFileError
+                          ? "text-[var(--color-danger)]"
+                          : "text-[var(--color-primary)]",
+                    )}
+                  >
                     <FileUp className="h-5 w-5" />
                   </span>
                   <span className="mt-4 text-[1rem] font-medium tracking-[-0.02em] text-[var(--color-ink)]">
-                    Arrastra un archivo o abre el explorador
+                    {selectedFile
+                      ? "Archivo listo para publicar"
+                      : "Arrastra un archivo o abre el explorador"}
                   </span>
                   <span className="mt-1.5 max-w-[34rem] text-sm leading-6 text-[var(--color-muted)]">
-                    PDF, DOCX, hojas de trabajo o material visual con acceso privado para este curso.
+                    {COURSE_UPLOAD_HELP_TEXT}. El acceso seguira siendo privado y
+                    ligado al curso.
                   </span>
+                  {selectedFile ? (
+                    <span className="mt-3 text-sm font-medium text-[var(--color-success)]">
+                      {selectedFile.name}
+                    </span>
+                  ) : null}
                 </label>
+
+                {selectedFile ? (
+                  <StateBanner
+                    actions={
+                      <>
+                        <Button
+                          onClick={() => fileInputRef.current?.click()}
+                          size="sm"
+                          type="button"
+                          variant="secondary"
+                        >
+                          <RefreshCw className="h-4 w-4" />
+                          Cambiar archivo
+                        </Button>
+                        <Button
+                          onClick={clearSelectedFile}
+                          size="sm"
+                          type="button"
+                          variant="ghost"
+                        >
+                          <X className="h-4 w-4" />
+                          Quitar
+                        </Button>
+                      </>
+                    }
+                    description={`${formatUploadFileSize(selectedFile.size)} · ${getCourseUploadTypeLabel(selectedFile.type)} · Acceso privado del curso.`}
+                    icon={<FileCheck2 className="h-5 w-5" />}
+                    title={selectedFile.name}
+                    tone="success"
+                  />
+                ) : null}
+
+                {selectedFileError ? (
+                  <StateBanner
+                    description={selectedFileError}
+                    icon={<CircleAlert className="h-5 w-5" />}
+                    tone="danger"
+                  />
+                ) : null}
               </div>
             ) : (
               <label className="block space-y-1.5">
@@ -831,6 +991,14 @@ export function CourseResourceManager({
               </label>
             )}
 
+            {showPublishSuccessBanner ? (
+              <StateBanner
+                description="El recurso se ha publicado correctamente y ya aparece en el recorrido del curso."
+                icon={<FileCheck2 className="h-5 w-5" />}
+                tone="success"
+              />
+            ) : null}
+
             {state.error ? <StateBanner description={state.error} tone="danger" /> : null}
 
             {state.success ? <StateBanner description={state.success} tone="success" /> : null}
@@ -839,7 +1007,11 @@ export function CourseResourceManager({
               <p className="max-w-[38rem] text-sm leading-7 text-[var(--color-muted)]">
                 Los archivos se sirven solo a personas con acceso vigente al curso. Si publicas un ejercicio, la revision quedara disponible en esta misma vista.
               </p>
-              <SubmitButton pendingLabel="Publicando..." variant="secondary">
+              <SubmitButton
+                disabled={!canSubmitResource}
+                pendingLabel="Publicando..."
+                variant="secondary"
+              >
                 {type === "EXERCISE"
                   ? "Publicar ejercicio"
                   : "Publicar recurso"}

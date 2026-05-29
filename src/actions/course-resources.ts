@@ -29,7 +29,10 @@ import {
   COURSE_SUBMISSION_UPLOAD_POLICY,
   validateFileUpload
 } from "@/lib/file-security";
-import { buildCourseResourcesHref } from "@/lib/course-navigation";
+import {
+  buildCourseResourcesHref,
+  buildPublishedCourseResourceHref
+} from "@/lib/course-navigation";
 import { captureOperationalWarning } from "@/lib/monitoring";
 import { sendPlatformNotification } from "@/lib/notifications";
 import { getDb } from "@/lib/prisma";
@@ -153,11 +156,12 @@ export async function createCourseResourceAction(
   _: CourseResourceFormState,
   formData: FormData
 ): Promise<CourseResourceFormState> {
+  const sourceValue = formData.get("source") ?? formData.get("origin");
   const parsed = createCourseResourceSchema.safeParse({
     courseSlug: formData.get("courseSlug"),
     moduleId: formData.get("moduleId")?.toString() || undefined,
     type: formData.get("type"),
-    source: formData.get("source"),
+    source: sourceValue,
     title: formData.get("title"),
     description: formData.get("description")?.toString() || undefined,
     linkUrl: formData.get("linkUrl")?.toString() || undefined,
@@ -288,7 +292,7 @@ export async function createCourseResourceAction(
     if (resource.type === "EXERCISE") {
       revalidateCourseTrackingView(course.slug);
     }
-    redirect(buildCourseResourcesHref(course.slug, `resource-${resource.id}`));
+    redirect(buildPublishedCourseResourceHref(course.slug, resource.id));
   } catch (error) {
     if (isRedirectSignal(error)) {
       throw error;
