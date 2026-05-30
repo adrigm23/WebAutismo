@@ -3,11 +3,13 @@ import Link from "next/link";
 import {
   ArrowRight,
   Bell,
-  BookOpenText,
+  BookOpen,
   CalendarClock,
+  CheckCircle2,
   ClipboardList,
   GraduationCap,
   MessageSquareText,
+  PlayCircle,
 } from "lucide-react";
 import { StudentShell, type StudentShellNavItem } from "@/components/campus/student-shell";
 import { CourseArtwork } from "@/components/course-artwork";
@@ -286,7 +288,7 @@ function buildStudentSteps(input: {
     steps.push({
       id: `resource-${resource.id}`,
       href: buildCourseResourcesHref(resource.courseSlug, `resource-${resource.id}`),
-      icon: BookOpenText,
+      icon: BookOpen,
       eyebrow: "Nuevo recurso",
       title: resource.title,
       description: resource.moduleTitle
@@ -594,12 +596,6 @@ export default async function MyCoursesPage({
   const inProgressCourses = studentCourses.filter((c) => !c.progress.isCompleted);
   const completedCourses = studentCourses.filter((c) => c.progress.isCompleted);
   const tabCourses = activeTab === "completados" ? completedCourses : inProgressCourses;
-  const studentAverageCompletion = studentCourses.length
-    ? Math.round(
-        studentCourses.reduce((sum, c) => sum + c.progress.completionRate, 0) /
-          studentCourses.length,
-      )
-    : 0;
 
   return (
     <StudentShell
@@ -673,93 +669,93 @@ export default async function MyCoursesPage({
 
         {heroCourse ? (
           <section className="mt-8">
-            <div className="overflow-hidden rounded-[2rem] bg-[linear-gradient(135deg,#082637_0%,#0c2e43_64%,#10324a_100%)] px-5 py-6 shadow-[0_28px_60px_-34px_rgba(8,38,55,0.78)] sm:px-8 sm:py-8">
-              <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_14rem] lg:items-center lg:gap-10">
-                {/* Text + progress + CTA */}
-                <div className="flex min-w-0 flex-col gap-5">
-                  <div>
-                    <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-white/60">
-                      {primaryStudentCourse ? "Continuar aprendiendo" : "Continuar docencia"}
-                    </p>
-                    <h2 className="font-premium mt-3 text-display-md font-semibold text-white">
-                      {heroCourse.space.course.title}
-                    </h2>
-
-                    {primaryStudentCourse ? (
-                      <div className="mt-3 flex flex-wrap items-center gap-2 text-sm text-white/75">
-                        <span className="leading-6">
-                          {nextModule
-                            ? `Módulo ${nextModule.index + 1}: ${nextModule.title}`
-                            : "Curso listo para continuar"}
-                        </span>
-                        <Badge className="bg-white/12 text-white/90" shape="pill" tone="neutral">
-                          {primaryStudentCourse.progress.completionRate}% completado
-                        </Badge>
-                      </div>
-                    ) : (
-                      <div className="mt-3 flex flex-wrap items-center gap-2 text-sm text-white/75">
-                        <span className="leading-6">
-                          {heroCourse.space.course.activeEdition?.label ?? "Curso asignado"}
-                        </span>
-                        <Badge className="bg-white/12 text-white/90" shape="pill" tone="neutral">
-                          {primaryTeacherSummary?.pendingReviewItems.length ?? 0} entregas pendientes
-                        </Badge>
-                        {primaryTeacherSummary?.totalSubmissionCount ? (
-                          <Badge className="bg-white/12 text-white/90" shape="pill" tone="neutral">
-                            {teacherReviewCompletion}% revisado
-                          </Badge>
-                        ) : null}
-                      </div>
-                    )}
-                  </div>
-
-                  <ProgressBar
-                    tone="light"
-                    value={
-                      primaryStudentCourse
-                        ? primaryStudentCourse.progress.completionRate
-                        : teacherReviewCompletion
-                    }
-                  />
-
-                  <div>
-                    <ButtonLink
-                      className="w-full justify-between bg-white text-[var(--color-primary)] hover:bg-white hover:text-[var(--color-primary)] sm:w-auto sm:min-w-[13rem]"
-                      href={
-                        primaryStudentCourse
-                          ? buildCourseContentHref(primaryStudentCourse.space.course.slug, {
-                              moduleIndex: nextModule?.index ?? 0,
-                            })
-                          : primaryTeacherCourse?.teachingHref ?? "/soporte"
-                      }
-                      variant="neutral"
-                    >
-                      <span>{primaryStudentCourse ? "Retomar módulo" : "Abrir seguimiento"}</span>
-                      <ArrowRight className="h-4 w-4" />
-                    </ButtonLink>
-                  </div>
-                </div>
-
-                {/* Course artwork — decorative, desktop only */}
-                <div aria-hidden="true" className="hidden lg:block">
+            <Link
+              className="group block overflow-hidden rounded-2xl border border-[rgba(22,60,88,0.09)] bg-white shadow-[0_2px_12px_rgba(30,58,95,0.06)] transition hover:shadow-[0_4px_20px_rgba(30,58,95,0.1)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)]"
+              href={
+                primaryStudentCourse
+                  ? buildCourseContentHref(primaryStudentCourse.space.course.slug, {
+                      moduleIndex: nextModule?.index ?? 0,
+                    })
+                  : primaryTeacherCourse?.teachingHref ?? "/soporte"
+              }
+            >
+              <div className="grid sm:grid-cols-[260px_minmax(0,1fr)] lg:grid-cols-[300px_minmax(0,1fr)]">
+                {/* Imagen izquierda */}
+                <div className="h-52 sm:h-full overflow-hidden">
                   <CourseArtwork
-                    className="h-48 w-full rounded-[1.5rem]"
+                    className="h-full w-full rounded-none border-0 transition-transform duration-500 group-hover:scale-105"
                     course={heroCourse.space.course}
                     variant="card"
                   />
                 </div>
+                {/* Contenido derecha */}
+                <div className="flex flex-col justify-between p-6 sm:p-7">
+                  <div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="inline-flex items-center rounded-full bg-[#d1fae5] px-2.5 py-0.5 text-[0.72rem] font-semibold text-[#065f46]">
+                        {primaryStudentCourse
+                          ? primaryStudentCourse.progress.isCompleted
+                            ? "Completado"
+                            : primaryStudentCourse.progress.hasStarted
+                              ? "En progreso"
+                              : "Disponible"
+                          : "Docencia activa"}
+                      </span>
+                      {nextModule && (
+                        <span className="text-[0.8rem] text-[var(--color-ink-soft)]">
+                          Módulo {nextModule.index + 1}
+                        </span>
+                      )}
+                    </div>
+                    <h2 className="mt-3 text-[1.35rem] font-bold leading-snug text-[var(--color-ink)] group-hover:text-[var(--color-primary)] transition sm:text-[1.5rem]">
+                      {heroCourse.space.course.title}
+                    </h2>
+                    {nextModule && (
+                      <p className="mt-2 flex items-center gap-2 text-sm text-[var(--color-ink-soft)]">
+                        <PlayCircle className="h-4 w-4 shrink-0 text-[var(--color-primary)]" />
+                        <span className="line-clamp-1">{nextModule.title}</span>
+                      </p>
+                    )}
+                    <div className="mt-5">
+                      <div className="mb-1.5 flex items-center justify-between text-[0.75rem] font-medium text-[var(--color-ink-soft)]">
+                        <span>Progreso</span>
+                        <span className="font-semibold text-[#059669]">
+                          {primaryStudentCourse
+                            ? `${primaryStudentCourse.progress.completionRate}% completado`
+                            : `${teacherReviewCompletion}% revisado`}
+                        </span>
+                      </div>
+                      <ProgressBar
+                        tone={primaryStudentCourse?.progress.isCompleted ? "success" : "brand"}
+                        value={primaryStudentCourse ? primaryStudentCourse.progress.completionRate : teacherReviewCompletion}
+                      />
+                    </div>
+                  </div>
+                  <div className="mt-6">
+                    <span className="inline-flex items-center gap-2 rounded-xl bg-[var(--color-primary)] px-5 py-2.5 text-sm font-semibold text-white transition group-hover:bg-[var(--color-primary-strong)]">
+                      {primaryStudentCourse
+                        ? primaryStudentCourse.progress.isCompleted
+                          ? "Repasar"
+                          : primaryStudentCourse.progress.hasStarted
+                            ? "Continuar"
+                            : "Empezar"
+                        : "Abrir seguimiento"}
+                      <ArrowRight className="h-4 w-4" />
+                    </span>
+                  </div>
+                </div>
               </div>
-            </div>
+            </Link>
           </section>
         ) : (
-          <section className="mt-8 overflow-hidden rounded-[2rem] border border-[rgba(22,60,88,0.08)] bg-white/86 px-5 py-6 shadow-[var(--shadow-soft)] sm:px-6">
-            <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--color-primary)]">
+          <section className="mt-8 overflow-hidden rounded-2xl border border-[rgba(22,60,88,0.09)] bg-white px-6 py-8 shadow-[0_2px_12px_rgba(30,58,95,0.06)] sm:px-8">
+            <p className="text-[0.75rem] font-semibold uppercase tracking-[0.12em] text-[var(--color-primary)]">
               Campus activo
             </p>
-            <h2 className="font-premium mt-4 text-display-md font-semibold text-[var(--color-ink)]">
+            <h2 className="mt-3 text-2xl font-bold text-[var(--color-ink)]">
               Todavia no tienes recorridos activos
             </h2>
-            <p className="mt-3 max-w-[42rem] text-body-sm text-[var(--color-ink-soft)]">
+            <p className="mt-2 max-w-[42rem] text-sm text-[var(--color-ink-soft)]">
               Explora el catalogo y activa tu siguiente curso sin salir de la zona privada.
             </p>
             <div className="mt-5">
@@ -768,65 +764,22 @@ export default async function MyCoursesPage({
           </section>
         )}
 
-        {/* Métricas rápidas para alumnos */}
-        {!isPureTeacher && studentCourses.length > 0 && (
-          <section className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
-            <div className="flex items-center gap-3.5 rounded-[1.25rem] border border-[rgba(22,60,88,0.08)] bg-white/90 px-4 py-4 shadow-[var(--shadow-soft)]">
-              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-[var(--color-brand-soft)] text-[var(--color-primary)]">
-                <BookOpenText className="h-5 w-5" />
-              </span>
-              <div>
-                <p className="text-[0.7rem] font-semibold uppercase tracking-[0.16em] text-[var(--color-muted)]">
-                  Cursos activos
-                </p>
-                <p className="mt-0.5 font-premium text-display-sm font-semibold text-[var(--color-ink)]">
-                  {inProgressCourses.length}
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3.5 rounded-[1.25rem] border border-[rgba(22,60,88,0.08)] bg-white/90 px-4 py-4 shadow-[var(--shadow-soft)]">
-              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-[var(--color-brand-soft)] text-[var(--color-primary)]">
-                <ClipboardList className="h-5 w-5" />
-              </span>
-              <div>
-                <p className="text-[0.7rem] font-semibold uppercase tracking-[0.16em] text-[var(--color-muted)]">
-                  Progreso medio
-                </p>
-                <p className="mt-0.5 font-premium text-display-sm font-semibold text-[var(--color-ink)]">
-                  {studentAverageCompletion}%
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3.5 rounded-[1.25rem] border border-[rgba(22,60,88,0.08)] bg-white/90 px-4 py-4 shadow-[var(--shadow-soft)]">
-              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-[var(--color-success-soft)] text-[var(--color-success)]">
-                <GraduationCap className="h-5 w-5" />
-              </span>
-              <div>
-                <p className="text-[0.7rem] font-semibold uppercase tracking-[0.16em] text-[var(--color-muted)]">
-                  Completados
-                </p>
-                <p className="mt-0.5 font-premium text-display-sm font-semibold text-[var(--color-ink)]">
-                  {completedCourses.length}
-                </p>
-              </div>
-            </div>
-          </section>
-        )}
 
-        <section className="mt-10 grid gap-8 xl:grid-cols-[minmax(0,1fr)_24rem] xl:items-start">
+        <section className="mt-8 grid gap-6 xl:grid-cols-[minmax(0,1fr)_22rem] xl:items-start">
           <div>
             {/* Section heading */}
-            <div>
-              <h2 className="font-premium text-display-md font-semibold text-[var(--color-ink)]">
-                {isPureTeacher ? "Tus cursos asignados" : "Tu biblioteca de formación"}
+            <div className="flex items-center justify-between gap-4">
+              <h2 className="text-xl font-bold text-[var(--color-ink)]">
+                {isPureTeacher ? "Tus cursos asignados" : "Mis Cursos"}
               </h2>
-              <p className="mt-1.5 text-body-sm text-[var(--color-ink-soft)]">
-                {studentCourses.length
-                  ? `${studentCourses.length} ${studentCourses.length === 1 ? "recorrido activo" : "recorridos activos"} en tu campus privado.`
-                  : teacherCourses.length
-                    ? `${teacherCourses.length} ${teacherCourses.length === 1 ? "curso asignado" : "cursos asignados"} como docente.`
-                    : "Tu zona privada mostrará aquí los cursos que actives."}
-              </p>
+              {studentCourses.length > 0 && (
+                <Link
+                  className="flex items-center gap-1 text-sm font-medium text-[var(--color-primary)] transition hover:opacity-75"
+                  href="/cursos"
+                >
+                  Ver todos <ArrowRight className="h-3.5 w-3.5" />
+                </Link>
+              )}
             </div>
 
             {/* Tabs — only for students */}
@@ -871,58 +824,56 @@ export default async function MyCoursesPage({
             {/* Course list */}
             {studentCourses.length > 0 ? (
               tabCourses.length > 0 ? (
-                <div className="mt-6 grid gap-5 sm:grid-cols-2">
+                <div className="mt-5 grid gap-4 sm:grid-cols-2">
                   {tabCourses.map((course) => {
                     const nextOpenModule = getNextModule(course);
                     const isDone = course.progress.isCompleted;
                     return (
                       <Link
-                        className="group flex flex-col overflow-hidden rounded-[1.5rem] border border-[rgba(22,60,88,0.08)] bg-[var(--color-surface-elevated)] shadow-[var(--shadow-soft)] transition hover:-translate-y-0.5 hover:shadow-[var(--shadow-medium)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2"
+                        className="group flex flex-col overflow-hidden rounded-xl border border-[rgba(22,60,88,0.09)] bg-white shadow-[0_1px_4px_rgba(30,58,95,0.06)] transition hover:-translate-y-0.5 hover:shadow-[0_4px_16px_rgba(30,58,95,0.1)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2"
                         href={buildCourseContentHref(course.space.course.slug, {
                           moduleIndex: nextOpenModule?.index ?? 0,
                         })}
                         key={course.space.course.slug}
                       >
-                        <div className="relative h-44 overflow-hidden">
+                        {/* Thumbnail */}
+                        <div className="h-40 overflow-hidden">
                           <CourseArtwork
                             className="h-full w-full rounded-none border-0 transition-transform duration-500 group-hover:scale-105"
                             course={course.space.course}
                             variant="card"
                           />
-                          <div className="absolute bottom-3 left-3 inline-flex items-center gap-1.5 rounded-full bg-[rgba(255,253,250,0.92)] px-2.5 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.08em] backdrop-blur-sm">
-                            <span
-                              className={cn(
-                                "h-1.5 w-1.5 rounded-full",
-                                isDone ? "bg-[var(--color-success)]" : "bg-[var(--color-primary)]",
-                              )}
-                            />
-                            <span className={isDone ? "text-[var(--color-success)]" : "text-[var(--color-primary)]"}>
-                              {isDone ? "Completado" : "En curso"}
-                            </span>
-                          </div>
                         </div>
-                        <div className="flex flex-1 flex-col p-5">
-                          <h3 className="font-premium text-heading-md font-semibold text-[var(--color-ink)] transition group-hover:text-[var(--color-primary)]">
+                        {/* Content */}
+                        <div className="flex flex-1 flex-col p-4">
+                          <h3 className="text-[0.95rem] font-semibold leading-snug text-[var(--color-ink)] transition group-hover:text-[var(--color-primary)]">
                             {course.space.course.title}
                           </h3>
-                          <p className="mt-1.5 line-clamp-2 text-body-sm text-[var(--color-ink-soft)]">
+                          <p className="mt-1 line-clamp-1 text-[0.8rem] text-[var(--color-ink-soft)]">
                             {getStudentCourseMeta(course)}
                           </p>
-                          <div className="mt-auto pt-5">
-                            <div className="mb-1.5 flex items-center justify-between text-[0.74rem] font-medium text-[var(--color-ink-soft)]">
-                              <span>Progreso</span>
-                              <span className="font-semibold text-[var(--color-primary)]">
-                                {course.progress.completionRate}%
-                              </span>
-                            </div>
-                            <ProgressBar
-                              tone={isDone ? "success" : "brand"}
-                              value={course.progress.completionRate}
-                            />
-                            <div className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-[var(--radius-md)] bg-[var(--color-primary)] px-4 py-2.5 text-sm font-semibold text-white transition group-hover:bg-[var(--color-primary-strong)]">
-                              {isDone ? "Repasar curso" : course.progress.hasStarted ? "Continuar" : "Empezar curso"}
-                              <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
-                            </div>
+                          <div className="mt-3 pt-3 border-t border-[rgba(22,60,88,0.07)]">
+                            {isDone ? (
+                              <div className="flex items-center justify-between">
+                                <span className="flex items-center gap-1.5 text-[0.8rem] text-[var(--color-success)]">
+                                  <CheckCircle2 className="h-4 w-4" />
+                                  Completado
+                                </span>
+                                <CheckCircle2 className="h-5 w-5 text-[var(--color-success)]" />
+                              </div>
+                            ) : (
+                              <div className="flex items-center justify-between">
+                                <span className="flex items-center gap-1.5 text-[0.8rem] text-[var(--color-ink-soft)]">
+                                  <BookOpen className="h-3.5 w-3.5" />
+                                  {course.progress.hasStarted
+                                    ? `Módulo ${nextOpenModule ? nextOpenModule.index + 1 : "?"}`
+                                    : "Sin iniciar"}
+                                </span>
+                                <span className="text-sm font-semibold text-[#059669]">
+                                  {course.progress.completionRate}%
+                                </span>
+                              </div>
+                            )}
                           </div>
                         </div>
                       </Link>
@@ -989,71 +940,68 @@ export default async function MyCoursesPage({
             )}
           </div>
 
-          <aside className="rounded-[1.75rem] border border-[rgba(22,60,88,0.08)] bg-white/88 p-5 shadow-[var(--shadow-soft)] sm:p-6 xl:sticky xl:top-28">
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <h2 className="font-premium text-heading-lg font-semibold text-[var(--color-ink)]">
-                  {isPureTeacher ? "Gestión docente" : "Próximos pasos"}
-                </h2>
-                <p className="mt-1.5 text-body-sm text-[var(--color-ink-soft)]">
-                  {isPureTeacher
-                    ? "Tareas y actividad pendiente de tus cursos."
-                    : "Acciones reales del campus para no perder continuidad."}
-                </p>
+          <aside className="xl:sticky xl:top-8 space-y-4">
+            {/* Panel de próximos pasos */}
+            <div className="rounded-xl border border-[rgba(22,60,88,0.09)] bg-white p-5 shadow-[0_1px_4px_rgba(30,58,95,0.06)]">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2.5">
+                  <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-[#dbeafe] text-[#1d4ed8]">
+                    <CalendarClock className="h-4.5 w-4.5" strokeWidth={2} />
+                  </span>
+                  <h2 className="text-[0.95rem] font-bold text-[var(--color-ink)]">
+                    {isPureTeacher ? "Gestión docente" : "Próximos pasos"}
+                  </h2>
+                </div>
+                {unreadCount > 0 && (
+                  <span className="grid h-5 min-w-5 place-items-center rounded-full bg-[var(--color-primary)] px-1.5 text-[0.62rem] font-bold text-white">
+                    {unreadCount}
+                  </span>
+                )}
               </div>
-              {unreadCount ? <Badge tone="brand">{unreadCount} nuevas</Badge> : null}
-            </div>
 
-            <div className="mt-5 divide-y divide-[rgba(22,60,88,0.08)]">
-              {nextSteps.map((step) => (
-                <Link
-                  className="group block py-4 first:pt-0 last:pb-0"
-                  href={step.href}
-                  key={step.id}
-                >
-                  <article className="flex items-start gap-4">
-                    <StepIconShell icon={step.icon} tone={step.tone} />
-                    <div className="min-w-0 flex-1">
-                      <p
-                        className={cn(
-                          "text-sm font-medium",
-                          step.tone === "warning"
-                            ? "text-[var(--color-danger)]"
-                            : step.tone === "brand"
-                              ? "text-[var(--color-primary)]"
-                              : "text-[var(--color-ink-soft)]",
-                        )}
-                      >
-                        {step.eyebrow}
-                      </p>
-                      <h3 className="mt-1 text-heading-md font-semibold text-[var(--color-ink)] transition group-hover:text-[var(--color-primary)]">
-                        {step.title}
-                      </h3>
-                      <p className="mt-1.5 text-body-sm text-[var(--color-ink-soft)]">
-                        {step.description}
-                      </p>
-                      <p className="mt-3 inline-flex items-center gap-2 text-sm font-semibold text-[var(--color-primary)]">
-                        {step.ctaLabel}
-                        <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
-                      </p>
+              <div className="mt-4 divide-y divide-[rgba(22,60,88,0.07)]">
+                {nextSteps.map((step) => (
+                  <Link
+                    className="group block py-3.5 first:pt-0 last:pb-0"
+                    href={step.href}
+                    key={step.id}
+                  >
+                    <div className="flex items-start gap-3">
+                      <StepIconShell icon={step.icon} tone={step.tone} />
+                      <div className="min-w-0 flex-1">
+                        <p
+                          className={cn(
+                            "text-[0.72rem] font-semibold uppercase tracking-[0.06em]",
+                            step.tone === "warning"
+                              ? "text-[var(--color-danger)]"
+                              : step.tone === "brand"
+                                ? "text-[var(--color-primary)]"
+                                : "text-[var(--color-ink-soft)]",
+                          )}
+                        >
+                          {step.eyebrow}
+                        </p>
+                        <h3 className="mt-0.5 text-sm font-semibold text-[var(--color-ink)] transition group-hover:text-[var(--color-primary)] line-clamp-2">
+                          {step.title}
+                        </h3>
+                        <p className="mt-1 inline-flex items-center gap-1 text-[0.78rem] font-medium text-[var(--color-primary)]">
+                          {step.ctaLabel}
+                          <ArrowRight className="h-3 w-3 transition group-hover:translate-x-0.5" />
+                        </p>
+                      </div>
                     </div>
-                  </article>
-                </Link>
-              ))}
-            </div>
-
-            {!nextSteps.length ? (
-              <div className="mt-5 rounded-[1.25rem] border border-[rgba(22,60,88,0.08)] bg-white/82 px-4 py-4">
-                <p className="text-sm font-semibold text-[var(--color-ink)]">
-                  {isPureTeacher ? "Sin tareas pendientes" : "Todo al día por ahora"}
-                </p>
-                <p className="mt-1.5 text-sm text-[var(--color-ink-soft)]">
-                  {isPureTeacher
-                    ? "Cuando haya entregas pendientes o actividad reciente, aparecerán aquí."
-                    : "Cuando haya nuevas tareas, recursos o actividad de comunidad, aparecerán aquí."}
-                </p>
+                  </Link>
+                ))}
               </div>
-            ) : null}
+
+              {!nextSteps.length ? (
+                <p className="mt-4 text-sm text-[var(--color-ink-soft)]">
+                  {isPureTeacher
+                    ? "Sin tareas pendientes en este momento."
+                    : "Todo al día. Volverá a mostrar tareas cuando haya actividad."}
+                </p>
+              ) : null}
+            </div>
           </aside>
         </section>
       </div>
