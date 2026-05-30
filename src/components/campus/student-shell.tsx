@@ -188,8 +188,8 @@ export function StudentShell({
   const closeMobileNav = () => setIsMobileNavOpen(false);
 
   return (
-    <div className="min-h-screen lg:grid lg:grid-cols-[240px_minmax(0,1fr)]">
-      <aside className="sticky top-0 hidden h-screen overflow-y-auto border-r border-[var(--color-border-subtle)] bg-[linear-gradient(180deg,#f5f1eb_0%,#f4f7fb_100%)] lg:flex lg:w-[240px] lg:flex-col">
+    <div className="min-h-screen lg:grid lg:grid-cols-[260px_minmax(0,1fr)]">
+      <aside className="sticky top-0 hidden h-screen overflow-y-auto border-r border-[var(--color-border-subtle)] bg-[linear-gradient(180deg,#f5f1eb_0%,#f4f7fb_100%)] lg:flex lg:w-[260px] lg:flex-col">
         <SidebarBrand />
         <SidebarNav navItems={navItems} pathname={pathname} />
         <SidebarFooter />

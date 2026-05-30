@@ -594,6 +594,12 @@ export default async function MyCoursesPage({
   const inProgressCourses = studentCourses.filter((c) => !c.progress.isCompleted);
   const completedCourses = studentCourses.filter((c) => c.progress.isCompleted);
   const tabCourses = activeTab === "completados" ? completedCourses : inProgressCourses;
+  const studentAverageCompletion = studentCourses.length
+    ? Math.round(
+        studentCourses.reduce((sum, c) => sum + c.progress.completionRate, 0) /
+          studentCourses.length,
+      )
+    : 0;
 
   return (
     <StudentShell
@@ -762,6 +768,51 @@ export default async function MyCoursesPage({
           </section>
         )}
 
+        {/* Métricas rápidas para alumnos */}
+        {!isPureTeacher && studentCourses.length > 0 && (
+          <section className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
+            <div className="flex items-center gap-3.5 rounded-[1.25rem] border border-[rgba(22,60,88,0.08)] bg-white/90 px-4 py-4 shadow-[var(--shadow-soft)]">
+              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-[var(--color-brand-soft)] text-[var(--color-primary)]">
+                <BookOpenText className="h-5 w-5" />
+              </span>
+              <div>
+                <p className="text-[0.7rem] font-semibold uppercase tracking-[0.16em] text-[var(--color-muted)]">
+                  Cursos activos
+                </p>
+                <p className="mt-0.5 font-premium text-display-sm font-semibold text-[var(--color-ink)]">
+                  {inProgressCourses.length}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3.5 rounded-[1.25rem] border border-[rgba(22,60,88,0.08)] bg-white/90 px-4 py-4 shadow-[var(--shadow-soft)]">
+              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-[var(--color-brand-soft)] text-[var(--color-primary)]">
+                <ClipboardList className="h-5 w-5" />
+              </span>
+              <div>
+                <p className="text-[0.7rem] font-semibold uppercase tracking-[0.16em] text-[var(--color-muted)]">
+                  Progreso medio
+                </p>
+                <p className="mt-0.5 font-premium text-display-sm font-semibold text-[var(--color-ink)]">
+                  {studentAverageCompletion}%
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3.5 rounded-[1.25rem] border border-[rgba(22,60,88,0.08)] bg-white/90 px-4 py-4 shadow-[var(--shadow-soft)]">
+              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-[var(--color-success-soft)] text-[var(--color-success)]">
+                <GraduationCap className="h-5 w-5" />
+              </span>
+              <div>
+                <p className="text-[0.7rem] font-semibold uppercase tracking-[0.16em] text-[var(--color-muted)]">
+                  Completados
+                </p>
+                <p className="mt-0.5 font-premium text-display-sm font-semibold text-[var(--color-ink)]">
+                  {completedCourses.length}
+                </p>
+              </div>
+            </div>
+          </section>
+        )}
+
         <section className="mt-10 grid gap-8 xl:grid-cols-[minmax(0,1fr)_24rem] xl:items-start">
           <div>
             {/* Section heading */}
@@ -820,41 +871,58 @@ export default async function MyCoursesPage({
             {/* Course list */}
             {studentCourses.length > 0 ? (
               tabCourses.length > 0 ? (
-                <div className="mt-6 flex flex-col divide-y divide-[rgba(22,60,88,0.07)]">
+                <div className="mt-6 grid gap-5 sm:grid-cols-2">
                   {tabCourses.map((course) => {
                     const nextOpenModule = getNextModule(course);
+                    const isDone = course.progress.isCompleted;
                     return (
                       <Link
-                        className="group flex gap-5 py-6 first:pt-2 transition hover:opacity-90"
+                        className="group flex flex-col overflow-hidden rounded-[1.5rem] border border-[rgba(22,60,88,0.08)] bg-[var(--color-surface-elevated)] shadow-[var(--shadow-soft)] transition hover:-translate-y-0.5 hover:shadow-[var(--shadow-medium)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2"
                         href={buildCourseContentHref(course.space.course.slug, {
                           moduleIndex: nextOpenModule?.index ?? 0,
                         })}
                         key={course.space.course.slug}
                       >
-                        <div className="h-28 w-40 shrink-0 overflow-hidden rounded-xl sm:h-32 sm:w-44">
+                        <div className="relative h-44 overflow-hidden">
                           <CourseArtwork
-                            className="h-full w-full rounded-xl border-0"
+                            className="h-full w-full rounded-none border-0 transition-transform duration-500 group-hover:scale-105"
                             course={course.space.course}
                             variant="card"
                           />
-                        </div>
-                        <div className="flex flex-1 flex-col justify-center gap-3">
-                          <div>
-                            {course.progress.isCompleted && (
-                              <Badge className="mb-1.5" tone="success">Completado</Badge>
-                            )}
-                            <h3 className="font-premium text-heading-md font-semibold text-[var(--color-ink)] transition group-hover:text-[var(--color-primary)]">
-                              {course.space.course.title}
-                            </h3>
-                            <p className="mt-1 text-body-sm text-[var(--color-ink-soft)]">
-                              {getStudentCourseMeta(course)}
-                            </p>
-                          </div>
-                          <div className="flex items-center gap-3">
-                            <ProgressBar className="max-w-[180px] flex-1" value={course.progress.completionRate} />
-                            <span className="text-sm font-semibold text-[var(--color-primary)]">
-                              {course.progress.completionRate}%
+                          <div className="absolute bottom-3 left-3 inline-flex items-center gap-1.5 rounded-full bg-[rgba(255,253,250,0.92)] px-2.5 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.08em] backdrop-blur-sm">
+                            <span
+                              className={cn(
+                                "h-1.5 w-1.5 rounded-full",
+                                isDone ? "bg-[var(--color-success)]" : "bg-[var(--color-primary)]",
+                              )}
+                            />
+                            <span className={isDone ? "text-[var(--color-success)]" : "text-[var(--color-primary)]"}>
+                              {isDone ? "Completado" : "En curso"}
                             </span>
+                          </div>
+                        </div>
+                        <div className="flex flex-1 flex-col p-5">
+                          <h3 className="font-premium text-heading-md font-semibold text-[var(--color-ink)] transition group-hover:text-[var(--color-primary)]">
+                            {course.space.course.title}
+                          </h3>
+                          <p className="mt-1.5 line-clamp-2 text-body-sm text-[var(--color-ink-soft)]">
+                            {getStudentCourseMeta(course)}
+                          </p>
+                          <div className="mt-auto pt-5">
+                            <div className="mb-1.5 flex items-center justify-between text-[0.74rem] font-medium text-[var(--color-ink-soft)]">
+                              <span>Progreso</span>
+                              <span className="font-semibold text-[var(--color-primary)]">
+                                {course.progress.completionRate}%
+                              </span>
+                            </div>
+                            <ProgressBar
+                              tone={isDone ? "success" : "brand"}
+                              value={course.progress.completionRate}
+                            />
+                            <div className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-[var(--radius-md)] bg-[var(--color-primary)] px-4 py-2.5 text-sm font-semibold text-white transition group-hover:bg-[var(--color-primary-strong)]">
+                              {isDone ? "Repasar curso" : course.progress.hasStarted ? "Continuar" : "Empezar curso"}
+                              <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
+                            </div>
                           </div>
                         </div>
                       </Link>
