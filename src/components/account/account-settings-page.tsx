@@ -14,21 +14,20 @@ import {
   LayoutGrid,
   LifeBuoy,
   Mail,
-  Menu,
   MessageSquareText,
   Monitor,
   Settings2,
   Shield,
   UserRound,
 } from "lucide-react";
-import { logoutAction, logoutEverywhereAction } from "@/actions/session";
+import { logoutEverywhereAction } from "@/actions/session";
 import { updateNotificationPreferencesAction } from "@/actions/account";
+import { StudentShell } from "@/components/campus/student-shell";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { StateBanner } from "@/components/ui/state-banner";
 import type { DashboardNotificationSnapshot } from "@/lib/account-dashboard";
 import { getGlobalRoleLabel } from "@/lib/course-permissions";
-import { siteConfig } from "@/lib/site";
-import { cn, formatDateTime, formatRelativeTime } from "@/lib/utils";
+import { cn, formatDateTime, formatRelativeTime, getInitials } from "@/lib/utils";
 
 type QuickLinkItem = {
   href?: string;
@@ -113,11 +112,6 @@ const desktopSidebarSecondaryItems = [
     icon: CircleHelp,
   },
 ] as const;
-
-function getInitials(name: string) {
-  const parts = name.trim().split(/\s+/).filter(Boolean).slice(0, 2);
-  return parts.map((part) => part[0]?.toUpperCase() ?? "").join("") || "U";
-}
 
 function getHeroEyebrow(role: UserGlobalRole) {
   if (role === "ADMIN") {
@@ -223,135 +217,6 @@ function DesktopSidebarLink(input: {
       <Icon className="h-5 w-5 shrink-0" />
       <span>{input.label}</span>
     </Link>
-  );
-}
-
-function AccountHeader(input: {
-  initials: string;
-  forumHref?: string;
-  unreadCount: number;
-}) {
-  const logoWords = siteConfig.shortName.split(" ");
-
-  return (
-    <header className="sticky top-0 z-40 border-b border-[rgba(21,39,58,0.1)] bg-[rgba(252,251,255,0.94)] backdrop-blur-xl">
-      <div className="mx-auto flex max-w-[1480px] items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8 xl:px-10">
-        <div className="flex items-center gap-3 lg:hidden">
-          <details className="relative">
-            <summary className="flex h-11 w-11 cursor-pointer list-none items-center justify-center rounded-full border border-[rgba(21,39,58,0.1)] bg-white text-[var(--color-ink)] marker:hidden transition hover:border-[rgba(23,60,86,0.2)]">
-              <Menu className="h-5 w-5" />
-            </summary>
-            <div className="absolute left-0 top-[calc(100%+0.75rem)] w-[16rem] rounded-[1.3rem] border border-[rgba(21,39,58,0.1)] bg-white p-3 shadow-[0_28px_60px_-34px_rgba(17,35,56,0.34)]">
-              <nav className="space-y-1.5" aria-label="Navegacion de cuenta">
-                {desktopSidebarPrimaryItems.map((item) => (
-                  <DesktopSidebarLink
-                    active={"active" in item ? item.active : undefined}
-                    href={item.href}
-                    icon={item.icon}
-                    key={`mobile-primary-${item.label}`}
-                    label={item.label}
-                  />
-                ))}
-                <div className="my-3 border-t border-[rgba(21,39,58,0.08)]" />
-                <Link
-                  className="flex items-center gap-3 rounded-[1rem] px-4 py-3 text-[1rem] font-medium text-[var(--color-ink)] transition hover:bg-[#f6f3ff]"
-                  href="/mis-cursos"
-                >
-                  <GraduationCap className="h-5 w-5" />
-                  <span>Mis cursos</span>
-                </Link>
-                <Link
-                  className="flex items-center gap-3 rounded-[1rem] px-4 py-3 text-[1rem] font-medium text-[var(--color-ink)] transition hover:bg-[#f6f3ff]"
-                  href={input.forumHref ?? "/mis-cursos"}
-                >
-                  <MessageSquareText className="h-5 w-5" />
-                  <span>Foro</span>
-                </Link>
-                <Link
-                  className="flex items-center gap-3 rounded-[1rem] px-4 py-3 text-[1rem] font-medium text-[var(--color-ink)] transition hover:bg-[#f6f3ff]"
-                  href="/soporte"
-                >
-                  <LifeBuoy className="h-5 w-5" />
-                  <span>Soporte</span>
-                </Link>
-                <form action={logoutAction}>
-                  <button
-                    className="mt-2 flex w-full items-center gap-3 rounded-[1rem] px-4 py-3 text-left text-[1rem] font-medium text-[var(--color-ink)] transition hover:bg-[#f6f3ff]"
-                    type="submit"
-                  >
-                    <ArrowRight className="h-5 w-5" />
-                    <span>Cerrar sesion</span>
-                  </button>
-                </form>
-              </nav>
-            </div>
-          </details>
-        </div>
-
-        <Link
-          className="min-w-0 shrink-0 text-[var(--color-ink)]"
-          href="/mis-cursos"
-        >
-          <span className="hidden text-[1rem] font-semibold leading-[0.95] tracking-[-0.05em] lg:block xl:text-[1.05rem]">
-            <span className="block">{logoWords[0] ?? "Autismo"}</span>
-            <span className="mt-1 block">{logoWords.slice(1).join(" ") || "Cordoba"}</span>
-          </span>
-          <span className="text-[1.95rem] font-semibold tracking-[-0.06em] lg:hidden">
-            {siteConfig.shortName}
-          </span>
-        </Link>
-
-        <nav
-          aria-label="Navegacion principal privada"
-          className="hidden items-center gap-8 lg:flex"
-        >
-          <Link
-            className="text-[1rem] font-medium text-[var(--color-ink)] transition hover:text-[#173c56]"
-            href="/mis-cursos"
-          >
-            Mis cursos
-          </Link>
-          <Link
-            className="text-[1rem] font-medium text-[var(--color-ink)] transition hover:text-[#173c56]"
-            href={input.forumHref ?? "/mis-cursos"}
-          >
-            Foro
-          </Link>
-          <Link
-            className="text-[1rem] font-medium text-[var(--color-ink)] transition hover:text-[#173c56]"
-            href="/soporte"
-          >
-            Soporte
-          </Link>
-        </nav>
-
-        <div className="flex items-center gap-3 sm:gap-4">
-          <Link
-            aria-label="Notificaciones"
-            className="relative flex h-11 w-11 items-center justify-center rounded-full border border-[rgba(21,39,58,0.1)] bg-white text-[var(--color-ink)] transition hover:border-[rgba(23,60,86,0.2)] hover:text-[#173c56]"
-            href="#preferencias"
-          >
-            <Bell className="h-5 w-5" />
-            {input.unreadCount > 0 ? (
-              <span className="absolute right-2.5 top-2.5 h-2.5 w-2.5 rounded-full bg-[#d54b3d]" />
-            ) : null}
-          </Link>
-
-          <div className="grid h-11 w-11 place-items-center rounded-full bg-[#d8e8fb] text-sm font-semibold text-[#173c56]">
-            {input.initials}
-          </div>
-
-          <form action={logoutAction} className="hidden lg:block">
-            <button
-              className="text-[1rem] font-medium text-[var(--color-ink)] transition hover:text-[#173c56]"
-              type="submit"
-            >
-              Cerrar sesion
-            </button>
-          </form>
-        </div>
-      </div>
-    </header>
   );
 }
 
@@ -514,15 +379,24 @@ export function AccountSettingsPage({
       : null;
 
   return (
-    <div className="min-h-screen bg-[#fcfbff]">
-      <AccountHeader
-        forumHref={forumQuickLink?.href}
-        initials={initials}
-        unreadCount={notificationSnapshot.unreadCount}
-      />
-
+    <StudentShell
+      fullName={fullName}
+      initials={initials}
+      navItems={[
+        { label: "Mi campus", href: "/mis-cursos", icon: "home" },
+        ...(forumQuickLink?.href
+          ? [{ label: "Comunidad", href: forumQuickLink.href, icon: "community" as const }]
+          : []),
+        { label: "Biblioteca", href: "/app/recursos", icon: "library", disabled: true },
+        { label: "Certificados", href: "/app/certificados", icon: "certificates", disabled: true },
+        { label: "Configuración", href: "/mi-cuenta", icon: "settings" },
+        { label: "Soporte", href: "/soporte", icon: "support" },
+      ]}
+      notificationsCount={notificationSnapshot.unreadCount}
+      roleLabel={roleLabel}
+    >
       <div className="mx-auto max-w-[1480px] lg:grid lg:grid-cols-[16.25rem_minmax(0,1fr)]">
-        <aside className="hidden border-r border-[rgba(21,39,58,0.08)] bg-[#f4f1ff] lg:block">
+        <aside className="hidden border-r border-[var(--color-border-subtle)] bg-[var(--color-brand-soft)] lg:block">
           <div className="sticky top-[5rem] flex min-h-[calc(100dvh-5rem)] flex-col justify-between px-5 py-8">
             <nav aria-label="Secciones de cuenta" className="space-y-2.5">
               {desktopSidebarPrimaryItems.map((item) => (
@@ -848,7 +722,7 @@ export function AccountSettingsPage({
           </div>
         </main>
       </div>
-    </div>
+    </StudentShell>
   );
 }
 

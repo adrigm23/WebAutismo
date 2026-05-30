@@ -9,10 +9,11 @@ import {
   GraduationCap,
   MessageSquareText,
 } from "lucide-react";
-import { CampusPrivateHeader } from "@/components/learning/campus-private-header";
+import { StudentShell, type StudentShellNavItem } from "@/components/campus/student-shell";
 import { CourseArtwork } from "@/components/course-artwork";
 import { Badge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button";
+import { ProgressBar } from "@/components/ui/progress-bar";
 import { requireUser } from "@/lib/auth";
 import {
   getDashboardNotificationSnapshot,
@@ -33,7 +34,7 @@ import { getCourseProgressDetailsMapForUser, type CourseProgressDetails } from "
 import { getCampusResources } from "@/lib/course-resources";
 import { isStaffCourseRole } from "@/lib/course-roles";
 import { siteConfig } from "@/lib/site";
-import { cn, formatDateTime, formatRelativeTime } from "@/lib/utils";
+import { cn, formatDateTime, getInitials } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: "Mis cursos",
@@ -82,18 +83,6 @@ type NotificationActivityItem = {
   createdAt: Date;
   icon: typeof Bell;
 };
-
-function getInitials(name: string) {
-  return (
-    name
-      .trim()
-      .split(/\s+/)
-      .filter(Boolean)
-      .slice(0, 2)
-      .map((part) => part[0]?.toUpperCase() ?? "")
-      .join("") || "U"
-  );
-}
 
 function getRoleLabel(input: {
   studentCount: number;
@@ -171,16 +160,6 @@ function getStudentCourseMeta(course: StudentCourseEntry) {
   }
 
   return `Modulo ${nextModule.index + 1}: ${nextModule.title}`;
-}
-
-function getStudentCourseDescription(course: StudentCourseEntry) {
-  if (course.progress.lastCompletedAt) {
-    return `Ultima actividad ${formatRelativeTime(course.progress.lastCompletedAt)}.`;
-  }
-
-  return course.progress.hasStarted
-    ? `${course.progress.pendingModules} modulos pendientes.`
-    : "Aun no has comenzado este recorrido.";
 }
 
 function buildNotificationActivity(snapshot: DashboardNotificationSnapshot) {
@@ -451,31 +430,6 @@ function buildTeacherSteps(input: {
   return steps.slice(0, 3);
 }
 
-function ProgressBar(input: {
-  value: number;
-  tone?: "light" | "brand";
-  className?: string;
-}) {
-  return (
-    <div
-      className={cn(
-        "h-2 overflow-hidden rounded-full",
-        input.tone === "light" ? "bg-white/16" : "bg-[rgba(38,56,91,0.1)]",
-        input.className,
-      )}
-    >
-      <div
-        aria-hidden="true"
-        className={cn(
-          "h-full rounded-full",
-          input.tone === "light" ? "bg-[rgba(245,248,252,0.96)]" : "bg-[var(--color-primary)]",
-        )}
-        style={{ width: `${Math.max(0, Math.min(100, input.value))}%` }}
-      />
-    </div>
-  );
-}
-
 function StepIconShell(input: {
   icon: typeof CalendarClock;
   tone?: "default" | "warning" | "brand";
@@ -483,7 +437,7 @@ function StepIconShell(input: {
   return (
     <div
       className={cn(
-        "grid h-10 w-10 shrink-0 place-items-center rounded-[var(--radius-md)] border",
+        "grid h-10 w-10 shrink-0 place-items-center rounded-full border",
         input.tone === "warning"
           ? "border-[rgba(209,88,62,0.18)] bg-[rgba(252,238,233,0.9)] text-[var(--color-danger)]"
           : input.tone === "brand"
@@ -494,6 +448,17 @@ function StepIconShell(input: {
       <input.icon className="h-4 w-4" />
     </div>
   );
+}
+
+function buildStudentNavItems(communityHref: string): StudentShellNavItem[] {
+  return [
+    { label: "Mi campus", href: "/mis-cursos", icon: "home" },
+    { label: "Comunidad", href: communityHref, icon: "community" },
+    { label: "Biblioteca", href: "/app/recursos", icon: "library", disabled: true },
+    { label: "Certificados", href: "/app/certificados", icon: "certificates", disabled: true },
+    { label: "Configuración", href: "/mi-cuenta", icon: "settings" },
+    { label: "Soporte", href: "/soporte", icon: "support" },
+  ];
 }
 
 export default async function MyCoursesPage({
@@ -610,14 +575,19 @@ export default async function MyCoursesPage({
             100,
         )
       : 0;
+  const totalPendingReviews = teacherSummaries.reduce(
+    (sum, s) => sum + s.pendingReviewItems.length,
+    0,
+  );
   const unreadCount = notificationSnapshot.unreadCount;
   const nextModule = primaryStudentCourse ? getNextModule(primaryStudentCourse) : null;
+  const isPureTeacher = !primaryStudentCourse && teacherCourses.length > 0;
   const heroSubtitle = primaryStudentCourse?.progress.hasStarted
     ? "Continúa donde lo dejaste."
     : primaryStudentCourse
       ? "Todo listo para empezar."
       : teacherCourses.length
-        ? "Aquí está la actividad de tus cursos."
+        ? "Gestiona tus cursos y revisa la actividad de tus alumnos."
         : "Bienvenido de nuevo al campus.";
   const { tab } = await searchParams;
   const activeTab = tab === "completados" ? "completados" : "en-curso";
@@ -626,28 +596,74 @@ export default async function MyCoursesPage({
   const tabCourses = activeTab === "completados" ? completedCourses : inProgressCourses;
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(223,234,243,0.38),transparent_26%),linear-gradient(180deg,#faf7f2_0%,#f7f4ef_54%,#fbf9f5_100%)] pb-14">
-      <CampusPrivateHeader
-        fullName={user.name}
-        initials={getInitials(user.name)}
-        navItems={[
-          { label: "Mis cursos", href: "/mis-cursos", active: true },
-          { label: "Comunidad", href: communityHref },
-          { label: "Soporte", href: "/soporte" },
-        ]}
-        notificationsCount={unreadCount}
-        roleLabel={roleLabel}
-      />
-
-      <main className="site-container pt-8 sm:pt-10">
+    <StudentShell
+      fullName={user.name}
+      initials={getInitials(user.name)}
+      navItems={buildStudentNavItems(communityHref)}
+      notificationsCount={unreadCount}
+      roleLabel={roleLabel}
+    >
+      <div className="site-container py-8 sm:py-10">
         <section className="max-w-[48rem]">
           <h1 className="font-premium text-display-lg font-semibold text-[var(--color-ink)]">
-            Hola, {user.name.split(" ")[0] || user.name}.
+            {isPureTeacher
+              ? `Bienvenido, ${user.name.split(" ")[0] || user.name}.`
+              : `Hola, ${user.name.split(" ")[0] || user.name}.`}
           </h1>
           <p className="mt-2 max-w-[38rem] text-body-md text-[var(--color-ink-soft)]">
-            {heroSubtitle}
+            {isPureTeacher
+              ? "Gestiona tus cursos y acompaña el progreso de tus alumnos."
+              : heroSubtitle}
           </p>
+          {isPureTeacher && (
+            <p className="mt-1 max-w-[38rem] text-body-sm text-[var(--color-muted)]">
+              Revisa entregas, responde dudas y mantén actualizada la actividad de tus formaciones.
+            </p>
+          )}
         </section>
+
+        {/* Métricas rápidas para docentes */}
+        {isPureTeacher && (
+          <section className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
+            <div className="rounded-[1.25rem] border border-[rgba(22,60,88,0.08)] bg-white/90 px-4 py-4 shadow-[var(--shadow-soft)]">
+              <p className="text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-[var(--color-muted)]">
+                Cursos activos
+              </p>
+              <p className="mt-1.5 font-premium text-display-sm font-semibold text-[var(--color-ink)]">
+                {teacherCourses.length}
+              </p>
+            </div>
+            <div className={cn(
+              "rounded-[1.25rem] border px-4 py-4 shadow-[var(--shadow-soft)]",
+              totalPendingReviews > 0
+                ? "border-[rgba(209,88,62,0.18)] bg-[rgba(252,238,233,0.7)]"
+                : "border-[rgba(22,60,88,0.08)] bg-white/90",
+            )}>
+              <p className={cn(
+                "text-[0.72rem] font-semibold uppercase tracking-[0.16em]",
+                totalPendingReviews > 0 ? "text-[var(--color-danger)]" : "text-[var(--color-muted)]",
+              )}>
+                Entregas pendientes
+              </p>
+              <p className={cn(
+                "mt-1.5 font-premium text-display-sm font-semibold",
+                totalPendingReviews > 0 ? "text-[var(--color-danger)]" : "text-[var(--color-ink)]",
+              )}>
+                {totalPendingReviews}
+              </p>
+            </div>
+            {unreadCount > 0 && (
+              <div className="rounded-[1.25rem] border border-[rgba(22,60,88,0.08)] bg-[var(--color-brand-soft)] px-4 py-4 shadow-[var(--shadow-soft)]">
+                <p className="text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-[var(--color-primary)]">
+                  Notificaciones
+                </p>
+                <p className="mt-1.5 font-premium text-display-sm font-semibold text-[var(--color-primary)]">
+                  {unreadCount}
+                </p>
+              </div>
+            )}
+          </section>
+        )}
 
         {heroCourse ? (
           <section className="mt-8">
@@ -751,13 +767,13 @@ export default async function MyCoursesPage({
             {/* Section heading */}
             <div>
               <h2 className="font-premium text-display-md font-semibold text-[var(--color-ink)]">
-                Tu biblioteca de formación
+                {isPureTeacher ? "Tus cursos asignados" : "Tu biblioteca de formación"}
               </h2>
               <p className="mt-1.5 text-body-sm text-[var(--color-ink-soft)]">
                 {studentCourses.length
                   ? `${studentCourses.length} ${studentCourses.length === 1 ? "recorrido activo" : "recorridos activos"} en tu campus privado.`
                   : teacherCourses.length
-                    ? "Cursos asignados como docente en tu zona privada."
+                    ? `${teacherCourses.length} ${teacherCourses.length === 1 ? "curso asignado" : "cursos asignados"} como docente.`
                     : "Tu zona privada mostrará aquí los cursos que actives."}
               </p>
             </div>
@@ -801,47 +817,44 @@ export default async function MyCoursesPage({
               </nav>
             )}
 
-            {/* Course card grid */}
+            {/* Course list */}
             {studentCourses.length > 0 ? (
               tabCourses.length > 0 ? (
-                <div className="mt-6 grid gap-5 sm:grid-cols-2">
+                <div className="mt-6 flex flex-col divide-y divide-[rgba(22,60,88,0.07)]">
                   {tabCourses.map((course) => {
                     const nextOpenModule = getNextModule(course);
                     return (
                       <Link
-                        className="group flex flex-col overflow-hidden rounded-[1.75rem] border border-[rgba(22,60,88,0.08)] bg-white/90 shadow-[var(--shadow-soft)] transition hover:-translate-y-0.5 hover:shadow-[var(--shadow-medium)]"
+                        className="group flex gap-5 py-6 first:pt-2 transition hover:opacity-90"
                         href={buildCourseContentHref(course.space.course.slug, {
                           moduleIndex: nextOpenModule?.index ?? 0,
                         })}
                         key={course.space.course.slug}
                       >
-                        <CourseArtwork
-                          className="h-44 w-full rounded-none border-0 sm:h-48"
-                          course={course.space.course}
-                          variant="card"
-                        />
-                        <div className="flex flex-1 flex-col gap-4 p-5">
-                          <div className="flex-1">
+                        <div className="h-28 w-40 shrink-0 overflow-hidden rounded-xl sm:h-32 sm:w-44">
+                          <CourseArtwork
+                            className="h-full w-full rounded-xl border-0"
+                            course={course.space.course}
+                            variant="card"
+                          />
+                        </div>
+                        <div className="flex flex-1 flex-col justify-center gap-3">
+                          <div>
                             {course.progress.isCompleted && (
-                              <Badge className="mb-2" tone="success">Completado</Badge>
+                              <Badge className="mb-1.5" tone="success">Completado</Badge>
                             )}
                             <h3 className="font-premium text-heading-md font-semibold text-[var(--color-ink)] transition group-hover:text-[var(--color-primary)]">
                               {course.space.course.title}
                             </h3>
-                            <p className="mt-1.5 text-body-sm text-[var(--color-ink-soft)]">
+                            <p className="mt-1 text-body-sm text-[var(--color-ink-soft)]">
                               {getStudentCourseMeta(course)}
                             </p>
                           </div>
-                          <div>
-                            <div className="mb-2 flex items-center justify-between">
-                              <span className="text-sm text-[var(--color-muted)]">
-                                {getStudentCourseDescription(course)}
-                              </span>
-                              <span className="text-sm font-semibold text-[var(--color-primary)]">
-                                {course.progress.completionRate}%
-                              </span>
-                            </div>
-                            <ProgressBar value={course.progress.completionRate} />
+                          <div className="flex items-center gap-3">
+                            <ProgressBar className="max-w-[180px] flex-1" value={course.progress.completionRate} />
+                            <span className="text-sm font-semibold text-[var(--color-primary)]">
+                              {course.progress.completionRate}%
+                            </span>
                           </div>
                         </div>
                       </Link>
@@ -861,32 +874,31 @@ export default async function MyCoursesPage({
                 </div>
               )
             ) : teacherCourses.length > 0 ? (
-              <div className="mt-6 grid gap-5 sm:grid-cols-2">
+              <div className="mt-6 flex flex-col divide-y divide-[rgba(22,60,88,0.07)]">
                 {teacherCourses.map((course) => (
                   <Link
-                    className="group flex flex-col overflow-hidden rounded-[1.75rem] border border-[rgba(22,60,88,0.08)] bg-white/90 shadow-[var(--shadow-soft)] transition hover:-translate-y-0.5 hover:shadow-[var(--shadow-medium)]"
+                    className="group flex gap-5 py-6 first:pt-2 transition hover:opacity-90"
                     href={course.teachingHref}
                     key={course.space.course.slug}
                   >
-                    <CourseArtwork
-                      className="h-44 w-full rounded-none border-0 sm:h-48"
-                      course={course.space.course}
-                      variant="card"
-                    />
-                    <div className="p-5">
+                    <div className="h-28 w-40 shrink-0 overflow-hidden rounded-xl sm:h-32 sm:w-44">
+                      <CourseArtwork
+                        className="h-full w-full rounded-xl border-0"
+                        course={course.space.course}
+                        variant="card"
+                      />
+                    </div>
+                    <div className="flex flex-1 flex-col justify-center gap-3">
                       <div className="flex flex-wrap items-center gap-2">
                         <Badge tone="info">Docencia</Badge>
                         <Badge tone="outline">
                           {course.space.course.activeEdition?.label ?? "Curso asignado"}
                         </Badge>
                       </div>
-                      <h3 className="font-premium mt-3 text-heading-md font-semibold text-[var(--color-ink)] transition group-hover:text-[var(--color-primary)]">
+                      <h3 className="font-premium text-heading-md font-semibold text-[var(--color-ink)] transition group-hover:text-[var(--color-primary)]">
                         {course.space.course.title}
                       </h3>
-                      <p className="mt-2 text-body-sm text-[var(--color-ink-soft)]">
-                        Abre seguimiento, campus y foro desde el mismo curso.
-                      </p>
-                      <p className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-[var(--color-primary)]">
+                      <p className="inline-flex items-center gap-2 text-sm font-medium text-[var(--color-primary)]">
                         Abrir seguimiento
                         <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
                       </p>
@@ -913,10 +925,12 @@ export default async function MyCoursesPage({
             <div className="flex items-start justify-between gap-3">
               <div>
                 <h2 className="font-premium text-heading-lg font-semibold text-[var(--color-ink)]">
-                  Próximos pasos
+                  {isPureTeacher ? "Gestión docente" : "Próximos pasos"}
                 </h2>
                 <p className="mt-1.5 text-body-sm text-[var(--color-ink-soft)]">
-                  Acciones reales del campus para no perder continuidad.
+                  {isPureTeacher
+                    ? "Tareas y actividad pendiente de tus cursos."
+                    : "Acciones reales del campus para no perder continuidad."}
                 </p>
               </div>
               {unreadCount ? <Badge tone="brand">{unreadCount} nuevas</Badge> : null}
@@ -963,16 +977,18 @@ export default async function MyCoursesPage({
             {!nextSteps.length ? (
               <div className="mt-5 rounded-[1.25rem] border border-[rgba(22,60,88,0.08)] bg-white/82 px-4 py-4">
                 <p className="text-sm font-semibold text-[var(--color-ink)]">
-                  Todo al dia por ahora
+                  {isPureTeacher ? "Sin tareas pendientes" : "Todo al día por ahora"}
                 </p>
                 <p className="mt-1.5 text-sm text-[var(--color-ink-soft)]">
-                  Cuando haya nuevas tareas, recursos o actividad de comunidad, apareceran aqui.
+                  {isPureTeacher
+                    ? "Cuando haya entregas pendientes o actividad reciente, aparecerán aquí."
+                    : "Cuando haya nuevas tareas, recursos o actividad de comunidad, aparecerán aquí."}
                 </p>
               </div>
             ) : null}
           </aside>
         </section>
-      </main>
-    </div>
+      </div>
+    </StudentShell>
   );
 }

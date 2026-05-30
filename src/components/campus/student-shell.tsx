@@ -1,0 +1,287 @@
+"use client";
+
+import { useState } from "react";
+import type { ReactNode } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import {
+  Award,
+  Bell,
+  BookOpen,
+  ChevronRight,
+  CircleHelp,
+  GraduationCap,
+  LayoutGrid,
+  LogOut,
+  Menu,
+  MessageSquareText,
+  Settings2,
+  X,
+} from "lucide-react";
+import type { LucideIcon } from "lucide-react";
+import { logoutAction } from "@/actions/session";
+import { siteConfig } from "@/lib/site";
+import { cn } from "@/lib/utils";
+
+export type StudentShellNavIcon =
+  | "home"
+  | "courses"
+  | "community"
+  | "library"
+  | "certificates"
+  | "settings"
+  | "support";
+
+export type StudentShellNavItem = {
+  label: string;
+  href: string;
+  icon: StudentShellNavIcon;
+  disabled?: boolean;
+  badge?: number;
+};
+
+type StudentShellProps = {
+  children: ReactNode;
+  fullName: string;
+  initials: string;
+  roleLabel: string;
+  navItems: StudentShellNavItem[];
+  notificationsCount?: number;
+};
+
+const NAV_ICONS: Record<StudentShellNavIcon, LucideIcon> = {
+  home: LayoutGrid,
+  courses: GraduationCap,
+  community: MessageSquareText,
+  library: BookOpen,
+  certificates: Award,
+  settings: Settings2,
+  support: CircleHelp,
+};
+
+function isNavItemActive(pathname: string, href: string) {
+  const path = href.split("?")[0]?.split("#")[0] ?? href;
+
+  if (path === "/" || path === "") {
+    return pathname === path;
+  }
+
+  return pathname === path || pathname.startsWith(`${path}/`);
+}
+
+function SidebarNav({
+  navItems,
+  pathname,
+  onNavigate,
+}: {
+  navItems: StudentShellNavItem[];
+  pathname: string;
+  onNavigate?: () => void;
+}) {
+  return (
+    <nav className="flex-1 space-y-1 px-4">
+      {navItems.map((item) => {
+        const Icon = NAV_ICONS[item.icon];
+        const isActive = !item.disabled && isNavItemActive(pathname, item.href);
+
+        if (item.disabled) {
+          return (
+            <div
+              aria-disabled="true"
+              className="flex cursor-not-allowed items-center gap-3 rounded-[var(--radius-md)] px-4 py-3 text-[1.02rem] font-medium text-[var(--color-ink-soft)] opacity-50"
+              key={item.label}
+            >
+              <Icon className="h-5 w-5 shrink-0" strokeWidth={2} />
+              <span className="flex-1">{item.label}</span>
+              <span className="rounded-full bg-[rgba(28,47,67,0.08)] px-2 py-0.5 text-[0.62rem] font-semibold uppercase tracking-[0.08em] text-[var(--color-ink-soft)]">
+                Próx.
+              </span>
+            </div>
+          );
+        }
+
+        return (
+          <Link
+            aria-current={isActive ? "page" : undefined}
+            className={cn(
+              "flex items-center gap-3 rounded-[var(--radius-md)] px-4 py-3 text-[1.02rem] font-medium text-[var(--color-ink-soft)] transition hover:bg-white hover:text-[var(--color-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2",
+              isActive &&
+                "bg-[var(--color-primary)] text-white shadow-[var(--shadow-soft)] hover:bg-[var(--color-primary)] hover:text-white",
+            )}
+            href={item.href}
+            key={item.label}
+            onClick={onNavigate}
+          >
+            <Icon className="h-5 w-5 shrink-0" strokeWidth={2} />
+            <span className="flex-1">{item.label}</span>
+            {typeof item.badge === "number" && item.badge > 0 ? (
+              <span
+                className={cn(
+                  "grid h-5 min-w-5 place-items-center rounded-full px-1.5 text-[0.62rem] font-semibold",
+                  isActive
+                    ? "bg-white/20 text-white"
+                    : "bg-[var(--color-brand-soft)] text-[var(--color-primary)]",
+                )}
+              >
+                {item.badge}
+              </span>
+            ) : null}
+          </Link>
+        );
+      })}
+    </nav>
+  );
+}
+
+function SidebarBrand() {
+  return (
+    <div className="px-6 pb-5 pt-8">
+      <Link className="block" href="/mis-cursos">
+        <div className="text-[1.85rem] font-bold tracking-[-0.06em] text-[var(--color-primary)]">
+          {siteConfig.shortName}
+        </div>
+        <p className="mt-2 text-[0.7rem] font-semibold uppercase tracking-[0.26em] text-[var(--color-ink-soft)]">
+          Campus del alumno
+        </p>
+      </Link>
+    </div>
+  );
+}
+
+function SidebarFooter({ onNavigate }: { onNavigate?: () => void }) {
+  return (
+    <div className="border-t border-[var(--color-border-subtle)] px-4 py-5">
+      <div className="space-y-1">
+        <Link
+          className="flex items-center gap-3 rounded-[var(--radius-md)] px-4 py-3 text-[1.02rem] font-medium text-[var(--color-ink-soft)] transition hover:bg-white hover:text-[var(--color-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2"
+          href="/soporte"
+          onClick={onNavigate}
+        >
+          <CircleHelp className="h-5 w-5 shrink-0" strokeWidth={2} />
+          <span>Soporte</span>
+        </Link>
+        <form action={logoutAction}>
+          <button
+            className="flex w-full items-center gap-3 rounded-[var(--radius-md)] px-4 py-3 text-left text-[1.02rem] font-medium text-[var(--color-ink-soft)] transition hover:bg-white hover:text-[var(--color-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2"
+            type="submit"
+          >
+            <LogOut className="h-5 w-5 shrink-0" strokeWidth={2} />
+            <span>Cerrar sesión</span>
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+export function StudentShell({
+  children,
+  fullName,
+  initials,
+  roleLabel,
+  navItems,
+  notificationsCount = 0,
+}: StudentShellProps) {
+  const pathname = usePathname();
+  const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
+
+  const closeMobileNav = () => setIsMobileNavOpen(false);
+
+  return (
+    <div className="min-h-screen lg:grid lg:grid-cols-[240px_minmax(0,1fr)]">
+      <aside className="sticky top-0 hidden h-screen overflow-y-auto border-r border-[var(--color-border-subtle)] bg-[linear-gradient(180deg,#f5f1eb_0%,#f4f7fb_100%)] lg:flex lg:w-[240px] lg:flex-col">
+        <SidebarBrand />
+        <SidebarNav navItems={navItems} pathname={pathname} />
+        <SidebarFooter />
+      </aside>
+
+      {isMobileNavOpen ? (
+        <div className="fixed inset-0 z-40 lg:hidden">
+          <button
+            aria-label="Cerrar menú"
+            className="absolute inset-0 bg-[rgba(15,23,32,0.45)] backdrop-blur-sm"
+            onClick={closeMobileNav}
+            type="button"
+          />
+          <aside className="absolute inset-y-0 left-0 flex w-[280px] max-w-[85vw] flex-col overflow-y-auto border-r border-[var(--color-border-subtle)] bg-[linear-gradient(180deg,#f5f1eb_0%,#f4f7fb_100%)] shadow-2xl">
+            <div className="flex items-start justify-between pr-3">
+              <SidebarBrand />
+              <button
+                aria-label="Cerrar menú"
+                className="mr-1 mt-7 grid h-10 w-10 place-items-center rounded-full text-[var(--color-ink-soft)] transition hover:bg-white hover:text-[var(--color-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)]"
+                onClick={closeMobileNav}
+                type="button"
+              >
+                <X className="h-5 w-5" strokeWidth={2} />
+              </button>
+            </div>
+            <SidebarNav
+              navItems={navItems}
+              onNavigate={closeMobileNav}
+              pathname={pathname}
+            />
+            <SidebarFooter onNavigate={closeMobileNav} />
+          </aside>
+        </div>
+      ) : null}
+
+      <div className="flex min-h-screen flex-col">
+        <header className="sticky top-0 z-20 border-b border-[var(--color-border-subtle)] bg-[rgba(247,244,239,0.96)] backdrop-blur-md">
+          <div className="flex items-center justify-between gap-3 px-4 py-3 sm:px-6">
+            <div className="flex min-w-0 items-center gap-2.5">
+              <button
+                aria-label="Abrir menú"
+                className="grid h-10 w-10 place-items-center rounded-full border border-transparent text-[var(--color-ink-soft)] transition hover:border-[var(--color-border-subtle)] hover:bg-white hover:text-[var(--color-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] lg:hidden"
+                onClick={() => setIsMobileNavOpen(true)}
+                type="button"
+              >
+                <Menu className="h-5 w-5" strokeWidth={2} />
+              </button>
+              <Link
+                className="truncate text-sm font-bold uppercase tracking-[0.16em] text-[var(--color-primary)] lg:hidden"
+                href="/mis-cursos"
+              >
+                {siteConfig.shortName}
+              </Link>
+            </div>
+
+            <div className="flex items-center gap-2 sm:gap-3">
+              <Link
+                aria-label="Ir a notificaciones"
+                className="relative grid h-10 w-10 place-items-center rounded-full border border-transparent text-[var(--color-ink-soft)] transition hover:border-[var(--color-border-subtle)] hover:bg-white hover:text-[var(--color-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)]"
+                href="/mi-cuenta#notificaciones"
+              >
+                <Bell className="h-5 w-5" strokeWidth={1.9} />
+                {notificationsCount > 0 ? (
+                  <span className="absolute -right-0.5 -top-0.5 grid h-[1.1rem] min-w-[1.1rem] place-items-center rounded-full bg-[var(--color-primary)] px-1 text-[0.6rem] font-semibold text-white">
+                    {notificationsCount > 9 ? "9+" : notificationsCount}
+                  </span>
+                ) : null}
+              </Link>
+
+              <Link
+                className="flex items-center gap-2.5 rounded-full border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] py-1 pl-1 pr-2 transition hover:border-[var(--color-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] sm:pr-3"
+                href="/mi-cuenta"
+              >
+                <span className="grid h-8 w-8 place-items-center rounded-full bg-[var(--color-primary)] text-xs font-semibold text-white">
+                  {initials}
+                </span>
+                <span className="hidden min-w-0 flex-col leading-tight sm:flex">
+                  <span className="truncate text-sm font-semibold text-[var(--color-ink)]">
+                    {fullName}
+                  </span>
+                  <span className="truncate text-[0.7rem] text-[var(--color-ink-soft)]">
+                    {roleLabel}
+                  </span>
+                </span>
+                <ChevronRight className="hidden h-4 w-4 text-[var(--color-ink-soft)] sm:block" strokeWidth={2} />
+              </Link>
+            </div>
+          </div>
+        </header>
+
+        <main className="flex-1 bg-[var(--color-bg-app)]">{children}</main>
+      </div>
+    </div>
+  );
+}

@@ -7,7 +7,7 @@ import type {
   UserGlobalRole,
 } from "@prisma/client";
 import { getGlobalRoleLabel } from "@/lib/course-permissions";
-import { firstValue, formatPrice } from "@/lib/utils";
+import { firstValue, formatPrice, getInitials } from "@/lib/utils";
 
 export type AdminNavigationItem = {
   href: string;
@@ -104,14 +104,7 @@ export function getAdminSearchPlaceholder(pathname: string) {
 }
 
 export function getUserInitials(name: string) {
-  return (
-    name
-      .split(" ")
-      .filter(Boolean)
-      .slice(0, 2)
-      .map((chunk) => chunk[0]?.toUpperCase())
-      .join("") || "AD"
-  );
+  return getInitials(name, "AD");
 }
 
 export function getCourseStatusLabel(status: CourseStatus) {
