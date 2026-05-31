@@ -114,6 +114,10 @@ export function buildCourseForumHref(courseSlug: string) {
   return `/mis-cursos/${courseSlug}/foro`;
 }
 
+export function buildLessonPlayerHref(courseSlug: string, moduleIndex: number) {
+  return `/mis-cursos/${courseSlug}/leccion/${moduleIndex}`;
+}
+
 export function buildCourseTrackingHref(input: {
   courseSlug: string;
   submissionId?: string | null;
