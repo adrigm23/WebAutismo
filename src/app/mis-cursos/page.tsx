@@ -455,6 +455,7 @@ function StepIconShell(input: {
 function buildStudentNavItems(communityHref: string): StudentShellNavItem[] {
   return [
     { label: "Mi campus", href: "/mis-cursos", icon: "home" },
+    { label: "Mensajes", href: "/mensajes", icon: "messages" },
     { label: "Comunidad", href: communityHref, icon: "community" },
     { label: "Biblioteca", href: "/app/recursos", icon: "library", disabled: true },
     { label: "Certificados", href: "/app/certificados", icon: "certificates", disabled: true },

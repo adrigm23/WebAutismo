@@ -14,6 +14,7 @@ import {
   LayoutGrid,
   LogOut,
   Menu,
+  MessagesSquare,
   MessageSquareText,
   Settings2,
   X,
@@ -26,6 +27,7 @@ import { cn } from "@/lib/utils";
 export type StudentShellNavIcon =
   | "home"
   | "courses"
+  | "messages"
   | "community"
   | "library"
   | "certificates"
@@ -52,6 +54,7 @@ type StudentShellProps = {
 const NAV_ICONS: Record<StudentShellNavIcon, LucideIcon> = {
   home: LayoutGrid,
   courses: GraduationCap,
+  messages: MessagesSquare,
   community: MessageSquareText,
   library: BookOpen,
   certificates: Award,

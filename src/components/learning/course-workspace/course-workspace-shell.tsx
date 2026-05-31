@@ -13,6 +13,7 @@ import {
   LayoutGrid,
   LogOut,
   Menu,
+  MessagesSquare,
   MessageSquareText,
   Search,
   Settings2,
@@ -32,6 +33,7 @@ type NavItem = {
 const NAV_ITEMS: NavItem[] = [
   { label: "Inicio", href: "/mis-cursos", icon: LayoutGrid },
   { label: "Mis Cursos", href: "/mis-cursos", icon: GraduationCap },
+  { label: "Mensajes", href: "/mensajes", icon: MessagesSquare },
   { label: "Comunidad", href: "#", icon: MessageSquareText, disabled: true },
   { label: "Biblioteca", href: "#", icon: BookOpen, disabled: true },
   { label: "Certificados", href: "#", icon: Award, disabled: true },
