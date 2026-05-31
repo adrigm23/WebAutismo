@@ -116,10 +116,19 @@ export async function GET(
 
   try {
     const fileBuffer = await readStoredCourseResourceSubmissionContent(submission.storageKey);
-    const headers = buildPrivateFileHeaders({
-      fileName: submission.attachmentLabel ?? "entrega",
-      mimeType: submission.mimeType
-    });
+    const requestUrl = new URL(request.url);
+    const inline = requestUrl.searchParams.get("inline") === "1";
+    const headers = inline
+      ? new Headers({
+          "Content-Type": submission.mimeType ?? "application/octet-stream",
+          "Content-Disposition": "inline",
+          "Cache-Control": "private, no-cache",
+          "X-Content-Type-Options": "nosniff",
+        })
+      : buildPrivateFileHeaders({
+          fileName: submission.attachmentLabel ?? "entrega",
+          mimeType: submission.mimeType,
+        });
 
     downloadLogger.info("Submission attachment downloaded.", {
       userId: user.id,
