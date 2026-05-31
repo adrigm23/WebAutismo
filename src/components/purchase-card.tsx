@@ -1,6 +1,12 @@
-import { Clock3, Lock, MonitorPlay } from "lucide-react";
-import { CourseArtwork } from "@/components/course-artwork";
-import { ButtonLink } from "@/components/ui/button";
+import {
+  Award,
+  Download,
+  Infinity,
+  MonitorPlay,
+  ShoppingCart,
+  Headphones,
+} from "lucide-react";
+import Link from "next/link";
 import type { CatalogCourse } from "@/lib/course-catalog";
 import type { PurchaseRuntimeMode } from "@/lib/purchase-runtime";
 import { formatPrice } from "@/lib/utils";
@@ -10,94 +16,80 @@ type PurchaseCardProps = {
   purchaseMode: PurchaseRuntimeMode;
 };
 
+function getBuyLabel(mode: PurchaseRuntimeMode) {
+  if (mode === "live") return "Comprar Curso";
+  if (mode === "demo") return "Acceso demo";
+  return "Ver disponibilidad";
+}
+
 export function PurchaseCard({ course, purchaseMode }: PurchaseCardProps) {
-  const isLiveMode = purchaseMode === "live";
-  const isDemoMode = purchaseMode === "demo";
-  const leadTeacher = course.teachers[0] ?? null;
-  const editionLabel = course.activeEdition?.label ?? null;
+  const buyLabel = getBuyLabel(purchaseMode);
+
+  const features = [
+    { icon: Infinity, text: "Acceso de por vida" },
+    { icon: Award, text: "Certificado institucional incluido" },
+    { icon: MonitorPlay, text: `${course.duration} de video bajo demanda` },
+    { icon: Download, text: `${course.modules.length * 2} Recursos descargables` },
+  ];
 
   return (
-    <div className="rounded-[28px] border border-[rgba(12,113,195,0.12)] bg-white p-6 shadow-[0_18px_40px_rgba(34,34,33,0.06)] lg:p-7">
-      <CourseArtwork
-        className="mb-5 hidden h-44 w-full rounded-[24px] border-0 lg:block"
-        course={course}
-        variant="hero"
-      />
-
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--color-primary)]">
-            Inscripcion
+    <>
+      {/* Main purchase card */}
+      <div className="rounded-2xl border border-[var(--color-border)] bg-white p-6 shadow-sm">
+        {/* Price */}
+        <div className="text-center">
+          <p className="text-[3rem] font-bold leading-none tracking-tight text-[var(--color-ink)]">
+            {formatPrice(course.priceInCents)}
           </p>
-          <p className="mt-2 text-sm leading-6 text-[var(--color-muted)]">
-            Compra clara, acceso personal y activacion vinculada a tu cuenta.
+          <p className="mt-1.5 text-sm text-[var(--color-muted)]">Pago único</p>
+        </div>
+
+        {/* CTA */}
+        <div className="mt-5">
+          <Link
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-[var(--color-ink)] py-3.5 text-sm font-bold text-white transition hover:opacity-90"
+            href={`/checkout/${course.slug}`}
+          >
+            <ShoppingCart className="h-4 w-4" />
+            {buyLabel}
+          </Link>
+          <p className="mt-2.5 text-center text-xs text-[var(--color-muted)]">
+            Garantía de devolución de 7 días
           </p>
         </div>
-        <div className="inline-flex items-center gap-2 rounded-full bg-[var(--color-surface)] px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-[var(--color-muted)]">
-          <Lock className="h-3.5 w-3.5" />
-          {isLiveMode ? "Pago real" : isDemoMode ? "Modo demo" : "Compra desactivada"}
+
+        {/* Features */}
+        <div className="mt-5 space-y-3 border-t border-[var(--color-border)] pt-5">
+          {features.map(({ icon: Icon, text }) => (
+            <div className="flex items-center gap-3 text-sm text-[var(--color-ink)]" key={text}>
+              <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[var(--color-surface)]">
+                <Icon className="h-3.5 w-3.5 text-[var(--color-primary)]" />
+              </div>
+              {text}
+            </div>
+          ))}
         </div>
       </div>
 
-      <p className="mt-5 text-[3.5rem] font-semibold tracking-[-0.07em] text-[var(--color-ink)] lg:text-[4rem]">
-        {formatPrice(course.priceInCents)}
-      </p>
-      <p className="mt-3 text-sm leading-7 text-[var(--color-muted)]">
-        El checkout se mantiene intacto. Esta capa solo reduce ruido y deja la decision de compra
-        mas clara.
-      </p>
-
-      <div className="mt-6">
-        <ButtonLink className="w-full" href={`/checkout/${course.slug}`} variant="accent">
-          {isLiveMode
-            ? "Continuar con la compra"
-            : isDemoMode
-              ? "Revisar acceso demo"
-              : "Ver disponibilidad del checkout"}
-        </ButtonLink>
+      {/* Help card */}
+      <div className="rounded-2xl border border-[var(--color-border)] bg-white p-6">
+        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[rgba(12,113,195,0.08)]">
+          <Headphones className="h-5 w-5 text-[var(--color-primary)]" />
+        </div>
+        <h3 className="mt-3 text-sm font-bold text-[var(--color-ink)]">
+          ¿Necesitas ayuda?
+        </h3>
+        <p className="mt-1.5 text-sm leading-relaxed text-[var(--color-muted)]">
+          Nuestro equipo académico está disponible para responder tus consultas
+          antes de inscribirte.
+        </p>
+        <Link
+          className="mt-4 inline-block text-sm font-semibold text-[var(--color-primary)] transition hover:underline"
+          href="/soporte"
+        >
+          Contactar Asesor
+        </Link>
       </div>
-
-      <dl className="mt-7 divide-y divide-[rgba(12,113,195,0.12)] border-t border-[rgba(12,113,195,0.12)] text-sm">
-        <div className="flex items-start gap-3 py-4">
-          <MonitorPlay className="mt-0.5 h-4 w-4 shrink-0 text-[var(--color-primary)]" />
-          <div>
-            <dt className="font-semibold text-[var(--color-ink)]">Formato</dt>
-            <dd className="mt-1 leading-6 text-[var(--color-muted)]">{course.format}</dd>
-          </div>
-        </div>
-        <div className="flex items-start gap-3 py-4">
-          <Clock3 className="mt-0.5 h-4 w-4 shrink-0 text-[var(--color-primary)]" />
-          <div>
-            <dt className="font-semibold text-[var(--color-ink)]">Duracion</dt>
-            <dd className="mt-1 leading-6 text-[var(--color-muted)]">{course.duration}</dd>
-          </div>
-        </div>
-        <div className="py-4">
-          <dt className="font-semibold text-[var(--color-ink)]">Acceso</dt>
-          <dd className="mt-1 leading-6 text-[var(--color-muted)]">
-            {editionLabel
-              ? `La matricula se vincula a ${editionLabel} y mantiene la ventana de consulta configurada para esa edicion.`
-              : "El acceso queda asociado a tu cuenta y se activa segun la edicion vigente del curso."}
-          </dd>
-        </div>
-        {leadTeacher ? (
-          <div className="py-4">
-            <dt className="font-semibold text-[var(--color-ink)]">Equipo docente</dt>
-            <dd className="mt-1 leading-6 text-[var(--color-muted)]">
-              {leadTeacher.name}
-              {leadTeacher.role ? ` · ${leadTeacher.role}` : ""}
-            </dd>
-          </div>
-        ) : null}
-      </dl>
-
-      <p className="mt-5 text-sm leading-7 text-[var(--color-muted)]">
-        {isLiveMode
-          ? "El cobro se realiza fuera de esta pagina, en la pasarela segura de Stripe."
-          : isDemoMode
-            ? "Este entorno activa acceso local de prueba y no procesa ningun cobro real."
-            : "Este entorno no tiene una pasarela de pago configurada y no permite activar acceso automatico."}
-      </p>
-    </div>
+    </>
   );
 }
