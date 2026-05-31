@@ -9,7 +9,7 @@ import { siteConfig } from "@/lib/site";
 
 function getMobilePrimaryAction(pathname: string) {
   if (pathname === "/cursos" || pathname.startsWith("/cursos/")) {
-    return { href: "/registro", label: "Inscribirse" };
+    return { href: "/registro", label: "Comenzar Ahora" };
   }
 
   return { href: "/cursos", label: "Ver cursos" };
@@ -45,13 +45,10 @@ export function SiteHeader() {
 
           <div className="flex items-center justify-end gap-3">
             <ButtonLink href="/acceder" variant="ghost">
-              Acceder
+              Iniciar Sesión
             </ButtonLink>
             <ButtonLink href="/registro" variant="primary">
-              Inscribirse
-            </ButtonLink>
-            <ButtonLink href={siteConfig.donateUrl} target="_blank" variant="accent">
-              Dona
+              Comenzar Ahora
             </ButtonLink>
           </div>
         </div>

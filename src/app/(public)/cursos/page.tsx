@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
-import { CourseCard } from "@/components/course-card";
 import { getCatalogCourses } from "@/lib/course-catalog";
 import { absoluteUrl } from "@/lib/site";
+import { CourseCatalogClient } from "@/components/catalog/course-catalog-client";
 
 export const metadata: Metadata = {
   title: "Cursos online",
@@ -23,27 +23,5 @@ export const revalidate = 3600;
 
 export default async function CoursesPage() {
   const courses = await getCatalogCourses();
-
-  return (
-    <div className="pb-24 pt-14 lg:pt-16">
-      <section className="site-container">
-        <div className="max-w-4xl">
-          <h1 className="text-display-xl font-semibold text-[var(--color-ink)]">
-            Catálogo de cursos
-          </h1>
-          <p className="mt-5 text-body-lg text-[var(--color-muted)]">
-            Descubre una oferta formativa especializada, pensada para familias, docentes y
-            profesionales que necesitan contenido claro, aplicable y acceso gestionado por
-            ediciones reales del campus.
-          </p>
-        </div>
-
-        <div className="mt-14 grid gap-6 lg:grid-cols-3">
-          {courses.map((course) => (
-            <CourseCard course={course} key={course.slug} />
-          ))}
-        </div>
-      </section>
-    </div>
-  );
+  return <CourseCatalogClient courses={courses} />;
 }

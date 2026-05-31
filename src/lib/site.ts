@@ -9,9 +9,8 @@ export const siteConfig = {
   donateUrl: "https://autismocordoba.org/",
   nav: [
     { href: "/cursos", label: "Cursos" },
-    { href: "/plataforma", label: "Plataforma" },
-    { href: "/#comunidad", label: "Comunidad" },
-    { href: "/soporte", label: "Soporte" }
+    { href: "/recursos", label: "Recursos" },
+    { href: "/blog", label: "Blog" }
   ]
 };
 
