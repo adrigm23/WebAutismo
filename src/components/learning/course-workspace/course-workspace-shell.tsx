@@ -18,16 +18,24 @@ import {
   Settings2,
   X,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { logoutAction } from "@/actions/session";
 import { cn } from "@/lib/utils";
 
-const NAV_ITEMS = [
+type NavItem = {
+  label: string;
+  href: string;
+  icon: LucideIcon;
+  disabled?: boolean;
+};
+
+const NAV_ITEMS: NavItem[] = [
   { label: "Inicio", href: "/mis-cursos", icon: LayoutGrid },
-  { label: "Mis Cursos", href: "/mis-cursos", icon: GraduationCap, matchPrefix: "/mis-cursos" },
+  { label: "Mis Cursos", href: "/mis-cursos", icon: GraduationCap },
   { label: "Comunidad", href: "#", icon: MessageSquareText, disabled: true },
   { label: "Biblioteca", href: "#", icon: BookOpen, disabled: true },
   { label: "Certificados", href: "#", icon: Award, disabled: true },
-] as const;
+];
 
 type CourseWorkspaceShellProps = {
   children: ReactNode;
