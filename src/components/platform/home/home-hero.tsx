@@ -18,7 +18,7 @@ export function HomeHero() {
         className="home-hero-grid pointer-events-none absolute inset-0 opacity-[0.45]"
       />
 
-      <div className="site-container relative grid gap-10 pb-16 pt-10 sm:pt-16 lg:grid-cols-[minmax(0,1fr)_minmax(28rem,0.88fr)] lg:items-start lg:gap-14 lg:pb-24 lg:pt-18">
+      <div className="site-container relative grid grid-cols-1 gap-10 pb-16 pt-10 sm:pt-16 lg:grid-cols-[minmax(0,1fr)_minmax(28rem,0.88fr)] lg:items-start lg:gap-14 lg:pb-24 lg:pt-18">
         <div className="max-w-2xl">
           <div className="home-rise inline-flex items-center gap-2 rounded-[var(--radius-pill)] border border-[rgba(22,60,88,0.15)] bg-[var(--color-brand-soft)] px-3.5 py-1.5 text-[0.72rem] font-semibold tracking-[0.06em] text-[var(--color-primary)]">
             Formación especializada basada en evidencia

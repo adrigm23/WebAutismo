@@ -36,10 +36,24 @@ function reportClientError(error: ErrorPageProps["error"]) {
   });
 }
 
+function isNextDevtoolsBug(error: Error): boolean {
+  // Next.js 16 devtools SegmentTrieNode throws when encountering deeply nested
+  // dynamic routes during dev-mode hydration. Auto-reset to let the page render.
+  if (process.env.NODE_ENV !== "development") return false;
+  return (
+    error.message.includes("page.tsx") &&
+    (error.stack?.includes("next-devtools") ?? false)
+  );
+}
+
 export default function ErrorPage({ error, reset }: ErrorPageProps) {
   useEffect(() => {
+    if (isNextDevtoolsBug(error)) {
+      reset();
+      return;
+    }
     reportClientError(error);
-  }, [error]);
+  }, [error, reset]);
 
   return (
     <div className="site-container flex min-h-[60vh] items-center py-16">

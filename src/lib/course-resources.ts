@@ -58,6 +58,7 @@ export type CampusResourceItem = {
   resourceType: CourseResourceType | "INFO";
   source: CourseResourceSource | null;
   mimeType: string | null;
+  sizeInBytes: number | null;
   resourceTypeLabel: string;
   accessLabel: string;
   href: string | null;
@@ -101,6 +102,7 @@ function getStaticCampusResources(course: CatalogCourse): CampusResourceItem[] {
       resourceType: "INFO",
       source: null,
       mimeType: null,
+      sizeInBytes: null,
       resourceTypeLabel: "Guia",
       accessLabel: "Referencia del campus",
       href: null,
@@ -129,6 +131,7 @@ function getStaticCampusResources(course: CatalogCourse): CampusResourceItem[] {
       resourceType: "INFO",
       source: null,
       mimeType: null,
+      sizeInBytes: null,
       resourceTypeLabel: "Equipo",
       accessLabel: "Informacion del curso",
       href: null,
@@ -327,6 +330,7 @@ export async function getCampusResources(input: {
           resourceType: resource.type,
           source: resource.source,
           mimeType: resource.mimeType ?? null,
+          sizeInBytes: resource.sizeInBytes ?? null,
           resourceTypeLabel: getResourceTypeLabel(resource.type),
           accessLabel: getResourceAccessLabel(resource.source),
           href:

@@ -22,10 +22,10 @@ export function AdminPageHeader({
       )}
     >
       <div className="min-w-0 max-w-[72rem]">
-        <h1 className="font-premium text-[2.85rem] font-semibold leading-[0.94] tracking-[-0.08em] text-[var(--color-ink)] sm:text-[3.5rem] xl:text-[4.05rem]">
+        <h1 className="text-display-md font-premium font-semibold text-[var(--color-ink)]">
           {title}
         </h1>
-        <p className="mt-4 max-w-[62ch] text-base leading-8 text-[var(--color-muted)] sm:text-[1.12rem]">
+        <p className="text-body-md mt-3 max-w-[62ch] text-[var(--color-muted)]">
           {description}
         </p>
       </div>

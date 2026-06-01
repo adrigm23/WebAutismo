@@ -22,7 +22,7 @@ export function SplitAuthPanel({
           next={next}
           pendingLabel="Accediendo..."
           showForgotLink
-          submitLabel="Acceder al panel"
+          submitLabel="Acceder al campus"
         />
       }
       leftDescription="Ingresa con tu cuenta para continuar tu experiencia educativa, acceder a tus cursos y retomar tu progreso."

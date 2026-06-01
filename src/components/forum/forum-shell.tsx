@@ -13,7 +13,6 @@ import {
   markAllForumNotificationsReadAction,
   markForumNotificationReadAction,
 } from "@/actions/forum";
-import { CoursePrivateHeader } from "@/components/learning/course-private-header";
 import {
   ForumShellCategoryDesktopNav,
   ForumShellDesktopModerationLinks,
@@ -85,16 +84,7 @@ export function ForumShell({
   const forumRootPath = `/mis-cursos/${course.slug}/foro`;
 
   return (
-    <div className="min-h-screen overflow-x-clip bg-[linear-gradient(180deg,#f8f5ef_0%,#f6f5fa_55%,#faf9f6_100%)] text-[var(--color-ink)]">
-      <CoursePrivateHeader
-        activeSection="forum"
-        courseSlug={course.slug}
-        fullName={user.name || user.email}
-        roleLabel={roleLabel}
-        showTrackingNav={showTrackingNav}
-      />
-
-      <div className="app-container min-h-[calc(100vh-74px)] py-4 lg:grid lg:grid-cols-[12.5rem_minmax(0,1fr)] lg:gap-5 lg:py-5 xl:grid-cols-[13rem_minmax(0,1fr)] xl:gap-6">
+    <div className="app-container py-4 lg:grid lg:grid-cols-[12.5rem_minmax(0,1fr)] lg:gap-5 lg:py-5 xl:grid-cols-[13rem_minmax(0,1fr)] xl:gap-6">
         <aside className="hidden lg:sticky lg:top-[6.4rem] lg:block lg:self-start">
           <div className="flex flex-col gap-3">
             <div className="rounded-[1rem] border border-[rgba(22,60,88,0.08)] bg-white/56 px-4 py-4">
@@ -362,6 +352,5 @@ export function ForumShell({
           </div>
         </div>
       </div>
-    </div>
   );
 }

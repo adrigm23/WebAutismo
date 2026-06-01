@@ -6,6 +6,8 @@ import { usePathname, useSearchParams } from "next/navigation";
 import {
   Bell,
   BookCopy,
+  BookOpen,
+  CalendarDays,
   ChartColumnBig,
   CircleHelp,
   GraduationCap,
@@ -58,6 +60,10 @@ function AdminNavIcon({ name }: { name: string }) {
       return <Tickets className={className} strokeWidth={2} />;
     case "scroll-text":
       return <ScrollText className={className} strokeWidth={2} />;
+    case "book-open":
+      return <BookOpen className={className} strokeWidth={2} />;
+    case "calendar-days":
+      return <CalendarDays className={className} strokeWidth={2} />;
     case "chart-column-big":
       return <ChartColumnBig className={className} strokeWidth={2} />;
     default:

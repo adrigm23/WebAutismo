@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
   BookOpen,
+  CalendarDays,
   Users,
   FolderOpen,
   MessageCircle,
@@ -30,8 +31,8 @@ type NavItem = {
 const NAV_ITEMS: NavItem[] = [
   { label: "Panel", href: "/mis-cursos", icon: LayoutDashboard },
   { label: "Cursos", href: "/mis-cursos", icon: BookOpen },
-  { label: "Pacientes", href: "#", icon: Users, disabled: true },
-  { label: "Recursos", href: "#", icon: FolderOpen, disabled: true },
+  { label: "Calendario", href: "/docente/calendario", icon: CalendarDays },
+  { label: "Biblioteca", href: "/docente/biblioteca", icon: FolderOpen },
   { label: "Comunidad", href: "#", icon: MessageCircle, disabled: true },
 ];
 

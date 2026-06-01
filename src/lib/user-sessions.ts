@@ -160,7 +160,13 @@ export async function getCurrentSessionUserId() {
     return null;
   }
 
-  await touchUserSession(session.id, session.lastSeenAt);
+  // Fire-and-forget: updating lastSeenAt is non-critical.
+  // It must NOT block the auth response — a write failure here should
+  // never prevent a valid session from being used.
+  void touchUserSession(session.id, session.lastSeenAt).catch(() => {
+    // Silent — lastSeenAt lag is acceptable if the write fails.
+  });
+
   return session.userId;
 }
 

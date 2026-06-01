@@ -52,7 +52,7 @@ export function HomeCampusInside() {
           title="Todo lo que necesitas en un solo lugar"
         />
 
-        <div className="mt-10 grid gap-8 lg:grid-cols-[1fr_1.6fr] lg:items-start">
+        <div className="mt-10 grid grid-cols-1 gap-8 lg:grid-cols-[1fr_1.6fr] lg:items-start">
           {/* Callouts */}
           <ul className="space-y-4">
             {homeCampusCallouts.map((item, i) => (

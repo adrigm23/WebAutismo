@@ -2,10 +2,7 @@ import { compare, hash } from "bcryptjs";
 import type { UserGlobalRole } from "@prisma/client";
 import { redirect } from "next/navigation";
 import { getDemoUserById, isDemoUserId } from "@/lib/demo-auth";
-import {
-  isDatabaseConnectionError,
-  isMissingDatabaseFieldError
-} from "@/lib/db-errors";
+import { isDatabaseConnectionError } from "@/lib/db-errors";
 import {
   isBootstrapAdminByEmailEnabled,
   isDemoAuthEnabled,
@@ -50,27 +47,6 @@ export async function createSession(userId: string) {
 
 export async function clearSession() {
   await clearCurrentUserSession();
-}
-
-async function getUserEmailVerificationDate(userId: string) {
-  try {
-    const user = await getDb().user.findUnique({
-      where: {
-        id: userId
-      },
-      select: {
-        emailVerifiedAt: true
-      }
-    });
-
-    return user?.emailVerifiedAt ?? null;
-  } catch (error) {
-    if (isMissingDatabaseFieldError(error, "emailVerifiedAt")) {
-      return null;
-    }
-
-    throw error;
-  }
 }
 
 export async function getSessionUserId() {
@@ -149,7 +125,8 @@ export async function getCurrentUser() {
         email: true,
         globalRole: true,
         isActive: true,
-        createdAt: true
+        createdAt: true,
+        emailVerifiedAt: true
       }
     });
 
@@ -162,8 +139,9 @@ export async function getCurrentUser() {
       email: user.email,
       currentRole: user.globalRole
     });
+    // emailVerifiedAt is now fetched in the same query — no extra round trip.
     const emailVerifiedAt = isEmailVerificationRequired()
-      ? await getUserEmailVerificationDate(user.id)
+      ? (user.emailVerifiedAt ?? null)
       : null;
 
     return {

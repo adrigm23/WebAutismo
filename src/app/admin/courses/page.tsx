@@ -1,257 +1,111 @@
-import { BookCopy, Layers3, PencilLine } from "lucide-react";
-import { AdminMetricCard } from "@/components/admin/admin-metric-card";
-import { AdminPageHeader } from "@/components/admin/admin-page-header";
-import { CourseDetailCard } from "@/components/admin/courses/course-detail-card";
-import { CourseFiltersCard } from "@/components/admin/courses/course-filters-card";
-import { CourseTableCard } from "@/components/admin/courses/course-table-card";
+import type { Metadata } from "next";
+import Link from "next/link";
+import { Plus } from "lucide-react";
+import {
+  CourseGrid,
+  type CourseGridItem,
+} from "@/components/admin/courses/course-grid";
 import { CreateCourseCard } from "@/components/admin/courses/create-course-card";
+import { CourseDetailCard } from "@/components/admin/courses/course-detail-card";
 import { CreateCourseEditionCard } from "@/components/admin/courses/create-course-edition-card";
-import { DemoCourseDetailCard } from "@/components/admin/courses/demo-course-detail-card";
 import type {
   CourseFilterStatus,
-  CourseTableRow,
-  DemoCourseDetail,
   EditableCourseDetail,
 } from "@/components/admin/courses/types";
-import { ButtonLink } from "@/components/ui/button";
-import { SurfaceCard } from "@/components/ui/surface-card";
 import { getSearchParamValue } from "@/lib/admin-console";
 import { requireAdminConsoleUser } from "@/lib/admin-console-server";
-import { demoAdminCourses } from "@/lib/admin-demo";
-import { isDemoUserId } from "@/lib/demo-auth";
 import { getDb } from "@/lib/prisma";
+import { cn } from "@/lib/utils";
+
+export const metadata: Metadata = { title: "Gestión de Cursos — Admin" };
+
+type Tab = "todos" | "publicados" | "borradores" | "archivados";
+
+const TABS: { id: Tab; label: string }[] = [
+  { id: "todos", label: "Todos" },
+  { id: "publicados", label: "Publicados" },
+  { id: "borradores", label: "Borradores" },
+  { id: "archivados", label: "Archivados" },
+];
 
 type CoursesPageProps = {
   searchParams: Promise<{
     q?: string | string[];
     status?: string | string[];
     courseId?: string | string[];
-    create?: string | string[];
+    tab?: string | string[];
   }>;
 };
-
-function buildCourseHref(input: {
-  q: string;
-  status: CourseFilterStatus;
-  courseId: string;
-  create: string;
-}) {
-  const qs = new URLSearchParams();
-
-  if (input.q) {
-    qs.set("q", input.q);
-  }
-
-  if (input.status !== "ALL") {
-    qs.set("status", input.status);
-  }
-
-  if (input.create === "1") {
-    qs.set("create", "1");
-  }
-
-  qs.set("courseId", input.courseId);
-
-  return `/admin/courses?${qs.toString()}#course-detail`;
-}
 
 export default async function AdminCoursesPage({
   searchParams,
 }: CoursesPageProps) {
-  const currentUser = await requireAdminConsoleUser("/admin/courses");
+  await requireAdminConsoleUser("/admin/courses");
+
   const params = await searchParams;
   const q = getSearchParamValue(params.q);
-  const status = getSearchParamValue(
-    params.status,
-    "ALL",
-  ) as CourseFilterStatus;
   const courseId = getSearchParamValue(params.courseId);
-  const create = getSearchParamValue(params.create);
+  const rawTab = getSearchParamValue(params.tab, "todos");
+  const activeTab: Tab = (["todos", "publicados", "borradores", "archivados"].includes(rawTab)
+    ? rawTab
+    : "todos") as Tab;
 
-  if (isDemoUserId(currentUser.id)) {
-    const visibleCourses = demoAdminCourses.filter((course) => {
-      const matchesQ =
-        !q ||
-        course.title.toLowerCase().includes(q.toLowerCase()) ||
-        course.slug.toLowerCase().includes(q.toLowerCase()) ||
-        course.teachers.some((teacher) =>
-          teacher.toLowerCase().includes(q.toLowerCase()),
-        );
-      const matchesStatus = status === "ALL" || course.status === status;
-      return matchesQ && matchesStatus;
-    });
-    const selectedDemoCourse =
-      visibleCourses.find((course) => course.id === courseId) ??
-      visibleCourses[0] ??
-      null;
-    const activeEditions = demoAdminCourses.reduce(
-      (sum, course) => sum + course.activeEditions,
-      0,
-    );
-    const inactiveCourses = demoAdminCourses.filter(
-      (course) => course.status === "INACTIVE",
-    ).length;
-    const demoRows: CourseTableRow[] = visibleCourses.map((course) => ({
-      id: course.id,
-      href: buildCourseHref({
-        q,
-        status,
-        courseId: course.id,
-        create,
-      }),
-      isSelected: course.id === selectedDemoCourse?.id,
-      title: course.title,
-      slug: course.slug,
-      status: course.status as "ACTIVE" | "INACTIVE",
-      priceInCents: course.priceInCents,
-      modulesCount: course.modules,
-      editionsCount: course.editions,
-      teachersCount: course.teachers.length,
-    }));
-    const demoDetail: DemoCourseDetail | null = selectedDemoCourse
-      ? {
-          title: selectedDemoCourse.title,
-          slug: selectedDemoCourse.slug,
-          shortDescription: selectedDemoCourse.shortDescription,
-          status: selectedDemoCourse.status as "ACTIVE" | "INACTIVE",
-          teachers: selectedDemoCourse.teachers,
-        }
-      : null;
-
-    return (
-      <div className="space-y-9">
-        <AdminPageHeader
-          actions={
-            <ButtonLink href="/admin/promotions" variant="neutral">
-              Ir a promociones
-            </ButtonLink>
-          }
-          description="Catálogo demo para validar estructura, estados y panel de gestión sin dependencia de la base de datos."
-          title="Catálogo de cursos"
-        />
-
-        <section className="grid gap-5 xl:grid-cols-3">
-          <AdminMetricCard
-            accent="primary"
-            icon={<BookCopy className="h-6 w-6" strokeWidth={1.8} />}
-            label="Cursos totales"
-            meta="Base curricular demo"
-            value={demoAdminCourses.length}
-          />
-          <AdminMetricCard
-            accent="neutral"
-            icon={<Layers3 className="h-6 w-6" strokeWidth={1.8} />}
-            label="Ediciones activas"
-            meta="Sesiones simuladas"
-            value={activeEditions}
-          />
-          <AdminMetricCard
-            accent="warning"
-            icon={<PencilLine className="h-6 w-6" strokeWidth={1.8} />}
-            label="Cursos inactivos"
-            meta="Pendientes de activar"
-            value={inactiveCourses}
-          />
-        </section>
-
-        <CourseFiltersCard q={q} status={status} />
-        <CourseTableCard rows={demoRows} />
-        {demoDetail ? <DemoCourseDetailCard course={demoDetail} /> : null}
-      </div>
-    );
-  }
+  // Map tab → DB status filter
+  const statusFilter: CourseFilterStatus =
+    activeTab === "publicados"
+      ? "ACTIVE"
+      : activeTab === "borradores"
+        ? "INACTIVE"
+        : "ALL";
 
   const db = getDb();
+
+  const courseInclude = {
+    modules: { orderBy: { position: "asc" as const } },
+    editions: { orderBy: { editionNumber: "desc" as const } },
+    teacherAssignments: { include: { user: true as const } },
+    _count: { select: { enrollments: true as const, purchases: true as const } },
+  } as const;
 
   const [courses, teacherCandidates] = await Promise.all([
     db.course.findMany({
       where: {
         ...(q
-          ? {
-              OR: [
-                { title: { contains: q } },
-                { slug: { contains: q } },
-                {
-                  teacherAssignments: {
-                    some: {
-                      user: {
-                        name: {
-                          contains: q,
-                        },
-                      },
-                    },
-                  },
-                },
-              ],
-            }
+          ? { OR: [{ title: { contains: q } }, { slug: { contains: q } }] }
           : {}),
-        ...(status !== "ALL"
-          ? {
-              status: status === "ACTIVE" ? "ACTIVE" : "INACTIVE",
-            }
+        ...(statusFilter !== "ALL"
+          ? { status: statusFilter === "ACTIVE" ? "ACTIVE" as const : "INACTIVE" as const }
           : {}),
       },
-      include: {
-        modules: {
-          orderBy: {
-            position: "asc",
-          },
-        },
-        editions: {
-          orderBy: {
-            editionNumber: "desc",
-          },
-        },
-        teacherAssignments: {
-          include: {
-            user: true,
-          },
-        },
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
+      include: courseInclude,
+      orderBy: { createdAt: "desc" },
     }),
     db.user.findMany({
-      where: {
-        globalRole: {
-          in: ["TEACHER", "ADMIN"],
-        },
-      },
-      orderBy: {
-        name: "asc",
-      },
+      where: { globalRole: { in: ["TEACHER", "ADMIN"] } },
+      orderBy: { name: "asc" },
     }),
   ]);
 
-  const selectedCourse =
-    courses.find((course) => course.id === courseId) ?? courses[0] ?? null;
-  const activeEditions = courses.reduce(
-    (sum, course) =>
-      sum +
-      course.editions.filter((edition) => edition.status === "ACTIVE").length,
-    0,
-  );
-  const draftCourses = courses.filter(
-    (course) => course.status === "INACTIVE",
-  ).length;
-  const tableRows: CourseTableRow[] = courses.map((course) => ({
+  const totalCount = courses.length;
+
+  // Build grid items — revenue approximated as enrollment_count × price
+  const gridItems: CourseGridItem[] = courses.map((course) => ({
     id: course.id,
-    href: buildCourseHref({
-      q,
-      status,
-      courseId: course.id,
-      create,
-    }),
-    isSelected: course.id === selectedCourse?.id,
-    title: course.title,
     slug: course.slug,
+    title: course.title,
+    category: course.category,
     status: course.status,
-    priceInCents: course.priceInCents,
-    modulesCount: course.modules.length,
-    editionsCount: course.editions.length,
-    teachersCount: course.teacherAssignments.length,
+    accentFrom: course.accentFrom,
+    accentTo: course.accentTo,
+    enrollmentCount: course._count.enrollments,
+    revenueInCents: course._count.purchases * course.priceInCents,
+    editHref: `/admin/courses?courseId=${course.id}#course-detail`,
+    viewHref: `/cursos/${course.slug}`,
   }));
+
+  // Selected course for inline editor
+  const selectedCourse =
+    courses.find((c) => c.id === courseId) ?? null;
   const editableDetail: EditableCourseDetail | null = selectedCourse
     ? {
         id: selectedCourse.id,
@@ -260,85 +114,114 @@ export default async function AdminCoursesPage({
         shortDescription: selectedCourse.shortDescription,
         status: selectedCourse.status,
         priceInCents: selectedCourse.priceInCents,
-        teacherAssignments: selectedCourse.teacherAssignments.map(
-          (assignment) => ({
-            id: assignment.id,
-            userId: assignment.user.id,
-            name: assignment.user.name,
-            email: assignment.user.email,
-          }),
-        ),
-        teacherCandidates: teacherCandidates.map((teacher) => ({
-          id: teacher.id,
-          name: teacher.name,
-          email: teacher.email,
+        teacherAssignments: selectedCourse.teacherAssignments.map((a) => ({
+          id: a.id,
+          userId: a.user.id,
+          name: a.user.name,
+          email: a.user.email,
         })),
-        editions: selectedCourse.editions.map((edition) => ({
-          id: edition.id,
-          label: edition.label,
-          status: edition.status,
+        teacherCandidates: teacherCandidates.map((t) => ({
+          id: t.id,
+          name: t.name,
+          email: t.email,
+        })),
+        editions: selectedCourse.editions.map((e) => ({
+          id: e.id,
+          label: e.label,
+          status: e.status,
         })),
       }
     : null;
 
+  function buildTabHref(tab: Tab) {
+    const sp = new URLSearchParams();
+    if (q) sp.set("q", q);
+    if (tab !== "todos") sp.set("tab", tab);
+    return `/admin/courses?${sp.toString()}`;
+  }
+
   return (
-    <div className="space-y-9">
-      <AdminPageHeader
-        actions={
-          <>
-            <ButtonLink href="#course-filters" variant="neutral">
-              Filtrar
-            </ButtonLink>
-            <ButtonLink href="#create-course">Crear curso</ButtonLink>
-          </>
-        }
-        description="Gestiona curriculum, estado del catalogo, docentes asignados y clonado de cursos para acelerar nuevas ediciones."
-        title="Catálogo de cursos"
-      />
-
-      <section className="grid gap-5 xl:grid-cols-3">
-        <AdminMetricCard
-          accent="primary"
-          icon={<BookCopy className="h-6 w-6" strokeWidth={1.8} />}
-          label="Cursos totales"
-          meta="Base curricular persistida"
-          value={courses.length}
-        />
-        <AdminMetricCard
-          accent="neutral"
-          icon={<Layers3 className="h-6 w-6" strokeWidth={1.8} />}
-          label="Ediciones activas"
-          meta="Sesiones actualmente abiertas"
-          value={activeEditions}
-        />
-        <AdminMetricCard
-          accent="warning"
-          icon={<PencilLine className="h-6 w-6" strokeWidth={1.8} />}
-          label="Cursos inactivos"
-          meta="Pendientes de revision"
-          value={draftCourses}
-        />
-      </section>
-
-      <section className="grid gap-6 2xl:grid-cols-[minmax(0,1.15fr)_24rem]">
-        <div className="space-y-6 min-w-0">
-          <CourseFiltersCard q={q} status={status} />
-          <CourseTableCard rows={tableRows} />
-          {editableDetail ? <CourseDetailCard course={editableDetail} /> : null}
+    <div className="space-y-7">
+      {/* ── Page header ────────────────────────────────────────────── */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <div className="flex flex-wrap items-center gap-3">
+            <h1 className="text-[1.9rem] font-bold tracking-[-0.04em] text-[var(--color-ink)]">
+              Gestión de Cursos
+            </h1>
+            <span className="rounded-full border border-[rgba(22,60,88,0.15)] bg-[rgba(22,60,88,0.06)] px-3 py-0.5 text-sm font-semibold text-[var(--color-ink-soft)]">
+              {totalCount} Totales
+            </span>
+          </div>
+          <p className="mt-1.5 text-sm text-[var(--color-muted)]">
+            Administra el currículo, métricas de retención y estado de publicación.
+          </p>
         </div>
 
-        <div className="space-y-6 self-start 2xl:sticky 2xl:top-28">
+        <Link
+          className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-[var(--color-primary)] px-4 py-2.5 text-sm font-semibold text-white shadow-[var(--shadow-soft)] transition hover:bg-[var(--color-primary-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2"
+          href="#create-course"
+        >
+          <Plus className="h-4 w-4" strokeWidth={2.5} />
+          Crear Nuevo Curso
+        </Link>
+      </div>
+
+      {/* ── Tabs ───────────────────────────────────────────────────── */}
+      <nav
+        aria-label="Filtrar cursos"
+        className="flex gap-0 overflow-x-auto border-b border-[rgba(22,60,88,0.1)]"
+      >
+        {TABS.map(({ id, label }) => (
+          <Link
+            aria-current={activeTab === id ? "page" : undefined}
+            className={cn(
+              "shrink-0 border-b-2 px-5 pb-3 pt-1 text-sm font-semibold transition focus-visible:outline-none",
+              activeTab === id
+                ? "border-[var(--color-primary)] text-[var(--color-primary)]"
+                : "border-transparent text-[var(--color-ink-soft)] hover:text-[var(--color-ink)]",
+            )}
+            href={buildTabHref(id)}
+            key={id}
+          >
+            {label}
+          </Link>
+        ))}
+      </nav>
+
+      {/* ── Course grid ─────────────────────────────────────────────── */}
+      <CourseGrid courses={gridItems} tab={activeTab} />
+
+      {/* ── Inline editor (appears when courseId is set) ────────────── */}
+      {editableDetail ? (
+        <section className="scroll-mt-24 space-y-6" id="course-detail">
+          <div className="flex items-center gap-3">
+            <div className="h-px flex-1 bg-[rgba(22,60,88,0.1)]" />
+            <span className="shrink-0 text-[0.72rem] font-semibold uppercase tracking-[0.12em] text-[var(--color-muted)]">
+              Editando: {editableDetail.title}
+            </span>
+            <div className="h-px flex-1 bg-[rgba(22,60,88,0.1)]" />
+          </div>
+          <div className="grid gap-6 xl:grid-cols-[minmax(0,1.15fr)_22rem]">
+            <CourseDetailCard course={editableDetail} />
+            <div className="space-y-6">
+              <CreateCourseEditionCard courseId={editableDetail.id} />
+            </div>
+          </div>
+        </section>
+      ) : null}
+
+      {/* ── Create course form ──────────────────────────────────────── */}
+      <section className="scroll-mt-24" id="create-course">
+        <div className="flex items-center gap-3 mb-5">
+          <div className="h-px flex-1 bg-[rgba(22,60,88,0.1)]" />
+          <span className="shrink-0 text-[0.72rem] font-semibold uppercase tracking-[0.12em] text-[var(--color-muted)]">
+            Crear nuevo curso
+          </span>
+          <div className="h-px flex-1 bg-[rgba(22,60,88,0.1)]" />
+        </div>
+        <div className="max-w-xl">
           <CreateCourseCard />
-          {selectedCourse ? (
-            <CreateCourseEditionCard courseId={selectedCourse.id} />
-          ) : (
-            <SurfaceCard title="Crear edicion">
-              <p className="text-sm leading-7 text-[var(--color-muted)]">
-                Selecciona un curso en la tabla y pulsa en gestionar curso para
-                preparar su siguiente edicion desde este mismo lateral.
-              </p>
-            </SurfaceCard>
-          )}
         </div>
       </section>
     </div>

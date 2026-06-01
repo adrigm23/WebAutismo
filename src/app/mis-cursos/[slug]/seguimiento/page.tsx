@@ -3,7 +3,7 @@ import type { CourseEnrollmentStatus } from "@prisma/client";
 import { ArrowRight, ChevronRight, MoveRight, Plus } from "lucide-react";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { CoursePrivateHeader } from "@/components/learning/course-private-header";
+import { CourseWorkspaceShell } from "@/components/learning/course-workspace/course-workspace-shell";
 import { CourseExerciseReviewForm } from "@/components/learning/course-exercise-review-form";
 import { Badge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button";
@@ -29,7 +29,7 @@ import { canViewCourseProgress } from "@/lib/course-permissions";
 import { getLearnerProgressRowsForCatalogCourse } from "@/lib/course-progress";
 import { getCampusResources } from "@/lib/course-resources";
 import { getDb } from "@/lib/prisma";
-import { formatDate, formatDateTime, formatRelativeTime } from "@/lib/utils";
+import { formatDate, formatDateTime, formatRelativeTime, getInitials } from "@/lib/utils";
 
 type TrackingPageProps = {
   params: Promise<{ slug: string }>;
@@ -628,17 +628,14 @@ export default async function CourseTrackingPage({
   ];
 
   return (
-    <div className="min-h-screen bg-[linear-gradient(180deg,#faf7f2_0%,#f7f4ee_48%,#fbfaf6_100%)] pb-20">
-      <CoursePrivateHeader
-        activeSection="tracking"
-        courseSlug={slug}
-        fullName={teacherFullName}
-        notificationsCount={notifications.unreadCount}
-        roleLabel={roleLabel}
-        showTrackingNav
-      />
-
-      <main className="site-container pt-6 sm:pt-8">
+    <CourseWorkspaceShell
+      courseTitle={course.title}
+      notificationsCount={notifications.unreadCount}
+      roleLabel={roleLabel}
+      viewerInitials={getInitials(teacherFullName)}
+      viewerName={teacherFullName}
+    >
+      <div className="site-container py-6 sm:py-8 pb-20">
         <section className="border-b border-[rgba(22,60,88,0.08)] pb-6 sm:pb-7">
           <div className="flex flex-col gap-6 xl:flex-row xl:items-start xl:justify-between">
             <div className="min-w-0">
@@ -1135,7 +1132,7 @@ export default async function CourseTrackingPage({
             </Card>
           )}
         </section>
-      </main>
-    </div>
+      </div>
+    </CourseWorkspaceShell>
   );
 }

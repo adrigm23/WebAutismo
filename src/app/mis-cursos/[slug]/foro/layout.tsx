@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { notFound, redirect } from "next/navigation";
 import { ForumShell } from "@/components/forum/forum-shell";
+import { CourseWorkspaceShell } from "@/components/learning/course-workspace/course-workspace-shell";
 import { requireUser } from "@/lib/auth";
 import { getCatalogCourseBySlug } from "@/lib/course-catalog";
 import {
@@ -10,6 +11,7 @@ import {
 } from "@/lib/course-community";
 import { canViewCourseProgress } from "@/lib/course-permissions";
 import { getForumCategories, getUserForumNotifications } from "@/lib/forum";
+import { getInitials } from "@/lib/utils";
 
 type ForumLayoutProps = {
   children: ReactNode;
@@ -49,20 +51,30 @@ export default async function ForumLayout({
     }),
   ]);
 
+  const viewerName = user.name ?? user.email;
+  const roleLabel = getRoleLabel(access.role);
+
   return (
-    <ForumShell
-      canModerate={canModerateCourse(access.role)}
-      categories={categories}
-      course={course}
-      forumNotifications={forumNotifications}
-      roleLabel={getRoleLabel(access.role)}
-      showTrackingNav={canViewCourseProgress({
-        globalRole: user.globalRole,
-        viewerRole: access.role,
-      })}
-      user={user}
+    <CourseWorkspaceShell
+      courseTitle={course.title}
+      roleLabel={roleLabel}
+      viewerInitials={getInitials(viewerName)}
+      viewerName={viewerName}
     >
-      {children}
-    </ForumShell>
+      <ForumShell
+        canModerate={canModerateCourse(access.role)}
+        categories={categories}
+        course={course}
+        forumNotifications={forumNotifications}
+        roleLabel={roleLabel}
+        showTrackingNav={canViewCourseProgress({
+          globalRole: user.globalRole,
+          viewerRole: access.role,
+        })}
+        user={user}
+      >
+        {children}
+      </ForumShell>
+    </CourseWorkspaceShell>
   );
 }

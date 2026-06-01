@@ -54,6 +54,18 @@ export const adminNavigation: AdminNavigationItem[] = [
     icon: "scroll-text",
   },
   {
+    href: "/admin/calendario",
+    label: "Calendario",
+    shortLabel: "Calendario",
+    icon: "calendar-days",
+  },
+  {
+    href: "/admin/biblioteca",
+    label: "Biblioteca",
+    shortLabel: "Biblioteca",
+    icon: "book-open",
+  },
+  {
     href: "/admin/supervision",
     label: "Incidencias",
     shortLabel: "Incidencias",

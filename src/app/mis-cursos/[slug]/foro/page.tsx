@@ -1,31 +1,42 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ChevronRight, Lock, MessageSquareText, MoveRight, ShieldCheck } from "lucide-react";
+import {
+  ChevronRight,
+  Lock,
+  MessageSquareText,
+  MoveRight,
+} from "lucide-react";
 import { notFound, redirect } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { MetricPanel } from "@/components/ui/metric-panel";
 import { SectionHeader } from "@/components/ui/section-header";
-import { StateBanner } from "@/components/ui/state-banner";
 import { SurfaceCard } from "@/components/ui/surface-card";
 import { requireUser } from "@/lib/auth";
 import { getCatalogCourseBySlug } from "@/lib/course-catalog";
 import {
   canAccessCourseCommunity,
   canModerateCourse,
-  getRoleLabel
+  getRoleLabel,
 } from "@/lib/course-community";
-import { getForumCategories, getForumSpaceHistory } from "@/lib/forum";
+import {
+  getForumCategories,
+  getForumSpaceHistory,
+  getRecentForumThreads,
+} from "@/lib/forum";
 import { getForumCategoryPreset } from "@/lib/forum-presentation";
-import { cn, firstValue, formatCompactNumber } from "@/lib/utils";
+import { cn, firstValue, formatCompactNumber, formatRelativeTime } from "@/lib/utils";
+import { ShieldCheck } from "lucide-react";
 
 type ForumHomePageProps = {
   params: Promise<{ slug: string }>;
   searchParams: Promise<{ q?: string | string[] }>;
 };
 
-export async function generateMetadata({ params }: ForumHomePageProps): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: ForumHomePageProps): Promise<Metadata> {
   const { slug } = await params;
   const course = await getCatalogCourseBySlug(slug);
 
@@ -33,12 +44,15 @@ export async function generateMetadata({ params }: ForumHomePageProps): Promise<
     title: course ? `Foro | ${course.title}` : "Foro",
     robots: {
       index: false,
-      follow: false
-    }
+      follow: false,
+    },
   };
 }
 
-export default async function ForumHomePage({ params, searchParams }: ForumHomePageProps) {
+export default async function ForumHomePage({
+  params,
+  searchParams,
+}: ForumHomePageProps) {
   const { slug } = await params;
   const { q } = await searchParams;
   const course = await getCatalogCourseBySlug(slug);
@@ -53,45 +67,63 @@ export default async function ForumHomePage({ params, searchParams }: ForumHomeP
     email: user.email,
     courseSlug: course.slug,
     userGlobalRole: user.globalRole,
-    userIsActive: user.isActive
+    userIsActive: user.isActive,
   });
 
   if (!access.allowed) {
     redirect(`/checkout/${course.slug}`);
   }
 
-  const [categories, history] = await Promise.all([
+  const canModerate = canModerateCourse(access.role);
+
+  const [categories, history, recentThreads] = await Promise.all([
     getForumCategories(course.slug, access.role),
-    getForumSpaceHistory(course.slug)
+    getForumSpaceHistory(course.slug),
+    getRecentForumThreads(course.slug, access.role, 5),
   ]);
 
   const query = firstValue(q)?.trim().toLowerCase() ?? "";
   const visibleCategories = query
     ? categories.filter((category) =>
-        `${category.title} ${category.description}`.toLowerCase().includes(query)
+        `${category.title} ${category.description}`
+          .toLowerCase()
+          .includes(query),
       )
     : categories;
-  const canModerate = canModerateCourse(access.role);
-  const totalThreads = categories.reduce((sum, category) => sum + category._count.threads, 0);
+  const totalThreads = categories.reduce(
+    (sum, category) => sum + category._count.threads,
+    0,
+  );
 
   return (
     <div className="space-y-6 lg:space-y-8">
+      {/* Breadcrumb */}
       <div className="flex flex-wrap items-center gap-2 text-sm text-[var(--color-muted)]">
-        <Link className="hover:text-[var(--color-primary)]" href={`/mis-cursos/${course.slug}`}>
+        <Link
+          className="hover:text-[var(--color-primary)]"
+          href={`/mis-cursos/${course.slug}`}
+        >
           {course.title}
         </Link>
         <ChevronRight className="h-4 w-4" />
         <span className="text-[var(--color-ink)]">Comunidad</span>
       </div>
 
+      {/* Header card */}
       <SurfaceCard
         actions={
           canModerate ? (
             <div className="flex flex-wrap gap-3">
-              <ButtonLink href={`/mis-cursos/${course.slug}/foro/moderacion`} variant="neutral">
+              <ButtonLink
+                href={`/mis-cursos/${course.slug}/foro/moderacion`}
+                variant="neutral"
+              >
                 Moderación
               </ButtonLink>
-              <ButtonLink href={`/mis-cursos/${course.slug}/foro/historico`} variant="subtle">
+              <ButtonLink
+                href={`/mis-cursos/${course.slug}/foro/historico`}
+                variant="subtle"
+              >
                 Histórico
               </ButtonLink>
             </div>
@@ -101,19 +133,25 @@ export default async function ForumHomePage({ params, searchParams }: ForumHomeP
         padding="md"
       >
         <SectionHeader
-          description="La comunidad acompaña el curso como una continuación del campus: anuncios, preguntas y conversaciones recuperables sin cambiar de contexto."
+          description="La comunidad acompaña el curso: anuncios, preguntas y conversaciones recuperables sin cambiar de contexto."
           eyebrow={
-            <span className="inline-flex flex-wrap items-center gap-2">
-              <Badge tone={canModerate ? "info" : "warning"}>{getRoleLabel(access.role)}</Badge>
-              <Badge className="hidden sm:inline-flex" tone="outline">
+            canModerate ? (
+              <span className="inline-flex flex-wrap items-center gap-2">
+                <Badge tone="info">{getRoleLabel(access.role)}</Badge>
+                <Badge className="hidden sm:inline-flex" tone="outline">
+                  {history.activeSpace.editionLabel}
+                </Badge>
+              </span>
+            ) : (
+              <Badge tone="outline">
                 {history.activeSpace.editionLabel}
               </Badge>
-            </span>
+            )
           }
           title="Conversaciones del curso"
         />
 
-        <div className="mt-5 grid gap-3 md:grid-cols-3">
+        <div className="mt-5 grid gap-3 md:grid-cols-2">
           <MetricPanel
             detail="Temas visibles en la edición actual."
             label="Hilos"
@@ -126,15 +164,65 @@ export default async function ForumHomePage({ params, searchParams }: ForumHomeP
             tone="brand"
             value={categories.length}
           />
-          <MetricPanel
-            detail="Espacios previos conservados para consulta docente."
-            label="Histórico"
-            tone="warning"
-            value={history.archivedSpaces.length}
-          />
         </div>
+
+        {/* Histórico solo visible para moderadores */}
+        {canModerate && history.archivedSpaces.length > 0 && (
+          <div className="mt-3">
+            <MetricPanel
+              detail="Espacios previos conservados para consulta docente."
+              label="Histórico"
+              tone="warning"
+              value={history.archivedSpaces.length}
+            />
+          </div>
+        )}
       </SurfaceCard>
 
+      {/* Últimas conversaciones — solo si hay datos */}
+      {recentThreads.length > 0 && (
+        <SurfaceCard
+          className="border-[rgba(22,60,88,0.08)] bg-white/88"
+          padding="md"
+        >
+          <h2 className="font-premium text-heading-md font-semibold text-[var(--color-ink)]">
+            Últimas conversaciones
+          </h2>
+          <p className="mt-1 text-sm text-[var(--color-muted)]">
+            Actividad más reciente de la comunidad de este curso.
+          </p>
+          <div className="mt-5 divide-y divide-[rgba(22,60,88,0.07)]">
+            {recentThreads.map((thread) => (
+              <Link
+                key={thread.id}
+                className="group flex items-start gap-4 py-4 first:pt-0 last:pb-0 hover:text-[var(--color-primary)]"
+                href={`/mis-cursos/${course.slug}/foro/${thread.category.slug}/${thread.id}`}
+              >
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium text-[var(--color-ink)] transition group-hover:text-[var(--color-primary)]">
+                    {thread.title}
+                  </p>
+                  <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-[var(--color-muted)]">
+                    <span className="rounded-full bg-[var(--color-brand-soft)] px-2 py-0.5 font-medium text-[var(--color-primary)]">
+                      {thread.category.title}
+                    </span>
+                    <span>{formatRelativeTime(thread.lastActivityAt)}</span>
+                    {thread.postCount > 0 && (
+                      <span>
+                        {thread.postCount}{" "}
+                        {thread.postCount === 1 ? "respuesta" : "respuestas"}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <MoveRight className="mt-0.5 h-4 w-4 shrink-0 text-[var(--color-muted)] transition group-hover:translate-x-0.5 group-hover:text-[var(--color-primary)]" />
+              </Link>
+            ))}
+          </div>
+        </SurfaceCard>
+      )}
+
+      {/* Grid de categorías */}
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {visibleCategories.length ? (
           visibleCategories.map((category) => {
@@ -154,7 +242,12 @@ export default async function ForumHomePage({ params, searchParams }: ForumHomeP
                 >
                   <div className="flex h-full flex-col">
                     <div className="flex items-start justify-between gap-4">
-                      <div className={cn("grid h-11 w-11 place-items-center rounded-2xl", preset.iconClass)}>
+                      <div
+                        className={cn(
+                          "grid h-11 w-11 place-items-center rounded-2xl",
+                          preset.iconClass,
+                        )}
+                      >
                         <Icon className="h-5 w-5" />
                       </div>
                       <MoveRight className="h-5 w-5 shrink-0 text-[var(--color-muted)] transition group-hover:translate-x-1 group-hover:text-[var(--color-primary)]" />
@@ -177,7 +270,9 @@ export default async function ForumHomePage({ params, searchParams }: ForumHomeP
                       <span className="font-medium text-[var(--color-ink-soft)]">
                         {category._count.threads} temas
                       </span>
-                      <span className="text-[var(--color-muted)]">Abrir conversación</span>
+                      <span className="text-[var(--color-muted)]">
+                        Abrir conversación
+                      </span>
                     </div>
                   </div>
                 </SurfaceCard>
@@ -196,8 +291,12 @@ export default async function ForumHomePage({ params, searchParams }: ForumHomeP
           </div>
         )}
 
+        {/* Card de moderación — solo para docentes */}
         {canModerate ? (
-          <SurfaceCard className="border-[rgba(22,60,88,0.08)] bg-[linear-gradient(180deg,rgba(255,255,255,0.94),rgba(243,247,251,0.88))] md:col-span-2 xl:col-span-1" padding="md">
+          <SurfaceCard
+            className="border-[rgba(22,60,88,0.08)] bg-[linear-gradient(180deg,rgba(255,255,255,0.94),rgba(243,247,251,0.88))] md:col-span-2 xl:col-span-1"
+            padding="md"
+          >
             <div className="flex h-full flex-col">
               <div className="flex items-start justify-between gap-4">
                 <div className="grid h-11 w-11 place-items-center rounded-2xl bg-[var(--color-brand-soft)] text-[var(--color-primary)]">
@@ -212,16 +311,22 @@ export default async function ForumHomePage({ params, searchParams }: ForumHomeP
                   Gestión de comunidad
                 </h2>
                 <p className="mt-3 text-sm leading-7 text-[var(--color-muted)]">
-                  Revisa contenido reportado o consulta espacios anteriores sin separar el foro del
-                  resto del campus.
+                  Revisa contenido reportado o consulta espacios anteriores sin
+                  separar el foro del resto del campus.
                 </p>
               </div>
 
               <div className="mt-auto flex flex-wrap gap-3 pt-5">
-                <ButtonLink href={`/mis-cursos/${course.slug}/foro/moderacion`} variant="neutral">
+                <ButtonLink
+                  href={`/mis-cursos/${course.slug}/foro/moderacion`}
+                  variant="neutral"
+                >
                   Abrir moderación
                 </ButtonLink>
-                <ButtonLink href={`/mis-cursos/${course.slug}/foro/historico`} variant="subtle">
+                <ButtonLink
+                  href={`/mis-cursos/${course.slug}/foro/historico`}
+                  variant="subtle"
+                >
                   Ver histórico
                 </ButtonLink>
               </div>
@@ -229,17 +334,6 @@ export default async function ForumHomePage({ params, searchParams }: ForumHomeP
           </SurfaceCard>
         ) : null}
       </div>
-
-      <StateBanner
-        description={
-          canModerate
-            ? "La vista principal prioriza leer y responder. La moderación y el histórico siguen disponibles, pero quedan relegados a accesos secundarios."
-            : "La comunidad muestra la edición activa del curso. El histórico y las herramientas de moderación siguen reservados al equipo docente y administración."
-        }
-        icon={canModerate ? <ShieldCheck className="h-5 w-5" /> : <MessageSquareText className="h-5 w-5" />}
-        className="px-4 py-3"
-        tone={canModerate ? "info" : "warning"}
-      />
     </div>
   );
 }

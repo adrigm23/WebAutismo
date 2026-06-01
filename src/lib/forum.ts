@@ -15,7 +15,13 @@ export type {
   ForumViewerRole
 } from "@/lib/forum-types";
 
-export { getForumCategories, getForumThreadById, getForumThreads } from "@/lib/forum-read";
+export {
+  getForumCategories,
+  getForumThreadById,
+  getForumThreads,
+  getRecentForumThreads,
+  type RecentForumThreadItem,
+} from "@/lib/forum-read";
 export { getForumSpaceHistory, getForumModerationDashboard } from "@/lib/forum-admin-read";
 export { getForumCategory } from "@/lib/forum-categories";
 export { canEditForumContent } from "@/lib/forum-permissions";

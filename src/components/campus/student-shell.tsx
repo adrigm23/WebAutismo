@@ -8,6 +8,7 @@ import {
   Award,
   Bell,
   BookOpen,
+  CalendarDays,
   ChevronRight,
   CircleHelp,
   GraduationCap,
@@ -30,6 +31,7 @@ export type StudentShellNavIcon =
   | "messages"
   | "community"
   | "library"
+  | "calendar"
   | "certificates"
   | "settings"
   | "support";
@@ -57,6 +59,7 @@ const NAV_ICONS: Record<StudentShellNavIcon, LucideIcon> = {
   messages: MessagesSquare,
   community: MessageSquareText,
   library: BookOpen,
+  calendar: CalendarDays,
   certificates: Award,
   settings: Settings2,
   support: CircleHelp,
@@ -252,7 +255,7 @@ export function StudentShell({
               <Link
                 aria-label="Ir a notificaciones"
                 className="relative grid h-10 w-10 place-items-center rounded-full border border-transparent text-[var(--color-ink-soft)] transition hover:border-[var(--color-border-subtle)] hover:bg-white hover:text-[var(--color-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)]"
-                href="/mi-cuenta#notificaciones"
+                href="/notificaciones"
               >
                 <Bell className="h-5 w-5" strokeWidth={1.9} />
                 {notificationsCount > 0 ? (

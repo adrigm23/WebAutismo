@@ -457,7 +457,8 @@ function buildStudentNavItems(communityHref: string): StudentShellNavItem[] {
     { label: "Mi campus", href: "/mis-cursos", icon: "home" },
     { label: "Mensajes", href: "/mensajes", icon: "messages" },
     { label: "Comunidad", href: communityHref, icon: "community" },
-    { label: "Biblioteca", href: "/app/recursos", icon: "library", disabled: true },
+    { label: "Calendario", href: "/calendario", icon: "calendar" },
+    { label: "Biblioteca", href: "/biblioteca", icon: "library" },
     { label: "Certificados", href: "/app/certificados", icon: "certificates", disabled: true },
     { label: "Configuración", href: "/mi-cuenta", icon: "settings" },
     { label: "Soporte", href: "/soporte", icon: "support" },
@@ -550,7 +551,7 @@ export default async function MyCoursesPage({
     studentCount: studentCourses.length,
     staffCount: teacherCourses.length,
   });
-  const communityHref = heroCourseSlug ? buildCourseForumHref(heroCourseSlug) : "/soporte";
+  const communityHref = "/comunidad";
   const primaryTeacherSummary =
     primaryTeacherCourse
       ? teacherSummaries.find(

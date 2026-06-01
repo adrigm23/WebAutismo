@@ -13,11 +13,15 @@ const MIME_EXTENSION_MAP = {
   "application/vnd.openxmlformats-officedocument.presentationml.presentation": [".pptx"],
   "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [".xlsx"],
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [".docx"],
+  "image/gif": [".gif"],
   "image/jpeg": [".jpg", ".jpeg"],
   "image/png": [".png"],
   "image/webp": [".webp"],
   "text/csv": [".csv"],
-  "text/plain": [".txt"]
+  "text/plain": [".txt"],
+  "video/mp4": [".mp4"],
+  "video/ogg": [".ogv"],
+  "video/webm": [".webm"]
 } as const satisfies Record<string, readonly string[]>;
 
 type AllowedMimeType = keyof typeof MIME_EXTENSION_MAP;
@@ -38,6 +42,12 @@ export const COURSE_SUBMISSION_UPLOAD_POLICY: UploadPolicy = {
   allowedMimeTypes: Object.keys(MIME_EXTENSION_MAP) as AllowedMimeType[],
   label: "El archivo",
   maxFileSizeBytes: MAX_STORED_ASSET_SIZE_BYTES
+};
+
+export const LIBRARY_UPLOAD_POLICY: UploadPolicy = {
+  allowedMimeTypes: Object.keys(MIME_EXTENSION_MAP) as AllowedMimeType[],
+  label: "El archivo",
+  maxFileSizeBytes: 200 * 1024 * 1024
 };
 
 export const FORUM_ATTACHMENT_UPLOAD_POLICY: UploadPolicy = {

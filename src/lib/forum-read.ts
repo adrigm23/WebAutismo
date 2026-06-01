@@ -5,6 +5,17 @@ import {
   buildThreadWhere,
   buildVisibilityWhere
 } from "@/lib/forum-query";
+
+export type RecentForumThreadItem = {
+  id: string;
+  title: string;
+  lastActivityAt: Date;
+  postCount: number;
+  category: {
+    slug: string;
+    title: string;
+  };
+};
 import { publishDueAnnouncementsForCourse } from "@/lib/forum-notifications";
 import { getDb } from "@/lib/prisma";
 import {
@@ -288,5 +299,56 @@ export async function getForumThreadById(input: {
 
     logForumFallback("getForumThreadById", input.courseSlug, error);
     return null;
+  }
+}
+
+export async function getRecentForumThreads(
+  courseSlug: string,
+  viewerRole?: ForumViewerRole,
+  limit = 5
+): Promise<RecentForumThreadItem[]> {
+  try {
+    const activeSpace = await ensureCourseCommunity(courseSlug);
+    const threads = await getDb().forumThread.findMany({
+      where: {
+        category: {
+          forumSpaceId: activeSpace.id,
+        },
+        deletedAt: null,
+        publishedAt: { not: null },
+        ...buildVisibilityWhere(viewerRole),
+      },
+      orderBy: { lastActivityAt: "desc" },
+      take: limit,
+      select: {
+        id: true,
+        title: true,
+        lastActivityAt: true,
+        category: {
+          select: {
+            slug: true,
+            title: true,
+          },
+        },
+        _count: {
+          select: { posts: true },
+        },
+      },
+    });
+
+    return threads.map((thread) => ({
+      id: thread.id,
+      title: thread.title,
+      lastActivityAt: thread.lastActivityAt,
+      postCount: thread._count.posts,
+      category: thread.category,
+    }));
+  } catch (error) {
+    if (!canUseForumFallback(error)) {
+      throw error;
+    }
+
+    logForumFallback("getRecentForumThreads", courseSlug, error);
+    return [];
   }
 }

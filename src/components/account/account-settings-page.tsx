@@ -1,33 +1,28 @@
-import type { ReactNode } from "react";
+"use client";
+
 import Link from "next/link";
 import type { LucideIcon } from "lucide-react";
 import type { UserGlobalRole } from "@prisma/client";
 import {
-  ArrowRight,
+  Activity,
+  ArrowLeft,
   Award,
   Bell,
-  BookCopy,
   BookOpen,
-  CircleHelp,
+  CheckCircle2,
   GraduationCap,
-  Languages,
-  LayoutGrid,
-  LifeBuoy,
-  Mail,
+  LogOut,
   MessageSquareText,
   Monitor,
-  Settings2,
   Shield,
   UserRound,
 } from "lucide-react";
 import { logoutEverywhereAction } from "@/actions/session";
 import { updateNotificationPreferencesAction } from "@/actions/account";
-import { StudentShell } from "@/components/campus/student-shell";
-import { Button, ButtonLink } from "@/components/ui/button";
-import { StateBanner } from "@/components/ui/state-banner";
 import type { DashboardNotificationSnapshot } from "@/lib/account-dashboard";
-import { getGlobalRoleLabel } from "@/lib/course-permissions";
-import { cn, formatDateTime, formatRelativeTime, getInitials } from "@/lib/utils";
+import { cn, formatRelativeTime, getInitials } from "@/lib/utils";
+
+// ─── types (keep for page.tsx compat) ────────────────────────────────────────
 
 type QuickLinkItem = {
   href?: string;
@@ -68,185 +63,71 @@ type AccountSettingsPageProps = {
   isDemoUser: boolean;
   notificationSnapshot: DashboardNotificationSnapshot;
   overviewPanel: AccountOverviewPanel;
-  primaryCta: {
-    href: string;
-    label: string;
-  };
+  primaryCta: { href: string; label: string };
   quickLinks: QuickLinkItem[];
   sessions: ActiveSessionItem[];
 };
 
-const desktopSidebarPrimaryItems = [
-  {
-    label: "Panel",
-    href: "/mis-cursos",
-    icon: LayoutGrid,
-  },
-  {
-    label: "Perfil",
-    href: "#perfil-cuenta",
-    icon: UserRound,
-    active: true,
-  },
-  {
-    label: "Seguridad",
-    href: "#seguridad",
-    icon: Shield,
-  },
-  {
-    label: "Notificaciones",
-    href: "#preferencias",
-    icon: Bell,
-  },
-] as const;
+// ─── icon registry (kept for page.tsx compat) ────────────────────────────────
 
-const desktopSidebarSecondaryItems = [
-  {
-    label: "Ajustes",
-    href: "#preferencias",
-    icon: Settings2,
-  },
-  {
-    label: "Ayuda",
-    href: "/soporte",
-    icon: CircleHelp,
-  },
-] as const;
+export const accountQuickLinkIcons = {
+  courses: GraduationCap,
+  forum: MessageSquareText,
+  library: BookOpen,
+  certificates: Award,
+  support: Bell,
+} satisfies Record<string, LucideIcon>;
 
-function getHeroEyebrow(role: UserGlobalRole) {
-  if (role === "ADMIN") {
-    return "ADMINISTRACION";
-  }
+// ─── helpers ──────────────────────────────────────────────────────────────────
 
-  return role === "TEACHER" ? "DOCENTE SENIOR" : "ESTUDIANTE SENIOR";
+function getSessionDeviceLabel(userAgent: string | null): string {
+  if (!userAgent) return "Dispositivo desconocido";
+  const browser = userAgent.includes("Edg/")
+    ? "Edge"
+    : userAgent.includes("Chrome/")
+      ? "Chrome"
+      : userAgent.includes("Firefox/")
+        ? "Firefox"
+        : userAgent.includes("Safari/")
+          ? "Safari"
+          : "Navegador";
+  const platform = userAgent.includes("Windows")
+    ? "Windows"
+    : userAgent.includes("Mac OS X")
+      ? "MacBook"
+      : userAgent.includes("Android")
+        ? "Android"
+        : userAgent.includes("iPhone") || userAgent.includes("iPad")
+          ? "iPhone"
+          : userAgent.includes("Linux")
+            ? "Linux"
+            : "Equipo";
+  return `${platform} - ${browser}`;
 }
 
-function getHeroDescription(role: UserGlobalRole) {
-  if (role === "ADMIN") {
-    return "Gestiona tus preferencias, seguridad e informacion personal.";
-  }
-
-  return role === "TEACHER"
-    ? "Gestiona tus preferencias, seguridad e informacion personal."
-    : "Gestiona tus preferencias, seguridad e informacion personal.";
-}
-
-function getSessionDeviceLabel(userAgent: string | null) {
-  if (!userAgent) {
-    return "Dispositivo sin identificar";
-  }
-
-  const browser =
-    userAgent.includes("Edg/")
-      ? "Microsoft Edge"
-      : userAgent.includes("Chrome/")
-        ? "Google Chrome"
-        : userAgent.includes("Firefox/")
-          ? "Mozilla Firefox"
-          : userAgent.includes("Safari/")
-            ? "Safari"
-            : "Navegador web";
-
-  const platform =
-    userAgent.includes("Windows")
-      ? "Windows"
-      : userAgent.includes("Mac OS X")
-        ? "macOS"
-        : userAgent.includes("Android")
-          ? "Android"
-          : userAgent.includes("iPhone") || userAgent.includes("iPad")
-            ? "iOS"
-            : userAgent.includes("Linux")
-              ? "Linux"
-              : "equipo actual";
-
-  return `${browser} en ${platform}`;
-}
-
-function getSessionDescription(session: ActiveSessionItem) {
-  const segments = [
-    session.lastSeenAt
-      ? `Ultima actividad ${formatRelativeTime(session.lastSeenAt)}`
-      : "Sesion iniciada hace poco",
-    `Caduca ${formatDateTime(session.expiresAt)}`,
-  ];
-
+function getSessionMeta(session: ActiveSessionItem): string {
+  const parts: string[] = [];
   if (session.ipAddress) {
-    segments.push(`IP ${session.ipAddress}`);
+    const ip = session.ipAddress;
+    parts.push(ip.startsWith("::ffff:") ? ip.slice(7) : ip);
   }
-
-  return segments.join(" - ");
+  if (session.isCurrent) {
+    parts.push("Sesión actual");
+  } else if (session.lastSeenAt) {
+    parts.push(formatRelativeTime(session.lastSeenAt));
+  }
+  return parts.join(" · ");
 }
 
-function getNotificationPreferenceTitle(snapshot: DashboardNotificationSnapshot) {
-  if (snapshot.preference.emailEnabled && snapshot.preference.webEnabled) {
-    return "Correo y area privada";
-  }
+// ─── toggle row (uses real server action) ────────────────────────────────────
 
-  if (snapshot.preference.emailEnabled) {
-    return "Solo correo";
-  }
-
-  if (snapshot.preference.webEnabled) {
-    return "Solo area privada";
-  }
-
-  return "Avisos minimizados";
-}
-
-function DesktopSidebarLink(input: {
-  href: string;
-  label: string;
-  icon: LucideIcon;
-  active?: boolean;
-}) {
-  const Icon = input.icon;
-
-  return (
-    <Link
-      aria-current={input.active ? "page" : undefined}
-      className={cn(
-        "flex items-center gap-3 rounded-[1rem] px-4 py-3 text-[1.02rem] font-medium transition",
-        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[#f4f1ff]",
-        input.active
-          ? "bg-[#173c56] text-white shadow-[0_14px_32px_-24px_rgba(23,60,86,0.72)]"
-          : "text-[var(--color-ink)] hover:bg-white hover:text-[#173c56]",
-      )}
-      href={input.href}
-    >
-      <Icon className="h-5 w-5 shrink-0" />
-      <span>{input.label}</span>
-    </Link>
-  );
-}
-
-function ProfileField(input: {
-  label: string;
-  value: ReactNode;
-  meta?: ReactNode;
-  action?: ReactNode;
-}) {
-  return (
-    <div className="space-y-2">
-      <p className="text-[0.78rem] font-medium uppercase tracking-[0.14em] text-[var(--color-muted)]">
-        {input.label}
-      </p>
-      <div className="flex items-start justify-between gap-4">
-        <div className="min-w-0">
-          <p className="text-[1.18rem] font-medium leading-8 text-[var(--color-ink)]">
-            {input.value}
-          </p>
-          {input.meta ? (
-            <p className="mt-1 text-sm leading-6 text-[var(--color-muted)]">{input.meta}</p>
-          ) : null}
-        </div>
-        {input.action ? <div className="shrink-0">{input.action}</div> : null}
-      </div>
-    </div>
-  );
-}
-
-function PreferenceSwitchRow(input: {
+function NotificationToggleRow({
+  title,
+  description,
+  enabled,
+  emailEnabled,
+  webEnabled,
+}: {
   title: string;
   description: string;
   enabled: boolean;
@@ -255,27 +136,29 @@ function PreferenceSwitchRow(input: {
 }) {
   return (
     <form action={updateNotificationPreferencesAction}>
-      <input name="emailEnabled" type="hidden" value={input.emailEnabled ? "true" : "false"} />
-      <input name="webEnabled" type="hidden" value={input.webEnabled ? "true" : "false"} />
+      <input name="emailEnabled" type="hidden" value={emailEnabled ? "true" : "false"} />
+      <input name="webEnabled" type="hidden" value={webEnabled ? "true" : "false"} />
       <button
-        className="flex w-full items-center justify-between gap-4 rounded-[1rem] py-1 text-left transition hover:opacity-85 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2"
+        className="flex w-full items-start justify-between gap-4 py-1 text-left transition hover:opacity-90"
         type="submit"
       >
         <div className="min-w-0">
-          <p className="text-[1rem] font-medium text-[var(--color-ink)]">{input.title}</p>
-          <p className="mt-1 text-sm leading-6 text-[var(--color-muted)]">{input.description}</p>
+          <p className="text-sm font-semibold text-[var(--color-ink)]">{title}</p>
+          <p className="mt-0.5 text-xs leading-relaxed text-[var(--color-muted)]">{description}</p>
         </div>
         <span
-          aria-hidden="true"
+          aria-checked={enabled}
+          aria-label={title}
+          role="switch"
           className={cn(
-            "flex h-8 w-14 shrink-0 items-center rounded-full p-1 transition",
-            input.enabled ? "bg-[#173c56]" : "bg-[rgba(90,108,126,0.25)]",
+            "mt-0.5 flex h-[1.4rem] w-10 shrink-0 items-center rounded-full p-0.5 transition",
+            enabled ? "bg-[var(--color-primary)]" : "bg-[#d1d5db]",
           )}
         >
           <span
             className={cn(
-              "h-6 w-6 rounded-full bg-white transition",
-              input.enabled ? "translate-x-6" : "translate-x-0",
+              "h-[1.1rem] w-[1.1rem] rounded-full bg-white shadow transition",
+              enabled ? "translate-x-[1.15rem]" : "translate-x-0",
             )}
           />
         </span>
@@ -284,455 +167,440 @@ function PreferenceSwitchRow(input: {
   );
 }
 
-function StaticSwitchRow(input: {
-  title: string;
-  description: string;
-  meta: string;
+// ─── left sidebar ─────────────────────────────────────────────────────────────
+
+type NavSection = "perfil" | "notificaciones" | "seguridad" | "actividad";
+
+const NAV_ITEMS: Array<{ id: NavSection; label: string; icon: LucideIcon; anchor: string }> = [
+  { id: "perfil", label: "Perfil", icon: UserRound, anchor: "#perfil" },
+  { id: "notificaciones", label: "Notificaciones", icon: Bell, anchor: "#notificaciones" },
+  { id: "seguridad", label: "Seguridad", icon: Shield, anchor: "#seguridad" },
+  { id: "actividad", label: "Actividad Académica", icon: Activity, anchor: "#actividad" },
+];
+
+function AccountSidebar({
+  fullName,
+  activeAnchor,
+}: {
+  fullName: string;
+  activeAnchor: NavSection;
+}) {
+  const initials = getInitials(fullName);
+
+  return (
+    <aside className="sticky top-0 hidden h-screen w-[220px] shrink-0 flex-col border-r border-[rgba(22,60,88,0.08)] bg-white lg:flex">
+      {/* Avatar + title */}
+      <div className="flex flex-col items-center px-5 pb-6 pt-8 text-center">
+        <div className="grid h-16 w-16 place-items-center rounded-full bg-[var(--color-primary)] text-xl font-bold text-white">
+          {initials}
+        </div>
+        <p className="mt-3 text-base font-bold text-[var(--color-ink)]">Mi Cuenta</p>
+        <p className="mt-0.5 text-[0.72rem] text-[var(--color-muted)]">Configuración del Centro</p>
+      </div>
+
+      {/* Nav */}
+      <nav className="flex-1 space-y-0.5 px-3" aria-label="Secciones de cuenta">
+        {NAV_ITEMS.map((item) => {
+          const Icon = item.icon;
+          const isActive = activeAnchor === item.id;
+          return (
+            <a
+              key={item.id}
+              href={item.anchor}
+              className={cn(
+                "flex items-center gap-3 rounded-xl px-4 py-2.5 text-sm font-medium transition",
+                isActive
+                  ? "border-l-2 border-[var(--color-primary)] bg-[rgba(22,60,88,0.06)] text-[var(--color-primary)]"
+                  : "text-[var(--color-ink-soft)] hover:bg-[rgba(22,60,88,0.04)] hover:text-[var(--color-ink)]",
+              )}
+            >
+              <Icon className="h-4 w-4 shrink-0" strokeWidth={2} />
+              {item.label}
+            </a>
+          );
+        })}
+      </nav>
+
+      {/* Bottom link */}
+      <div className="border-t border-[rgba(22,60,88,0.08)] px-3 py-5">
+        <Link
+          href="/mis-cursos"
+          className="flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium text-[var(--color-muted)] transition hover:text-[var(--color-primary)]"
+        >
+          <ArrowLeft className="h-4 w-4 shrink-0" />
+          Volver al Campus
+        </Link>
+      </div>
+    </aside>
+  );
+}
+
+// ─── mobile section tabs ──────────────────────────────────────────────────────
+
+function MobileSectionTabs() {
+  return (
+    <nav
+      aria-label="Secciones de cuenta"
+      className="flex gap-1 overflow-x-auto border-b border-[rgba(22,60,88,0.08)] bg-white px-4 py-2 lg:hidden"
+    >
+      {NAV_ITEMS.map((item) => (
+        <a
+          key={item.id}
+          href={item.anchor}
+          className="whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-medium text-[var(--color-ink-soft)] transition hover:bg-[rgba(22,60,88,0.05)] hover:text-[var(--color-primary)]"
+        >
+          {item.label}
+        </a>
+      ))}
+    </nav>
+  );
+}
+
+// ─── personal info card ───────────────────────────────────────────────────────
+
+function PersonalInfoCard({
+  fullName,
+  email,
+  isDemoUser,
+}: {
+  fullName: string;
+  email: string;
+  isDemoUser: boolean;
+}) {
+  const initials = getInitials(fullName);
+
+  return (
+    <section id="perfil">
+      <div className="overflow-hidden rounded-2xl border border-[rgba(22,60,88,0.08)] bg-white p-6">
+        <div className="flex items-center justify-between gap-4">
+          <h2 className="text-lg font-bold text-[var(--color-ink)]">Información Personal</h2>
+          {!isDemoUser && (
+            <button
+              type="button"
+              className="text-sm font-medium text-[var(--color-primary)] transition hover:underline"
+            >
+              Editar
+            </button>
+          )}
+        </div>
+
+        <div className="mt-6 flex flex-col items-start gap-5 sm:flex-row">
+          {/* Avatar */}
+          <div className="grid h-[4.5rem] w-[4.5rem] shrink-0 place-items-center rounded-full bg-[var(--color-primary)] text-xl font-bold text-white">
+            {initials}
+          </div>
+
+          {/* Fields */}
+          <div className="flex-1 space-y-4">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-[var(--color-muted)]">
+                  Nombre Completo
+                </label>
+                <input
+                  readOnly
+                  value={fullName}
+                  className="w-full rounded-xl border border-[rgba(22,60,88,0.1)] bg-[#f8fafc] px-4 py-2.5 text-sm text-[var(--color-ink)] focus:outline-none"
+                />
+              </div>
+              <div>
+                <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-[var(--color-muted)]">
+                  Correo Electrónico
+                </label>
+                <input
+                  readOnly
+                  value={email}
+                  className="w-full rounded-xl border border-[rgba(22,60,88,0.1)] bg-[#f8fafc] px-4 py-2.5 text-sm text-[var(--color-ink)] focus:outline-none"
+                />
+              </div>
+            </div>
+            <div>
+              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-[var(--color-muted)]">
+                Especialidad Profesional
+              </label>
+              <input
+                readOnly
+                defaultValue="Psicología Clínica y Apoyo Neurodivergente"
+                className="w-full rounded-xl border border-[rgba(22,60,88,0.1)] bg-[#f8fafc] px-4 py-2.5 text-sm text-[var(--color-ink)] focus:outline-none"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ─── security card ────────────────────────────────────────────────────────────
+
+function SecurityCard({
+  sessions,
+  isDemoUser,
+}: {
+  sessions: ActiveSessionItem[];
+  isDemoUser: boolean;
+}) {
+  const hasOtherSessions = sessions.some((s) => !s.isCurrent);
+
+  return (
+    <section id="seguridad">
+      <div className="overflow-hidden rounded-2xl border border-[rgba(22,60,88,0.08)] bg-white p-6">
+        <h2 className="text-lg font-bold text-[var(--color-ink)]">Seguridad y Privacidad</h2>
+
+        <div className="mt-5 divide-y divide-[rgba(22,60,88,0.07)]">
+          {/* Password */}
+          <div className="flex items-center justify-between gap-4 py-4 first:pt-0">
+            <div>
+              <p className="text-sm font-semibold text-[var(--color-ink)]">Contraseña</p>
+              <p className="mt-0.5 text-xs text-[var(--color-muted)]">Última actualización hace 3 meses</p>
+            </div>
+            <Link
+              href="/recuperar-contrasena"
+              className="rounded-xl border border-[rgba(22,60,88,0.15)] px-4 py-2 text-sm font-medium text-[var(--color-ink)] transition hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]"
+            >
+              Cambiar
+            </Link>
+          </div>
+
+          {/* Profile visibility */}
+          <div id="notificaciones" className="flex items-center justify-between gap-4 py-4">
+            <div>
+              <p className="text-sm font-semibold text-[var(--color-ink)]">Visibilidad del Perfil</p>
+              <p className="mt-0.5 text-xs text-[var(--color-muted)]">Quién puede ver tus datos de contacto</p>
+            </div>
+            <span className="rounded-xl border border-[rgba(22,60,88,0.15)] px-4 py-2 text-sm font-medium text-[var(--color-ink)]">
+              Solo Alumnos
+            </span>
+          </div>
+
+          {/* Active sessions */}
+          <div className="py-4">
+            <p className="text-sm font-semibold text-[var(--color-ink)]">Sesiones Activas</p>
+            <div className="mt-3 space-y-2">
+              {sessions.slice(0, 3).map((session) => (
+                <div
+                  key={session.id}
+                  className="flex items-center gap-3 rounded-xl border border-[rgba(22,60,88,0.08)] bg-[#f8fafc] px-4 py-3"
+                >
+                  <Monitor className="h-4 w-4 shrink-0 text-[var(--color-muted)]" />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium text-[var(--color-ink)]">
+                      {getSessionDeviceLabel(session.userAgent)}
+                    </p>
+                    <p className="text-xs text-[var(--color-muted)]">
+                      {getSessionMeta(session)}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Logout everywhere */}
+          {(hasOtherSessions || isDemoUser) && (
+            <div className="pt-4">
+              <form action={logoutEverywhereAction}>
+                <button
+                  type="submit"
+                  disabled={isDemoUser}
+                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-red-50 px-4 py-2.5 text-sm font-medium text-red-600 transition hover:bg-red-100 disabled:opacity-50"
+                >
+                  <LogOut className="h-4 w-4" />
+                  Cerrar sesión en todos los dispositivos
+                </button>
+              </form>
+            </div>
+          )}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ─── notifications sidebar card ───────────────────────────────────────────────
+
+function NotificationsCard({
+  emailEnabled,
+  webEnabled,
+}: {
+  emailEnabled: boolean;
+  webEnabled: boolean;
 }) {
   return (
-    <div className="flex items-center justify-between gap-4 rounded-[1rem] py-1">
-      <div className="min-w-0">
-        <p className="text-[1rem] font-medium text-[var(--color-ink)]">{input.title}</p>
-        <p className="mt-1 text-sm leading-6 text-[var(--color-muted)]">{input.description}</p>
-      </div>
-      <div className="flex items-center gap-3">
-        <span className="hidden text-xs font-medium uppercase tracking-[0.12em] text-[var(--color-muted)] sm:inline">
-          {input.meta}
-        </span>
-        <span
-          aria-hidden="true"
-          className="flex h-8 w-14 shrink-0 items-center rounded-full bg-[rgba(90,108,126,0.16)] p-1"
-        >
-          <span className="h-6 w-6 rounded-full bg-white" />
-        </span>
+    <div className="overflow-hidden rounded-2xl border border-[rgba(22,60,88,0.08)] bg-white p-5">
+      <h2 className="text-base font-bold text-[var(--color-ink)]">Notificaciones</h2>
+      <div className="mt-4 space-y-4">
+        <NotificationToggleRow
+          title="Correos de Plataforma"
+          description="Resúmenes semanales y actualizaciones de cursos."
+          enabled={emailEnabled}
+          emailEnabled={!emailEnabled}
+          webEnabled={webEnabled}
+        />
+        <div className="h-px bg-[rgba(22,60,88,0.06)]" />
+        <NotificationToggleRow
+          title="Alertas de Comunidad"
+          description="Menciones en foros y mensajes directos."
+          enabled={webEnabled}
+          emailEnabled={emailEnabled}
+          webEnabled={!webEnabled}
+        />
       </div>
     </div>
   );
 }
 
-function ProgressItem(input: { text: string }) {
+// ─── academic activity sidebar card ──────────────────────────────────────────
+
+function AcademicActivityCard({ overviewPanel }: { overviewPanel: AccountOverviewPanel }) {
+  const hasProgress =
+    overviewPanel.progressPercent !== null && overviewPanel.detail !== "Seguridad, sesiones y soporte de tu cuenta.";
+
   return (
-    <li className="flex items-start gap-3 text-sm leading-6 text-white/84">
-      <span className="mt-1.5 h-3.5 w-3.5 shrink-0 rounded-full border border-[rgba(109,244,235,0.94)]" />
-      <span>{input.text}</span>
-    </li>
-  );
-}
-
-function QuickAccessTile(input: QuickLinkItem) {
-  const Icon = input.icon;
-  const sharedClassName =
-    "rounded-[1.1rem] border border-[rgba(21,39,58,0.1)] bg-white p-4 transition";
-
-  const content = (
-    <>
-      <div className="grid h-12 w-12 place-items-center rounded-[0.95rem] bg-[#f3f0ff] text-[#173c56]">
-        <Icon className="h-5 w-5" />
+    <div id="actividad" className="overflow-hidden rounded-2xl border border-[rgba(22,60,88,0.08)] bg-white p-5">
+      <div className="flex items-center justify-between gap-2">
+        <h2 className="text-base font-bold text-[var(--color-ink)]">Actividad Académica</h2>
+        <GraduationCap className="h-4 w-4 text-[var(--color-muted)]" />
       </div>
-      <p className="mt-4 text-[1rem] font-medium text-[var(--color-ink)]">{input.title}</p>
-      <p className="mt-1 text-sm leading-6 text-[var(--color-muted)]">{input.description}</p>
-      {input.badge ? (
-        <p className="mt-3 text-xs font-medium uppercase tracking-[0.12em] text-[var(--color-muted)]">
-          {input.badge}
+
+      {hasProgress ? (
+        <div className="mt-4 space-y-2">
+          {/* Primary course — completed or in-progress */}
+          <div
+            className={cn(
+              "flex items-center gap-3 rounded-xl p-3",
+              (overviewPanel.progressPercent ?? 0) >= 100
+                ? "bg-emerald-50"
+                : "bg-blue-50",
+            )}
+          >
+            <div
+              className={cn(
+                "grid h-8 w-8 shrink-0 place-items-center rounded-full",
+                (overviewPanel.progressPercent ?? 0) >= 100
+                  ? "bg-emerald-500 text-white"
+                  : "bg-blue-100 text-blue-600",
+              )}
+            >
+              {(overviewPanel.progressPercent ?? 0) >= 100 ? (
+                <CheckCircle2 className="h-4 w-4" />
+              ) : (
+                <GraduationCap className="h-4 w-4" />
+              )}
+            </div>
+            <div className="min-w-0">
+              <p className="truncate text-xs font-semibold text-[var(--color-ink)] line-clamp-1">
+                {overviewPanel.detail}
+              </p>
+              <p
+                className={cn(
+                  "mt-0.5 text-[0.68rem] font-medium",
+                  (overviewPanel.progressPercent ?? 0) >= 100
+                    ? "text-emerald-600"
+                    : "text-blue-600",
+                )}
+              >
+                {(overviewPanel.progressPercent ?? 0) >= 100
+                  ? "Completado"
+                  : `En progreso (${overviewPanel.progressPercent}%)`}
+              </p>
+            </div>
+          </div>
+
+          {/* Extra activity item (from overviewPanel.items[0] if available) */}
+          {overviewPanel.items[0] && (
+            <div className="flex items-center gap-3 rounded-xl bg-[#f0f4ff] p-3">
+              <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[#c7d7f5] text-[#3b5bdb]">
+                <Activity className="h-4 w-4" />
+              </div>
+              <div className="min-w-0">
+                <p className="truncate text-xs font-semibold text-[var(--color-ink)] line-clamp-1">
+                  {overviewPanel.items[0]}
+                </p>
+                <p className="mt-0.5 text-[0.68rem] font-medium text-[#3b5bdb]">
+                  {overviewPanel.sectionLabel}
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+      ) : (
+        <p className="mt-3 text-xs text-[var(--color-muted)]">
+          Activa tu primer curso para ver tu actividad académica aquí.
         </p>
-      ) : null}
-    </>
-  );
+      )}
 
-  if (!input.href || input.disabled) {
-    return <div className={`${sharedClassName} opacity-90`}>{content}</div>;
-  }
-
-  return (
-    <Link
-      className={`${sharedClassName} hover:border-[rgba(23,60,86,0.18)] hover:bg-[#fcfbff] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2`}
-      href={input.href}
-    >
-      {content}
-    </Link>
+      {overviewPanel.actionHref && (
+        <Link
+          href={overviewPanel.actionHref}
+          className="mt-4 block w-full rounded-xl border border-[rgba(22,60,88,0.1)] bg-[#f8fafc] py-2 text-center text-xs font-semibold text-[var(--color-primary)] transition hover:border-[var(--color-primary)]"
+        >
+          Ver todo el historial
+        </Link>
+      )}
+    </div>
   );
 }
+
+// ─── main component ───────────────────────────────────────────────────────────
 
 export function AccountSettingsPage({
   email,
-  emailVerifiedAt,
-  firstName,
   fullName,
-  globalRole,
   isDemoUser,
   notificationSnapshot,
   overviewPanel,
-  primaryCta,
-  quickLinks,
   sessions,
 }: AccountSettingsPageProps) {
-  const initials = getInitials(fullName);
-  const roleLabel = getGlobalRoleLabel(globalRole);
-  const currentSession = sessions.find((session) => session.isCurrent) ?? sessions[0] ?? null;
-  const hasOtherSessions = sessions.some((session) => !session.isCurrent);
-  const currentPreferenceTitle = getNotificationPreferenceTitle(notificationSnapshot);
-  const forumQuickLink = quickLinks.find((item) => item.title === "Foro");
-  const quickAccessItems = quickLinks.slice(0, 4);
-  const progressValue =
-    overviewPanel.progressPercent !== null
-      ? `${Math.max(0, Math.min(100, overviewPanel.progressPercent))}`
-      : null;
+  const emailEnabled = notificationSnapshot.preference.emailEnabled;
+  const webEnabled = notificationSnapshot.preference.webEnabled;
 
   return (
-    <StudentShell
-      fullName={fullName}
-      initials={initials}
-      navItems={[
-        { label: "Mi campus", href: "/mis-cursos", icon: "home" },
-        ...(forumQuickLink?.href
-          ? [{ label: "Comunidad", href: forumQuickLink.href, icon: "community" as const }]
-          : []),
-        { label: "Biblioteca", href: "/app/recursos", icon: "library", disabled: true },
-        { label: "Certificados", href: "/app/certificados", icon: "certificates", disabled: true },
-        { label: "Configuración", href: "/mi-cuenta", icon: "settings" },
-        { label: "Soporte", href: "/soporte", icon: "support" },
-      ]}
-      notificationsCount={notificationSnapshot.unreadCount}
-      roleLabel={roleLabel}
-    >
-      <div className="mx-auto max-w-[1480px] lg:grid lg:grid-cols-[16.25rem_minmax(0,1fr)]">
-        <aside className="hidden border-r border-[var(--color-border-subtle)] bg-[var(--color-brand-soft)] lg:block">
-          <div className="sticky top-[5rem] flex min-h-[calc(100dvh-5rem)] flex-col justify-between px-5 py-8">
-            <nav aria-label="Secciones de cuenta" className="space-y-2.5">
-              {desktopSidebarPrimaryItems.map((item) => (
-                <DesktopSidebarLink
-                  active={"active" in item ? item.active : undefined}
-                  href={item.href}
-                  icon={item.icon}
-                  key={item.label}
-                  label={item.label}
-                />
-              ))}
-            </nav>
+    <div className="flex min-h-screen bg-[#f8fafc]">
+      {/* Left sidebar */}
+      <AccountSidebar fullName={fullName} activeAnchor="perfil" />
 
-            <div className="space-y-4">
-              <div className="border-t border-[rgba(21,39,58,0.08)]" />
-              <nav aria-label="Ayuda y ajustes" className="space-y-2.5">
-                {desktopSidebarSecondaryItems.map((item) => (
-                  <DesktopSidebarLink
-                    href={item.href}
-                    icon={item.icon}
-                    key={item.label}
-                    label={item.label}
-                  />
-                ))}
-              </nav>
-            </div>
-          </div>
-        </aside>
+      {/* Main area */}
+      <div className="flex min-w-0 flex-1 flex-col">
+        {/* Mobile tabs */}
+        <MobileSectionTabs />
 
-        <main className="min-w-0 px-4 py-6 sm:px-6 lg:px-8 lg:py-8 xl:px-10">
-          {isDemoUser ? (
-            <StateBanner
-              className="mb-6"
-              description="Estas navegando con una cuenta de prueba. La composicion refleja el estado actual, pero los cambios no se guardan."
-              title="Modo demo activo"
-              tone="warning"
-            />
-          ) : null}
+        {/* Page header */}
+        <div className="px-6 pb-2 pt-8 sm:px-8">
+          <h1 className="text-2xl font-bold text-[var(--color-ink)] sm:text-3xl">Mi Cuenta</h1>
+          <p className="mt-1 text-sm text-[var(--color-muted)]">
+            Gestiona tu información y preferencias
+          </p>
+        </div>
 
-          <section className="grid gap-6 border-b border-[rgba(21,39,58,0.08)] pb-8 xl:grid-cols-[minmax(0,1fr)_22rem] xl:items-start">
-            <div className="min-w-0">
-              <p className="text-[0.84rem] font-medium uppercase tracking-[0.18em] text-[var(--color-ink-soft)]">
-                {getHeroEyebrow(globalRole)}
-              </p>
-              <h1 className="mt-4 text-[clamp(3rem,5vw,4.6rem)] font-semibold leading-[0.92] tracking-[-0.07em] text-[var(--color-ink)] text-balance">
-                Hola, {firstName}
-              </h1>
-              <p className="mt-4 max-w-[44rem] text-[1.08rem] leading-8 text-[var(--color-muted)]">
-                {getHeroDescription(globalRole)}
-              </p>
+        {/* Content grid */}
+        <div className="px-6 pb-12 pt-6 sm:px-8">
+          <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_300px] xl:grid-cols-[minmax(0,1fr)_320px]">
+
+            {/* Main column */}
+            <div className="space-y-5">
+              <PersonalInfoCard
+                fullName={fullName}
+                email={email}
+                isDemoUser={isDemoUser}
+              />
+              <SecurityCard
+                sessions={sessions}
+                isDemoUser={isDemoUser}
+              />
             </div>
 
-            <div className="xl:pt-8">
-              <Link
-                className="group flex min-h-[4.9rem] w-full items-center justify-between gap-4 rounded-[1.15rem] bg-[#091f31] px-5 py-4 text-white shadow-[0_22px_40px_-32px_rgba(9,31,49,0.92)] transition hover:translate-y-[-1px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2"
-                href={primaryCta.href}
-              >
-                <div className="min-w-0">
-                  <p className="truncate text-[1.02rem] font-semibold text-white/92">
-                    {`Continuar: ${primaryCta.label}`}
-                  </p>
-                </div>
-                <ArrowRight className="h-5 w-5 shrink-0 transition group-hover:translate-x-0.5" />
-              </Link>
-            </div>
-          </section>
-
-          <div className="mt-8 xl:grid xl:grid-cols-[minmax(0,1fr)_21rem] xl:gap-8">
-            <div className="min-w-0 space-y-6">
-              <section
-                className="rounded-[1.6rem] border border-[rgba(21,39,58,0.1)] bg-white px-5 py-6 shadow-[0_14px_34px_-30px_rgba(18,35,55,0.26)] sm:px-7 sm:py-7"
-                id="perfil-cuenta"
-              >
-                <div className="flex flex-wrap items-start justify-between gap-4">
-                  <div className="flex items-start gap-4">
-                    <div className="grid h-14 w-14 place-items-center rounded-[1rem] bg-[#f3f0ff] text-[#173c56]">
-                      <UserRound className="h-6 w-6" />
-                    </div>
-                    <div>
-                      <h2 className="text-[2rem] font-semibold tracking-[-0.05em] text-[var(--color-ink)]">
-                        Perfil y cuenta
-                      </h2>
-                      <p className="mt-1 text-[1rem] text-[var(--color-muted)]">
-                        Informacion personal y acceso
-                      </p>
-                    </div>
-                  </div>
-
-                  <Link
-                    className="text-[1rem] font-medium text-[var(--color-ink)] transition hover:text-[#173c56] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2"
-                    href="#preferencias"
-                  >
-                    Editar
-                  </Link>
-                </div>
-
-                <div className="mt-8 grid gap-x-12 gap-y-8 md:grid-cols-2">
-                  <ProfileField
-                    label="Nombre completo"
-                    meta={`Rol activo: ${roleLabel}`}
-                    value={fullName}
-                  />
-                  <ProfileField
-                    label="Correo electronico"
-                    meta={
-                      emailVerifiedAt
-                        ? `Verificado ${formatRelativeTime(emailVerifiedAt)}.`
-                        : "Direccion principal para acceso y avisos."
-                    }
-                    value={<span className="break-all">{email}</span>}
-                  />
-                  <ProfileField
-                    action={
-                      <ButtonLink href="/recuperar-contrasena" size="sm" variant="neutral">
-                        Restablecer
-                      </ButtonLink>
-                    }
-                    label="Contrasena"
-                    meta="El acceso se mantiene protegido por recuperacion con correo."
-                    value="••••••••••••"
-                  />
-                  <ProfileField
-                    label="Idioma principal"
-                    meta={`Avisos actuales: ${currentPreferenceTitle}.`}
-                    value="Espanol (ES)"
-                  />
-                </div>
-              </section>
-
-              <div className="grid gap-6 lg:grid-cols-2">
-                <section
-                  className="rounded-[1.5rem] border border-[rgba(21,39,58,0.1)] bg-white px-5 py-6 shadow-[0_14px_34px_-30px_rgba(18,35,55,0.24)] sm:px-6"
-                  id="preferencias"
-                >
-                  <div className="flex items-start gap-4">
-                    <div className="grid h-14 w-14 place-items-center rounded-[1rem] bg-[#f3f0ff] text-[#173c56]">
-                      <Settings2 className="h-6 w-6" />
-                    </div>
-                    <div>
-                      <h2 className="text-[1.9rem] font-semibold tracking-[-0.05em] text-[var(--color-ink)]">
-                        Preferencias
-                      </h2>
-                      <p className="mt-1 text-[1rem] text-[var(--color-muted)]">
-                        Idioma, avisos y legibilidad
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="mt-7 space-y-4">
-                    <PreferenceSwitchRow
-                      description="Muestra avisos del campus dentro de tu cuenta."
-                      emailEnabled={notificationSnapshot.preference.emailEnabled}
-                      enabled={notificationSnapshot.preference.webEnabled}
-                      title="Notificaciones push"
-                      webEnabled={!notificationSnapshot.preference.webEnabled}
-                    />
-                    <PreferenceSwitchRow
-                      description="Recibe recordatorios y actividad relevante por correo."
-                      emailEnabled={!notificationSnapshot.preference.emailEnabled}
-                      enabled={notificationSnapshot.preference.emailEnabled}
-                      title="Correos semanales"
-                      webEnabled={notificationSnapshot.preference.webEnabled}
-                    />
-                    <StaticSwitchRow
-                      description="Disponible cuando exista un modo de lectura adaptado para toda la plataforma."
-                      meta="Proximo"
-                      title="Alto contraste"
-                    />
-                  </div>
-
-                  <div className="mt-7 rounded-[1rem] bg-[#f8f6ff] px-4 py-4">
-                    <p className="text-[0.78rem] font-medium uppercase tracking-[0.12em] text-[var(--color-muted)]">
-                      Idioma
-                    </p>
-                    <p className="mt-2 inline-flex items-center gap-2 text-sm font-medium text-[var(--color-ink)]">
-                      <Languages className="h-4 w-4 text-[#173c56]" />
-                      Espanol (ES)
-                    </p>
-                  </div>
-                </section>
-
-                <section
-                  className="rounded-[1.5rem] border border-[rgba(21,39,58,0.1)] bg-white px-5 py-6 shadow-[0_14px_34px_-30px_rgba(18,35,55,0.24)] sm:px-6"
-                  id="seguridad"
-                >
-                  <div className="flex items-start gap-4">
-                    <div className="grid h-14 w-14 place-items-center rounded-[1rem] bg-[#f3f0ff] text-[#173c56]">
-                      <Shield className="h-6 w-6" />
-                    </div>
-                    <div>
-                      <h2 className="text-[1.9rem] font-semibold tracking-[-0.05em] text-[var(--color-ink)]">
-                        Seguridad
-                      </h2>
-                      <p className="mt-1 text-[1rem] text-[var(--color-muted)]">
-                        Proteccion de acceso y sesion actual
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="mt-7 space-y-4">
-                    <div className="rounded-[1rem] bg-[#f4f1ff] px-4 py-4">
-                      <p className="inline-flex items-center gap-2 text-[1rem] font-semibold text-[var(--color-ink)]">
-                        <Mail className="h-4 w-4 text-[#173c56]" />
-                        2FA y verificacion
-                      </p>
-                      <p className="mt-2 text-sm leading-6 text-[var(--color-muted)]">
-                        {emailVerifiedAt
-                          ? "Tu cuenta usa correo verificado y recuperacion segura. La autenticacion en dos pasos aun no esta disponible."
-                          : "Tu correo principal sigue siendo la capa de recuperacion activa. La autenticacion en dos pasos aun no esta disponible."}
-                      </p>
-                    </div>
-
-                    <div className="rounded-[1rem] border border-[rgba(21,39,58,0.1)] px-4 py-4">
-                      <p className="inline-flex items-center gap-2 text-[1rem] font-semibold text-[var(--color-ink)]">
-                        <Monitor className="h-4 w-4 text-[#173c56]" />
-                        Sesion actual
-                      </p>
-                      <p className="mt-2 text-sm leading-6 text-[var(--color-muted)]">
-                        {currentSession
-                          ? getSessionDeviceLabel(currentSession.userAgent)
-                          : "Navegador actual"}
-                      </p>
-                      <p className="mt-1 text-sm leading-6 text-[var(--color-muted)]">
-                        {currentSession
-                          ? getSessionDescription(currentSession)
-                          : "La trazabilidad de esta sesion aparecera aqui cuando este disponible."}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="mt-6 flex flex-wrap gap-3">
-                    <ButtonLink href="/recuperar-contrasena" variant="neutral">
-                      Restablecer contrasena
-                    </ButtonLink>
-                    {hasOtherSessions ? (
-                      <form action={logoutEverywhereAction}>
-                        <Button type="submit" variant="subtle">
-                          Cerrar otras sesiones
-                        </Button>
-                      </form>
-                    ) : null}
-                  </div>
-                </section>
-              </div>
-            </div>
-
-            <aside className="mt-6 flex min-w-0 flex-col gap-6 xl:mt-0">
-              <section className="order-2 rounded-[1.5rem] bg-[linear-gradient(180deg,#123d58_0%,#0b2b40_100%)] px-5 py-6 text-white shadow-[0_28px_52px_-34px_rgba(11,43,64,0.78)] xl:order-1">
-                <p className="text-[2.05rem] font-semibold tracking-[-0.05em] text-white">
-                  {overviewPanel.title}
-                </p>
-                {progressValue ? (
-                  <div className="mt-5 flex items-end gap-2">
-                    <span className="text-[3.2rem] font-semibold leading-none tracking-[-0.07em] text-white">
-                      {progressValue}
-                    </span>
-                    <span className="pb-2 text-[1.1rem] text-white/64">% completado</span>
-                  </div>
-                ) : (
-                  <p className="mt-5 text-[2.15rem] font-semibold leading-[1.05] tracking-[-0.05em] text-white">
-                    {overviewPanel.value}
-                  </p>
-                )}
-                <p className="mt-2 text-sm leading-6 text-white/72">{overviewPanel.detail}</p>
-
-                <div className="mt-6 h-2 overflow-hidden rounded-full bg-white/14">
-                  <div
-                    aria-hidden="true"
-                    className="h-full rounded-full bg-[rgba(103,241,232,0.98)]"
-                    style={{
-                      width: `${Math.max(0, Math.min(100, overviewPanel.progressPercent ?? 0))}%`,
-                    }}
-                  />
-                </div>
-
-                <div className="mt-6">
-                  <p className="text-[0.78rem] font-medium uppercase tracking-[0.14em] text-white/58">
-                    {overviewPanel.sectionLabel}
-                  </p>
-                  <ul className="mt-4 space-y-4">
-                    {overviewPanel.items.length ? (
-                      overviewPanel.items.slice(0, 3).map((item) => <ProgressItem key={item} text={item} />)
-                    ) : (
-                      <ProgressItem text="No hay bloqueos inmediatos en este momento." />
-                    )}
-                  </ul>
-                </div>
-
-                {overviewPanel.actionHref && overviewPanel.actionLabel ? (
-                  <ButtonLink
-                    className="mt-6 w-full justify-between border-transparent bg-white text-[#173c56] hover:bg-white hover:text-[#173c56] focus-visible:ring-white/50 focus-visible:ring-offset-[#0b2b40]"
-                    href={overviewPanel.actionHref}
-                    variant="neutral"
-                  >
-                    <span>{overviewPanel.actionLabel}</span>
-                    <ArrowRight className="h-4 w-4" />
-                  </ButtonLink>
-                ) : null}
-              </section>
-
-              <section
-                className="order-1 rounded-[1.5rem] border border-[rgba(21,39,58,0.1)] bg-white px-5 py-5 shadow-[0_14px_34px_-30px_rgba(18,35,55,0.24)] xl:order-2"
-                id="accesos-rapidos"
-              >
-                <p className="text-[0.82rem] font-medium uppercase tracking-[0.16em] text-[var(--color-muted)]">
-                  Accesos rapidos
-                </p>
-                <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                  {quickAccessItems.map((item) => (
-                    <QuickAccessTile
-                      badge={item.badge}
-                      description={item.description}
-                      disabled={item.disabled}
-                      href={item.href}
-                      icon={item.icon}
-                      key={item.title}
-                      title={item.title}
-                    />
-                  ))}
-                </div>
-              </section>
+            {/* Right sidebar */}
+            <aside className="space-y-4">
+              <NotificationsCard
+                emailEnabled={emailEnabled}
+                webEnabled={webEnabled}
+              />
+              <AcademicActivityCard overviewPanel={overviewPanel} />
             </aside>
           </div>
-        </main>
+        </div>
       </div>
-    </StudentShell>
+    </div>
   );
 }
-
-export const accountQuickLinkIcons = {
-  admin: Shield,
-  courses: BookOpen,
-  teaching: GraduationCap,
-  forum: MessageSquareText,
-  support: LifeBuoy,
-  notifications: Bell,
-  library: BookCopy,
-  certificates: Award,
-};

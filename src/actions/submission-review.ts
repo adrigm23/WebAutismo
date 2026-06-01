@@ -6,6 +6,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { canAccessCourseCommunityForCourse, canModerateCourse } from "@/lib/course-community";
 import { getCatalogCourseBySlug } from "@/lib/course-catalog";
 import { getDb } from "@/lib/prisma";
+import { upsertRubricScores } from "@/lib/submission-review";
 
 export type ReviewSubmissionState = {
   error?: string;
@@ -21,6 +22,13 @@ const schema = z.object({
     .string()
     .min(8, "Escribe un feedback más útil para el alumno.")
     .max(4000),
+});
+
+const draftSchema = z.object({
+  submissionId: z.string().min(1),
+  courseSlug: z.string().min(1),
+  score: z.string().optional(),
+  feedback: z.string().max(4000).optional(),
 });
 
 export async function reviewSubmissionAction(
@@ -77,6 +85,19 @@ export async function reviewSubmissionAction(
     score = num;
   }
 
+  // Persist rubric scores if provided (criterionId:points pairs encoded as JSON)
+  const rubricRaw = formData.get("rubricScores");
+  if (typeof rubricRaw === "string" && rubricRaw) {
+    try {
+      const rubricData = JSON.parse(rubricRaw) as Array<{ criterionId: string; points: number; comment?: string }>;
+      if (Array.isArray(rubricData) && rubricData.length > 0) {
+        await upsertRubricScores({ submissionId: parsed.data.submissionId, scores: rubricData });
+      }
+    } catch {
+      // Ignore rubric parsing errors — don't block the review.
+    }
+  }
+
   await getDb().courseResourceSubmission.update({
     where: { id: parsed.data.submissionId },
     data: {
@@ -94,7 +115,72 @@ export async function reviewSubmissionAction(
   return {
     success:
       parsed.data.status === "REVIEWED"
-        ? "Entrega aprobada y nota guardada."
+        ? "Nota publicada correctamente."
         : "Se solicitaron cambios al alumno.",
   };
+}
+
+// ─── Save draft (no status change) ───────────────────────────────────────────
+
+export async function saveReviewDraftAction(
+  _prev: ReviewSubmissionState,
+  formData: FormData,
+): Promise<ReviewSubmissionState> {
+  const parsed = draftSchema.safeParse({
+    submissionId: formData.get("submissionId"),
+    courseSlug: formData.get("courseSlug"),
+    score: formData.get("score") ?? undefined,
+    feedback: formData.get("feedback") ?? undefined,
+  });
+
+  if (!parsed.success) {
+    return { error: "Datos inválidos." };
+  }
+
+  const user = await getCurrentUser();
+  if (!user) return { error: "Sesión requerida." };
+
+  const course = await getCatalogCourseBySlug(parsed.data.courseSlug);
+  if (!course) return { error: "Curso no encontrado." };
+
+  const access = await canAccessCourseCommunityForCourse({
+    userId: user.id,
+    email: user.email,
+    course,
+    userGlobalRole: user.globalRole,
+    userIsActive: user.isActive,
+  });
+
+  if (!access.allowed || !canModerateCourse(access.role)) {
+    return { error: "Sin permisos." };
+  }
+
+  // Persist rubric scores
+  const rubricRaw = formData.get("rubricScores");
+  if (typeof rubricRaw === "string" && rubricRaw) {
+    try {
+      const rubricData = JSON.parse(rubricRaw) as Array<{ criterionId: string; points: number; comment?: string }>;
+      if (Array.isArray(rubricData) && rubricData.length > 0) {
+        await upsertRubricScores({ submissionId: parsed.data.submissionId, scores: rubricData });
+      }
+    } catch {
+      // Ignore rubric parsing errors.
+    }
+  }
+
+  // Update score + feedback without changing status
+  const raw = parsed.data.score?.trim().replace(",", ".");
+  const score = raw ? Number(raw) : null;
+
+  await getDb().courseResourceSubmission.update({
+    where: { id: parsed.data.submissionId },
+    data: {
+      ...(score !== null && !isNaN(score) ? { score } : {}),
+      ...(parsed.data.feedback ? { feedback: parsed.data.feedback } : {}),
+      reviewerId: user.id,
+    },
+  });
+
+  revalidatePath(`/docente/tareas/revision/${parsed.data.submissionId}`);
+  return { success: "Borrador guardado." };
 }
