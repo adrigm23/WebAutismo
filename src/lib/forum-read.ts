@@ -16,6 +16,120 @@ export type RecentForumThreadItem = {
     title: string;
   };
 };
+
+export type CommunityFeedThread = {
+  id: string;
+  title: string;
+  excerpt: string;
+  categorySlug: string;
+  categoryTitle: string;
+  courseSlug: string;
+  courseTitle: string;
+  authorName: string;
+  authorInitials: string;
+  isStaff: boolean;
+  isResolved: boolean;
+  isPinned: boolean;
+  replyCount: number;
+  lastActivityAt: Date;
+};
+
+export type CommunityFeedCourse = {
+  courseSlug: string;
+  courseTitle: string;
+  threadCount: number;
+};
+
+export async function getAggregatedCommunityFeed(
+  spaces: Array<{ courseSlug: string; courseTitle: string }>,
+  limit = 24
+): Promise<{ threads: CommunityFeedThread[]; courses: CommunityFeedCourse[] }> {
+  if (spaces.length === 0) return { threads: [], courses: [] };
+
+  const db = getDb();
+  const courseSlugs = spaces.map((s) => s.courseSlug);
+
+  // Get active forum spaces for enrolled courses
+  const activeSpaces = await db.forumSpace.findMany({
+    where: { courseSlug: { in: courseSlugs }, status: "ACTIVE", deletedAt: null },
+    select: { id: true, courseSlug: true },
+  });
+
+  if (activeSpaces.length === 0) return { threads: [], courses: [] };
+
+  const spaceIds = activeSpaces.map((s) => s.id);
+
+  const rawThreads = await db.forumThread.findMany({
+    where: {
+      category: { forumSpaceId: { in: spaceIds } },
+      publishedAt: { not: null },
+      deletedAt: null,
+    },
+    orderBy: { lastActivityAt: "desc" },
+    take: limit,
+    select: {
+      id: true,
+      title: true,
+      body: true,
+      isPinned: true,
+      isResolved: true,
+      lastActivityAt: true,
+      authorRole: true,
+      author: { select: { name: true } },
+      category: { select: { slug: true, title: true, courseSlug: true } },
+      _count: { select: { posts: true } },
+    },
+  });
+
+  const courseThreadCounts: Record<string, number> = {};
+  for (const space of activeSpaces) {
+    const spaceThreads = await db.forumThread.count({
+      where: {
+        category: { forumSpaceId: space.id },
+        publishedAt: { not: null },
+        deletedAt: null,
+      },
+    });
+    courseThreadCounts[space.courseSlug] = spaceThreads;
+  }
+
+  function initials(name: string): string {
+    return name
+      .split(" ")
+      .slice(0, 2)
+      .map((w) => w[0]?.toUpperCase() ?? "")
+      .join("");
+  }
+
+  const threads: CommunityFeedThread[] = rawThreads.map((t) => {
+    const courseSpace = spaces.find((s) => s.courseSlug === t.category.courseSlug);
+    const plainExcerpt = t.body.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim().slice(0, 160);
+    return {
+      id: t.id,
+      title: t.title,
+      excerpt: plainExcerpt,
+      categorySlug: t.category.slug,
+      categoryTitle: t.category.title,
+      courseSlug: t.category.courseSlug,
+      courseTitle: courseSpace?.courseTitle ?? t.category.courseSlug,
+      authorName: t.author.name,
+      authorInitials: initials(t.author.name),
+      isStaff: t.authorRole === "TEACHER" || t.authorRole === "ADMIN",
+      isResolved: t.isResolved,
+      isPinned: t.isPinned,
+      replyCount: t._count.posts,
+      lastActivityAt: t.lastActivityAt,
+    };
+  });
+
+  const courses: CommunityFeedCourse[] = spaces.map((s) => ({
+    courseSlug: s.courseSlug,
+    courseTitle: s.courseTitle,
+    threadCount: courseThreadCounts[s.courseSlug] ?? 0,
+  }));
+
+  return { threads, courses };
+}
 import { publishDueAnnouncementsForCourse } from "@/lib/forum-notifications";
 import { getDb } from "@/lib/prisma";
 import {

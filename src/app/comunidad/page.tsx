@@ -6,6 +6,8 @@ import { StudentShell, type StudentShellNavItem } from "@/components/campus/stud
 import { CampusCommunity } from "@/components/platform/community/campus-community";
 import { isStaffCourseRole } from "@/lib/course-roles";
 import { getInitials } from "@/lib/utils";
+import { getAggregatedCommunityFeed } from "@/lib/forum-read";
+import { buildCourseForumHref } from "@/lib/course-navigation";
 
 export const metadata: Metadata = {
   title: "Comunidad | Campus",
@@ -17,7 +19,7 @@ function buildNavItems(): StudentShellNavItem[] {
     { label: "Mi campus", href: "/mis-cursos", icon: "home" },
     { label: "Mensajes", href: "/mensajes", icon: "messages" },
     { label: "Comunidad", href: "/comunidad", icon: "community" },
-    { label: "Biblioteca", href: "/app/recursos", icon: "library", disabled: true },
+    { label: "Biblioteca", href: "/biblioteca", icon: "library" },
     { label: "Certificados", href: "/app/certificados", icon: "certificates", disabled: true },
     { label: "Configuración", href: "/mi-cuenta", icon: "settings" },
     { label: "Soporte", href: "/soporte", icon: "support" },
@@ -42,7 +44,6 @@ export default async function CommunityPage() {
 
   const studentSpaces = spaces.filter((s) => !isStaffCourseRole(s.role));
   const staffSpaces = spaces.filter((s) => isStaffCourseRole(s.role));
-  const primaryCourse = studentSpaces[0]?.course ?? staffSpaces[0]?.course ?? null;
 
   const roleLabel =
     studentSpaces.length && staffSpaces.length
@@ -50,6 +51,19 @@ export default async function CommunityPage() {
       : staffSpaces.length
         ? "Docente"
         : "Alumno";
+
+  const feedSpaces = spaces.map((s) => ({
+    courseSlug: s.course.slug,
+    courseTitle: s.course.title,
+  }));
+
+  const { threads, courses } = await getAggregatedCommunityFeed(feedSpaces);
+
+  // "Nueva Consulta" → forum of the first course with an active space
+  const primaryCourse = studentSpaces[0]?.course ?? staffSpaces[0]?.course ?? null;
+  const newThreadHref = primaryCourse
+    ? `${buildCourseForumHref(primaryCourse.slug)}/nuevo`
+    : null;
 
   return (
     <StudentShell
@@ -59,7 +73,12 @@ export default async function CommunityPage() {
       notificationsCount={notificationSnapshot.unreadCount}
       roleLabel={roleLabel}
     >
-      <CampusCommunity primaryCourseTitle={primaryCourse?.title ?? null} />
+      <CampusCommunity
+        threads={threads}
+        courses={courses}
+        newThreadHref={newThreadHref}
+        userInitials={getInitials(user.name)}
+      />
     </StudentShell>
   );
 }
