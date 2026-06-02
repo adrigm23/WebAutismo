@@ -2,8 +2,6 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/auth";
 import { getDb } from "@/lib/prisma";
-import { getInitials } from "@/lib/utils";
-import { DocenteShell } from "@/components/docente/docente-shell";
 import { PublishResourcePage } from "@/components/platform/library/publish-resource-page";
 
 export const metadata: Metadata = {
@@ -43,18 +41,12 @@ export default async function DocenteNuevoRecursoPage({ searchParams }: Props) {
   const backHref =
     back && back.startsWith("/") ? back : "/docente/biblioteca";
 
-  const viewerName = user.name ?? user.email;
-
   return (
-    <DocenteShell
-      viewerName={viewerName}
-      viewerInitials={getInitials(viewerName)}
-    >
-      <PublishResourcePage
-        backHref={backHref}
-        courses={courses}
-        preselectedCourseId={preselectedCourse?.id ?? null}
-      />
-    </DocenteShell>
+    <PublishResourcePage
+      backHref={backHref}
+      courses={courses}
+      preselectedCourseId={preselectedCourse?.id ?? null}
+      standalone
+    />
   );
 }
