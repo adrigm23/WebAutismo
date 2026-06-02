@@ -65,6 +65,7 @@ export default async function BibliotecaStudentPage() {
   const communityHref =
     studentSpaces[0] ? buildCourseForumHref(studentSpaces[0].course.slug) : "/mis-cursos";
 
+  const isManager = user.globalRole === "TEACHER" || user.globalRole === "ADMIN";
   const viewerName = user.name ?? user.email;
   const navItems = buildStudentNavItems(communityHref);
 
@@ -72,15 +73,16 @@ export default async function BibliotecaStudentPage() {
     <StudentShell
       fullName={viewerName}
       initials={getInitials(viewerName)}
-      roleLabel="Alumno"
+      roleLabel={isManager ? "Docente" : "Alumno"}
       navItems={navItems}
     >
       <LibraryPage
         resources={resources}
         folders={folders}
         courses={courses}
-        canManage={false}
-        role="student"
+        canManage={isManager}
+        role={user.globalRole === "ADMIN" ? "admin" : isManager ? "teacher" : "student"}
+        newResourceHref={isManager ? "/docente/biblioteca/nuevo" : undefined}
       />
     </StudentShell>
   );
