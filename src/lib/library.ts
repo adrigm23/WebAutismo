@@ -1,7 +1,9 @@
 import { randomUUID } from "crypto";
 import path from "path";
 import type {
+  LibraryResourceAudience,
   LibraryResourceCategory,
+  LibraryResourceStatus,
   LibraryResourceType,
   LibraryVisibility,
   UserGlobalRole,
@@ -61,11 +63,14 @@ export type LibraryResourceItem = {
   description: string | null;
   fileName: string;
   fileUrl: string;
+  externalUrl: string | null;
   mimeType: string;
   fileSize: number;
   type: LibraryResourceType;
   category: LibraryResourceCategory | null;
+  audience: LibraryResourceAudience | null;
   visibility: LibraryVisibility;
+  status: LibraryResourceStatus;
   courseId: string | null;
   courseTitle: string | null;
   courseSlug: string | null;
@@ -164,6 +169,17 @@ export async function getLibraryResources(
     ];
   }
 
+  // Exclude other users' drafts
+  if (ctx.globalRole !== "ADMIN") {
+    const draftFilter = {
+      OR: [
+        { status: "PUBLISHED" as LibraryResourceStatus },
+        { status: "DRAFT" as LibraryResourceStatus, uploadedById: ctx.userId },
+      ],
+    };
+    Object.assign(where, draftFilter);
+  }
+
   const resources = await getDb().libraryResource.findMany({
     where,
     include: {
@@ -180,11 +196,14 @@ export async function getLibraryResources(
     description: r.description,
     fileName: r.fileName,
     fileUrl: r.fileUrl,
+    externalUrl: r.externalUrl,
     mimeType: r.mimeType,
     fileSize: r.fileSize,
     type: r.type,
     category: r.category,
+    audience: r.audience,
     visibility: r.visibility,
+    status: r.status,
     courseId: r.courseId,
     courseTitle: r.course?.title ?? null,
     courseSlug: r.course?.slug ?? null,
@@ -235,7 +254,22 @@ export async function getLibraryFolders(ctx: ViewerContext): Promise<LibraryFold
 export async function getLibraryResourceById(id: string) {
   return getDb().libraryResource.findUnique({
     where: { id },
-    include: { course: { select: { id: true, slug: true } } },
+    select: {
+      id: true,
+      title: true,
+      fileName: true,
+      fileUrl: true,
+      fileKey: true,
+      externalUrl: true,
+      mimeType: true,
+      fileSize: true,
+      type: true,
+      visibility: true,
+      status: true,
+      uploadedById: true,
+      courseId: true,
+      course: { select: { id: true, slug: true } },
+    },
   });
 }
 
@@ -244,13 +278,44 @@ export async function getLibraryResourceById(id: string) {
 export async function createLibraryResource(input: {
   title: string;
   description?: string | null;
-  file: File;
+  file?: File | null;
+  externalUrl?: string | null;
   category?: LibraryResourceCategory | null;
+  audience?: LibraryResourceAudience | null;
   visibility: LibraryVisibility;
+  status?: LibraryResourceStatus;
   courseId?: string | null;
   folderId?: string | null;
   uploadedById: string;
 }) {
+  // ── LINK type: no file upload ─────────────────────────────────────────────
+  if (input.externalUrl) {
+    const url = new URL(input.externalUrl.trim());
+    const hostname = url.hostname;
+    return getDb().libraryResource.create({
+      data: {
+        title: input.title.trim(),
+        description: input.description?.trim() || null,
+        fileName: hostname,
+        fileUrl: input.externalUrl.trim(),
+        externalUrl: input.externalUrl.trim(),
+        mimeType: "text/html",
+        fileSize: 0,
+        type: "LINK",
+        category: input.category ?? null,
+        audience: input.audience ?? null,
+        visibility: input.visibility,
+        status: input.status ?? "PUBLISHED",
+        courseId: input.courseId ?? null,
+        folderId: input.folderId ?? null,
+        uploadedById: input.uploadedById,
+      },
+    });
+  }
+
+  // ── File upload ───────────────────────────────────────────────────────────
+  if (!input.file) throw new Error("Se requiere un archivo o un enlace externo.");
+
   const validatedFile = validateFileUpload(input.file, LIBRARY_UPLOAD_POLICY);
   const safeName = sanitizeSegment(validatedFile.fileName);
   const storedFileName = `${randomUUID()}-${safeName}`;
@@ -275,7 +340,9 @@ export async function createLibraryResource(input: {
       fileSize: validatedFile.sizeInBytes,
       type,
       category: input.category ?? null,
+      audience: input.audience ?? null,
       visibility: input.visibility,
+      status: input.status ?? "PUBLISHED",
       courseId: input.courseId ?? null,
       folderId: input.folderId ?? null,
       uploadedById: input.uploadedById,

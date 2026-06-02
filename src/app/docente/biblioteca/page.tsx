@@ -50,6 +50,7 @@ export default async function DocenteBibliotecaPage() {
         courses={courses}
         canManage={true}
         role="teacher"
+        newResourceHref="/docente/biblioteca/nuevo"
       />
     </DocenteShell>
   );

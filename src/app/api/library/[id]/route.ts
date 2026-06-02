@@ -20,7 +20,21 @@ export async function GET(
   }
 
   const resource = await getLibraryResourceById(id);
-  if (!resource || !resource.fileKey) {
+  if (!resource) {
+    return NextResponse.json({ error: "Resource not found." }, { status: 404 });
+  }
+
+  // External link resources — redirect directly
+  if (resource.type === "LINK") {
+    const canAccess = await checkLibraryAccess(user, resource);
+    if (!canAccess) {
+      return NextResponse.json({ error: "Access denied." }, { status: 403 });
+    }
+    const target = resource.externalUrl || resource.fileUrl;
+    return NextResponse.redirect(target);
+  }
+
+  if (!resource.fileKey) {
     return NextResponse.json({ error: "Resource not found." }, { status: 404 });
   }
 

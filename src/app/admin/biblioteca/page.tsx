@@ -41,6 +41,7 @@ export default async function AdminBibliotecaPage() {
       courses={courses}
       canManage={true}
       role="admin"
+      newResourceHref="/admin/biblioteca/nuevo"
     />
   );
 }

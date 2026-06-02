@@ -838,31 +838,35 @@ enum PaymentWebhookEventStatus {
 }
 
 model LibraryResource {
-  id           String                   @id @default(cuid())
+  id           String                    @id @default(cuid())
   title        String
-  description  String?                  @db.LongText
+  description  String?                   @db.LongText
   fileName     String
-  fileUrl      String                   @db.LongText
+  fileUrl      String                    @db.LongText
   fileKey      String?
+  externalUrl  String?                   @db.LongText
   mimeType     String
   fileSize     Int
   type         LibraryResourceType
   category     LibraryResourceCategory?
-  visibility   LibraryVisibility        @default(PRIVATE)
+  audience     LibraryResourceAudience?
+  visibility   LibraryVisibility         @default(PRIVATE)
+  status       LibraryResourceStatus     @default(PUBLISHED)
   courseId     String?
   folderId     String?
   uploadedById String
-  createdAt    DateTime                 @default(now())
-  updatedAt    DateTime                 @updatedAt
+  createdAt    DateTime                  @default(now())
+  updatedAt    DateTime                  @updatedAt
 
-  course       Course?                  @relation(fields: [courseId], references: [id], onDelete: SetNull)
-  folder       LibraryFolder?           @relation(fields: [folderId], references: [id], onDelete: SetNull)
-  uploadedBy   User                     @relation("LibraryResourceUploadedBy", fields: [uploadedById], references: [id], onDelete: Cascade)
+  course       Course?                   @relation(fields: [courseId], references: [id], onDelete: SetNull)
+  folder       LibraryFolder?            @relation(fields: [folderId], references: [id], onDelete: SetNull)
+  uploadedBy   User                      @relation("LibraryResourceUploadedBy", fields: [uploadedById], references: [id], onDelete: Cascade)
 
   @@index([uploadedById, createdAt])
   @@index([courseId, visibility])
   @@index([folderId, createdAt])
   @@index([type, visibility, createdAt])
+  @@index([status, visibility, createdAt])
 }
 
 model LibraryFolder {
@@ -892,7 +896,20 @@ enum LibraryResourceType {
   PRESENTATION
   DOCUMENT
   IMAGE
+  LINK
   OTHER
+}
+
+enum LibraryResourceStatus {
+  DRAFT
+  PUBLISHED
+}
+
+enum LibraryResourceAudience {
+  ALL
+  STUDENTS
+  FAMILIES
+  PROFESSIONALS
 }
 
 enum LibraryResourceCategory {

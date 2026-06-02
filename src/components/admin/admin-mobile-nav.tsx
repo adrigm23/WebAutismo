@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X } from "lucide-react";
+import { LogOut, Menu, X } from "lucide-react";
 import { useState } from "react";
+import { logoutAction } from "@/actions/session";
 import { adminNavigation } from "@/lib/admin-console";
 import { siteConfig } from "@/lib/site";
 import { cn } from "@/lib/utils";
@@ -81,6 +82,15 @@ export function AdminMobileNav() {
             >
               Soporte
             </Link>
+            <form action={logoutAction}>
+              <button
+                className="flex w-full items-center gap-2 rounded-[var(--radius-md)] px-4 py-3 text-sm font-medium text-red-600 transition hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-surface-canvas)]"
+                type="submit"
+              >
+                <LogOut className="h-4 w-4" />
+                Cerrar sesión
+              </button>
+            </form>
           </div>
         </nav>
       ) : null}

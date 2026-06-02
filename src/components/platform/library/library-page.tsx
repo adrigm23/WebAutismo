@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useRef, useState, useTransition } from "react";
+import Link from "next/link";
 import type { LibraryResourceCategory, LibraryResourceType, LibraryVisibility } from "@prisma/client";
 import {
   BookOpen,
@@ -15,6 +16,7 @@ import {
   LayoutList,
   Loader2,
   MoreHorizontal,
+  Plus,
   Presentation,
   Search,
   Trash2,
@@ -51,6 +53,7 @@ export type LibraryPageProps = {
   courses: LibraryCourse[];
   canManage: boolean;
   role: "student" | "teacher" | "admin";
+  newResourceHref?: string;
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -61,6 +64,7 @@ const TYPE_LABELS: Record<LibraryResourceType, string> = {
   PRESENTATION: "Presentación",
   DOCUMENT: "Documento",
   IMAGE: "Imagen",
+  LINK: "Enlace",
   OTHER: "Otro",
 };
 
@@ -107,6 +111,7 @@ function ResourceTypeIcon({ type, className }: { type: LibraryResourceType; clas
     PRESENTATION: { Icon: Presentation, bg: "bg-amber-50", color: "text-amber-600", badge: "PPTX" },
     DOCUMENT: { Icon: FileText, bg: "bg-sky-50", color: "text-sky-600", badge: "DOC" },
     IMAGE: { Icon: Image, bg: "bg-purple-50", color: "text-purple-600", badge: "IMG" },
+    LINK: { Icon: BookOpen, bg: "bg-violet-50", color: "text-violet-600", badge: "URL" },
     OTHER: { Icon: BookOpen, bg: "bg-gray-50", color: "text-gray-500", badge: "FILE" },
   };
 
@@ -126,6 +131,7 @@ function ResourceTypeBadge({ type }: { type: LibraryResourceType }) {
     PRESENTATION: { bg: "bg-amber-50", text: "text-amber-700", label: "PPTX" },
     DOCUMENT: { bg: "bg-sky-50", text: "text-sky-700", label: "DOC" },
     IMAGE: { bg: "bg-purple-50", text: "text-purple-700", label: "IMG" },
+    LINK: { bg: "bg-violet-50", text: "text-violet-700", label: "URL" },
     OTHER: { bg: "bg-gray-50", text: "text-gray-600", label: "FILE" },
   };
 
@@ -787,7 +793,7 @@ function DeleteFolderConfirmDialog({
 
 // ─── Main Library Page ────────────────────────────────────────────────────────
 
-export function LibraryPage({ resources, folders, courses, canManage }: LibraryPageProps) {
+export function LibraryPage({ resources, folders, courses, canManage, newResourceHref }: LibraryPageProps) {
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
   const [activeFolderId, setActiveFolderId] = useState<string | null | undefined>(undefined);
   const [filters, setFilters] = useState<Filters>({ q: "", type: "", category: "", courseId: "" });
@@ -847,13 +853,22 @@ export function LibraryPage({ resources, folders, courses, canManage }: LibraryP
               >
                 <FolderPlus className="h-4 w-4" /> Nueva Carpeta
               </button>
-              <button
-                type="button"
-                onClick={() => setShowUpload(true)}
-                className="flex items-center gap-2 rounded-lg bg-[#1a1f2e] px-4 py-2 text-sm font-medium text-white hover:bg-[#2d3748]"
-              >
-                <Upload className="h-4 w-4" /> Subir Archivo
-              </button>
+              {newResourceHref ? (
+                <Link
+                  href={newResourceHref}
+                  className="flex items-center gap-2 rounded-lg bg-[#1a1f2e] px-4 py-2 text-sm font-medium text-white hover:bg-[#2d3748]"
+                >
+                  <Plus className="h-4 w-4" /> Publicar Recurso
+                </Link>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setShowUpload(true)}
+                  className="flex items-center gap-2 rounded-lg bg-[#1a1f2e] px-4 py-2 text-sm font-medium text-white hover:bg-[#2d3748]"
+                >
+                  <Upload className="h-4 w-4" /> Subir Archivo
+                </button>
+              )}
             </div>
           )}
         </div>
@@ -1014,13 +1029,22 @@ export function LibraryPage({ resources, folders, courses, canManage }: LibraryP
                   : "No hay recursos disponibles todavía."}
               </p>
               {canManage && !filters.q && !hasActiveFilters && (
-                <button
-                  type="button"
-                  onClick={() => setShowUpload(true)}
-                  className="mt-4 flex items-center gap-2 rounded-full bg-[#1a1f2e] px-4 py-1.5 text-sm font-medium text-white hover:bg-[#2d3748]"
-                >
-                  <Upload className="h-4 w-4" /> Subir primer archivo
-                </button>
+                newResourceHref ? (
+                  <Link
+                    href={newResourceHref}
+                    className="mt-4 inline-flex items-center gap-2 rounded-full bg-[#1a1f2e] px-4 py-1.5 text-sm font-medium text-white hover:bg-[#2d3748]"
+                  >
+                    <Plus className="h-4 w-4" /> Publicar primer recurso
+                  </Link>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setShowUpload(true)}
+                    className="mt-4 flex items-center gap-2 rounded-full bg-[#1a1f2e] px-4 py-1.5 text-sm font-medium text-white hover:bg-[#2d3748]"
+                  >
+                    <Upload className="h-4 w-4" /> Subir primer archivo
+                  </button>
+                )
               )}
             </div>
           ) : viewMode === "grid" ? (

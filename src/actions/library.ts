@@ -2,9 +2,12 @@
 
 import { revalidatePath } from "next/cache";
 import type {
+  LibraryResourceAudience,
   LibraryResourceCategory,
+  LibraryResourceStatus,
   LibraryVisibility,
 } from "@prisma/client";
+import { assertSafeHttpUrl } from "@/lib/file-security";
 import { requireUser } from "@/lib/auth";
 import {
   createLibraryResource,
@@ -218,6 +221,114 @@ export async function deleteLibraryFolderAction(
   } catch (error) {
     return {
       error: error instanceof Error ? error.message : "Error al eliminar la carpeta.",
+    };
+  }
+}
+
+// ─── Publish / Draft resource (new full-page form) ────────────────────────────
+
+export type PublishResourceActionState = {
+  error?: string;
+  success?: boolean;
+  resourceId?: string;
+};
+
+export async function publishResourceAction(
+  _state: PublishResourceActionState,
+  formData: FormData
+): Promise<PublishResourceActionState> {
+  try {
+    const user = await requireUser();
+    if (!canManageLibrary(user.globalRole)) {
+      return { error: "No tienes permisos para publicar recursos." };
+    }
+
+    const uploadMode = formData.get("uploadMode"); // "file" | "link"
+    const actionType = formData.get("action"); // "publish" | "draft"
+    const title = formData.get("title");
+    const description = formData.get("description");
+    const visibility = formData.get("visibility");
+    const category = formData.get("category");
+    const audience = formData.get("audience");
+    const courseId = formData.get("courseId");
+    const folderId = formData.get("folderId");
+    const externalUrlRaw = formData.get("externalUrl");
+    const file = formData.get("file");
+
+    // Common validations
+    if (typeof title !== "string" || title.trim().length < 2) {
+      return { error: "El título debe tener al menos 2 caracteres." };
+    }
+
+    const isDraft = actionType === "draft";
+    const status: LibraryResourceStatus = isDraft ? "DRAFT" : "PUBLISHED";
+
+    // Validate required fields only when publishing
+    if (!isDraft) {
+      if (typeof visibility !== "string" || !visibility) {
+        return { error: "Selecciona la visibilidad del recurso." };
+      }
+    }
+
+    const resolvedVisibility = (typeof visibility === "string" && visibility
+      ? visibility
+      : "PRIVATE") as LibraryVisibility;
+
+    if (uploadMode === "link") {
+      if (typeof externalUrlRaw !== "string" || !externalUrlRaw.trim()) {
+        return { error: "Introduce un enlace externo válido." };
+      }
+      let safeUrl: string;
+      try {
+        safeUrl = assertSafeHttpUrl(externalUrlRaw.trim());
+      } catch {
+        return { error: "El enlace debe empezar por http:// o https://." };
+      }
+
+      const resource = await createLibraryResource({
+        title: title.trim(),
+        description: typeof description === "string" ? description.trim() || null : null,
+        externalUrl: safeUrl,
+        category: (category as LibraryResourceCategory) || null,
+        audience: (audience as LibraryResourceAudience) || null,
+        visibility: resolvedVisibility,
+        status,
+        courseId: typeof courseId === "string" && courseId ? courseId : null,
+        folderId: typeof folderId === "string" && folderId ? folderId : null,
+        uploadedById: user.id,
+      });
+
+      revalidatePath("/biblioteca");
+      revalidatePath("/docente/biblioteca");
+      revalidatePath("/admin/biblioteca");
+      return { success: true, resourceId: resource.id };
+    }
+
+    // File upload mode
+    if (!file || !(file instanceof File) || file.size === 0) {
+      return { error: "Selecciona un archivo para subir." };
+    }
+
+    const resource = await createLibraryResource({
+      title: title.trim(),
+      description: typeof description === "string" ? description.trim() || null : null,
+      file,
+      category: (category as LibraryResourceCategory) || null,
+      audience: (audience as LibraryResourceAudience) || null,
+      visibility: resolvedVisibility,
+      status,
+      courseId: typeof courseId === "string" && courseId ? courseId : null,
+      folderId: typeof folderId === "string" && folderId ? folderId : null,
+      uploadedById: user.id,
+    });
+
+    revalidatePath("/biblioteca");
+    revalidatePath("/docente/biblioteca");
+    revalidatePath("/admin/biblioteca");
+    return { success: true, resourceId: resource.id };
+  } catch (error) {
+    return {
+      error: error instanceof Error ? error.message : "Error al guardar el recurso.",
     };
   }
 }
