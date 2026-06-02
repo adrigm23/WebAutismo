@@ -870,7 +870,7 @@ export default async function CourseTrackingPage({
             <section className="border-b border-[rgba(22,60,88,0.08)] pb-5">
               <Link
                 className="inline-flex items-center gap-2 text-[1rem] font-medium text-[var(--color-ink-soft)] transition hover:text-[var(--color-primary)]"
-                href={buildCourseResourcesHref(slug, "resource-manager-top")}
+                href={`/docente/biblioteca/nuevo?courseSlug=${slug}&back=${encodeURIComponent(`/mis-cursos/${slug}/seguimiento`)}`}
               >
                 <Plus className="h-4 w-4" />
                 Publicar rápido...

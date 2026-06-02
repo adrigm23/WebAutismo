@@ -11,22 +11,37 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default async function DocenteNuevoRecursoPage() {
+type Props = {
+  searchParams: Promise<{ courseSlug?: string; back?: string }>;
+};
+
+export default async function DocenteNuevoRecursoPage({ searchParams }: Props) {
   const user = await requireUser("/docente/biblioteca/nuevo");
 
   if (user.globalRole !== "TEACHER" && user.globalRole !== "ADMIN") {
     redirect("/mis-cursos");
   }
 
+  const { courseSlug, back } = await searchParams;
+
   const teacherCourses = await getDb().courseTeacherAssignment.findMany({
     where: { userId: user.id },
-    include: { course: { select: { id: true, title: true } } },
+    include: { course: { select: { id: true, title: true, slug: true } } },
   });
 
   const courses = teacherCourses.map((a) => ({
     id: a.course.id,
     title: a.course.title,
   }));
+
+  // Resolve preselected course from slug
+  const preselectedCourse = courseSlug
+    ? teacherCourses.find((a) => a.course.slug === courseSlug)?.course ?? null
+    : null;
+
+  // Safe back URL: only allow relative paths on this domain
+  const backHref =
+    back && back.startsWith("/") ? back : "/docente/biblioteca";
 
   const viewerName = user.name ?? user.email;
 
@@ -36,8 +51,9 @@ export default async function DocenteNuevoRecursoPage() {
       viewerInitials={getInitials(viewerName)}
     >
       <PublishResourcePage
-        backHref="/docente/biblioteca"
+        backHref={backHref}
         courses={courses}
+        preselectedCourseId={preselectedCourse?.id ?? null}
       />
     </DocenteShell>
   );

@@ -117,6 +117,7 @@ export type PublishResourcePageCourse = { id: string; title: string };
 type Props = {
   backHref: string;
   courses: PublishResourcePageCourse[];
+  preselectedCourseId?: string | null;
 };
 
 // ─── Toast ────────────────────────────────────────────────────────────────────
@@ -402,7 +403,7 @@ function PreviewCard({
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
-export function PublishResourcePage({ backHref, courses }: Props) {
+export function PublishResourcePage({ backHref, courses, preselectedCourseId }: Props) {
   const router = useRouter();
   const [state, formAction, pending] =
     useActionState<PublishResourceActionState, FormData>(
@@ -675,22 +676,35 @@ export function PublishResourcePage({ backHref, courses }: Props) {
                       className="mb-1.5 block text-sm font-medium text-[var(--color-ink)]"
                     >
                       Curso asociado{" "}
-                      <span className="text-[var(--color-ink-soft)] font-normal">
-                        (opcional)
-                      </span>
+                      {!preselectedCourseId && (
+                        <span className="font-normal text-[var(--color-ink-soft)]">
+                          (opcional)
+                        </span>
+                      )}
                     </label>
-                    <select
-                      id="pub-course"
-                      name="courseId"
-                      className="w-full appearance-none rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3 text-sm text-[var(--color-ink)] outline-none transition focus:border-[var(--color-primary)] focus:ring-2 focus:ring-[var(--color-primary)]/10"
-                    >
-                      <option value="">Sin curso específico</option>
-                      {courses.map((c) => (
-                        <option key={c.id} value={c.id}>
-                          {c.title}
-                        </option>
-                      ))}
-                    </select>
+                    {preselectedCourseId && courses.length === 1 ? (
+                      // Single course, locked — no dropdown needed
+                      <>
+                        <input type="hidden" name="courseId" value={preselectedCourseId} />
+                        <p className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3 text-sm text-[var(--color-ink)]">
+                          {courses.find((c) => c.id === preselectedCourseId)?.title ?? "Curso actual"}
+                        </p>
+                      </>
+                    ) : (
+                      <select
+                        id="pub-course"
+                        name="courseId"
+                        defaultValue={preselectedCourseId ?? ""}
+                        className="w-full appearance-none rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3 text-sm text-[var(--color-ink)] outline-none transition focus:border-[var(--color-primary)] focus:ring-2 focus:ring-[var(--color-primary)]/10"
+                      >
+                        <option value="">Sin curso específico</option>
+                        {courses.map((c) => (
+                          <option key={c.id} value={c.id}>
+                            {c.title}
+                          </option>
+                        ))}
+                      </select>
+                    )}
                   </div>
                 )}
               </div>
