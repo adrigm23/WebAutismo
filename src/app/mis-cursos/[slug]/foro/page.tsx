@@ -1,37 +1,31 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import {
-  ChevronRight,
-  Lock,
+  CheckCircle2,
+  MessageSquare,
   MessageSquareText,
-  MoveRight,
+  Pin,
+  Plus,
+  Search,
+  Shield,
+  ShieldCheck,
+  Tag,
+  Users,
 } from "lucide-react";
 import { notFound, redirect } from "next/navigation";
-import { Badge } from "@/components/ui/badge";
-import { ButtonLink } from "@/components/ui/button";
-import { EmptyState } from "@/components/ui/empty-state";
-import { MetricPanel } from "@/components/ui/metric-panel";
-import { SectionHeader } from "@/components/ui/section-header";
-import { SurfaceCard } from "@/components/ui/surface-card";
 import { requireUser } from "@/lib/auth";
 import { getCatalogCourseBySlug } from "@/lib/course-catalog";
 import {
   canAccessCourseCommunity,
   canModerateCourse,
-  getRoleLabel,
 } from "@/lib/course-community";
-import {
-  getForumCategories,
-  getForumSpaceHistory,
-  getRecentForumThreads,
-} from "@/lib/forum";
-import { getForumCategoryPreset } from "@/lib/forum-presentation";
-import { cn, firstValue, formatCompactNumber, formatRelativeTime } from "@/lib/utils";
-import { ShieldCheck } from "lucide-react";
+import { getForumCategories } from "@/lib/forum-read";
+import { getAggregatedCommunityFeed } from "@/lib/forum-read";
+import { cn, firstValue, formatRelativeTime } from "@/lib/utils";
 
 type ForumHomePageProps = {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ q?: string | string[] }>;
+  searchParams: Promise<{ q?: string | string[]; filter?: string | string[] }>;
 };
 
 export async function generateMetadata({
@@ -54,7 +48,7 @@ export default async function ForumHomePage({
   searchParams,
 }: ForumHomePageProps) {
   const { slug } = await params;
-  const { q } = await searchParams;
+  const { q, filter } = await searchParams;
   const course = await getCatalogCourseBySlug(slug);
 
   if (!course) {
@@ -76,263 +70,280 @@ export default async function ForumHomePage({
 
   const canModerate = canModerateCourse(access.role);
 
-  const [categories, history, recentThreads] = await Promise.all([
+  const [categories, feedResult] = await Promise.all([
     getForumCategories(course.slug, access.role),
-    getForumSpaceHistory(course.slug),
-    getRecentForumThreads(course.slug, access.role, 5),
+    getAggregatedCommunityFeed(
+      [{ courseSlug: course.slug, courseTitle: course.title }],
+      30,
+    ),
   ]);
 
   const query = firstValue(q)?.trim().toLowerCase() ?? "";
-  const visibleCategories = query
-    ? categories.filter((category) =>
-        `${category.title} ${category.description}`
-          .toLowerCase()
-          .includes(query),
-      )
-    : categories;
+  const filterValue = firstValue(filter) ?? "";
   const totalThreads = categories.reduce(
     (sum, category) => sum + category._count.threads,
     0,
   );
 
+  const feedThreads = filterValue === "sin-respuesta"
+    ? feedResult.threads.filter((t) => t.replyCount === 0)
+    : feedResult.threads;
+
   return (
-    <div className="space-y-6 lg:space-y-8">
-      {/* Breadcrumb */}
-      <div className="flex flex-wrap items-center gap-2 text-sm text-[var(--color-muted)]">
-        <Link
-          className="hover:text-[var(--color-primary)]"
-          href={`/mis-cursos/${course.slug}`}
+    <div>
+      {/* Filtros + búsqueda */}
+      <div className="mb-6 flex flex-col sm:flex-row items-start sm:items-center gap-3">
+        <div
+          className="flex gap-1 p-1 rounded-full border border-[#c4c6cf] bg-white"
+          style={{ boxShadow: "0px 2px 8px rgba(30,58,95,0.04)" }}
         >
-          {course.title}
-        </Link>
-        <ChevronRight className="h-4 w-4" />
-        <span className="text-[var(--color-ink)]">Comunidad</span>
-      </div>
-
-      {/* Header card */}
-      <SurfaceCard
-        actions={
-          canModerate ? (
-            <div className="flex flex-wrap gap-3">
-              <ButtonLink
-                href={`/mis-cursos/${course.slug}/foro/moderacion`}
-                variant="neutral"
-              >
-                Moderación
-              </ButtonLink>
-              <ButtonLink
-                href={`/mis-cursos/${course.slug}/foro/historico`}
-                variant="subtle"
-              >
-                Histórico
-              </ButtonLink>
-            </div>
-          ) : null
-        }
-        className="border-[rgba(22,60,88,0.1)] bg-white/90"
-        padding="md"
-      >
-        <SectionHeader
-          description="La comunidad acompaña el curso: anuncios, preguntas y conversaciones recuperables sin cambiar de contexto."
-          eyebrow={
-            canModerate ? (
-              <span className="inline-flex flex-wrap items-center gap-2">
-                <Badge tone="info">{getRoleLabel(access.role)}</Badge>
-                <Badge className="hidden sm:inline-flex" tone="outline">
-                  {history.activeSpace.editionLabel}
-                </Badge>
-              </span>
-            ) : (
-              <Badge tone="outline">
-                {history.activeSpace.editionLabel}
-              </Badge>
-            )
-          }
-          title="Conversaciones del curso"
-        />
-
-        <div className="mt-5 grid gap-3 md:grid-cols-2">
-          <MetricPanel
-            detail="Temas visibles en la edición actual."
-            label="Hilos"
-            tone="default"
-            value={formatCompactNumber(totalThreads)}
-          />
-          <MetricPanel
-            detail="Categorías activas para orientar la conversación."
-            label="Categorías"
-            tone="brand"
-            value={categories.length}
-          />
+          <Link
+            href={`/mis-cursos/${course.slug}/foro`}
+            className={cn(
+              "px-4 py-1.5 rounded-full text-sm font-medium transition-all",
+              filterValue !== "sin-respuesta"
+                ? "bg-[#022448] text-white shadow-sm"
+                : "text-[#43474e] hover:text-[#022448]",
+            )}
+          >
+            Más recientes
+          </Link>
+          <Link
+            href={`/mis-cursos/${course.slug}/foro?filter=sin-respuesta`}
+            className={cn(
+              "px-4 py-1.5 rounded-full text-sm font-medium transition-all",
+              filterValue === "sin-respuesta"
+                ? "bg-[#022448] text-white shadow-sm"
+                : "text-[#43474e] hover:text-[#022448]",
+            )}
+          >
+            Sin respuesta
+          </Link>
         </div>
-
-        {/* Histórico solo visible para moderadores */}
-        {canModerate && history.archivedSpaces.length > 0 && (
-          <div className="mt-3">
-            <MetricPanel
-              detail="Espacios previos conservados para consulta docente."
-              label="Histórico"
-              tone="warning"
-              value={history.archivedSpaces.length}
+        <form
+          method="get"
+          action={`/mis-cursos/${course.slug}/foro`}
+          className="flex-1 max-w-sm"
+        >
+          <div
+            className="relative flex items-center h-10 rounded-full border border-[#c4c6cf] bg-white px-4 gap-2"
+            style={{ boxShadow: "0px 2px 8px rgba(30,58,95,0.04)" }}
+          >
+            <Search className="h-4 w-4 text-[#74777f] shrink-0" />
+            <input
+              name="q"
+              defaultValue={query}
+              placeholder="Buscar discusiones..."
+              className="flex-1 bg-transparent text-sm text-[#111c2c] placeholder:text-[#74777f] focus:outline-none"
             />
           </div>
-        )}
-      </SurfaceCard>
+        </form>
+      </div>
 
-      {/* Últimas conversaciones — solo si hay datos */}
-      {recentThreads.length > 0 && (
-        <SurfaceCard
-          className="border-[rgba(22,60,88,0.08)] bg-white/88"
-          padding="md"
-        >
-          <h2 className="font-premium text-heading-md font-semibold text-[var(--color-ink)]">
-            Últimas conversaciones
-          </h2>
-          <p className="mt-1 text-sm text-[var(--color-muted)]">
-            Actividad más reciente de la comunidad de este curso.
-          </p>
-          <div className="mt-5 divide-y divide-[rgba(22,60,88,0.07)]">
-            {recentThreads.map((thread) => (
+      {/* Layout dos columnas */}
+      <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_280px] lg:gap-6 lg:items-start">
+        {/* Columna principal: thread feed */}
+        <div className="space-y-4">
+          {feedThreads.length > 0 ? (
+            feedThreads.map((thread) => (
               <Link
                 key={thread.id}
-                className="group flex items-start gap-4 py-4 first:pt-0 last:pb-0 hover:text-[var(--color-primary)]"
-                href={`/mis-cursos/${course.slug}/foro/${thread.category.slug}/${thread.id}`}
+                href={`/mis-cursos/${thread.courseSlug}/foro/${thread.categorySlug}/${thread.id}`}
+                className="block bg-white rounded-xl border border-[#c4c6cf] p-5 hover:border-[#74777f] transition-all cursor-pointer group"
+                style={{ boxShadow: "0px 4px 12px rgba(30,58,95,0.03)" }}
               >
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium text-[var(--color-ink)] transition group-hover:text-[var(--color-primary)]">
-                    {thread.title}
-                  </p>
-                  <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-[var(--color-muted)]">
-                    <span className="rounded-full bg-[var(--color-brand-soft)] px-2 py-0.5 font-medium text-[var(--color-primary)]">
-                      {thread.category.title}
-                    </span>
-                    <span>{formatRelativeTime(thread.lastActivityAt)}</span>
-                    {thread.postCount > 0 && (
-                      <span>
-                        {thread.postCount}{" "}
-                        {thread.postCount === 1 ? "respuesta" : "respuestas"}
+                <div className="flex items-start justify-between gap-4 mb-3">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-2 flex-wrap">
+                      {thread.isPinned && (
+                        <span className="flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-[#e7eeff] text-[#022448] border border-[#c4c6cf]">
+                          <Pin className="h-3 w-3" /> Fijado
+                        </span>
+                      )}
+                      <span className="px-2.5 py-0.5 rounded text-[12px] font-medium bg-[#adf0df] text-[#2c6f62] border border-[#91d3c3]">
+                        {thread.categoryTitle}
                       </span>
+                      {thread.isResolved && (
+                        <span className="flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-[#f0f3ff] text-[#25695c] border border-[#91d3c3]">
+                          <CheckCircle2 className="h-3 w-3" /> Resuelta
+                        </span>
+                      )}
+                      <span className="text-xs text-[#43474e]">
+                        {formatRelativeTime(thread.lastActivityAt)}
+                      </span>
+                    </div>
+                    <h3 className="text-[18px] font-semibold text-[#111c2c] group-hover:text-[#022448] transition-colors leading-snug mb-2 line-clamp-2">
+                      {thread.title}
+                    </h3>
+                    {thread.excerpt && (
+                      <p className="text-sm text-[#43474e] line-clamp-2 leading-relaxed">
+                        {thread.excerpt}
+                      </p>
                     )}
                   </div>
                 </div>
-                <MoveRight className="mt-0.5 h-4 w-4 shrink-0 text-[var(--color-muted)] transition group-hover:translate-x-0.5 group-hover:text-[var(--color-primary)]" />
-              </Link>
-            ))}
-          </div>
-        </SurfaceCard>
-      )}
-
-      {/* Grid de categorías */}
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        {visibleCategories.length ? (
-          visibleCategories.map((category) => {
-            const preset = getForumCategoryPreset(category.slug);
-            const Icon = preset.icon;
-
-            return (
-              <Link
-                className="group"
-                href={`/mis-cursos/${course.slug}/foro/${category.slug}`}
-                key={category.id}
-              >
-                <SurfaceCard
-                  className="h-full border-[rgba(22,60,88,0.08)] bg-white/84 transition duration-[var(--motion-duration-base)] hover:-translate-y-[1px] hover:border-[rgba(22,60,88,0.14)]"
-                  padding="md"
-                  variant="interactive"
-                >
-                  <div className="flex h-full flex-col">
-                    <div className="flex items-start justify-between gap-4">
-                      <div
-                        className={cn(
-                          "grid h-11 w-11 place-items-center rounded-2xl",
-                          preset.iconClass,
-                        )}
-                      >
-                        <Icon className="h-5 w-5" />
-                      </div>
-                      <MoveRight className="h-5 w-5 shrink-0 text-[var(--color-muted)] transition group-hover:translate-x-1 group-hover:text-[var(--color-primary)]" />
+                <div className="flex items-center justify-between mt-4 pt-4 border-t border-[#c4c6cf]">
+                  <div className="flex items-center gap-3">
+                    <div
+                      className={cn(
+                        "w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold border shrink-0",
+                        thread.isStaff
+                          ? "border-[#25695c] bg-[#adf0df] text-[#2c6f62]"
+                          : "border-[#c4c6cf] bg-[#e7eeff] text-[#022448]",
+                      )}
+                    >
+                      {thread.authorInitials}
                     </div>
-
-                    <div className="mt-4 min-w-0">
-                      <h2 className="font-premium text-[1.28rem] font-semibold tracking-[-0.04em] text-[var(--color-ink)] sm:text-[1.5rem]">
-                        {category.title}
-                      </h2>
-                      <p className="mt-3 text-sm leading-7 text-[var(--color-muted)] sm:text-base">
-                        {category.description}
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-[#111c2c] leading-none truncate">
+                        {thread.authorName}
                       </p>
                     </div>
-
-                    <p className="mt-4 text-sm leading-6 text-[var(--color-ink-soft)]">
-                      {preset.expectedContent}
-                    </p>
-
-                    <div className="mt-auto flex items-center justify-between gap-3 pt-4 text-sm">
-                      <span className="font-medium text-[var(--color-ink-soft)]">
-                        {category._count.threads} temas
-                      </span>
-                      <span className="text-[var(--color-muted)]">
-                        Abrir conversación
-                      </span>
-                    </div>
                   </div>
-                </SurfaceCard>
-              </Link>
-            );
-          })
-        ) : (
-          <div className="md:col-span-2 xl:col-span-3">
-            <EmptyState
-              align="center"
-              description="Prueba con otro término o limpia la búsqueda para volver a ver todas las categorías activas del curso."
-              icon={<MessageSquareText className="h-5 w-5" />}
-              title="No hay categorías que coincidan con esta búsqueda"
-              tone="subtle"
-            />
-          </div>
-        )}
-
-        {/* Card de moderación — solo para docentes */}
-        {canModerate ? (
-          <SurfaceCard
-            className="border-[rgba(22,60,88,0.08)] bg-[linear-gradient(180deg,rgba(255,255,255,0.94),rgba(243,247,251,0.88))] md:col-span-2 xl:col-span-1"
-            padding="md"
-          >
-            <div className="flex h-full flex-col">
-              <div className="flex items-start justify-between gap-4">
-                <div className="grid h-11 w-11 place-items-center rounded-2xl bg-[var(--color-brand-soft)] text-[var(--color-primary)]">
-                  <ShieldCheck className="h-5 w-5" />
+                  <div className="flex items-center gap-1.5 text-sm text-[#43474e]">
+                    <MessageSquare className="h-4 w-4" />
+                    <span>{thread.replyCount}</span>
+                  </div>
                 </div>
-                <Lock className="h-5 w-5 shrink-0 text-[var(--color-muted)]" />
+              </Link>
+            ))
+          ) : (
+            <div className="flex flex-col items-center justify-center py-20 text-center bg-white rounded-xl border border-[#c4c6cf]">
+              <div className="w-16 h-16 rounded-full bg-[#e7eeff] flex items-center justify-center mb-4">
+                <MessageSquareText className="h-8 w-8 text-[#022448]" />
               </div>
+              <h3 className="text-lg font-semibold text-[#111c2c] mb-2">
+                Sin discusiones todavía
+              </h3>
+              <p className="text-sm text-[#43474e] max-w-xs mb-6">
+                Sé el primero en iniciar una conversación en la comunidad del
+                curso.
+              </p>
+              <Link
+                href={`/mis-cursos/${course.slug}/foro/nuevo`}
+                className="flex items-center gap-2 bg-[#022448] text-white px-5 py-2.5 rounded-lg text-sm font-medium hover:bg-[#1e3a5f] transition-colors"
+              >
+                <Plus className="h-4 w-4" /> Nueva Consulta
+              </Link>
+            </div>
+          )}
+        </div>
 
-              <div className="mt-5">
-                <Badge tone="info">Docencia</Badge>
-                <h2 className="mt-3 font-premium text-[1.4rem] font-semibold tracking-[-0.04em] text-[var(--color-ink)]">
-                  Gestión de comunidad
-                </h2>
-                <p className="mt-3 text-sm leading-7 text-[var(--color-muted)]">
-                  Revisa contenido reportado o consulta espacios anteriores sin
-                  separar el foro del resto del campus.
-                </p>
-              </div>
-
-              <div className="mt-auto flex flex-wrap gap-3 pt-5">
-                <ButtonLink
-                  href={`/mis-cursos/${course.slug}/foro/moderacion`}
-                  variant="neutral"
+        {/* Sidebar derecho */}
+        <div className="hidden lg:block space-y-4 mt-0">
+          {/* Mis comunidades */}
+          <div
+            className="bg-white rounded-xl border border-[#c4c6cf] p-4"
+            style={{ boxShadow: "0px 4px 12px rgba(30,58,95,0.03)" }}
+          >
+            <div className="flex items-center gap-2 mb-3">
+              <Users className="h-4 w-4 text-[#43474e]" />
+              <h3 className="text-sm font-semibold text-[#111c2c]">
+                Mis comunidades
+              </h3>
+            </div>
+            <div className="space-y-1">
+              <Link
+                href={`/mis-cursos/${course.slug}/foro`}
+                className="flex items-center justify-between w-full px-3 py-2 rounded-full bg-[#022448] text-white text-sm font-medium"
+              >
+                <span>Todas las discusiones</span>
+                <span className="bg-white/20 rounded-full px-2 py-0.5 text-xs">
+                  {totalThreads}
+                </span>
+              </Link>
+              {categories.map((cat) => (
+                <Link
+                  key={cat.id}
+                  href={`/mis-cursos/${course.slug}/foro/${cat.slug}`}
+                  className="flex items-center justify-between w-full px-3 py-2 rounded-full text-sm text-[#43474e] hover:bg-[#f0f3ff] hover:text-[#022448] transition-colors"
                 >
-                  Abrir moderación
-                </ButtonLink>
-                <ButtonLink
+                  <span className="truncate">{cat.title}</span>
+                  {cat._count.threads > 0 && (
+                    <span className="ml-2 shrink-0 bg-[#e7eeff] text-[#022448] rounded-full px-2 py-0.5 text-xs font-medium">
+                      {cat._count.threads}
+                    </span>
+                  )}
+                </Link>
+              ))}
+            </div>
+          </div>
+
+          {/* Categorías activas */}
+          <div
+            className="bg-white rounded-xl border border-[#c4c6cf] p-4"
+            style={{ boxShadow: "0px 4px 12px rgba(30,58,95,0.03)" }}
+          >
+            <div className="flex items-center gap-2 mb-3">
+              <Tag className="h-4 w-4 text-[#43474e]" />
+              <h3 className="text-sm font-semibold text-[#111c2c]">
+                Categorías activas
+              </h3>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {categories
+                .filter((c) => c._count.threads > 0)
+                .map((cat) => (
+                  <Link
+                    key={cat.id}
+                    href={`/mis-cursos/${course.slug}/foro/${cat.slug}`}
+                    className="px-3 py-1 rounded-full border border-[#c4c6cf] text-sm text-[#43474e] hover:border-[#022448] hover:text-[#022448] transition-colors"
+                  >
+                    {cat.title}
+                  </Link>
+                ))}
+            </div>
+          </div>
+
+          {/* Normas de la Comunidad */}
+          <div
+            className="bg-white rounded-xl border border-[#c4c6cf] p-4 text-center"
+            style={{ boxShadow: "0px 4px 12px rgba(30,58,95,0.03)" }}
+          >
+            <Shield className="h-8 w-8 text-[#43474e] mx-auto mb-2 opacity-60" />
+            <h3 className="text-sm font-semibold text-[#111c2c] mb-1">
+              Normas de la Comunidad
+            </h3>
+            <p className="text-xs text-[#43474e] mb-3">
+              Mantenemos un entorno seguro, respetuoso y basado en evidencia.
+            </p>
+            <Link
+              href="/soporte"
+              className="text-xs font-medium text-[#022448] hover:underline"
+            >
+              Leer lineamientos
+            </Link>
+          </div>
+
+          {/* Para moderadores */}
+          {canModerate && (
+            <div
+              className="bg-white rounded-xl border border-[#c4c6cf] p-4"
+              style={{ boxShadow: "0px 4px 12px rgba(30,58,95,0.03)" }}
+            >
+              <div className="flex items-center gap-2 mb-3">
+                <ShieldCheck className="h-4 w-4 text-[#022448]" />
+                <h3 className="text-sm font-semibold text-[#111c2c]">
+                  Moderación
+                </h3>
+              </div>
+              <div className="space-y-2">
+                <Link
+                  href={`/mis-cursos/${course.slug}/foro/moderacion`}
+                  className="flex items-center gap-2 w-full px-3 py-2 rounded-lg text-sm text-[#43474e] border border-[#c4c6cf] hover:border-[#022448] hover:text-[#022448] transition-colors"
+                >
+                  Panel de moderación
+                </Link>
+                <Link
                   href={`/mis-cursos/${course.slug}/foro/historico`}
-                  variant="subtle"
+                  className="flex items-center gap-2 w-full px-3 py-2 rounded-lg text-sm text-[#43474e] border border-[#c4c6cf] hover:border-[#022448] hover:text-[#022448] transition-colors"
                 >
                   Ver histórico
-                </ButtonLink>
+                </Link>
               </div>
             </div>
-          </SurfaceCard>
-        ) : null}
+          )}
+        </div>
       </div>
     </div>
   );
