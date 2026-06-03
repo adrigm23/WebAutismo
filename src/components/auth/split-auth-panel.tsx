@@ -27,11 +27,11 @@ export function SplitAuthPanel({
       }
       leftDescription="Ingresa con tu cuenta para continuar tu experiencia educativa, acceder a tus cursos y retomar tu progreso."
       leftTitle="Bienvenido al Campus"
-      secondaryCtaHint="Si aun no tienes cuenta, puedes solicitar acceso y completar tu registro profesional."
+      secondaryCtaHint="¿Aún no tienes cuenta? Regístrate y accede a la formación especializada."
       secondaryCtaHref={
         next ? `/registro?next=${encodeURIComponent(next)}` : "/registro"
       }
-      secondaryCtaLabel="Solicitar acceso"
+      secondaryCtaLabel="Crear cuenta"
       showDemoNotice={showDemoNotice}
       statusMessage={statusMessage}
       statusTone="info"

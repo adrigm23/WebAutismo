@@ -55,7 +55,7 @@ function buildNavItems(courseSlug: string | null): NavItem[] {
       icon: BookOpen,
       disabled: !courseSlug,
     },
-    { label: "Certificados", href: "#", icon: Award, disabled: true },
+    { label: "Certificados", href: "/certificados", icon: Award },
     { label: "Configuración", href: "/mi-cuenta", icon: Settings2 },
   ];
 }

@@ -459,7 +459,7 @@ function buildStudentNavItems(communityHref: string): StudentShellNavItem[] {
     { label: "Comunidad", href: communityHref, icon: "community" },
     { label: "Calendario", href: "/calendario", icon: "calendar" },
     { label: "Biblioteca", href: "/biblioteca", icon: "library" },
-    { label: "Certificados", href: "/app/certificados", icon: "certificates", disabled: true },
+    { label: "Certificados", href: "/certificados", icon: "certificates" },
     { label: "Configuración", href: "/mi-cuenta", icon: "settings" },
     { label: "Soporte", href: "/soporte", icon: "support" },
   ];
@@ -597,7 +597,10 @@ export default async function MyCoursesPage({
   const activeTab = tab === "completados" ? "completados" : "en-curso";
   const inProgressCourses = studentCourses.filter((c) => !c.progress.isCompleted);
   const completedCourses = studentCourses.filter((c) => c.progress.isCompleted);
-  const tabCourses = activeTab === "completados" ? completedCourses : inProgressCourses;
+  // Exclude the hero course from the grid — it's already shown prominently above
+  const gridCourses = (activeTab === "completados" ? completedCourses : inProgressCourses)
+    .filter((c) => c.space.course.slug !== heroCourseSlug);
+  const tabCourses = gridCourses;
 
   return (
     <StudentShell
@@ -767,9 +770,11 @@ export default async function MyCoursesPage({
         )}
 
 
+        {/* Only show the Mis Cursos section if there are courses beyond the hero */}
         <section className="mt-8 grid gap-6 xl:grid-cols-[minmax(0,1fr)_22rem] xl:items-start">
           <div>
-            {/* Section heading */}
+            {/* Section heading — hide when student has only the hero course */}
+            {(isPureTeacher || studentCourses.length > 1) && (
             <div className="flex items-center justify-between gap-4">
               <h2 className="text-xl font-bold text-[var(--color-ink)]">
                 {isPureTeacher ? "Tus cursos asignados" : "Mis Cursos"}
@@ -783,9 +788,10 @@ export default async function MyCoursesPage({
                 </Link>
               )}
             </div>
+            )}
 
-            {/* Tabs — only for students */}
-            {studentCourses.length > 0 && (
+            {/* Tabs — only for students with multiple courses */}
+            {studentCourses.length > 1 && (
               <nav
                 aria-label="Filtrar cursos"
                 className="mt-6 flex w-fit gap-0.5 rounded-[var(--radius-md)] border border-[rgba(22,60,88,0.07)] bg-[var(--color-surface-muted)] p-1"
