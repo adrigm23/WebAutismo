@@ -15,7 +15,7 @@ import {
   Menu,
   MessagesSquare,
   MessageSquareText,
-  Search,
+
   Settings2,
   X,
 } from "lucide-react";
@@ -242,16 +242,7 @@ export function CourseWorkspaceShell({
                     {courseTitle}
                   </span>
                 </div>
-              ) : (
-                <div className="hidden w-full max-w-[22rem] items-center gap-2 rounded-full border border-[var(--color-border-subtle)] bg-white px-4 py-2 shadow-[var(--shadow-inset-soft)] sm:flex">
-                  <Search className="h-4 w-4 shrink-0 text-[var(--color-muted)]" strokeWidth={2} />
-                  <input
-                    className="flex-1 bg-transparent text-sm text-[var(--color-ink)] placeholder:text-[var(--color-muted)] focus:outline-none"
-                    placeholder="Buscar contenido..."
-                    type="text"
-                  />
-                </div>
-              )}
+              ) : null}
             </div>
 
             {/* Right: bell + help + avatar */}

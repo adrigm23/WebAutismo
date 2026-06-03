@@ -51,6 +51,7 @@ export default async function MyCoursePage({ params }: MyCoursePageProps) {
 
   return (
     <CourseWorkspaceShell
+      courseTitle={course.title}
       roleLabel={getRoleLabel(access.role)}
       viewerInitials={getInitials(viewerName)}
       viewerName={viewerName}
