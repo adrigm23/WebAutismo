@@ -82,7 +82,7 @@ function ContenidoTab({
           return (
             <div
               key={module.id}
-              className="overflow-hidden rounded-[1.3rem] border border-[rgba(22,60,88,0.09)] bg-white shadow-[var(--shadow-xs)]"
+              className="overflow-hidden rounded-xl border border-[rgba(22,60,88,0.09)] bg-white shadow-[var(--shadow-xs)]"
             >
               {/* Module header */}
               <div className="flex items-center gap-4 border-b border-[rgba(22,60,88,0.06)] px-5 py-4">
@@ -209,7 +209,7 @@ function ContenidoTab({
       </div>
 
       {course.modules.length === 0 && (
-        <div className="rounded-[1.3rem] border border-[rgba(22,60,88,0.08)] bg-white/60 px-6 py-10 text-center">
+        <div className="rounded-xl border border-[rgba(22,60,88,0.08)] bg-white/60 px-6 py-10 text-center">
           <p className="font-semibold text-[var(--color-ink)]">El curso no tiene módulos todavía</p>
           <p className="mt-2 text-sm text-[var(--color-ink-soft)]">
             Usa el constructor para añadir el primer módulo.
@@ -301,7 +301,7 @@ function AlumnosTab({
             return (
               <div
                 key={row.userId}
-                className="flex flex-col gap-4 rounded-[1.3rem] border border-[rgba(22,60,88,0.09)] bg-white px-5 py-4 shadow-[var(--shadow-xs)] sm:flex-row sm:items-center"
+                className="flex flex-col gap-4 rounded-xl border border-[rgba(22,60,88,0.09)] bg-white px-5 py-4 shadow-[var(--shadow-xs)] sm:flex-row sm:items-center"
               >
                 {/* Avatar */}
                 <div className="flex items-center gap-3 sm:w-52 sm:shrink-0">
@@ -405,7 +405,7 @@ function AlumnosTab({
           })}
         </div>
       ) : (
-        <div className="rounded-[1.3rem] border border-[rgba(22,60,88,0.08)] bg-white/60 px-6 py-10 text-center">
+        <div className="rounded-xl border border-[rgba(22,60,88,0.08)] bg-white/60 px-6 py-10 text-center">
           <p className="font-semibold text-[var(--color-ink)]">No hay alumnos matriculados</p>
           <p className="mt-2 text-sm text-[var(--color-ink-soft)]">
             Cuando los alumnos se matriculen aparecerán aquí con su progreso.
@@ -418,7 +418,7 @@ function AlumnosTab({
 
 function ComunidadTab({ courseSlug, courseTitle }: { courseSlug: string; courseTitle: string }) {
   return (
-    <div className="rounded-[1.3rem] border border-[rgba(22,60,88,0.08)] bg-white px-6 py-8 text-center">
+    <div className="rounded-xl border border-[rgba(22,60,88,0.08)] bg-white px-6 py-8 text-center">
       <MessageSquareText className="mx-auto h-10 w-10 text-[var(--color-primary)] opacity-60" />
       <h2 className="mt-4 text-lg font-semibold text-[var(--color-ink)]">Foro del curso</h2>
       <p className="mt-2 text-sm text-[var(--color-ink-soft)]">
@@ -438,7 +438,7 @@ function ComunidadTab({ courseSlug, courseTitle }: { courseSlug: string; courseT
 
 function EstadisticasTab() {
   return (
-    <div className="rounded-[1.3rem] border border-[rgba(22,60,88,0.08)] bg-white/60 px-6 py-12 text-center">
+    <div className="rounded-xl border border-[rgba(22,60,88,0.08)] bg-white/60 px-6 py-12 text-center">
       <BarChart3 className="mx-auto h-10 w-10 text-[var(--color-ink-muted)] opacity-50" />
       <p className="mt-4 font-semibold text-[var(--color-ink)]">Estadísticas en desarrollo</p>
       <p className="mt-2 text-sm text-[var(--color-ink-soft)]">

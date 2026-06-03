@@ -64,7 +64,7 @@ export default async function DocenteCursosPage() {
               return (
                 <article
                   key={course.slug}
-                  className="overflow-hidden rounded-[1.5rem] border border-[rgba(22,60,88,0.09)] bg-white shadow-[var(--shadow-soft)]"
+                  className="overflow-hidden rounded-xl border border-[rgba(22,60,88,0.09)] bg-white shadow-[var(--shadow-soft)]"
                 >
                   <div className="flex flex-col sm:flex-row">
                     {/* Artwork */}
@@ -134,7 +134,7 @@ export default async function DocenteCursosPage() {
             })}
           </div>
         ) : (
-          <div className="mt-10 rounded-[1.5rem] border border-[rgba(22,60,88,0.08)] bg-white/60 px-6 py-12 text-center">
+          <div className="mt-10 rounded-xl border border-[rgba(22,60,88,0.08)] bg-white/60 px-6 py-12 text-center">
             <BookOpen className="mx-auto h-10 w-10 text-[var(--color-primary)] opacity-40" />
             <p className="mt-4 font-semibold text-[var(--color-ink)]">No tienes cursos asignados</p>
             <p className="mt-2 text-sm text-[var(--color-ink-soft)]">

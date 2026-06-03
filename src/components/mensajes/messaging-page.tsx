@@ -215,7 +215,7 @@ function MessageBubble({ msg }: { msg: Message }) {
 
         <div
           className={cn(
-            "rounded-2xl px-4 py-3 text-sm leading-relaxed",
+            "rounded-xl px-4 py-3 text-sm leading-relaxed",
             isSent
               ? "rounded-tr-sm bg-[#1e3a5f] text-white"
               : "rounded-tl-sm border border-[#e5e7eb] bg-white text-[#1a1f2e]",
@@ -227,7 +227,7 @@ function MessageBubble({ msg }: { msg: Message }) {
         {msg.attachment && (
           <div
             className={cn(
-              "flex items-center gap-3 rounded-2xl border border-[#e5e7eb] bg-white p-3.5",
+              "flex items-center gap-3 rounded-xl border border-[#e5e7eb] bg-white p-3.5",
               isSent ? "rounded-tr-sm" : "rounded-tl-sm",
             )}
           >
@@ -619,7 +619,7 @@ export function MessagingPage({
 
         {/* Input area */}
         <div className="shrink-0 border-t border-[#e5e7eb] bg-white px-5 py-4">
-          <div className="rounded-2xl border border-[#e5e7eb] bg-white">
+          <div className="rounded-xl border border-[#e5e7eb] bg-white">
             <textarea
               className="w-full resize-none rounded-t-2xl px-4 pt-3.5 text-sm text-[#1a1f2e] placeholder:text-[#9ba3af] focus:outline-none"
               onKeyDown={handleKeyDown}

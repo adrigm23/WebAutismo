@@ -83,7 +83,7 @@ function CourseCard({ course }: { course: CourseGridItem }) {
   const isDraft = course.status === "INACTIVE";
 
   return (
-    <article className="flex flex-col overflow-hidden rounded-2xl border border-[rgba(22,60,88,0.09)] bg-white shadow-[0_2px_8px_rgba(22,60,88,0.06)] transition hover:shadow-[0_4px_16px_rgba(22,60,88,0.1)]">
+    <article className="flex flex-col overflow-hidden rounded-xl border border-[rgba(22,60,88,0.09)] bg-white shadow-[0_2px_8px_rgba(22,60,88,0.06)] transition hover:shadow-[0_4px_16px_rgba(22,60,88,0.1)]">
       {/* Image / gradient area */}
       <div className="relative h-[11rem] overflow-hidden">
         <div
@@ -184,7 +184,7 @@ function EmptyGrid({ tab }: { tab: string }) {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-[rgba(22,60,88,0.15)] bg-white py-20 text-center">
+    <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-[rgba(22,60,88,0.15)] bg-white py-20 text-center">
       <p className="text-sm font-medium text-[var(--color-ink-soft)]">
         {messages[tab] ?? messages.todos}
       </p>

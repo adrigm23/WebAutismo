@@ -67,7 +67,7 @@ export default async function DocenteDashboardPage() {
         {/* Métricas rápidas */}
         <section className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
           {/* Card: Cursos activos */}
-          <div className="flex flex-col gap-1 rounded-[1.3rem] border border-[rgba(22,60,88,0.08)] bg-white/90 px-5 py-4 shadow-[var(--shadow-soft)]">
+          <div className="flex flex-col gap-1 rounded-xl border border-[rgba(22,60,88,0.08)] bg-white/90 px-5 py-4 shadow-[var(--shadow-soft)]">
             <div className="flex items-center gap-2 text-[var(--color-ink-soft)]">
               <GraduationCap className="h-4 w-4" />
               <span className="text-xs font-medium uppercase tracking-wide">Cursos</span>
@@ -77,7 +77,7 @@ export default async function DocenteDashboardPage() {
           </div>
 
           {/* Card: Revisiones pendientes */}
-          <div className={`flex flex-col gap-1 rounded-[1.3rem] border px-5 py-4 shadow-[var(--shadow-soft)] ${
+          <div className={`flex flex-col gap-1 rounded-xl border px-5 py-4 shadow-[var(--shadow-soft)] ${
             totalPendingReviews > 0
               ? "border-[rgba(209,88,62,0.18)] bg-[rgba(252,238,233,0.7)]"
               : "border-[rgba(22,60,88,0.08)] bg-white/90"
@@ -95,7 +95,7 @@ export default async function DocenteDashboardPage() {
           </div>
 
           {/* Card: Alumnos activos */}
-          <div className="flex flex-col gap-1 rounded-[1.3rem] border border-[rgba(22,60,88,0.08)] bg-white/90 px-5 py-4 shadow-[var(--shadow-soft)]">
+          <div className="flex flex-col gap-1 rounded-xl border border-[rgba(22,60,88,0.08)] bg-white/90 px-5 py-4 shadow-[var(--shadow-soft)]">
             <div className="flex items-center gap-2 text-[var(--color-ink-soft)]">
               <Users className="h-4 w-4" />
               <span className="text-xs font-medium uppercase tracking-wide">Alumnos</span>
@@ -113,7 +113,7 @@ export default async function DocenteDashboardPage() {
               {allPendingItems.map((item) => (
                 <div
                   key={item.id}
-                  className="flex flex-col gap-2 rounded-[1.1rem] border border-[rgba(209,88,62,0.16)] bg-[rgba(252,238,233,0.5)] px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
+                  className="flex flex-col gap-2 rounded-lg border border-[rgba(209,88,62,0.16)] bg-[rgba(252,238,233,0.5)] px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
                 >
                   <div className="min-w-0">
                     <p className="text-sm font-semibold text-[var(--color-ink)] truncate">
@@ -160,7 +160,7 @@ export default async function DocenteDashboardPage() {
                 return (
                   <article
                     key={course.slug}
-                    className="overflow-hidden rounded-[1.5rem] border border-[rgba(22,60,88,0.09)] bg-white shadow-[var(--shadow-soft)]"
+                    className="overflow-hidden rounded-xl border border-[rgba(22,60,88,0.09)] bg-white shadow-[var(--shadow-soft)]"
                   >
                     <CourseArtwork
                       course={course}
@@ -206,7 +206,7 @@ export default async function DocenteDashboardPage() {
           </section>
         ) : (
           <section className="mt-10">
-            <div className="rounded-[1.5rem] border border-[rgba(22,60,88,0.08)] bg-white/60 px-6 py-12 text-center">
+            <div className="rounded-xl border border-[rgba(22,60,88,0.08)] bg-white/60 px-6 py-12 text-center">
               <BookOpen className="mx-auto h-10 w-10 text-[var(--color-primary)] opacity-40" />
               <p className="mt-4 font-semibold text-[var(--color-ink)]">No tienes cursos asignados</p>
               <p className="mt-2 text-sm text-[var(--color-ink-soft)]">

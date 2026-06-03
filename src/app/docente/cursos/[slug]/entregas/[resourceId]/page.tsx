@@ -94,7 +94,7 @@ export default async function TeacherEntregasPage({ params }: Props) {
         </nav>
 
         {/* Header card */}
-        <div className="mt-4 rounded-[1.5rem] border border-[rgba(22,60,88,0.09)] bg-white p-6 shadow-[var(--shadow-xs)]">
+        <div className="mt-4 rounded-xl border border-[rgba(22,60,88,0.09)] bg-white p-6 shadow-[var(--shadow-xs)]">
           <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
             <div>
               <div className="flex flex-wrap items-center gap-2">
@@ -192,7 +192,7 @@ export default async function TeacherEntregasPage({ params }: Props) {
                 return (
                   <div
                     key={submission.id}
-                    className="flex flex-col gap-4 rounded-[1.3rem] border border-[rgba(22,60,88,0.09)] bg-white px-5 py-4 shadow-[var(--shadow-xs)] sm:flex-row sm:items-center"
+                    className="flex flex-col gap-4 rounded-xl border border-[rgba(22,60,88,0.09)] bg-white px-5 py-4 shadow-[var(--shadow-xs)] sm:flex-row sm:items-center"
                   >
                     {/* Avatar + nombre */}
                     <div className="flex items-center gap-3 sm:w-48 sm:shrink-0">
@@ -274,7 +274,7 @@ export default async function TeacherEntregasPage({ params }: Props) {
               })}
             </div>
           ) : (
-            <div className="rounded-[1.3rem] border border-[rgba(22,60,88,0.08)] bg-white/60 px-6 py-10 text-center">
+            <div className="rounded-xl border border-[rgba(22,60,88,0.08)] bg-white/60 px-6 py-10 text-center">
               <p className="font-semibold text-[var(--color-ink)]">Todavía no hay entregas</p>
               <p className="mt-2 text-sm text-[var(--color-ink-soft)]">
                 Las entregas de los alumnos aparecerán aquí cuando las envíen.

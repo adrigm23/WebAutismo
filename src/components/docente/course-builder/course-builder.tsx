@@ -99,7 +99,7 @@ function Toast({ msg, kind, onDismiss }: { msg: string; kind: "success" | "error
 
   return (
     <div className={cn(
-      "fixed bottom-6 left-1/2 z-[100] flex -translate-x-1/2 items-center gap-3 rounded-2xl px-5 py-3.5 text-sm font-medium text-white shadow-xl",
+      "fixed bottom-6 left-1/2 z-[100] flex -translate-x-1/2 items-center gap-3 rounded-xl px-5 py-3.5 text-sm font-medium text-white shadow-xl",
       kind === "success" ? "bg-[#17624f]" : "bg-[#9f452e]",
     )}>
       {kind === "success" ? <Check className="h-4 w-4 shrink-0" /> : <X className="h-4 w-4 shrink-0" />}
@@ -116,7 +116,7 @@ function ConfirmDialog({ title, desc, onConfirm, onCancel, loading }: {
 }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="w-full max-w-sm overflow-hidden rounded-2xl bg-white shadow-2xl">
+      <div className="w-full max-w-sm overflow-hidden rounded-xl bg-white shadow-2xl">
         <div className="p-6">
           <h3 className="text-base font-bold text-[var(--color-ink)]">{title}</h3>
           <p className="mt-2 text-sm text-[var(--color-ink-soft)]">{desc}</p>
@@ -160,7 +160,7 @@ function ModuleDialog({ courseId, editModule, onClose }: {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-2xl">
+      <div className="w-full max-w-md overflow-hidden rounded-xl bg-white shadow-2xl">
         <div className="flex items-center justify-between border-b border-[rgba(22,60,88,0.08)] px-6 py-4">
           <h2 className="text-base font-bold text-[var(--color-ink)]">{isEdit ? "Editar módulo" : "Nuevo módulo"}</h2>
           <button type="button" onClick={() => onClose()} className="text-[var(--color-muted)] hover:text-[var(--color-ink)]"><X className="h-5 w-5" /></button>
@@ -219,7 +219,7 @@ function AddLessonDialog({ courseId, moduleId, onClose }: {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-2xl">
+      <div className="w-full max-w-md overflow-hidden rounded-xl bg-white shadow-2xl">
         <div className="flex items-center justify-between border-b border-[rgba(22,60,88,0.08)] px-6 py-4">
           <h2 className="text-base font-bold text-[var(--color-ink)]">Añadir lección</h2>
           <button type="button" onClick={() => onClose()} className="text-[var(--color-muted)] hover:text-[var(--color-ink)]"><X className="h-5 w-5" /></button>
@@ -487,7 +487,7 @@ function ModuleCard({ module: mod, courseId, isFirst, isLast, onDelete, onEdit, 
 
   return (
     <>
-      <div className="overflow-hidden rounded-2xl border border-[rgba(22,60,88,0.1)] bg-white shadow-[0_1px_4px_rgba(22,60,88,0.06)]">
+      <div className="overflow-hidden rounded-xl border border-[rgba(22,60,88,0.1)] bg-white shadow-[0_1px_4px_rgba(22,60,88,0.06)]">
         <div className="flex items-center gap-3 px-5 py-4">
           <GripVertical className="h-5 w-5 shrink-0 text-[var(--color-border)]" strokeWidth={2} />
           <button className="flex-1 text-left text-[0.95rem] font-bold text-[var(--color-ink)] hover:text-[var(--color-primary)] transition" onClick={() => setOpen(v => !v)} type="button">
@@ -804,7 +804,7 @@ export function CourseBuilder({ course, embedded = false }: { course: BuilderCou
                   ))}
                   {/* Add module zone */}
                   <button type="button" onClick={() => setShowAddModule(true)}
-                    className="flex w-full flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-[rgba(22,60,88,0.15)] py-10 transition hover:border-[var(--color-primary)] hover:bg-[rgba(22,60,88,0.018)]">
+                    className="flex w-full flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-[rgba(22,60,88,0.15)] py-10 transition hover:border-[var(--color-primary)] hover:bg-[rgba(22,60,88,0.018)]">
                     <div className="grid h-10 w-10 place-items-center rounded-xl border border-[rgba(22,60,88,0.15)] bg-white text-[var(--color-muted)]">
                       <Plus className="h-5 w-5" strokeWidth={2} />
                     </div>

@@ -65,7 +65,7 @@ function KpiCard({
   positive?: boolean;
 }) {
   return (
-    <div className="rounded-2xl border border-[var(--color-border-subtle)] bg-white p-5 shadow-sm">
+    <div className="rounded-xl border border-[var(--color-border-subtle)] bg-white p-5 shadow-sm">
       <div className="flex items-start justify-between">
         <p className="text-sm font-medium text-[var(--color-muted)]">{label}</p>
         <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--color-surface)]">
@@ -270,7 +270,7 @@ export default async function AdminDashboardPage() {
       {/* Activity + Incidents */}
       <div className="grid gap-5 xl:grid-cols-2">
         {/* Actividad Reciente */}
-        <div className="rounded-2xl border border-[var(--color-border-subtle)] bg-white p-5">
+        <div className="rounded-xl border border-[var(--color-border-subtle)] bg-white p-5">
           <div className="flex items-center justify-between">
             <h2 className="text-base font-bold text-[var(--color-ink)]">Actividad Reciente</h2>
             <Link
@@ -332,7 +332,7 @@ export default async function AdminDashboardPage() {
         </div>
 
         {/* Estado de Incidencias */}
-        <div className="rounded-2xl border border-[var(--color-border-subtle)] bg-white p-5">
+        <div className="rounded-xl border border-[var(--color-border-subtle)] bg-white p-5">
           <div className="flex items-center justify-between">
             <h2 className="text-base font-bold text-[var(--color-ink)]">
               Estado de Incidencias
@@ -441,7 +441,7 @@ export default async function AdminDashboardPage() {
       </div>
 
       {/* Course performance table */}
-      <div className="rounded-2xl border border-[var(--color-border-subtle)] bg-white p-5">
+      <div className="rounded-xl border border-[var(--color-border-subtle)] bg-white p-5">
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-base font-bold text-[var(--color-ink)]">

@@ -10,7 +10,7 @@ type CourseCardProps = {
 
 export function CourseCard({ course }: CourseCardProps) {
   return (
-    <article className="overflow-hidden rounded-2xl border border-[var(--color-border)] bg-white shadow-[0_18px_40px_rgba(34,34,33,0.06)] transition hover:-translate-y-1">
+    <article className="overflow-hidden rounded-xl border border-[var(--color-border)] bg-white shadow-[0_18px_40px_rgba(34,34,33,0.06)] transition hover:-translate-y-1">
       <div className="relative p-4 pb-0">
         <CourseArtwork className="h-48 w-full" course={course} variant="card" />
         <span className="absolute left-8 top-8 rounded-md bg-[rgba(12,113,195,0.92)] px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-white">

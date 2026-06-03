@@ -18,7 +18,7 @@ export function UserFiltersBar({ q, role, status }: Props) {
   }
 
   return (
-    <div className="rounded-2xl border border-[var(--color-border-subtle)] bg-white px-4 py-3.5 shadow-sm sm:px-5">
+    <div className="rounded-xl border border-[var(--color-border-subtle)] bg-white px-4 py-3.5 shadow-sm sm:px-5">
       <form
         className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center"
         method="get"

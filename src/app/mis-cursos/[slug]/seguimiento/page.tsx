@@ -673,7 +673,7 @@ export default async function CourseTrackingPage({
 
             <div className="xl:w-[19rem] xl:shrink-0">
               <ButtonLink
-                className="w-full justify-between rounded-[1rem] px-5"
+                className="w-full justify-between rounded-lg px-5"
                 href={reviewCtaHref}
                 variant="inverse"
               >
@@ -733,7 +733,7 @@ export default async function CourseTrackingPage({
 
                     return (
                       <Link
-                        className="group relative block overflow-hidden rounded-[1.3rem] border border-[rgba(22,60,88,0.08)] bg-white/84 px-4 py-4 shadow-[0_10px_24px_rgba(23,32,44,0.04)] transition hover:-translate-y-px hover:border-[rgba(22,60,88,0.14)] hover:bg-white hover:shadow-[0_16px_32px_rgba(23,32,44,0.08)] sm:px-5"
+                        className="group relative block overflow-hidden rounded-xl border border-[rgba(22,60,88,0.08)] bg-white/84 px-4 py-4 shadow-[0_10px_24px_rgba(23,32,44,0.04)] transition hover:-translate-y-px hover:border-[rgba(22,60,88,0.14)] hover:bg-white hover:shadow-[0_16px_32px_rgba(23,32,44,0.08)] sm:px-5"
                         href={entry.href}
                         key={entry.id}
                       >
@@ -826,7 +826,7 @@ export default async function CourseTrackingPage({
               </div>
 
               {recentActivity.length ? (
-                <div className="mt-4 rounded-[1.5rem] border border-[rgba(22,60,88,0.08)] bg-white/70">
+                <div className="mt-4 rounded-xl border border-[rgba(22,60,88,0.08)] bg-white/70">
                   {recentActivity.map((item, index) => (
                     <Link
                       className="block px-5 py-4 transition hover:bg-white/84"
@@ -981,7 +981,7 @@ export default async function CourseTrackingPage({
                       </div>
                     </div>
 
-                    <div className="rounded-[1.1rem] border border-[rgba(22,60,88,0.08)] bg-[rgba(248,246,241,0.78)] px-4 py-3 text-sm leading-6 text-[var(--color-ink-soft)] lg:w-[18rem]">
+                    <div className="rounded-lg border border-[rgba(22,60,88,0.08)] bg-[rgba(248,246,241,0.78)] px-4 py-3 text-sm leading-6 text-[var(--color-ink-soft)] lg:w-[18rem]">
                       <p className="font-medium text-[var(--color-ink)]">
                         {resource.submissions.length} entregas registradas
                       </p>
@@ -1086,7 +1086,7 @@ export default async function CourseTrackingPage({
                     </div>
 
                     <div className="mt-4 grid gap-3 md:grid-cols-[10rem_minmax(0,1fr)]">
-                      <div className="rounded-[1.1rem] border border-[rgba(22,60,88,0.08)] bg-[rgba(248,246,241,0.84)] px-4 py-4">
+                      <div className="rounded-lg border border-[rgba(22,60,88,0.08)] bg-[rgba(248,246,241,0.84)] px-4 py-4">
                         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-muted)]">
                           Progreso
                         </p>
@@ -1095,7 +1095,7 @@ export default async function CourseTrackingPage({
                         </p>
                       </div>
 
-                      <div className="rounded-[1.1rem] border border-[rgba(22,60,88,0.08)] bg-white/72 px-4 py-4">
+                      <div className="rounded-lg border border-[rgba(22,60,88,0.08)] bg-white/72 px-4 py-4">
                         <div className="flex items-center justify-between gap-3">
                           <p className="text-sm font-medium text-[var(--color-ink)]">
                             {row.completedModules} de {row.totalModules} módulos completados

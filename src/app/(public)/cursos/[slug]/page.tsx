@@ -62,7 +62,7 @@ function TeacherInitials({ name }: { name: string }) {
 
 function CourseProgram({ course }: { course: CatalogCourse }) {
   return (
-    <section className="rounded-2xl border border-[var(--color-border)] bg-white p-6 lg:p-8">
+    <section className="rounded-xl border border-[var(--color-border)] bg-white p-6 lg:p-8">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="text-xl font-bold text-[var(--color-ink)]">Programa del curso</h2>
         <span className="rounded-full bg-[var(--color-surface)] px-3 py-1 text-xs font-semibold text-[var(--color-muted)]">
@@ -214,7 +214,7 @@ export default async function CoursePage({ params }: CoursePageProps) {
           {/* ── LEFT ──────────────────────────────────── */}
           <div className="space-y-5">
             {/* Hero card */}
-            <div className="rounded-2xl border border-[var(--color-border)] bg-white p-6 lg:p-8">
+            <div className="rounded-xl border border-[var(--color-border)] bg-white p-6 lg:p-8">
               <h1 className="text-[1.9rem] font-bold leading-[1.15] tracking-tight text-[var(--color-ink)] lg:text-[2.3rem]">
                 {course.title}
               </h1>
@@ -266,7 +266,7 @@ export default async function CoursePage({ params }: CoursePageProps) {
             </div>
 
             {/* What you'll learn */}
-            <section className="rounded-2xl border border-[var(--color-border)] bg-white p-6 lg:p-8">
+            <section className="rounded-xl border border-[var(--color-border)] bg-white p-6 lg:p-8">
               <h2 className="text-xl font-bold text-[var(--color-ink)]">Qué aprenderás</h2>
               <div className="mt-4 grid gap-3 sm:grid-cols-2">
                 {course.outcomes.map((outcome) => (
@@ -285,7 +285,7 @@ export default async function CoursePage({ params }: CoursePageProps) {
 
             {/* Teachers */}
             {course.teachers.length > 0 && (
-              <section className="rounded-2xl border border-[var(--color-border)] bg-white p-6 lg:p-8">
+              <section className="rounded-xl border border-[var(--color-border)] bg-white p-6 lg:p-8">
                 <h2 className="text-xl font-bold text-[var(--color-ink)]">Equipo docente</h2>
                 <div className="mt-5 space-y-6">
                   {course.teachers.map((teacher) => (
@@ -311,7 +311,7 @@ export default async function CoursePage({ params }: CoursePageProps) {
 
             {/* FAQ */}
             {course.faq.length > 0 && (
-              <section className="rounded-2xl border border-[var(--color-border)] bg-white p-6 lg:p-8">
+              <section className="rounded-xl border border-[var(--color-border)] bg-white p-6 lg:p-8">
                 <h2 className="text-xl font-bold text-[var(--color-ink)]">
                   Preguntas frecuentes
                 </h2>

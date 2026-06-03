@@ -98,7 +98,7 @@ function ResourceKindIcon({ kind, className }: { kind: ResourceKind; className?:
   const { icon: Icon, bg, color } = configs[kind];
 
   return (
-    <div className={cn("flex h-12 w-12 items-center justify-center rounded-2xl", bg, className)}>
+    <div className={cn("flex h-12 w-12 items-center justify-center rounded-xl", bg, className)}>
       <Icon className={cn("h-6 w-6", color)} />
     </div>
   );
@@ -135,7 +135,7 @@ function ResourceCard({
   return (
     <div
       className={cn(
-        "group relative flex flex-col rounded-2xl border bg-white p-5 transition hover:shadow-md",
+        "group relative flex flex-col rounded-xl border bg-white p-5 transition hover:shadow-md",
         isUnpublished
           ? "border-dashed border-[#e2e8f0] opacity-60"
           : "border-[#eaecf0] hover:border-[#d0d5dd]",
@@ -237,7 +237,7 @@ function TasksCard({ resources, courseSlug }: { resources: CampusResourceItem[];
 
   if (tasks.length === 0) {
     return (
-      <div className="rounded-2xl border border-[#eaecf0] bg-white p-5">
+      <div className="rounded-xl border border-[#eaecf0] bg-white p-5">
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-semibold text-[#1a1f2e]">Tareas y Entregas</h2>
         </div>
@@ -247,7 +247,7 @@ function TasksCard({ resources, courseSlug }: { resources: CampusResourceItem[];
   }
 
   return (
-    <div className="rounded-2xl border border-[#eaecf0] bg-white p-5">
+    <div className="rounded-xl border border-[#eaecf0] bg-white p-5">
       <div className="flex items-center justify-between">
         <h2 className="text-sm font-semibold text-[#1a1f2e]">Tareas y Entregas</h2>
       </div>
@@ -344,7 +344,7 @@ function ActivityCard({ resources }: { resources: CampusResourceItem[] }) {
 
   if (activityItems.length === 0) {
     return (
-      <div className="rounded-2xl border border-[#eaecf0] bg-white p-5">
+      <div className="rounded-xl border border-[#eaecf0] bg-white p-5">
         <h2 className="text-sm font-semibold text-[#1a1f2e]">Actividad Reciente</h2>
         <p className="mt-3 text-xs text-[#9ba3af]">Sin actividad reciente.</p>
       </div>
@@ -352,7 +352,7 @@ function ActivityCard({ resources }: { resources: CampusResourceItem[] }) {
   }
 
   return (
-    <div className="rounded-2xl border border-[#eaecf0] bg-white p-5">
+    <div className="rounded-xl border border-[#eaecf0] bg-white p-5">
       <h2 className="text-sm font-semibold text-[#1a1f2e]">Actividad Reciente</h2>
 
       <div className="mt-4 space-y-4">
@@ -421,7 +421,7 @@ export function CourseResourceLibrary({
         </nav>
 
         {/* Hero card */}
-        <div className="mb-6 overflow-hidden rounded-2xl border border-[#eaecf0] bg-white px-6 py-5">
+        <div className="mb-6 overflow-hidden rounded-xl border border-[#eaecf0] bg-white px-6 py-5">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div className="flex-1">
               {/* Badge */}
@@ -441,7 +441,7 @@ export function CourseResourceLibrary({
             </div>
 
             {/* Metrics */}
-            <div className="flex shrink-0 items-center divide-x divide-[#eaecf0] rounded-2xl border border-[#eaecf0] bg-[#f8fafc]">
+            <div className="flex shrink-0 items-center divide-x divide-[#eaecf0] rounded-xl border border-[#eaecf0] bg-[#f8fafc]">
               <div className="flex flex-col items-center px-5 py-3">
                 <span className="text-xl font-bold text-[#1a1f2e]">{materialCount}</span>
                 <span className="mt-0.5 text-[0.65rem] font-medium text-[#9ba3af]">Materiales</span>
@@ -496,7 +496,7 @@ export function CourseResourceLibrary({
           {/* Resource grid */}
           <div className="min-w-0 flex-1">
             {visibleResources.length === 0 ? (
-              <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-[#e5e7eb] bg-white px-6 py-16 text-center">
+              <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-[#e5e7eb] bg-white px-6 py-16 text-center">
                 <BookOpen className="mb-3 h-10 w-10 text-[#d1d5db]" />
                 <p className="text-sm font-medium text-[#6b7280]">
                   No hay recursos en esta categoría todavía.

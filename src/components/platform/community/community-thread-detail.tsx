@@ -200,7 +200,7 @@ function ReplyCard({ reply }: { reply: ThreadReply }) {
   const likeCount = liked ? reply.likeCount + 1 : reply.likeCount;
 
   return (
-    <div className="rounded-2xl border border-[rgba(22,60,88,0.08)] bg-white p-5">
+    <div className="rounded-xl border border-[rgba(22,60,88,0.08)] bg-white p-5">
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-3">
           <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[var(--color-primary)] text-xs font-bold text-white">
@@ -247,7 +247,7 @@ function ReplyCard({ reply }: { reply: ThreadReply }) {
 
 function ParticipantsCard({ participants }: { participants: ThreadParticipant[] }) {
   return (
-    <div className="rounded-2xl border border-[rgba(22,60,88,0.08)] bg-white p-5">
+    <div className="rounded-xl border border-[rgba(22,60,88,0.08)] bg-white p-5">
       <h2 className="text-sm font-bold text-[var(--color-ink)]">Participantes en el debate</h2>
       <div className="mt-1 h-px bg-[rgba(22,60,88,0.07)]" />
       <div className="mt-4 space-y-3">
@@ -276,7 +276,7 @@ function ParticipantsCard({ participants }: { participants: ThreadParticipant[] 
 
 function RelatedTopicsCard({ threads }: { threads: RelatedThread[] }) {
   return (
-    <div className="rounded-2xl border border-[rgba(22,60,88,0.08)] bg-white p-5">
+    <div className="rounded-xl border border-[rgba(22,60,88,0.08)] bg-white p-5">
       <h2 className="text-sm font-bold text-[var(--color-ink)]">Temas Relacionados</h2>
       <div className="mt-4 space-y-4">
         {threads.map((t) => (
@@ -344,7 +344,7 @@ export function CommunityThreadDetail({ threadId }: CommunityThreadDetailProps) 
     <div className="site-container py-8 sm:py-10">
 
       {/* ── Search bar ────────────────────────────────────────── */}
-      <div className="flex items-center gap-2 rounded-2xl border border-[rgba(22,60,88,0.1)] bg-white px-5 py-3 shadow-[0_1px_4px_rgba(30,58,95,0.06)]">
+      <div className="flex items-center gap-2 rounded-xl border border-[rgba(22,60,88,0.1)] bg-white px-5 py-3 shadow-[0_1px_4px_rgba(30,58,95,0.06)]">
         <Search className="h-4 w-4 shrink-0 text-[var(--color-muted)]" />
         <input
           aria-label="Buscar en la comunidad"
@@ -392,7 +392,7 @@ export function CommunityThreadDetail({ threadId }: CommunityThreadDetailProps) 
         <div className="space-y-4">
 
           {/* Main post card */}
-          <div className="overflow-hidden rounded-2xl border border-[rgba(22,60,88,0.08)] bg-white p-6">
+          <div className="overflow-hidden rounded-xl border border-[rgba(22,60,88,0.08)] bg-white p-6">
             {/* Author row */}
             <div className="flex items-start justify-between gap-4">
               <div className="flex items-center gap-3">
@@ -495,7 +495,7 @@ export function CommunityThreadDetail({ threadId }: CommunityThreadDetailProps) 
           )}
 
           {/* Reply composer placeholder */}
-          <div className="overflow-hidden rounded-2xl border border-dashed border-[rgba(22,60,88,0.15)] bg-white p-4">
+          <div className="overflow-hidden rounded-xl border border-dashed border-[rgba(22,60,88,0.15)] bg-white p-4">
             <p className="text-center text-sm text-[var(--color-muted)]">
               Escribe tu respuesta a esta discusión...
             </p>

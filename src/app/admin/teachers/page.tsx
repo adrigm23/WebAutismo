@@ -127,7 +127,7 @@ export default async function AdminTeachersPage({ searchParams }: TeachersPagePr
           <AdminMetricCard accent="warning" icon={<BookCopy className="h-6 w-6" strokeWidth={1.8} />} label="Ediciones en curso" meta="Seguimiento operativo demo" value={totalEditions} />
         </section>
 
-        <Card className="rounded-[2rem] p-5">
+        <Card className="rounded-xl p-5">
           <div className="flex flex-wrap gap-2">
             {[
               { id: "all", label: "Todo activo", count: demoAdminTeachers.length },
@@ -386,7 +386,7 @@ export default async function AdminTeachersPage({ searchParams }: TeachersPagePr
         />
       </section>
 
-      <Card className="rounded-[2rem] p-5">
+      <Card className="rounded-xl p-5">
         <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
           <div className="flex flex-wrap gap-2">
             {[
@@ -458,7 +458,7 @@ export default async function AdminTeachersPage({ searchParams }: TeachersPagePr
               />
             ))
           ) : (
-            <Card className="rounded-[2rem] p-8 md:col-span-2">
+            <Card className="rounded-xl p-8 md:col-span-2">
               <p className="text-[1.35rem] font-semibold text-[var(--color-ink)]">
                 No hay docentes que coincidan con los filtros.
               </p>

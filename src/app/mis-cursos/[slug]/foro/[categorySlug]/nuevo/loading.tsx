@@ -1,5 +1,5 @@
 function LoadingBlock(input: { className: string }) {
-  return <div className={`animate-pulse rounded-[24px] bg-[var(--color-surface)] ${input.className}`} />;
+  return <div className={`animate-pulse rounded-xl bg-[var(--color-surface)] ${input.className}`} />;
 }
 
 export default function CategoryNewThreadLoading() {

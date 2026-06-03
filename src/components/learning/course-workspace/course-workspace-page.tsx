@@ -76,7 +76,7 @@ function ProgressCard({
   const href = `/mis-cursos/${courseSlug}/leccion/${Math.max(0, inProgressIndex)}`;
 
   return (
-    <div className="min-w-[220px] rounded-2xl border border-[#e5e7eb] bg-white p-5 shadow-sm">
+    <div className="min-w-[220px] rounded-xl border border-[#e5e7eb] bg-white p-5 shadow-sm">
       <div className="flex items-center justify-between text-sm">
         <span className="font-medium text-[#6b7280]">Progreso del curso</span>
         <span className="text-xl font-bold text-[#1a1f2e]">{pct}%</span>
@@ -122,7 +122,7 @@ function ModuleCard({
   return (
     <div
       className={cn(
-        "overflow-hidden rounded-2xl border transition",
+        "overflow-hidden rounded-xl border transition",
         status === "in-progress"
           ? "border-emerald-300 bg-white shadow-sm"
           : status === "completed"
@@ -341,7 +341,7 @@ function InstructorCard({ course }: { course: CatalogCourse }) {
     .join("");
 
   return (
-    <div className="rounded-2xl border border-[#e5e7eb] bg-white p-5">
+    <div className="rounded-xl border border-[#e5e7eb] bg-white p-5">
       <p className="text-[0.65rem] font-bold uppercase tracking-[0.14em] text-[#9ba3af]">
         Instructora del Curso
       </p>
@@ -372,7 +372,7 @@ function MaterialsCard({ resources }: { resources: CampusResourceItem[] }) {
   if (materials.length === 0) return null;
 
   return (
-    <div className="rounded-2xl border border-[#e5e7eb] bg-white p-5">
+    <div className="rounded-xl border border-[#e5e7eb] bg-white p-5">
       <p className="text-[0.65rem] font-bold uppercase tracking-[0.14em] text-[#9ba3af]">
         Materiales Incluidos
       </p>
@@ -420,7 +420,7 @@ function DatesCard({ course }: { course: CatalogCourse }) {
   if (dates.length === 0) return null;
 
   return (
-    <div className="rounded-2xl border border-[#e5e7eb] bg-white p-5">
+    <div className="rounded-xl border border-[#e5e7eb] bg-white p-5">
       <p className="text-[0.65rem] font-bold uppercase tracking-[0.14em] text-[#9ba3af]">
         Fechas Importantes
       </p>
@@ -449,7 +449,7 @@ function DatesCard({ course }: { course: CatalogCourse }) {
 
 function CertificateCard({ isCompleted }: { isCompleted: boolean }) {
   return (
-    <div className="overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white p-5">
+    <div className="overflow-hidden rounded-xl border border-[#e5e7eb] bg-white p-5">
       <p className="text-center text-sm font-bold text-[#1a1f2e]">
         Certificado Oficial
       </p>
@@ -507,7 +507,7 @@ export function CourseWorkspacePage({
         {/* ── Left column ─────────────────────────────── */}
         <div className="space-y-5">
           {/* Hero card */}
-          <div className="rounded-2xl border border-[#e5e7eb] bg-white p-6 lg:p-7">
+          <div className="rounded-xl border border-[#e5e7eb] bg-white p-6 lg:p-7">
             <div className="flex flex-wrap items-start justify-between gap-5">
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-3">
@@ -544,7 +544,7 @@ export function CourseWorkspacePage({
           </div>
 
           {/* About this course */}
-          <div className="rounded-2xl border border-[#e5e7eb] bg-white p-6 lg:p-7">
+          <div className="rounded-xl border border-[#e5e7eb] bg-white p-6 lg:p-7">
             <h2 className="text-lg font-bold text-[#1a1f2e]">
               Acerca de este curso
             </h2>

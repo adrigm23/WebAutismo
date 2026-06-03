@@ -26,7 +26,7 @@ export default function LegalPage() {
           </p>
         </div>
 
-        <section className="rounded-[28px] border border-[var(--color-border)] bg-white p-8 shadow-[0_18px_40px_rgba(34,34,33,0.05)]">
+        <section className="rounded-xl border border-[var(--color-border)] bg-white p-8 shadow-[0_18px_40px_rgba(34,34,33,0.05)]">
           <h2 className="text-2xl font-semibold text-[var(--color-ink)]">Titularidad y contacto</h2>
           <p className="mt-4 text-base leading-8 text-[var(--color-muted)]">
             Responsable del servicio: {siteConfig.name}. Para consultas legales, soporte operativo o
@@ -38,7 +38,7 @@ export default function LegalPage() {
           </p>
         </section>
 
-        <section className="rounded-[28px] border border-[var(--color-border)] bg-white p-8 shadow-[0_18px_40px_rgba(34,34,33,0.05)]">
+        <section className="rounded-xl border border-[var(--color-border)] bg-white p-8 shadow-[0_18px_40px_rgba(34,34,33,0.05)]">
           <h2 className="text-2xl font-semibold text-[var(--color-ink)]">Privacidad</h2>
           <p className="mt-4 text-base leading-8 text-[var(--color-muted)]">
             La plataforma trata datos de identificacion, acceso, compra y seguimiento academico con
@@ -48,7 +48,7 @@ export default function LegalPage() {
           </p>
         </section>
 
-        <section className="rounded-[28px] border border-[var(--color-border)] bg-white p-8 shadow-[0_18px_40px_rgba(34,34,33,0.05)]">
+        <section className="rounded-xl border border-[var(--color-border)] bg-white p-8 shadow-[0_18px_40px_rgba(34,34,33,0.05)]">
           <h2 className="text-2xl font-semibold text-[var(--color-ink)]">Uso del campus</h2>
           <p className="mt-4 text-base leading-8 text-[var(--color-muted)]">
             El alumnado y el equipo docente deben utilizar el campus de forma responsable,

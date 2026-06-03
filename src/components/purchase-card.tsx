@@ -35,7 +35,7 @@ export function PurchaseCard({ course, purchaseMode }: PurchaseCardProps) {
   return (
     <>
       {/* Main purchase card */}
-      <div className="rounded-2xl border border-[var(--color-border)] bg-white p-6 shadow-sm">
+      <div className="rounded-xl border border-[var(--color-border)] bg-white p-6 shadow-sm">
         {/* Price */}
         <div className="text-center">
           <p className="text-[3rem] font-bold leading-none tracking-tight text-[var(--color-ink)]">
@@ -72,7 +72,7 @@ export function PurchaseCard({ course, purchaseMode }: PurchaseCardProps) {
       </div>
 
       {/* Help card */}
-      <div className="rounded-2xl border border-[var(--color-border)] bg-white p-6">
+      <div className="rounded-xl border border-[var(--color-border)] bg-white p-6">
         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[rgba(12,113,195,0.08)]">
           <Headphones className="h-5 w-5 text-[var(--color-primary)]" />
         </div>

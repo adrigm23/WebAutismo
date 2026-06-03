@@ -47,7 +47,7 @@ const DynamicCourseResourceManager = dynamic(
 function CourseResourceManagerSkeleton() {
   return (
     <div className="space-y-4" aria-hidden="true">
-      <div className="space-y-3 rounded-[1rem] border border-[rgba(22,60,88,0.08)] bg-white/72 p-4">
+      <div className="space-y-3 rounded-lg border border-[rgba(22,60,88,0.08)] bg-white/72 p-4">
         <div className="flex flex-wrap gap-2">
           <Skeleton className="h-6 w-24" rounded="pill" />
           <Skeleton className="h-6 w-20" rounded="pill" />
@@ -58,7 +58,7 @@ function CourseResourceManagerSkeleton() {
         <Skeleton className="h-4 w-11/12" rounded="md" />
         <Skeleton className="h-10 w-36" rounded="md" />
       </div>
-      <div className="space-y-3 rounded-[1rem] border border-[rgba(22,60,88,0.08)] bg-white/72 p-4">
+      <div className="space-y-3 rounded-lg border border-[rgba(22,60,88,0.08)] bg-white/72 p-4">
         <Skeleton className="h-6 w-40" rounded="md" />
         <Skeleton className="h-4 w-full" rounded="md" />
         <Skeleton className="h-4 w-10/12" rounded="md" />
@@ -547,7 +547,7 @@ export function CourseLearningContentTab({
               </div>
             </div>
 
-            <div className="flex flex-wrap items-center justify-between gap-3 rounded-[1rem] border border-[rgba(22,60,88,0.08)] bg-[rgba(248,245,239,0.58)] p-4">
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-[rgba(22,60,88,0.08)] bg-[rgba(248,245,239,0.58)] p-4">
               <p className="text-body-sm text-[var(--color-muted)]">
                 {currentModule.completedAt
                   ? `Marcado como revisado el ${formatDate(currentModule.completedAt)}.`
@@ -848,7 +848,7 @@ function StudentEditorialResourcesList(input: {
 
   if (!groups.length) {
     return (
-      <div className="rounded-[1rem] border border-dashed border-[rgba(22,60,88,0.16)] bg-white/78 px-5 py-7">
+      <div className="rounded-lg border border-dashed border-[rgba(22,60,88,0.16)] bg-white/78 px-5 py-7">
         <p className="font-premium text-[1.4rem] font-semibold tracking-[-0.04em] text-[var(--color-ink)]">
           Recursos
         </p>
@@ -866,7 +866,7 @@ function StudentEditorialResourcesList(input: {
           <h2 className="text-[1.05rem] font-semibold tracking-[0.08em] uppercase text-[var(--color-ink)]">
             {group.title}
           </h2>
-          <div className="mt-3 overflow-hidden rounded-[0.95rem] border border-[rgba(22,60,88,0.11)] bg-white/88">
+          <div className="mt-3 overflow-hidden rounded-lg border border-[rgba(22,60,88,0.11)] bg-white/88">
             {group.items.map((resource, index) => (
               <StudentResourceRow
                 isLast={index === group.items.length - 1}
@@ -916,7 +916,7 @@ function StudentResourceRow(input: {
       onClick={handleClick}
       type="button"
     >
-      <div className="grid h-11 w-11 shrink-0 place-items-center rounded-[0.8rem] bg-[rgba(243,242,252,0.9)] text-[var(--color-primary)]">
+      <div className="grid h-11 w-11 shrink-0 place-items-center rounded-md bg-[rgba(243,242,252,0.9)] text-[var(--color-primary)]">
         <StudentResourceGlyph resource={input.resource} />
       </div>
 
@@ -968,7 +968,7 @@ export function CourseLearningSupportTab({
           {forumCategories.length ? (
             forumCategories.map((category) => (
               <Link
-                className="rounded-[1rem] border border-[rgba(22,60,88,0.08)] bg-[rgba(248,245,239,0.52)] p-4 transition-colors duration-[var(--motion-duration-base)] hover:border-[rgba(22,60,88,0.16)] hover:bg-white/88 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-surface-canvas)]"
+                className="rounded-lg border border-[rgba(22,60,88,0.08)] bg-[rgba(248,245,239,0.52)] p-4 transition-colors duration-[var(--motion-duration-base)] hover:border-[rgba(22,60,88,0.16)] hover:bg-white/88 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-surface-canvas)]"
                 href={`/mis-cursos/${courseSlug}/foro/${category.slug}`}
                 key={category.id}
                 prefetch

@@ -9,7 +9,7 @@ type HomeFeaturedCourseCardProps = {
 
 export function HomeFeaturedCourseCard({ course }: HomeFeaturedCourseCardProps) {
   return (
-    <article className="group flex h-full flex-col overflow-hidden rounded-[1.6rem] border border-[rgba(12,113,195,0.12)] bg-white/88 transition duration-200 hover:border-[rgba(12,113,195,0.2)] hover:bg-white motion-reduce:transform-none">
+    <article className="group flex h-full flex-col overflow-hidden rounded-xl border border-[rgba(12,113,195,0.12)] bg-white/88 transition duration-200 hover:border-[rgba(12,113,195,0.2)] hover:bg-white motion-reduce:transform-none">
       <CourseArtwork className="h-44 w-full border-0 sm:h-48" course={course} variant="card" />
 
       <div className="flex flex-1 flex-col px-5 pb-5 pt-5 sm:px-6 sm:pb-6">

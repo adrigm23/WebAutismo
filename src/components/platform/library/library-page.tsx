@@ -172,7 +172,7 @@ function ResourceCardGrid({
   }, []);
 
   return (
-    <div className="group relative flex flex-col overflow-hidden rounded-2xl border border-[#eaecf0] bg-white transition hover:shadow-md">
+    <div className="group relative flex flex-col overflow-hidden rounded-xl border border-[#eaecf0] bg-white transition hover:shadow-md">
       {/* Thumbnail area */}
       <div className="relative flex h-36 items-center justify-center bg-gradient-to-br from-[#f8fafc] to-[#f1f5f9]">
         <ResourceTypeBadge type={resource.type} />
@@ -381,7 +381,7 @@ function UploadDialog({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-2xl">
+      <div className="w-full max-w-md overflow-hidden rounded-xl bg-white shadow-2xl">
         <div className="flex items-center justify-between border-b border-[#eaecf0] px-6 py-4">
           <h2 className="text-base font-semibold text-[#1a1f2e]">
             {isEdit ? "Editar recurso" : "Subir archivo"}
@@ -553,7 +553,7 @@ function FolderDialog({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="w-full max-w-sm overflow-hidden rounded-2xl bg-white shadow-2xl">
+      <div className="w-full max-w-sm overflow-hidden rounded-xl bg-white shadow-2xl">
         <div className="flex items-center justify-between border-b border-[#eaecf0] px-6 py-4">
           <h2 className="text-base font-semibold text-[#1a1f2e]">Nueva carpeta</h2>
           <button type="button" onClick={onClose} className="text-[#9ba3af] hover:text-[#1a1f2e]">
@@ -642,7 +642,7 @@ function DeleteConfirmDialog({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="w-full max-w-sm overflow-hidden rounded-2xl bg-white shadow-2xl">
+      <div className="w-full max-w-sm overflow-hidden rounded-xl bg-white shadow-2xl">
         <div className="p-6">
           <h2 className="text-base font-semibold text-[#1a1f2e]">Eliminar recurso</h2>
           <p className="mt-2 text-sm text-[#6b7280]">
@@ -765,7 +765,7 @@ function DeleteFolderConfirmDialog({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="w-full max-w-sm overflow-hidden rounded-2xl bg-white shadow-2xl">
+      <div className="w-full max-w-sm overflow-hidden rounded-xl bg-white shadow-2xl">
         <div className="p-6">
           <h2 className="text-base font-semibold text-[#1a1f2e]">Eliminar carpeta</h2>
           <p className="mt-2 text-sm text-[#6b7280]">
@@ -1021,7 +1021,7 @@ export function LibraryPage({ resources, folders, courses, canManage, newResourc
           </div>
 
           {filtered.length === 0 ? (
-            <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-[#e5e7eb] bg-white px-6 py-16 text-center">
+            <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-[#e5e7eb] bg-white px-6 py-16 text-center">
               <BookOpen className="mb-3 h-10 w-10 text-[#d1d5db]" />
               <p className="text-sm font-medium text-[#6b7280]">
                 {filters.q || hasActiveFilters

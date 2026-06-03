@@ -16,7 +16,7 @@ export function SurfaceCard(input: {
   return (
     <section
       className={cn(
-        "rounded-[1.1rem] border border-[rgba(22,60,88,0.08)] bg-[rgba(255,255,255,0.72)] px-4 py-4 shadow-[0_1px_0_rgba(255,255,255,0.88)] backdrop-blur-[2px] sm:px-5 sm:py-5",
+        "rounded-lg border border-[rgba(22,60,88,0.08)] bg-[rgba(255,255,255,0.72)] px-4 py-4 shadow-[0_1px_0_rgba(255,255,255,0.88)] backdrop-blur-[2px] sm:px-5 sm:py-5",
         input.className,
       )}
       id={input.id}
@@ -46,7 +46,7 @@ export function SummaryMetric(input: {
   detail: string;
 }) {
   return (
-    <div className="rounded-[0.95rem] border border-[rgba(22,60,88,0.08)] bg-[rgba(248,245,239,0.62)] p-3.5">
+    <div className="rounded-lg border border-[rgba(22,60,88,0.08)] bg-[rgba(248,245,239,0.62)] p-3.5">
       <p className="text-meta-xs font-semibold text-[var(--color-muted)]">{input.label}</p>
       <p className="font-premium mt-2.5 text-[1.45rem] font-semibold leading-tight tracking-[-0.04em] text-[var(--color-ink)] [font-variant-numeric:tabular-nums]">
         {input.value}
@@ -89,7 +89,7 @@ export function ActionCard(input: {
 }) {
   return (
     <button
-      className="w-full rounded-[1rem] border border-[rgba(22,60,88,0.08)] bg-[rgba(248,245,239,0.58)] p-4 text-left transition-colors duration-[var(--motion-duration-base)] hover:border-[rgba(22,60,88,0.16)] hover:bg-white/88 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-surface-canvas)]"
+      className="w-full rounded-lg border border-[rgba(22,60,88,0.08)] bg-[rgba(248,245,239,0.58)] p-4 text-left transition-colors duration-[var(--motion-duration-base)] hover:border-[rgba(22,60,88,0.16)] hover:bg-white/88 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-surface-canvas)]"
       onClick={input.onClick}
       type="button"
     >
@@ -114,7 +114,7 @@ export function ModuleRow(input: {
   return (
     <button
       className={cn(
-        "flex w-full items-start justify-between gap-3 rounded-[1rem] border px-4 py-3.5 text-left transition-colors duration-[var(--motion-duration-base)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-surface-canvas)]",
+        "flex w-full items-start justify-between gap-3 rounded-lg border px-4 py-3.5 text-left transition-colors duration-[var(--motion-duration-base)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-surface-canvas)]",
         input.isSelected
           ? "border-[rgba(22,60,88,0.16)] bg-[rgba(242,247,252,0.92)] text-[var(--color-primary)]"
           : "border-[rgba(22,60,88,0.08)] bg-[rgba(255,255,255,0.62)] hover:border-[rgba(22,60,88,0.14)] hover:bg-white/88",
@@ -139,7 +139,7 @@ export function InfoPanel(input: {
   onAction?: () => void;
 }) {
   return (
-    <div className="rounded-[1rem] border border-[rgba(22,60,88,0.08)] bg-[rgba(248,245,239,0.58)] p-4">
+    <div className="rounded-lg border border-[rgba(22,60,88,0.08)] bg-[rgba(248,245,239,0.58)] p-4">
       <p className="text-heading-md font-semibold text-[var(--color-ink)]">{input.title}</p>
       <p className="mt-2 text-body-sm text-[var(--color-muted)]">{input.body}</p>
       {input.onAction && input.ctaLabel ? (
@@ -179,7 +179,7 @@ export function ModuleResourceCard(input: {
 }) {
   return (
     <button
-      className="w-full rounded-[1rem] border border-[rgba(22,60,88,0.08)] bg-[rgba(248,245,239,0.58)] p-4 text-left transition-colors duration-[var(--motion-duration-base)] hover:border-[rgba(22,60,88,0.16)] hover:bg-white/88 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-surface-canvas)]"
+      className="w-full rounded-lg border border-[rgba(22,60,88,0.08)] bg-[rgba(248,245,239,0.58)] p-4 text-left transition-colors duration-[var(--motion-duration-base)] hover:border-[rgba(22,60,88,0.16)] hover:bg-white/88 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-surface-canvas)]"
       onClick={input.onClick}
       type="button"
     >

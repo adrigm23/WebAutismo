@@ -6,9 +6,9 @@ import { SubmitButton } from "@/components/ui/submit-button";
 
 export function CreateTeacherCard() {
   return (
-    <Card className="rounded-[2rem] p-7" id="create-teacher">
+    <Card className="rounded-xl p-7" id="create-teacher">
       <div className="flex items-start gap-4">
-        <div className="grid h-12 w-12 place-items-center rounded-2xl bg-[rgba(12,113,195,0.12)] text-[var(--color-primary)]">
+        <div className="grid h-12 w-12 place-items-center rounded-xl bg-[rgba(12,113,195,0.12)] text-[var(--color-primary)]">
           <UserPlus className="h-5 w-5" strokeWidth={1.8} />
         </div>
         <div>
@@ -38,7 +38,7 @@ export function CreateTeacherCard() {
           required
           type="password"
         />
-        <div className="rounded-[1.4rem] border border-[#d8e0e8] bg-[#f7fafc] px-4 py-4 text-sm leading-7 text-[#4c6074]">
+        <div className="rounded-xl border border-[#d8e0e8] bg-[#f7fafc] px-4 py-4 text-sm leading-7 text-[#4c6074]">
           La cuenta se crea como docente, activa y con preferencias básicas de
           notificación.
         </div>

@@ -63,7 +63,7 @@ export function SiteHeader() {
 
           <div className="flex shrink-0 items-center gap-2">
             <ButtonLink
-              className="min-h-10 rounded-[1rem] px-3.5 py-2 text-sm"
+              className="min-h-10 rounded-lg px-3.5 py-2 text-sm"
               href={mobilePrimaryAction.href}
               variant="primary"
             >
@@ -75,7 +75,7 @@ export function SiteHeader() {
                 aria-controls="public-mobile-menu"
                 aria-expanded={isMobileMenuOpen}
                 aria-label={isMobileMenuOpen ? "Cerrar menu" : "Abrir menu"}
-                className="inline-flex min-h-10 min-w-10 items-center justify-center rounded-[1rem] border border-[rgba(12,113,195,0.16)] bg-white/92 px-3 text-[var(--color-primary)] shadow-[var(--shadow-inset-soft)] transition-[border-color,background-color,color] duration-200 hover:border-[rgba(12,113,195,0.3)] hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2"
+                className="inline-flex min-h-10 min-w-10 items-center justify-center rounded-lg border border-[rgba(12,113,195,0.16)] bg-white/92 px-3 text-[var(--color-primary)] shadow-[var(--shadow-inset-soft)] transition-[border-color,background-color,color] duration-200 hover:border-[rgba(12,113,195,0.3)] hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2"
                 onClick={() => setIsMobileMenuOpen((current) => !current)}
                 type="button"
               >
@@ -88,13 +88,13 @@ export function SiteHeader() {
               </button>
 
               <div
-                className={`absolute right-0 top-[calc(100%+0.5rem)] z-50 w-[min(17rem,calc(100vw-2rem))] overflow-hidden rounded-[1.2rem] border border-[rgba(12,113,195,0.12)] bg-[rgba(248,246,243,0.995)] p-2 shadow-[0_16px_32px_rgba(21,35,50,0.12)] transition-[opacity,transform] duration-200 ${isMobileMenuOpen ? "pointer-events-auto translate-y-0 opacity-100" : "pointer-events-none -translate-y-2 opacity-0"}`}
+                className={`absolute right-0 top-[calc(100%+0.5rem)] z-50 w-[min(17rem,calc(100vw-2rem))] overflow-hidden rounded-xl border border-[rgba(12,113,195,0.12)] bg-[rgba(248,246,243,0.995)] p-2 shadow-[0_16px_32px_rgba(21,35,50,0.12)] transition-[opacity,transform] duration-200 ${isMobileMenuOpen ? "pointer-events-auto translate-y-0 opacity-100" : "pointer-events-none -translate-y-2 opacity-0"}`}
                 id="public-mobile-menu"
               >
                 <nav aria-label="Navegacion principal movil" className="flex flex-col">
                   {siteConfig.nav.map((item) => (
                     <Link
-                      className="inline-flex min-h-11 items-center rounded-[0.95rem] px-3.5 py-2.5 text-sm font-medium text-[var(--color-ink)] transition hover:bg-white hover:text-[var(--color-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2"
+                      className="inline-flex min-h-11 items-center rounded-lg px-3.5 py-2.5 text-sm font-medium text-[var(--color-ink)] transition hover:bg-white hover:text-[var(--color-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2"
                       href={item.href}
                       key={`mobile-${item.href}`}
                       onClick={() => setIsMobileMenuOpen(false)}
@@ -106,7 +106,7 @@ export function SiteHeader() {
 
                 <div className="mt-1 border-t border-[rgba(12,113,195,0.1)] pt-1.5">
                   <Link
-                    className="inline-flex min-h-11 w-full items-center rounded-[0.95rem] px-3.5 py-2.5 text-sm font-medium text-[var(--color-muted)] transition hover:bg-white hover:text-[var(--color-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2"
+                    className="inline-flex min-h-11 w-full items-center rounded-lg px-3.5 py-2.5 text-sm font-medium text-[var(--color-muted)] transition hover:bg-white hover:text-[var(--color-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2"
                     href="/acceder"
                     onClick={() => setIsMobileMenuOpen(false)}
                   >

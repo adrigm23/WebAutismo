@@ -30,7 +30,7 @@ export function PromotionTableCard({
   promotions: PromotionRow[];
 }) {
   return (
-    <Card className="min-w-0 overflow-hidden rounded-[2rem]">
+    <Card className="min-w-0 overflow-hidden rounded-xl">
       <div className="border-b border-[#dde4ec] px-7 py-6">
         <form className="grid min-w-0 gap-3 md:grid-cols-[minmax(0,1fr)_220px_auto]">
           <Input defaultValue={q} name="q" placeholder="Buscar cupones..." />
@@ -53,7 +53,7 @@ export function PromotionTableCard({
 
       <div className="grid gap-4 p-4 md:hidden">
         {promotions.map((promotion) => (
-          <Card className="rounded-[1.6rem] p-5" key={promotion.id}>
+          <Card className="rounded-xl p-5" key={promotion.id}>
             <div className="flex items-start justify-between gap-4">
               <div className="min-w-0">
                 <Link

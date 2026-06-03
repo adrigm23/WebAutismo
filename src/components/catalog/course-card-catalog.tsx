@@ -13,7 +13,7 @@ export function CourseCardCatalog({ course }: Props) {
   const teacherName = course.teachers[0]?.name ?? "Equipo Campus Autismo";
 
   return (
-    <article className="overflow-hidden rounded-2xl border border-[var(--color-border)] bg-white shadow-sm transition hover:shadow-md hover:-translate-y-0.5">
+    <article className="overflow-hidden rounded-xl border border-[var(--color-border)] bg-white shadow-sm transition hover:shadow-md hover:-translate-y-0.5">
       <div className="relative h-48 overflow-hidden">
         <CourseArtwork
           className="h-full w-full rounded-none border-none"

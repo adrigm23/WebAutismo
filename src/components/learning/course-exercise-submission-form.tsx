@@ -322,7 +322,7 @@ export function CourseExerciseSubmissionForm({
         </section>
 
         {supportMaterials.length ? (
-          <section className="rounded-[1.7rem] border border-[rgba(22,60,88,0.08)] bg-[rgba(255,255,255,0.68)] p-5 sm:p-7">
+          <section className="rounded-xl border border-[rgba(22,60,88,0.08)] bg-[rgba(255,255,255,0.68)] p-5 sm:p-7">
             <div className="flex items-center gap-2 text-[0.82rem] font-semibold uppercase tracking-[0.14em] text-[var(--color-ink)]">
               <Paperclip className="h-4 w-4" />
               Materiales de apoyo
@@ -337,7 +337,7 @@ export function CourseExerciseSubmissionForm({
                   rel={resource.isExternal ? "noreferrer" : undefined}
                   target={resource.isExternal ? "_blank" : undefined}
                 >
-                  <div className="grid h-11 w-11 shrink-0 place-items-center rounded-[0.95rem] border border-[rgba(22,60,88,0.08)] bg-white text-[var(--color-ink)]">
+                  <div className="grid h-11 w-11 shrink-0 place-items-center rounded-lg border border-[rgba(22,60,88,0.08)] bg-white text-[var(--color-ink)]">
                     <SupportMaterialIcon resource={resource} />
                   </div>
 
@@ -370,7 +370,7 @@ export function CourseExerciseSubmissionForm({
           </div>
 
           {existingSubmission ? (
-            <div className="rounded-[1.35rem] border border-[rgba(22,60,88,0.08)] bg-[rgba(251,248,244,0.92)] px-5 py-4 text-sm leading-7 text-[var(--color-ink-soft)]">
+            <div className="rounded-xl border border-[rgba(22,60,88,0.08)] bg-[rgba(251,248,244,0.92)] px-5 py-4 text-sm leading-7 text-[var(--color-ink-soft)]">
               <p>
                 Ultima entrega registrada:{" "}
                 <strong className="font-medium text-[var(--color-ink)]">
@@ -390,7 +390,7 @@ export function CourseExerciseSubmissionForm({
           ) : null}
 
           {isSubmissionClosed ? (
-            <div className="rounded-[1.35rem] border border-[rgba(159,69,46,0.16)] bg-[rgba(252,238,233,0.78)] px-5 py-4 text-sm leading-7 text-[var(--color-danger)]">
+            <div className="rounded-xl border border-[rgba(159,69,46,0.16)] bg-[rgba(252,238,233,0.78)] px-5 py-4 text-sm leading-7 text-[var(--color-danger)]">
               El plazo de entrega ya ha finalizado. Si necesitas una nueva ventana, el equipo docente debe reabrir la tarea.
             </div>
           ) : null}
@@ -414,7 +414,7 @@ export function CourseExerciseSubmissionForm({
 
               <button
                 className={cn(
-                  "group flex min-h-[15rem] w-full flex-col items-center justify-center rounded-[1.75rem] border border-dashed px-6 py-8 text-center transition-colors duration-[var(--motion-duration-base)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2",
+                  "group flex min-h-[15rem] w-full flex-col items-center justify-center rounded-xl border border-dashed px-6 py-8 text-center transition-colors duration-[var(--motion-duration-base)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2",
                   isSubmissionClosed
                     ? "cursor-not-allowed border-[rgba(22,60,88,0.08)] bg-[rgba(248,246,241,0.52)] text-[var(--color-muted)]"
                     : isDragging
@@ -462,7 +462,7 @@ export function CourseExerciseSubmissionForm({
                 }}
                 type="button"
               >
-                <div className="grid h-12 w-12 place-items-center rounded-[1rem] bg-[rgba(241,238,248,0.92)] text-[var(--color-ink-soft)] transition-transform duration-[var(--motion-duration-base)] group-hover:scale-[1.02]">
+                <div className="grid h-12 w-12 place-items-center rounded-lg bg-[rgba(241,238,248,0.92)] text-[var(--color-ink-soft)] transition-transform duration-[var(--motion-duration-base)] group-hover:scale-[1.02]">
                   <Plus className="h-5 w-5" />
                 </div>
                 <p className="mt-5 text-[1.08rem] font-medium tracking-[-0.02em] text-[var(--color-ink)]">
@@ -492,7 +492,7 @@ export function CourseExerciseSubmissionForm({
                 Enlace alternativo (opcional)
               </label>
               <Input
-                className="h-[3.5rem] rounded-[1.15rem] border-[rgba(22,60,88,0.12)] bg-white/88 px-5 text-[1rem] shadow-none"
+                className="h-[3.5rem] rounded-xl border-[rgba(22,60,88,0.12)] bg-white/88 px-5 text-[1rem] shadow-none"
                 controlSize="lg"
                 disabled={isSubmissionClosed}
                 id={`${inputId}-link`}
@@ -507,13 +507,13 @@ export function CourseExerciseSubmissionForm({
             {(state.error || state.success || draftNotice) ? (
               <div className="space-y-3">
                 {state.error ? (
-                  <p className="rounded-[1.2rem] border border-[rgba(159,69,46,0.18)] bg-[rgba(252,238,233,0.82)] px-4 py-3 text-sm text-[var(--color-danger)]">
+                  <p className="rounded-xl border border-[rgba(159,69,46,0.18)] bg-[rgba(252,238,233,0.82)] px-4 py-3 text-sm text-[var(--color-danger)]">
                     {state.error}
                   </p>
                 ) : null}
 
                 {state.success ? (
-                  <p className="rounded-[1.2rem] border border-[rgba(23,98,79,0.16)] bg-[rgba(228,241,235,0.82)] px-4 py-3 text-sm text-[var(--color-success)]">
+                  <p className="rounded-xl border border-[rgba(23,98,79,0.16)] bg-[rgba(228,241,235,0.82)] px-4 py-3 text-sm text-[var(--color-success)]">
                     {state.success}
                   </p>
                 ) : null}

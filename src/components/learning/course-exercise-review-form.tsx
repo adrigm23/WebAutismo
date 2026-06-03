@@ -485,7 +485,7 @@ export function CourseExerciseReviewForm({
                 value={scoreValue}
               />
             </label>
-            <div className="rounded-[1.1rem] bg-[var(--color-surface)] px-4 py-3 text-xs leading-5 text-[var(--color-muted)]">
+            <div className="rounded-lg bg-[var(--color-surface)] px-4 py-3 text-xs leading-5 text-[var(--color-muted)]">
               La nota es obligatoria al cerrar la revision. Si solicitas cambios, la nota actual se retira.
             </div>
           </div>

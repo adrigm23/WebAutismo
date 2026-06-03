@@ -271,7 +271,7 @@ function PersonalInfoCard({
 
   return (
     <section id="perfil">
-      <div className="overflow-hidden rounded-2xl border border-[rgba(22,60,88,0.08)] bg-white p-6">
+      <div className="overflow-hidden rounded-xl border border-[rgba(22,60,88,0.08)] bg-white p-6">
         <div className="flex items-center justify-between gap-4">
           <h2 className="text-lg font-bold text-[var(--color-ink)]">Información Personal</h2>
           {!isDemoUser && (
@@ -344,7 +344,7 @@ function SecurityCard({
 
   return (
     <section id="seguridad">
-      <div className="overflow-hidden rounded-2xl border border-[rgba(22,60,88,0.08)] bg-white p-6">
+      <div className="overflow-hidden rounded-xl border border-[rgba(22,60,88,0.08)] bg-white p-6">
         <h2 className="text-lg font-bold text-[var(--color-ink)]">Seguridad y Privacidad</h2>
 
         <div className="mt-5 divide-y divide-[rgba(22,60,88,0.07)]">
@@ -427,7 +427,7 @@ function NotificationsCard({
   webEnabled: boolean;
 }) {
   return (
-    <div className="overflow-hidden rounded-2xl border border-[rgba(22,60,88,0.08)] bg-white p-5">
+    <div className="overflow-hidden rounded-xl border border-[rgba(22,60,88,0.08)] bg-white p-5">
       <h2 className="text-base font-bold text-[var(--color-ink)]">Notificaciones</h2>
       <div className="mt-4 space-y-4">
         <NotificationToggleRow
@@ -457,7 +457,7 @@ function AcademicActivityCard({ overviewPanel }: { overviewPanel: AccountOvervie
     overviewPanel.progressPercent !== null && overviewPanel.detail !== "Seguridad, sesiones y soporte de tu cuenta.";
 
   return (
-    <div id="actividad" className="overflow-hidden rounded-2xl border border-[rgba(22,60,88,0.08)] bg-white p-5">
+    <div id="actividad" className="overflow-hidden rounded-xl border border-[rgba(22,60,88,0.08)] bg-white p-5">
       <div className="flex items-center justify-between gap-2">
         <h2 className="text-base font-bold text-[var(--color-ink)]">Actividad Académica</h2>
         <GraduationCap className="h-4 w-4 text-[var(--color-muted)]" />

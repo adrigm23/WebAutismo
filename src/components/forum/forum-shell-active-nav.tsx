@@ -24,7 +24,7 @@ export function ForumShellCategoryDesktopNav({
   const forumRootPath = `/mis-cursos/${courseSlug}/foro`;
 
   return (
-    <nav className="rounded-[1rem] border border-[rgba(22,60,88,0.08)] bg-white/56 p-1.5">
+    <nav className="rounded-lg border border-[rgba(22,60,88,0.08)] bg-white/56 p-1.5">
       <p className="px-3 pb-1 text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--color-muted)]">
         Categorias
       </p>

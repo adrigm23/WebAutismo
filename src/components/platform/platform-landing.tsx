@@ -107,9 +107,9 @@ export async function PlatformLanding() {
         </div>
 
         <div className="relative">
-          <div className="absolute inset-0 -z-10 rounded-[40px] bg-[linear-gradient(135deg,rgba(13,99,86,0.12),rgba(232,133,100,0.18))] blur-3xl" />
+          <div className="absolute inset-0 -z-10 rounded-xl bg-[linear-gradient(135deg,rgba(13,99,86,0.12),rgba(232,133,100,0.18))] blur-3xl" />
           <Card className="overflow-hidden p-6">
-            <div className="grid-mesh rounded-[28px] border border-white/70 bg-[linear-gradient(135deg,#0d6356,#e88564)] p-6 text-white">
+            <div className="grid-mesh rounded-xl border border-white/70 bg-[linear-gradient(135deg,#0d6356,#e88564)] p-6 text-white">
               <div className="max-w-sm space-y-4">
                 <p className="text-xs font-semibold uppercase tracking-[0.26em] text-white/70">
                   Flujo principal
@@ -125,7 +125,7 @@ export async function PlatformLanding() {
             </div>
 
             <div className="mt-6 grid gap-4 lg:grid-cols-[1.15fr_0.85fr]">
-              <div className="rounded-[28px] bg-[var(--color-surface)] p-5">
+              <div className="rounded-xl bg-[var(--color-surface)] p-5">
                 <div className="flex items-center justify-between">
                   <p className="text-sm font-semibold text-[var(--color-ink)]">
                     Vista del curso
@@ -135,20 +135,20 @@ export async function PlatformLanding() {
                   </span>
                 </div>
                 <div className="mt-4 space-y-4">
-                  <div className="rounded-[24px] bg-white p-4">
+                  <div className="rounded-xl bg-white p-4">
                     <p className="text-xs uppercase tracking-[0.22em] text-[var(--color-muted)]">
                       Programa
                     </p>
                     <div className="mt-3 space-y-3 text-sm text-[var(--color-muted)]">
-                      <div className="rounded-2xl bg-[var(--color-surface)] px-4 py-3">
+                      <div className="rounded-xl bg-[var(--color-surface)] px-4 py-3">
                         Módulos, objetivos, metodología y docente.
                       </div>
-                      <div className="rounded-2xl bg-[var(--color-surface)] px-4 py-3">
+                      <div className="rounded-xl bg-[var(--color-surface)] px-4 py-3">
                         Tiempos y recursos definidos por modulo.
                       </div>
                     </div>
                   </div>
-                  <div className="rounded-[24px] bg-white p-4">
+                  <div className="rounded-xl bg-white p-4">
                     <p className="text-xs uppercase tracking-[0.22em] text-[var(--color-muted)]">
                       Campus y foro
                     </p>
@@ -160,7 +160,7 @@ export async function PlatformLanding() {
                 </div>
               </div>
 
-              <div className="rounded-[28px] border border-[color:var(--color-border)] bg-white p-5">
+              <div className="rounded-xl border border-[color:var(--color-border)] bg-white p-5">
                 <p className="text-xs uppercase tracking-[0.22em] text-[var(--color-muted)]">
                   Inscripcion
                 </p>
@@ -168,15 +168,15 @@ export async function PlatformLanding() {
                   Clara
                 </p>
                 <div className="mt-5 space-y-3">
-                  <div className="flex items-center gap-3 rounded-2xl bg-[var(--color-surface)] px-4 py-3 text-sm">
+                  <div className="flex items-center gap-3 rounded-xl bg-[var(--color-surface)] px-4 py-3 text-sm">
                     <CheckCircle2 className="h-4 w-4 text-[var(--color-teal)]" />
                     Pago seguro cuando Stripe esta activo
                   </div>
-                  <div className="flex items-center gap-3 rounded-2xl bg-[var(--color-surface)] px-4 py-3 text-sm">
+                  <div className="flex items-center gap-3 rounded-xl bg-[var(--color-surface)] px-4 py-3 text-sm">
                     <CheckCircle2 className="h-4 w-4 text-[var(--color-teal)]" />
                     Modo demo local claramente identificado
                   </div>
-                  <div className="flex items-center gap-3 rounded-2xl bg-[var(--color-surface)] px-4 py-3 text-sm">
+                  <div className="flex items-center gap-3 rounded-xl bg-[var(--color-surface)] px-4 py-3 text-sm">
                     <CheckCircle2 className="h-4 w-4 text-[var(--color-teal)]" />
                     Activacion y correo solo cuando corresponde
                   </div>
@@ -217,7 +217,7 @@ export async function PlatformLanding() {
       <section className="mx-auto grid w-full max-w-7xl gap-6 px-6 py-12 lg:grid-cols-3 lg:px-8">
         {benefits.map((benefit) => (
           <Card className="p-7" key={benefit.title}>
-            <div className="mb-5 inline-flex rounded-2xl bg-[var(--color-surface)] p-3">
+            <div className="mb-5 inline-flex rounded-xl bg-[var(--color-surface)] p-3">
               {benefit.title.includes("Compra") ? (
                 <BookOpenText className="h-6 w-6 text-[var(--color-teal)]" />
               ) : benefit.title.includes("Area") ? (
@@ -254,7 +254,7 @@ export async function PlatformLanding() {
           <div className="space-y-4">
             {steps.map((step, index) => (
               <div
-                className="flex gap-4 rounded-[28px] border border-[color:var(--color-border)] bg-[var(--color-surface-strong)] p-5"
+                className="flex gap-4 rounded-xl border border-[color:var(--color-border)] bg-[var(--color-surface-strong)] p-5"
                 key={step}
               >
                 <div className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-[var(--color-teal)] text-sm font-semibold text-white">

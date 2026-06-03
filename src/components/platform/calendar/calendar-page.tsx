@@ -181,7 +181,7 @@ function MonthGrid({
   const MAX_VISIBLE = 3;
 
   return (
-    <div className="flex-1 overflow-hidden rounded-2xl border border-[#eaecf0] bg-white">
+    <div className="flex-1 overflow-hidden rounded-xl border border-[#eaecf0] bg-white">
       {/* Day headers */}
       <div className="grid grid-cols-7 border-b border-[#eaecf0]">
         {DAYS_ES.map((d) => (
@@ -246,7 +246,7 @@ function WeekGrid({
   onEventClick: (e: CalendarEventItem) => void;
 }) {
   return (
-    <div className="flex-1 overflow-hidden rounded-2xl border border-[#eaecf0] bg-white">
+    <div className="flex-1 overflow-hidden rounded-xl border border-[#eaecf0] bg-white">
       <div className="grid grid-cols-7 border-b border-[#eaecf0]">
         {weekDays.map((day) => {
           const todayFlag = isToday(day);
@@ -365,7 +365,7 @@ function AgendaView({
 
   if (events.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-[#e5e7eb] bg-white px-6 py-16 text-center">
+      <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-[#e5e7eb] bg-white px-6 py-16 text-center">
         <CalendarDays className="mb-3 h-10 w-10 text-[#d1d5db]" />
         <p className="text-sm text-[#6b7280]">No hay eventos disponibles.</p>
       </div>
@@ -399,7 +399,7 @@ function UpcomingEventsPanel({
     .slice(0, 5);
 
   return (
-    <div className="rounded-2xl border border-[#eaecf0] bg-white p-4">
+    <div className="rounded-xl border border-[#eaecf0] bg-white p-4">
       <h3 className="mb-3 text-sm font-semibold text-[#1a1f2e]">Próximos Eventos</h3>
       {upcoming.length === 0 ? (
         <p className="text-xs text-[#9ba3af]">Sin próximos eventos.</p>
@@ -475,7 +475,7 @@ function FiltersPanel({
   return (
     <div className="space-y-4">
       {/* Type */}
-      <div className="rounded-2xl border border-[#eaecf0] bg-white p-4">
+      <div className="rounded-xl border border-[#eaecf0] bg-white p-4">
         <h3 className="mb-3 text-xs font-bold uppercase tracking-wider text-[#9ba3af]">Tipo de evento</h3>
         <div className="space-y-2">
           {typeGroups.map(({ type, label, dotColor }) => (
@@ -495,7 +495,7 @@ function FiltersPanel({
 
       {/* Courses */}
       {courses.length > 0 && (
-        <div className="rounded-2xl border border-[#eaecf0] bg-white p-4">
+        <div className="rounded-xl border border-[#eaecf0] bg-white p-4">
           <h3 className="mb-3 text-xs font-bold uppercase tracking-wider text-[#9ba3af]">Mis cursos</h3>
           <div className="space-y-2">
             <label className="flex cursor-pointer items-center gap-2.5">
@@ -527,7 +527,7 @@ function FiltersPanel({
       )}
 
       {/* Status */}
-      <div className="rounded-2xl border border-[#eaecf0] bg-white p-4">
+      <div className="rounded-xl border border-[#eaecf0] bg-white p-4">
         <h3 className="mb-3 text-xs font-bold uppercase tracking-wider text-[#9ba3af]">Estado</h3>
         <div className="space-y-2">
           {(["SCHEDULED", "LIVE", "FINISHED"] as CalendarEventStatus[]).map((s) => (
@@ -579,7 +579,7 @@ function EventModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onClose}>
       <div
-        className="w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-2xl"
+        className="w-full max-w-md overflow-hidden rounded-xl bg-white shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header band */}
@@ -705,7 +705,7 @@ function CancelConfirmDialog({
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4">
-      <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl">
+      <div className="w-full max-w-sm rounded-xl bg-white p-6 shadow-2xl">
         <h2 className="text-base font-semibold text-[#1a1f2e]">Cancelar evento</h2>
         <p className="mt-2 text-sm text-[#6b7280]">
           ¿Cancelar &ldquo;{event.title}&rdquo;? Esta acción no se puede deshacer.
@@ -764,7 +764,7 @@ function EventFormDialog({
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4">
-      <div className="w-full max-w-lg overflow-hidden rounded-2xl bg-white shadow-2xl">
+      <div className="w-full max-w-lg overflow-hidden rounded-xl bg-white shadow-2xl">
         <div className="flex items-center justify-between border-b border-[#eaecf0] px-6 py-4">
           <h2 className="text-base font-semibold text-[#1a1f2e]">
             {isEdit ? "Editar evento" : "Nuevo evento"}

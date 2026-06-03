@@ -63,7 +63,7 @@ export function CourseArtwork({
   return (
     <div
       className={cn(
-        "relative overflow-hidden rounded-[18px] border border-[rgba(255,255,255,0.16)]",
+        "relative overflow-hidden rounded-lg border border-[rgba(255,255,255,0.16)]",
         className
       )}
       style={{ background: theme.background }}

@@ -15,7 +15,7 @@ export function PromotionDetailCard({
   courses: PromotionCourseOption[];
 }) {
   return (
-    <Card className="rounded-[2rem] p-7">
+    <Card className="rounded-xl p-7">
       <div className="flex items-start justify-between gap-4">
         <div>
           <h2 className="text-[1.8rem] font-semibold tracking-[-0.05em] text-[var(--color-ink)]">

@@ -9,7 +9,7 @@ export function CreatePromotionCard({
   courses: PromotionCourseOption[];
 }) {
   return (
-    <Card className="rounded-[2rem] p-7" id="create-promotion">
+    <Card className="rounded-xl p-7" id="create-promotion">
       <h2 className="text-[1.8rem] font-semibold tracking-[-0.05em] text-[var(--color-ink)]">
         Crear cupon
       </h2>

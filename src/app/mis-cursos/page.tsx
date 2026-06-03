@@ -629,7 +629,7 @@ export default async function MyCoursesPage({
         {/* Métricas rápidas para docentes */}
         {isPureTeacher && (
           <section className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
-            <div className="rounded-[1.25rem] border border-[rgba(22,60,88,0.08)] bg-white/90 px-4 py-4 shadow-[var(--shadow-soft)]">
+            <div className="rounded-xl border border-[rgba(22,60,88,0.08)] bg-white/90 px-4 py-4 shadow-[var(--shadow-soft)]">
               <p className="text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-[var(--color-muted)]">
                 Cursos activos
               </p>
@@ -638,7 +638,7 @@ export default async function MyCoursesPage({
               </p>
             </div>
             <div className={cn(
-              "rounded-[1.25rem] border px-4 py-4 shadow-[var(--shadow-soft)]",
+              "rounded-xl border px-4 py-4 shadow-[var(--shadow-soft)]",
               totalPendingReviews > 0
                 ? "border-[rgba(209,88,62,0.18)] bg-[rgba(252,238,233,0.7)]"
                 : "border-[rgba(22,60,88,0.08)] bg-white/90",
@@ -657,7 +657,7 @@ export default async function MyCoursesPage({
               </p>
             </div>
             {unreadCount > 0 && (
-              <div className="rounded-[1.25rem] border border-[rgba(22,60,88,0.08)] bg-[var(--color-brand-soft)] px-4 py-4 shadow-[var(--shadow-soft)]">
+              <div className="rounded-xl border border-[rgba(22,60,88,0.08)] bg-[var(--color-brand-soft)] px-4 py-4 shadow-[var(--shadow-soft)]">
                 <p className="text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-[var(--color-primary)]">
                   Notificaciones
                 </p>
@@ -672,7 +672,7 @@ export default async function MyCoursesPage({
         {heroCourse ? (
           <section className="mt-8">
             <Link
-              className="group block overflow-hidden rounded-2xl border border-[rgba(22,60,88,0.09)] bg-white shadow-[0_2px_12px_rgba(30,58,95,0.06)] transition hover:shadow-[0_4px_20px_rgba(30,58,95,0.1)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)]"
+              className="group block overflow-hidden rounded-xl border border-[rgba(22,60,88,0.09)] bg-white shadow-[0_2px_12px_rgba(30,58,95,0.06)] transition hover:shadow-[0_4px_20px_rgba(30,58,95,0.1)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)]"
               href={
                 primaryStudentCourse
                   ? buildCourseContentHref(primaryStudentCourse.space.course.slug, {
@@ -750,7 +750,7 @@ export default async function MyCoursesPage({
             </Link>
           </section>
         ) : (
-          <section className="mt-8 overflow-hidden rounded-2xl border border-[rgba(22,60,88,0.09)] bg-white px-6 py-8 shadow-[0_2px_12px_rgba(30,58,95,0.06)] sm:px-8">
+          <section className="mt-8 overflow-hidden rounded-xl border border-[rgba(22,60,88,0.09)] bg-white px-6 py-8 shadow-[0_2px_12px_rgba(30,58,95,0.06)] sm:px-8">
             <p className="text-[0.75rem] font-semibold uppercase tracking-[0.12em] text-[var(--color-primary)]">
               Campus activo
             </p>
@@ -883,7 +883,7 @@ export default async function MyCoursesPage({
                   })}
                 </div>
               ) : (
-                <div className="mt-8 rounded-[1.5rem] border border-[rgba(22,60,88,0.08)] bg-white/60 px-6 py-10 text-center">
+                <div className="mt-8 rounded-xl border border-[rgba(22,60,88,0.08)] bg-white/60 px-6 py-10 text-center">
                   <p className="font-premium text-heading-md font-semibold text-[var(--color-ink)]">
                     {activeTab === "completados" ? "Aún no has completado ningún curso" : "No hay cursos en progreso"}
                   </p>
@@ -928,7 +928,7 @@ export default async function MyCoursesPage({
                 ))}
               </div>
             ) : (
-              <div className="mt-8 rounded-[1.5rem] border border-[rgba(22,60,88,0.08)] bg-white/60 px-6 py-10 text-center">
+              <div className="mt-8 rounded-xl border border-[rgba(22,60,88,0.08)] bg-white/60 px-6 py-10 text-center">
                 <p className="font-premium text-heading-md font-semibold text-[var(--color-ink)]">
                   Tu biblioteca está vacía por ahora
                 </p>

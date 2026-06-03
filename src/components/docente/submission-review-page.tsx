@@ -68,7 +68,7 @@ function DocumentViewer({ submission }: { submission: SubmissionForReview }) {
   function zoomOut() { setZoom((z) => Math.max(z - 25, 50)); }
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-[#eaecf0] bg-white shadow-sm">
+    <div className="overflow-hidden rounded-xl border border-[#eaecf0] bg-white shadow-sm">
       {/* Toolbar */}
       <div className="flex items-center gap-1 border-b border-[#eaecf0] bg-[#f8f9fa] px-3 py-2">
         <div className="flex items-center gap-1 text-[#6b7280]">
@@ -147,7 +147,7 @@ function DocumentViewer({ submission }: { submission: SubmissionForReview }) {
         </div>
       ) : submission.attachmentLabel ? (
         <div className="flex flex-col items-center justify-center gap-4 bg-[#f7f9fb] p-16">
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#e8f0fe]">
+          <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-[#e8f0fe]">
             <FileText className="h-7 w-7 text-[#163c58]" />
           </div>
           <p className="text-sm text-[#6b7280]">{submission.attachmentLabel}</p>
@@ -227,7 +227,7 @@ function RubricPanel({
   if (criteria.length === 0) return null;
 
   return (
-    <div className="rounded-2xl border border-[#eaecf0] bg-white">
+    <div className="rounded-xl border border-[#eaecf0] bg-white">
       {/* Header */}
       <div className="flex items-center justify-between border-b border-[#eaecf0] px-5 py-4">
         <div className="flex items-center gap-2">
@@ -332,7 +332,7 @@ function GradingForm({
   return (
     <div className="space-y-3">
       {/* ── Feedback ─────────────── */}
-      <div className="rounded-2xl border border-[#eaecf0] bg-white">
+      <div className="rounded-xl border border-[#eaecf0] bg-white">
         <div className="flex items-center gap-2 border-b border-[#eaecf0] px-5 py-3.5">
           <MessageSquare className="h-4 w-4 text-[#163c58]" />
           <h3 className="text-sm font-bold text-[#1a1f2e]">Feedback General</h3>

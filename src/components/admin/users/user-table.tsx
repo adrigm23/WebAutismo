@@ -196,7 +196,7 @@ export function UserTable({ users }: { users: UserDirectoryItem[] }) {
 
   if (users.length === 0) {
     return (
-      <div className="rounded-2xl border border-[var(--color-border-subtle)] bg-white px-6 py-16 text-center">
+      <div className="rounded-xl border border-[var(--color-border-subtle)] bg-white px-6 py-16 text-center">
         <p className="text-sm font-medium text-[var(--color-ink-soft)]">
           No se encontraron usuarios con los filtros aplicados.
         </p>
@@ -205,7 +205,7 @@ export function UserTable({ users }: { users: UserDirectoryItem[] }) {
   }
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-[var(--color-border-subtle)] bg-white">
+    <div className="overflow-hidden rounded-xl border border-[var(--color-border-subtle)] bg-white">
       {/* Overflow wrapper for horizontal scroll on tablet */}
       <div className="overflow-x-auto">
         <table className="w-full min-w-[640px] border-collapse">

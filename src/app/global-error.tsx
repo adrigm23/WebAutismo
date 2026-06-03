@@ -32,7 +32,7 @@ export default function GlobalError({ error, reset }: GlobalErrorProps) {
     <html lang="es">
       <body className="bg-[var(--color-page)] text-[var(--color-ink)]">
         <main className="site-container flex min-h-screen items-center py-16">
-          <div className="w-full rounded-[32px] border border-[var(--color-border)] bg-white p-8 shadow-[0_24px_60px_rgba(16,24,40,0.08)]">
+          <div className="w-full rounded-xl border border-[var(--color-border)] bg-white p-8 shadow-[0_24px_60px_rgba(16,24,40,0.08)]">
             <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--color-primary)]">
               Error global
             </p>

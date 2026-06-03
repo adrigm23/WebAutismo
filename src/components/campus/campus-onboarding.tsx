@@ -59,7 +59,7 @@ export function CampusOnboarding({ courseSlug, showInitially = false }: CampusOn
   return (
     <aside
       aria-labelledby="campus-onboarding-title"
-      className="rounded-2xl border border-[rgba(12,113,195,0.16)] bg-[var(--color-primary-soft)] p-5"
+      className="rounded-xl border border-[rgba(12,113,195,0.16)] bg-[var(--color-primary-soft)] p-5"
     >
       <div className="flex items-start justify-between gap-4">
         <div>

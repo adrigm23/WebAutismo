@@ -11,7 +11,7 @@ export function DemoTeacherDetailCard({
   selectedTeacher: TeacherSummary;
 }) {
   return (
-    <Card className="overflow-hidden rounded-[2rem]">
+    <Card className="overflow-hidden rounded-xl">
       <div className="border-b border-[#dde4ec] px-7 py-7">
         <div className="flex items-start gap-4">
           <div className="grid h-14 w-14 place-items-center rounded-full bg-[rgba(12,113,195,0.12)] text-base font-semibold text-[var(--color-primary)]">
@@ -57,7 +57,7 @@ export function DemoTeacherDetailCard({
       <div className="px-7 py-7">
         <div
           className={cn(
-            "rounded-[1.5rem] border px-5 py-4 text-sm leading-7",
+            "rounded-xl border px-5 py-4 text-sm leading-7",
             selectedTeacher.activeStudents >= 75
               ? "border-[#f3b3ac] bg-[#fff2f0] text-[#a03329]"
               : "border-[#dbe6ef] bg-[#f7fafc] text-[#44586d]",
@@ -82,7 +82,7 @@ export function DemoTeacherDetailCard({
           <div className="mt-4 space-y-3">
             {selectedTeacher.courseAssignments.map((assignment) => (
               <div
-                className="rounded-[1.2rem] border border-[#d9e1e8] bg-[#fbfcfd] px-4 py-4 text-sm text-[#33475b]"
+                className="rounded-xl border border-[#d9e1e8] bg-[#fbfcfd] px-4 py-4 text-sm text-[#33475b]"
                 key={assignment.courseId}
               >
                 <div className="font-medium text-[var(--color-ink)]">
@@ -102,7 +102,7 @@ export function DemoTeacherDetailCard({
 
 function StatBox({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-[1.4rem] bg-[#f6fafc] px-4 py-4">
+    <div className="rounded-xl bg-[#f6fafc] px-4 py-4">
       <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#5a6c80]">
         {label}
       </p>

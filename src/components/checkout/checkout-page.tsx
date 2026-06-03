@@ -75,7 +75,7 @@ const COUNTRIES = [
 
 function CheckoutCustomerData({ user }: { user: CheckoutPageProps["user"] }) {
   return (
-    <div className="rounded-2xl border border-[#dbe3ec] bg-white p-6 shadow-[0_1px_4px_rgba(22,60,88,0.06)]">
+    <div className="rounded-xl border border-[#dbe3ec] bg-white p-6 shadow-[0_1px_4px_rgba(22,60,88,0.06)]">
       <div className="mb-5 flex items-center gap-2.5">
         <User className="h-4 w-4 text-[#163c58]" strokeWidth={2} />
         <h2 className="text-[1rem] font-bold text-[#163c58]">Tus Datos</h2>
@@ -165,7 +165,7 @@ function CheckoutPaymentMethod({
   ];
 
   return (
-    <div className="rounded-2xl border border-[#dbe3ec] bg-white p-6 shadow-[0_1px_4px_rgba(22,60,88,0.06)]">
+    <div className="rounded-xl border border-[#dbe3ec] bg-white p-6 shadow-[0_1px_4px_rgba(22,60,88,0.06)]">
       <div className="mb-5 flex items-center gap-2.5">
         <CreditCard className="h-4 w-4 text-[#163c58]" strokeWidth={2} />
         <h2 className="text-[1rem] font-bold text-[#163c58]">Método de Pago</h2>
@@ -305,7 +305,7 @@ function CheckoutOrderSummary({
       : "Intentar Compra";
 
   return (
-    <div className="rounded-2xl border border-[#dbe3ec] bg-white p-6 shadow-[0_1px_4px_rgba(22,60,88,0.06)] lg:sticky lg:top-6">
+    <div className="rounded-xl border border-[#dbe3ec] bg-white p-6 shadow-[0_1px_4px_rgba(22,60,88,0.06)] lg:sticky lg:top-6">
       <h2 className="mb-5 text-[1rem] font-bold text-[#163c58]">Resumen del Pedido</h2>
 
       {/* Course */}

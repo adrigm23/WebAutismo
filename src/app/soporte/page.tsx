@@ -63,7 +63,7 @@ export default function SupportPage() {
       <div className="px-6 pb-12 lg:px-8">
         <div className="mx-auto max-w-3xl grid gap-4 sm:grid-cols-3">
           {/* Contacto */}
-          <div className="rounded-[1.5rem] border border-[var(--color-border)] bg-white p-6 shadow-[0_8px_24px_rgba(34,34,33,0.04)]">
+          <div className="rounded-xl border border-[var(--color-border)] bg-white p-6 shadow-[0_8px_24px_rgba(34,34,33,0.04)]">
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--color-brand-soft)] text-[var(--color-primary)]">
               <Mail className="h-5 w-5" />
             </div>
@@ -83,7 +83,7 @@ export default function SupportPage() {
           </div>
 
           {/* Tiempo de respuesta */}
-          <div className="rounded-[1.5rem] border border-[var(--color-border)] bg-white p-6 shadow-[0_8px_24px_rgba(34,34,33,0.04)]">
+          <div className="rounded-xl border border-[var(--color-border)] bg-white p-6 shadow-[0_8px_24px_rgba(34,34,33,0.04)]">
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--color-success-soft)] text-[var(--color-success)]">
               <Clock className="h-5 w-5" />
             </div>
@@ -100,7 +100,7 @@ export default function SupportPage() {
           </div>
 
           {/* Comunidad */}
-          <div className="rounded-[1.5rem] border border-[var(--color-border)] bg-white p-6 shadow-[0_8px_24px_rgba(34,34,33,0.04)]">
+          <div className="rounded-xl border border-[var(--color-border)] bg-white p-6 shadow-[0_8px_24px_rgba(34,34,33,0.04)]">
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--color-accent-warm-soft)] text-[var(--color-accent-warm)]">
               <MessageSquareText className="h-5 w-5" />
             </div>
@@ -117,7 +117,7 @@ export default function SupportPage() {
 
       {/* Qué incluir */}
       <div className="px-6 pb-12 lg:px-8">
-        <div className="mx-auto max-w-3xl rounded-[1.5rem] border border-[var(--color-border)] bg-white p-8 shadow-[0_8px_24px_rgba(34,34,33,0.04)]">
+        <div className="mx-auto max-w-3xl rounded-xl border border-[var(--color-border)] bg-white p-8 shadow-[0_8px_24px_rgba(34,34,33,0.04)]">
           <h2 className="text-xl font-semibold text-[var(--color-ink)]">
             Qué incluir en tu mensaje
           </h2>
@@ -156,7 +156,7 @@ export default function SupportPage() {
             {faqs.map((faq) => (
               <details
                 key={faq.question}
-                className="group rounded-[1.25rem] border border-[var(--color-border)] bg-white px-6 shadow-[0_4px_12px_rgba(34,34,33,0.03)] open:shadow-[0_8px_24px_rgba(34,34,33,0.05)]"
+                className="group rounded-xl border border-[var(--color-border)] bg-white px-6 shadow-[0_4px_12px_rgba(34,34,33,0.03)] open:shadow-[0_8px_24px_rgba(34,34,33,0.05)]"
               >
                 <summary className="flex cursor-pointer list-none items-center justify-between gap-4 py-5 text-sm font-semibold text-[var(--color-ink)] hover:text-[var(--color-primary)] [&::-webkit-details-marker]:hidden">
                   {faq.question}
