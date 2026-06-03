@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { requireUser } from "@/lib/auth";
-import { getUserCourseSpaces } from "@/lib/course-community";
+import { getDb } from "@/lib/prisma";
 import { getInitials } from "@/lib/utils";
 import { MessagingPage } from "@/components/mensajes/messaging-page";
 
@@ -12,42 +12,71 @@ export const metadata: Metadata = {
 export default async function MensajesPage() {
   const user = await requireUser("/mensajes");
 
-  const courseSpaces = await getUserCourseSpaces({
-    userId: user.id,
-    userGlobalRole: user.globalRole,
-    userIsActive: user.isActive,
-  }).catch(() => []);
+  // Channels: courses the user is active in
+  const enrollments = await getDb().courseEnrollment.findMany({
+    where: { userId: user.id, status: "ACTIVE" },
+    include: { course: { select: { slug: true, title: true } } },
+    orderBy: { createdAt: "desc" },
+    take: 6,
+  });
 
-  // Derive channels from enrolled courses (skip duplicates of seed channels)
-  const extraChannels = courseSpaces
-    .filter((s) => s.accessState === "active")
-    .map((s) => ({ id: s.course.slug, name: s.course.title }))
-    .slice(0, 6);
+  const channels = enrollments.map((e) => ({
+    id: e.course.slug,
+    name: e.course.title,
+  }));
 
-  // Derive contacts from course teachers
-  const seenNames = new Set<string>(["Dra. Elena Ramos", "Martín Castro"]);
-  const extraContacts = courseSpaces
-    .flatMap((s) => s.course.teachers ?? [])
-    .filter((t) => {
-      if (seenNames.has(t.name)) return false;
-      seenNames.add(t.name);
-      return true;
-    })
-    .map((t, i) => ({
-      id: `teacher-${i}`,
-      name: t.name,
-      initials: getInitials(t.name),
-      role: t.role ?? "Docente",
-      department: "Campus Autismo",
-    }))
-    .slice(0, 4);
+  // Contacts: teachers of user's courses (if student), or enrolled students (if teacher)
+  let contacts: Array<{ id: string; name: string; initials: string; role: string }> = [];
+
+  if (user.globalRole === "STUDENT") {
+    // Get teachers assigned to courses where user is enrolled
+    const assignments = await getDb().courseTeacherAssignment.findMany({
+      where: {
+        course: {
+          enrollments: { some: { userId: user.id, status: "ACTIVE" } },
+        },
+      },
+      include: { user: { select: { id: true, name: true } } },
+      distinct: ["userId"],
+    });
+    contacts = assignments
+      .filter((a) => a.user.id !== user.id)
+      .map((a) => ({
+        id: a.user.id,
+        name: a.user.name,
+        initials: getInitials(a.user.name),
+        role: "Docente",
+      }));
+  } else {
+    // Teacher/admin: get enrolled students
+    const studentEnrollments = await getDb().courseEnrollment.findMany({
+      where: {
+        course: {
+          teacherAssignments: { some: { userId: user.id } },
+        },
+        status: "ACTIVE",
+      },
+      include: { user: { select: { id: true, name: true } } },
+      distinct: ["userId"],
+      take: 20,
+    });
+    contacts = studentEnrollments
+      .filter((e) => e.user.id !== user.id)
+      .map((e) => ({
+        id: e.user.id,
+        name: e.user.name,
+        initials: getInitials(e.user.name),
+        role: "Alumno",
+      }));
+  }
 
   const viewerName = user.name ?? user.email;
 
   return (
     <MessagingPage
-      extraChannels={extraChannels}
-      extraContacts={extraContacts}
+      channels={channels}
+      contacts={contacts}
+      viewerId={user.id}
       viewerInitials={getInitials(viewerName)}
       viewerName={viewerName}
     />

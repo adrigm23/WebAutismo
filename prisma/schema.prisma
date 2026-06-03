@@ -45,6 +45,8 @@ model User {
   libraryResources      LibraryResource[]            @relation("LibraryResourceUploadedBy")
   libraryFolders        LibraryFolder[]              @relation("LibraryFolderCreatedBy")
   calendarEvents        CalendarEvent[]              @relation("CalendarEventCreatedBy")
+  sentMessages          DirectMessage[]              @relation("SentMessages")
+  receivedMessages      DirectMessage[]              @relation("ReceivedMessages")
 }
 
 model Course {
@@ -1012,4 +1014,18 @@ enum CalendarEventVisibility {
   COURSE
   TEACHERS_ONLY
   ADMIN_ONLY
+}
+
+model DirectMessage {
+  id          String    @id @default(cuid())
+  senderId    String
+  recipientId String
+  body        String    @db.Text
+  readAt      DateTime?
+  createdAt   DateTime  @default(now())
+  sender      User      @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
+  recipient   User      @relation("ReceivedMessages", fields: [recipientId], references: [id], onDelete: Cascade)
+
+  @@index([senderId, recipientId, createdAt])
+  @@index([recipientId, senderId, createdAt])
 }

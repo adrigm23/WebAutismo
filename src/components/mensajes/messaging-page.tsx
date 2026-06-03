@@ -54,76 +54,6 @@ type DirectMessage = {
 
 type Conversation = Channel | DirectMessage;
 
-// ─── seed data ────────────────────────────────────────────────────────────────
-
-const STORAGE_KEY = "campus_messages_v1";
-
-const SEED_CHANNELS: Channel[] = [
-  { id: "ch-general", kind: "channel", name: "General - Neurodiversidad", unread: 0 },
-  {
-    id: "ch-intervencion",
-    kind: "channel",
-    name: "Curso Intervención Temprana",
-    unread: 3,
-  },
-];
-
-const SEED_DMS: DirectMessage[] = [
-  {
-    id: "dm-elena",
-    kind: "dm",
-    name: "Dra. Elena Ramos",
-    initials: "ER",
-    role: "Docente / Supervisora",
-    department: "Dpto. de Intervención Temprana",
-    lastMessage: "Revise el plan de adaptación...",
-    lastTime: "10:42",
-    unread: 0,
-    isOnline: true,
-  },
-  {
-    id: "dm-martin",
-    kind: "dm",
-    name: "Martín Castro",
-    initials: "MC",
-    role: "Alumno",
-    department: "Curso Neurodiversidad",
-    lastMessage: "¿Podrías enviarme el PDF de...",
-    lastTime: "Ayer",
-    unread: 0,
-    isOnline: false,
-  },
-];
-
-const SEED_MESSAGES: Record<string, Message[]> = {
-  "dm-elena": [
-    {
-      id: "1",
-      type: "received",
-      senderName: "Dra. Elena Ramos",
-      senderInitials: "ER",
-      content:
-        "Hola, revisé el plan de adaptación curricular para el nuevo grupo. Me parece excelente la forma en que estructuraste los módulos de reducción de carga sensorial.",
-      time: "10:30",
-      dateGroup: "Hoy",
-    },
-    {
-      id: "2",
-      type: "sent",
-      senderName: "Tú",
-      senderInitials: "TÚ",
-      content:
-        "¡Gracias Elena! Intenté mantener la estética limpia que discutimos. Adjunto el borrador final del PDF para que lo tengas a mano.",
-      time: "10:35",
-      dateGroup: "Hoy",
-      attachment: { name: "Plan_Adaptacion_V2.pdf", size: "2.4 MB" },
-    },
-  ],
-  "dm-martin": [],
-  "ch-general": [],
-  "ch-intervencion": [],
-};
-
 // ─── helpers ─────────────────────────────────────────────────────────────────
 
 function nowTime() {
@@ -133,22 +63,21 @@ function nowTime() {
   });
 }
 
-function loadMessages(): Record<string, Message[]> {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) return { ...SEED_MESSAGES, ...JSON.parse(raw) };
-  } catch {
-    // ignore
-  }
-  return { ...SEED_MESSAGES };
+function isToday(date: Date) {
+  const today = new Date();
+  return (
+    date.getDate() === today.getDate() &&
+    date.getMonth() === today.getMonth() &&
+    date.getFullYear() === today.getFullYear()
+  );
 }
 
-function saveMessages(map: Record<string, Message[]>) {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(map));
-  } catch {
-    // ignore
-  }
+function getInitialsLocal(name: string) {
+  return name
+    .split(" ")
+    .slice(0, 2)
+    .map((n) => n[0]?.toUpperCase() ?? "")
+    .join("");
 }
 
 // ─── sub-components ───────────────────────────────────────────────────────────
@@ -248,77 +177,271 @@ function MessageBubble({ msg }: { msg: Message }) {
 // ─── main component ───────────────────────────────────────────────────────────
 
 export type MessagingPageProps = {
+  channels: Array<{ id: string; name: string }>;
+  contacts: Array<{ id: string; name: string; initials: string; role: string }>;
+  viewerId: string;
   viewerName: string;
   viewerInitials: string;
-  extraChannels?: Array<{ id: string; name: string }>;
-  extraContacts?: Array<{
-    id: string;
-    name: string;
-    initials: string;
-    role: string;
-    department: string;
-  }>;
 };
 
 export function MessagingPage({
+  channels,
+  contacts,
   viewerName,
   viewerInitials,
-  extraChannels = [],
-  extraContacts = [],
 }: MessagingPageProps) {
-  const [selectedId, setSelectedId] = useState("dm-elena");
-  const [messagesMap, setMessagesMap] = useState<Record<string, Message[]>>(SEED_MESSAGES);
-  const [input, setInput] = useState("");
+  const allChannels: Channel[] = channels.map((c) => ({
+    id: c.id,
+    kind: "channel" as const,
+    name: c.name,
+    unread: 0,
+  }));
+
+  const allDMs: DirectMessage[] = contacts.map((c) => ({
+    id: c.id,
+    kind: "dm" as const,
+    name: c.name,
+    initials: c.initials,
+    role: c.role,
+    department: "Campus Autismo",
+    lastMessage: "",
+    lastTime: "",
+    unread: 0,
+    isOnline: false,
+  }));
+
+  const [conversations, setConversations] = useState<Conversation[]>([
+    ...allChannels,
+    ...allDMs,
+  ]);
+  const [messages, setMessages] = useState<Record<string, Message[]>>({});
+  const [active, setActive] = useState<Conversation | null>(
+    allDMs[0] ?? allChannels[0] ?? null
+  );
+  const [draftText, setDraftText] = useState("");
   const [channelsOpen, setChannelsOpen] = useState(true);
   const [dmsOpen, setDmsOpen] = useState(true);
   const [search, setSearch] = useState("");
+  const [loadingMessages, setLoadingMessages] = useState(false);
+  const [sending, setSending] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // Load from localStorage on mount
+  // Load conversation metadata on mount
   useEffect(() => {
-    setMessagesMap(loadMessages());
+    fetch("/api/messages/conversations")
+      .then((r) => r.json())
+      .then(
+        (
+          convs: Array<{
+            partnerId: string;
+            lastMessage: string;
+            lastTime: string;
+            unreadCount: number;
+          }>
+        ) => {
+          setConversations((prev) =>
+            prev.map((c) => {
+              if (c.kind === "dm") {
+                const conv = convs.find((cv) => cv.partnerId === c.id);
+                if (conv) {
+                  return {
+                    ...c,
+                    lastMessage: conv.lastMessage,
+                    lastTime: new Date(conv.lastTime).toLocaleTimeString("es-ES", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    }),
+                    unread: conv.unreadCount,
+                  };
+                }
+              }
+              return c;
+            })
+          );
+        }
+      )
+      .catch(() => {});
   }, []);
 
   // Scroll to bottom when messages change
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messagesMap, selectedId]);
+  }, [messages, active]);
 
-  const channels: Channel[] = [
-    ...SEED_CHANNELS,
-    ...extraChannels.map(
-      (c): Channel => ({
-        id: `ch-extra-${c.id}`,
-        kind: "channel",
-        name: c.name,
-        unread: 0,
-      }),
-    ),
-  ];
+  // Load messages when active DM changes
+  useEffect(() => {
+    if (!active || active.kind !== "dm") return;
+    setLoadingMessages(true);
+    fetch(`/api/messages/${active.id}`)
+      .then((r) => r.json())
+      .then(
+        (
+          msgs: Array<{
+            id: string;
+            body: string;
+            createdAt: string;
+            isMine: boolean;
+            senderName: string;
+          }>
+        ) => {
+          const mapped: Message[] = msgs.map((m) => ({
+            id: m.id,
+            type: m.isMine ? ("sent" as const) : ("received" as const),
+            senderName: m.isMine ? viewerName : m.senderName,
+            senderInitials: m.isMine ? viewerInitials : getInitialsLocal(m.senderName),
+            content: m.body,
+            time: new Date(m.createdAt).toLocaleTimeString("es-ES", {
+              hour: "2-digit",
+              minute: "2-digit",
+            }),
+            dateGroup: isToday(new Date(m.createdAt))
+              ? "Hoy"
+              : new Date(m.createdAt).toLocaleDateString("es-ES"),
+          }));
+          setMessages((prev) => ({ ...prev, [active.id]: mapped }));
+        }
+      )
+      .catch(() => {})
+      .finally(() => setLoadingMessages(false));
+  }, [active?.id, active?.kind, viewerName, viewerInitials]);
 
-  const dms: DirectMessage[] = [
-    ...SEED_DMS,
-    ...extraContacts.map(
-      (c): DirectMessage => ({
-        id: `dm-extra-${c.id}`,
-        kind: "dm",
-        name: c.name,
-        initials: c.initials,
-        role: c.role,
-        department: c.department,
-        lastMessage: "",
-        lastTime: "",
-        unread: 0,
-        isOnline: false,
-      }),
-    ),
-  ];
+  // Polling — reload messages every 10 seconds for active DM
+  useEffect(() => {
+    if (!active || active.kind !== "dm") return;
+    const interval = setInterval(() => {
+      fetch(`/api/messages/${active.id}`)
+        .then((r) => r.json())
+        .then(
+          (
+            msgs: Array<{
+              id: string;
+              body: string;
+              createdAt: string;
+              isMine: boolean;
+              senderName: string;
+            }>
+          ) => {
+            const mapped: Message[] = msgs.map((m) => ({
+              id: m.id,
+              type: m.isMine ? ("sent" as const) : ("received" as const),
+              senderName: m.isMine ? viewerName : m.senderName,
+              senderInitials: m.isMine
+                ? viewerInitials
+                : getInitialsLocal(m.senderName),
+              content: m.body,
+              time: new Date(m.createdAt).toLocaleTimeString("es-ES", {
+                hour: "2-digit",
+                minute: "2-digit",
+              }),
+              dateGroup: isToday(new Date(m.createdAt))
+                ? "Hoy"
+                : new Date(m.createdAt).toLocaleDateString("es-ES"),
+            }));
+            setMessages((prev) => ({ ...prev, [active.id]: mapped }));
+          }
+        )
+        .catch(() => {});
+    }, 10000);
+    return () => clearInterval(interval);
+  }, [active?.id, active?.kind, viewerName, viewerInitials]);
 
-  const allConversations: Conversation[] = [...channels, ...dms];
+  function selectConversation(conv: Conversation) {
+    if (conv.kind === "channel") {
+      window.location.assign(`/mis-cursos/${conv.id}/foro`);
+      return;
+    }
+    setActive(conv);
+  }
 
-  const selectedConversation = allConversations.find((c) => c.id === selectedId);
-  const currentMessages = messagesMap[selectedId] ?? [];
+  async function handleSend() {
+    if (!draftText.trim() || !active || active.kind !== "dm" || sending) return;
+    const body = draftText.trim();
+    setDraftText("");
+    setSending(true);
+
+    // Optimistic update
+    const tempId = `temp-${Date.now()}`;
+    const tempMsg: Message = {
+      id: tempId,
+      type: "sent",
+      senderName: viewerName,
+      senderInitials: viewerInitials,
+      content: body,
+      time: nowTime(),
+      dateGroup: "Hoy",
+    };
+    setMessages((prev) => ({
+      ...prev,
+      [active.id]: [...(prev[active.id] ?? []), tempMsg],
+    }));
+
+    try {
+      const res = await fetch("/api/messages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ recipientId: active.id, body }),
+      });
+      if (!res.ok) throw new Error("Failed");
+      // Reload to get server-confirmed message
+      const msgs = await fetch(`/api/messages/${active.id}`).then((r) => r.json());
+      const mapped: Message[] = (
+        msgs as Array<{
+          id: string;
+          body: string;
+          createdAt: string;
+          isMine: boolean;
+          senderName: string;
+        }>
+      ).map((m) => ({
+        id: m.id,
+        type: m.isMine ? ("sent" as const) : ("received" as const),
+        senderName: m.isMine ? viewerName : m.senderName,
+        senderInitials: m.isMine ? viewerInitials : getInitialsLocal(m.senderName),
+        content: m.body,
+        time: new Date(m.createdAt).toLocaleTimeString("es-ES", {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+        dateGroup: isToday(new Date(m.createdAt))
+          ? "Hoy"
+          : new Date(m.createdAt).toLocaleDateString("es-ES"),
+      }));
+      setMessages((prev) => ({ ...prev, [active.id]: mapped }));
+    } catch {
+      // Revert optimistic on failure
+      setMessages((prev) => ({
+        ...prev,
+        [active.id]: (prev[active.id] ?? []).filter((m) => m.id !== tempId),
+      }));
+      setDraftText(body);
+    } finally {
+      setSending(false);
+    }
+  }
+
+  function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      void handleSend();
+    }
+  }
+
+  const channelList = conversations.filter(
+    (c): c is Channel => c.kind === "channel"
+  );
+  const dmList = conversations.filter(
+    (c): c is DirectMessage => c.kind === "dm"
+  );
+
+  const filteredChannels = search
+    ? channelList.filter((c) => c.name.toLowerCase().includes(search.toLowerCase()))
+    : channelList;
+  const filteredDms = search
+    ? dmList.filter((d) => d.name.toLowerCase().includes(search.toLowerCase()))
+    : dmList;
+
+  const currentMessages = active ? (messages[active.id] ?? []) : [];
 
   // Group messages by dateGroup
   const groupedMessages: Array<{ date: string; messages: Message[] }> = [];
@@ -335,45 +458,6 @@ export function MessagingPage({
   const sharedFiles = currentMessages
     .filter((m) => m.attachment)
     .map((m) => ({ ...m.attachment!, time: m.time }));
-
-  function sendMessage() {
-    const text = input.trim();
-    if (!text) return;
-
-    const newMsg: Message = {
-      id: Date.now().toString(),
-      type: "sent",
-      senderName: viewerName,
-      senderInitials: viewerInitials,
-      content: text,
-      time: nowTime(),
-      dateGroup: "Hoy",
-    };
-
-    const updated = {
-      ...messagesMap,
-      [selectedId]: [...(messagesMap[selectedId] ?? []), newMsg],
-    };
-
-    setMessagesMap(updated);
-    saveMessages(updated);
-    setInput("");
-    textareaRef.current?.focus();
-  }
-
-  function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      sendMessage();
-    }
-  }
-
-  const filteredChannels = search
-    ? channels.filter((c) => c.name.toLowerCase().includes(search.toLowerCase()))
-    : channels;
-  const filteredDms = search
-    ? dms.filter((d) => d.name.toLowerCase().includes(search.toLowerCase()))
-    : dms;
 
   return (
     <div className="flex h-screen overflow-hidden bg-white">
@@ -419,142 +503,146 @@ export function MessagingPage({
         {/* Scrollable list */}
         <div className="flex-1 overflow-y-auto">
           {/* Channels */}
-          <div className="mb-1">
-            <button
-              className="flex w-full items-center justify-between px-4 py-2 text-left"
-              onClick={() => setChannelsOpen((v) => !v)}
-              type="button"
-            >
-              <span className="text-[0.65rem] font-bold uppercase tracking-[0.14em] text-[#9ba3af]">
-                Canales
-              </span>
-              <ChevronDown
-                className={cn(
-                  "h-3.5 w-3.5 text-[#9ba3af] transition-transform",
-                  !channelsOpen && "-rotate-90",
-                )}
-              />
-            </button>
+          {filteredChannels.length > 0 && (
+            <div className="mb-1">
+              <button
+                className="flex w-full items-center justify-between px-4 py-2 text-left"
+                onClick={() => setChannelsOpen((v) => !v)}
+                type="button"
+              >
+                <span className="text-[0.65rem] font-bold uppercase tracking-[0.14em] text-[#9ba3af]">
+                  Canales
+                </span>
+                <ChevronDown
+                  className={cn(
+                    "h-3.5 w-3.5 text-[#9ba3af] transition-transform",
+                    !channelsOpen && "-rotate-90",
+                  )}
+                />
+              </button>
 
-            {channelsOpen && (
-              <div className="space-y-0.5 px-2">
-                {filteredChannels.map((ch) => (
-                  <button
-                    className={cn(
-                      "flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-left text-sm transition",
-                      selectedId === ch.id
-                        ? "bg-[#1e3a5f] text-white"
-                        : "text-[#4b5563] hover:bg-[#f3f4f6]",
-                    )}
-                    key={ch.id}
-                    onClick={() => setSelectedId(ch.id)}
-                    type="button"
-                  >
-                    {ch.name.startsWith("Curso") ? (
-                      <GraduationCap className="h-3.5 w-3.5 shrink-0" />
-                    ) : (
-                      <Hash className="h-3.5 w-3.5 shrink-0" />
-                    )}
-                    <span className="flex-1 truncate">{ch.name}</span>
-                    {ch.unread > 0 && (
-                      <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-[var(--color-primary)] px-1 text-[0.6rem] font-bold text-white">
-                        {ch.unread}
-                      </span>
-                    )}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
+              {channelsOpen && (
+                <div className="space-y-0.5 px-2">
+                  {filteredChannels.map((ch) => (
+                    <button
+                      className={cn(
+                        "flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-left text-sm transition",
+                        active?.id === ch.id
+                          ? "bg-[#1e3a5f] text-white"
+                          : "text-[#4b5563] hover:bg-[#f3f4f6]",
+                      )}
+                      key={ch.id}
+                      onClick={() => selectConversation(ch)}
+                      type="button"
+                    >
+                      {ch.name.startsWith("Curso") ? (
+                        <GraduationCap className="h-3.5 w-3.5 shrink-0" />
+                      ) : (
+                        <Hash className="h-3.5 w-3.5 shrink-0" />
+                      )}
+                      <span className="flex-1 truncate">{ch.name}</span>
+                      {ch.unread > 0 && (
+                        <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-[var(--color-primary)] px-1 text-[0.6rem] font-bold text-white">
+                          {ch.unread}
+                        </span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Direct messages */}
-          <div>
-            <button
-              className="flex w-full items-center justify-between px-4 py-2 text-left"
-              onClick={() => setDmsOpen((v) => !v)}
-              type="button"
-            >
-              <span className="text-[0.65rem] font-bold uppercase tracking-[0.14em] text-[#9ba3af]">
-                Mensajes Directos
-              </span>
-              <ChevronDown
-                className={cn(
-                  "h-3.5 w-3.5 text-[#9ba3af] transition-transform",
-                  !dmsOpen && "-rotate-90",
-                )}
-              />
-            </button>
+          {filteredDms.length > 0 && (
+            <div>
+              <button
+                className="flex w-full items-center justify-between px-4 py-2 text-left"
+                onClick={() => setDmsOpen((v) => !v)}
+                type="button"
+              >
+                <span className="text-[0.65rem] font-bold uppercase tracking-[0.14em] text-[#9ba3af]">
+                  Mensajes Directos
+                </span>
+                <ChevronDown
+                  className={cn(
+                    "h-3.5 w-3.5 text-[#9ba3af] transition-transform",
+                    !dmsOpen && "-rotate-90",
+                  )}
+                />
+              </button>
 
-            {dmsOpen && (
-              <div className="space-y-0.5 px-2">
-                {filteredDms.map((dm) => (
-                  <button
-                    className={cn(
-                      "flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition",
-                      selectedId === dm.id
-                        ? "bg-[#1e3a5f]"
-                        : "hover:bg-[#f3f4f6]",
-                    )}
-                    key={dm.id}
-                    onClick={() => setSelectedId(dm.id)}
-                    type="button"
-                  >
-                    <Avatar initials={dm.initials} online={dm.isOnline} size="md" />
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center justify-between">
-                        <span
-                          className={cn(
-                            "text-sm font-semibold truncate",
-                            selectedId === dm.id ? "text-white" : "text-[#1a1f2e]",
-                          )}
-                        >
-                          {dm.name}
-                        </span>
-                        {dm.lastTime && (
+              {dmsOpen && (
+                <div className="space-y-0.5 px-2">
+                  {filteredDms.map((dm) => (
+                    <button
+                      className={cn(
+                        "flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition",
+                        active?.id === dm.id
+                          ? "bg-[#1e3a5f]"
+                          : "hover:bg-[#f3f4f6]",
+                      )}
+                      key={dm.id}
+                      onClick={() => selectConversation(dm)}
+                      type="button"
+                    >
+                      <Avatar initials={dm.initials} online={dm.isOnline} size="md" />
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center justify-between">
                           <span
                             className={cn(
-                              "shrink-0 text-[0.65rem]",
-                              selectedId === dm.id ? "text-white/60" : "text-[#9ba3af]",
+                              "text-sm font-semibold truncate",
+                              active?.id === dm.id ? "text-white" : "text-[#1a1f2e]",
                             )}
                           >
-                            {dm.lastTime}
+                            {dm.name}
                           </span>
+                          {dm.lastTime && (
+                            <span
+                              className={cn(
+                                "shrink-0 text-[0.65rem]",
+                                active?.id === dm.id ? "text-white/60" : "text-[#9ba3af]",
+                              )}
+                            >
+                              {dm.lastTime}
+                            </span>
+                          )}
+                        </div>
+                        {dm.lastMessage && (
+                          <p
+                            className={cn(
+                              "truncate text-xs",
+                              active?.id === dm.id ? "text-white/60" : "text-[#9ba3af]",
+                            )}
+                          >
+                            {dm.lastMessage}
+                          </p>
                         )}
                       </div>
-                      {dm.lastMessage && (
-                        <p
-                          className={cn(
-                            "truncate text-xs",
-                            selectedId === dm.id ? "text-white/60" : "text-[#9ba3af]",
-                          )}
-                        >
-                          {dm.lastMessage}
-                        </p>
+                      {dm.unread > 0 && (
+                        <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-[var(--color-primary)] px-1 text-[0.6rem] font-bold text-white">
+                          {dm.unread}
+                        </span>
                       )}
-                    </div>
-                    {dm.unread > 0 && (
-                      <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-[var(--color-primary)] px-1 text-[0.6rem] font-bold text-white">
-                        {dm.unread}
-                      </span>
-                    )}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </aside>
 
       {/* ── CENTER: Chat area ────────────────────────────────────────── */}
       <div className="flex min-w-0 flex-1 flex-col bg-[#f8f9fa]">
         {/* Chat header */}
-        {selectedConversation ? (
+        {active ? (
           <header className="flex h-[3.75rem] shrink-0 items-center justify-between border-b border-[#e5e7eb] bg-white px-5">
             <div className="flex items-center gap-3">
-              {selectedConversation.kind === "dm" ? (
+              {active.kind === "dm" ? (
                 <Avatar
-                  initials={selectedConversation.initials}
-                  online={selectedConversation.isOnline}
+                  initials={active.initials}
+                  online={active.isOnline}
                   size="lg"
                 />
               ) : (
@@ -563,14 +651,14 @@ export function MessagingPage({
                 </div>
               )}
               <div>
-                <p className="text-sm font-bold text-[#1a1f2e]">{selectedConversation.name}</p>
-                {selectedConversation.kind === "dm" && (
+                <p className="text-sm font-bold text-[#1a1f2e]">{active.name}</p>
+                {active.kind === "dm" && (
                   <p className="flex items-center gap-1.5 text-xs text-emerald-600">
                     <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                    {selectedConversation.isOnline ? "Activa ahora" : "Desconectada"}
+                    {active.isOnline ? "Activa ahora" : "Desconectada"}
                   </p>
                 )}
-                {selectedConversation.kind === "channel" && (
+                {active.kind === "channel" && (
                   <p className="text-xs text-[#9ba3af]">Canal del curso</p>
                 )}
               </div>
@@ -592,10 +680,14 @@ export function MessagingPage({
 
         {/* Messages area */}
         <div className="flex-1 overflow-y-auto px-5 py-4">
-          {currentMessages.length === 0 ? (
+          {loadingMessages ? (
+            <div className="flex h-full items-center justify-center">
+              <p className="text-sm text-[#9ba3af]">Cargando mensajes...</p>
+            </div>
+          ) : currentMessages.length === 0 ? (
             <div className="flex h-full items-center justify-center">
               <p className="text-sm text-[#9ba3af]">
-                {selectedConversation?.kind === "channel"
+                {active?.kind === "channel"
                   ? "Sé el primero en escribir en este canal."
                   : "Inicia la conversación enviando un mensaje."}
               </p>
@@ -623,11 +715,11 @@ export function MessagingPage({
             <textarea
               className="w-full resize-none rounded-t-2xl px-4 pt-3.5 text-sm text-[#1a1f2e] placeholder:text-[#9ba3af] focus:outline-none"
               onKeyDown={handleKeyDown}
-              onChange={(e) => setInput(e.target.value)}
+              onChange={(e) => setDraftText(e.target.value)}
               placeholder="Escribe un mensaje..."
               ref={textareaRef}
               rows={3}
-              value={input}
+              value={draftText}
             />
             <div className="flex items-center justify-between border-t border-[#f0f0f0] px-4 py-2.5">
               <div className="flex items-center gap-1">
@@ -648,8 +740,8 @@ export function MessagingPage({
               </div>
               <button
                 className="flex items-center gap-2 rounded-xl bg-[#1e3a5f] px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-50"
-                disabled={!input.trim()}
-                onClick={sendMessage}
+                disabled={!draftText.trim() || sending}
+                onClick={() => void handleSend()}
                 type="button"
               >
                 Enviar
@@ -662,16 +754,16 @@ export function MessagingPage({
 
       {/* ── RIGHT: Profile / info panel ─────────────────────────────── */}
       <aside className="hidden w-64 shrink-0 flex-col border-l border-[#e5e7eb] xl:flex">
-        {selectedConversation?.kind === "dm" ? (
+        {active?.kind === "dm" ? (
           <>
             {/* Profile */}
             <div className="flex flex-col items-center border-b border-[#e5e7eb] px-5 py-6 text-center">
-              <Avatar initials={selectedConversation.initials} size="xl" />
-              <h2 className="mt-3 text-base font-bold text-[#1a1f2e]">{selectedConversation.name}</h2>
+              <Avatar initials={active.initials} size="xl" />
+              <h2 className="mt-3 text-base font-bold text-[#1a1f2e]">{active.name}</h2>
               <span className="mt-1.5 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
-                {selectedConversation.role}
+                {active.role}
               </span>
-              <p className="mt-2 text-xs text-[#9ba3af]">{selectedConversation.department}</p>
+              <p className="mt-2 text-xs text-[#9ba3af]">{active.department}</p>
               <button className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl border border-[#e5e7eb] py-2 text-xs font-semibold text-[#1a1f2e] transition hover:bg-[#f3f4f6]">
                 <User className="h-3.5 w-3.5" />
                 Ver Ficha Académica
@@ -700,12 +792,12 @@ export function MessagingPage({
               </div>
             )}
           </>
-        ) : selectedConversation?.kind === "channel" ? (
+        ) : active?.kind === "channel" ? (
           <div className="px-5 py-6 text-center">
             <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[var(--color-surface)]">
               <Hash className="h-7 w-7 text-[var(--color-primary)]" />
             </div>
-            <p className="mt-3 text-sm font-bold text-[#1a1f2e]">{selectedConversation.name}</p>
+            <p className="mt-3 text-sm font-bold text-[#1a1f2e]">{active.name}</p>
             <p className="mt-1 text-xs text-[#9ba3af]">Canal del curso</p>
           </div>
         ) : null}
