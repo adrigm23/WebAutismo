@@ -152,6 +152,50 @@ function getLessonTypeLabel(resource: CampusResourceItem | null): string {
 
 // ─── sub-components ─────────────────────────────────────────────────────────
 
+function PdfViewerCard({
+  resource,
+}: {
+  resource: CampusResourceItem;
+}) {
+  const inlineSrc = resource.href
+    ? `${resource.href}${resource.href.includes("?") ? "&" : "?"}inline=1`
+    : null;
+
+  if (!inlineSrc) return null;
+
+  return (
+    <div className="overflow-hidden rounded-xl border border-[#e5e7eb] shadow-sm">
+      {/* Header bar */}
+      <div className="flex items-center justify-between border-b border-[#e5e7eb] bg-[#f8f9fa] px-4 py-2.5">
+        <div className="flex min-w-0 items-center gap-2">
+          <FileText className="h-3.5 w-3.5 shrink-0 text-[#e74c3c]" />
+          <span className="truncate text-[0.73rem] font-medium text-[#374151]">
+            {resource.title}
+          </span>
+        </div>
+        {resource.href && (
+          <a
+            className="ml-3 flex h-7 w-7 shrink-0 items-center justify-center rounded text-[#9ca3af] transition hover:bg-[#e5e7eb] hover:text-[#374151]"
+            download
+            href={resource.href}
+            title="Descargar"
+          >
+            <Download className="h-3.5 w-3.5" />
+          </a>
+        )}
+      </div>
+      {/* PDF iframe — tall */}
+      <div className="bg-[#f0f2f5]" style={{ height: "68vh", minHeight: "520px" }}>
+        <iframe
+          className="h-full w-full"
+          src={inlineSrc}
+          title={resource.title}
+        />
+      </div>
+    </div>
+  );
+}
+
 function VideoArea({ resource }: { resource: CampusResourceItem | null }) {
   const embed = resource ? getContentEmbed(resource) : null;
 
@@ -384,6 +428,9 @@ export function LessonPlayer({
   const nextIndex = moduleIndex < modules.length - 1 ? moduleIndex + 1 : null;
 
   const primaryResource = currentModule ? getPrimaryResource(currentModule, resources) : null;
+  const isPdfLesson =
+    primaryResource?.source === "FILE" &&
+    primaryResource?.mimeType === "application/pdf";
   const downloadableFiles = currentModule
     ? getDownloadableFiles(currentModule, resources, primaryResource?.id ?? null)
     : [];
@@ -461,128 +508,269 @@ export function LessonPlayer({
       <div className="flex min-h-0 flex-1">
         {/* Left: scrollable content area */}
         <main className="flex-1 overflow-y-auto">
-          {/* Video / content player */}
-          <VideoArea resource={primaryResource} />
-
-          {/* Below-video content */}
-          <div className="mx-auto max-w-3xl px-5 pb-16 pt-6 lg:px-8">
-            {/* Lesson title + meta */}
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-              <div className="min-w-0">
-                <h1 className="text-2xl font-bold leading-snug text-[var(--color-ink)]">
-                  {currentModule.title}
-                </h1>
-                <div className="mt-2 flex items-center gap-4 text-sm text-[var(--color-muted)]">
-                  <span className="flex items-center gap-1.5">
-                    <Clock className="h-3.5 w-3.5" />
-                    {currentModule.estimatedTime}
-                  </span>
-                  <span className="flex items-center gap-1.5">
-                    <PlayCircle className="h-3.5 w-3.5" />
-                    {lessonType}
-                  </span>
-                </div>
+          {/* PDF lesson — title ABOVE viewer (Stitch design) */}
+          {isPdfLesson ? (
+            <div className="mx-auto max-w-3xl px-5 pb-16 pt-8 lg:px-8">
+              {/* Time badge */}
+              <div className="mb-3 flex items-center gap-1.5 text-sm text-[#6b7280]">
+                <Clock className="h-3.5 w-3.5" />
+                <span>Tiempo estimado: {currentModule.estimatedTime} de lectura</span>
               </div>
 
-              {/* Mark-as-complete form */}
-              <div className="shrink-0">
+              {/* Title */}
+              <h1 className="mb-4 text-[1.75rem] font-bold leading-tight text-[#111c2c]">
+                {currentModule.title}
+              </h1>
+
+              {/* Description — highlighted like Stitch */}
+              {currentModule.description && (
+                <p className="mb-6 rounded-lg border-l-4 border-[#3b82f6] bg-[#eff6ff] px-4 py-3 text-[1rem] leading-relaxed text-[#374151]">
+                  {currentModule.description}
+                </p>
+              )}
+
+              {/* PDF viewer */}
+              <PdfViewerCard resource={primaryResource} />
+
+              {/* Recursos descargables inline */}
+              {downloadableFiles.length > 0 && (
+                <div className="mt-6">
+                  <p className="mb-3 flex items-center gap-2 text-[0.7rem] font-semibold uppercase tracking-widest text-[#9ca3af]">
+                    <FileText className="h-3.5 w-3.5" />
+                    Recursos Descargables
+                  </p>
+                  <div className="space-y-2">
+                    {downloadableFiles.map((file) => (
+                      <div
+                        key={file.id}
+                        className="flex items-center gap-3 rounded-xl border border-[#e5e7eb] bg-white px-4 py-3 shadow-sm"
+                      >
+                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#fef2f2] text-[#e74c3c]">
+                          <FileTypeIcon mimeType={file.mimeType} />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-semibold text-[#111c2c]">
+                            {file.title}
+                          </p>
+                          <p className="text-xs text-[#9ca3af]">
+                            {getFileTypeLabel(file.mimeType)}
+                            {file.sizeInBytes
+                              ? ` · ${file.sizeInBytes < 1024 * 1024
+                                  ? `${(file.sizeInBytes / 1024).toFixed(1)} KB`
+                                  : `${(file.sizeInBytes / (1024 * 1024)).toFixed(1)} MB`}`
+                              : ""}
+                          </p>
+                        </div>
+                        {file.href && (
+                          <a
+                            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-[#e5e7eb] text-[#9ca3af] transition hover:border-[#3b82f6] hover:text-[#3b82f6]"
+                            download
+                            href={file.href}
+                          >
+                            <Download className="h-4 w-4" />
+                          </a>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Bottom navigation — Anterior | Marcar como completado | Siguiente */}
+              <div className="mt-8 flex items-center justify-between border-t border-[#e5e7eb] pt-5">
+                {prevHref ? (
+                  <Link
+                    className="flex items-center gap-2 rounded-xl border border-[#e5e7eb] bg-white px-5 py-2.5 text-sm font-semibold text-[#374151] shadow-sm transition hover:border-[#3b82f6] hover:text-[#3b82f6]"
+                    href={prevHref}
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                    Anterior
+                  </Link>
+                ) : (
+                  <div />
+                )}
+
                 <CourseProgressToggleForm
                   courseSlug={course.slug}
                   isCompleted={currentModule.isCompleted}
                   moduleId={currentModule.id}
-                  nextPath={
-                    nextHref ??
-                    `/mis-cursos/${course.slug}/leccion/${moduleIndex}`
-                  }
+                  nextPath={nextHref ?? `/mis-cursos/${course.slug}/leccion/${moduleIndex}`}
                 />
-              </div>
-            </div>
 
-            {/* Module description */}
-            {currentModule.description && (
-              <p className="mt-4 text-sm leading-7 text-[var(--color-muted)]">
-                {currentModule.description}
-              </p>
-            )}
-
-            {/* Anterior / Siguiente navigation */}
-            <div className="mt-6 flex items-center justify-between border-t border-[var(--color-border)] pt-5">
-              {prevHref ? (
-                <Link
-                  className="flex items-center gap-2 rounded-xl border border-[var(--color-border)] bg-white px-5 py-2.5 text-sm font-semibold text-[var(--color-ink)] shadow-sm transition hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]"
-                  href={prevHref}
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                  Anterior
-                </Link>
-              ) : (
-                <div />
-              )}
-              {nextHref ? (
-                <Link
-                  className="flex items-center gap-2 rounded-xl bg-[var(--color-ink)] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:opacity-90"
-                  href={nextHref}
-                >
-                  Siguiente
-                  <ChevronRight className="h-4 w-4" />
-                </Link>
-              ) : (
-                <Link
-                  className="flex items-center gap-2 rounded-xl bg-emerald-500 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:opacity-90"
-                  href={`/mis-cursos/${course.slug}`}
-                >
-                  Finalizar curso
-                  <CheckCheck className="h-4 w-4" />
-                </Link>
-              )}
-            </div>
-
-            {/* Tabs */}
-            <div className="mt-8">
-              <div className="flex gap-6 border-b border-[var(--color-border)]">
-                {(
-                  [
-                    { id: "recursos", label: "Recursos", icon: BookOpen },
-                    { id: "notas", label: "Notas Personales", icon: StickyNote },
-                    {
-                      id: "comentarios",
-                      label: "Comentarios",
-                      icon: MessageSquare,
-                    },
-                  ] as const
-                ).map(({ id, label, icon: Icon }) => (
-                  <button
-                    className={cn(
-                      "flex items-center gap-2 border-b-2 pb-3 text-sm font-medium transition",
-                      activeTab === id
-                        ? "border-[var(--color-ink)] text-[var(--color-ink)]"
-                        : "border-transparent text-[var(--color-muted)] hover:text-[var(--color-ink)]",
-                    )}
-                    key={id}
-                    onClick={() => setActiveTab(id)}
-                    type="button"
+                {nextHref ? (
+                  <Link
+                    className="flex items-center gap-2 rounded-xl bg-[#022448] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:opacity-90"
+                    href={nextHref}
                   >
-                    <Icon className="h-4 w-4" />
-                    {label}
-                  </button>
-                ))}
+                    Siguiente Lección
+                    <ChevronRight className="h-4 w-4" />
+                  </Link>
+                ) : (
+                  <Link
+                    className="flex items-center gap-2 rounded-xl bg-emerald-500 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:opacity-90"
+                    href={`/mis-cursos/${course.slug}`}
+                  >
+                    Finalizar curso
+                    <CheckCheck className="h-4 w-4" />
+                  </Link>
+                )}
               </div>
 
-              <div className="pt-6">
-                {activeTab === "recursos" && (
-                  <ResourcesTab
-                    courseSlug={course.slug}
-                    downloadableFiles={downloadableFiles}
-                    module={currentModule}
-                  />
-                )}
-                {activeTab === "notas" && <NotesTab storageKey={notesKey} />}
-                {activeTab === "comentarios" && (
-                  <CommentsTab courseSlug={course.slug} />
-                )}
+              {/* Tabs — Notas y Comentarios still available for PDFs */}
+              <div className="mt-8">
+                <div className="flex gap-6 border-b border-[var(--color-border)]">
+                  {(
+                    [
+                      { id: "notas", label: "Notas Personales", icon: StickyNote },
+                      { id: "comentarios", label: "Comentarios", icon: MessageSquare },
+                    ] as const
+                  ).map(({ id, label, icon: Icon }) => (
+                    <button
+                      className={cn(
+                        "flex items-center gap-2 border-b-2 pb-3 text-sm font-medium transition",
+                        activeTab === id
+                          ? "border-[var(--color-ink)] text-[var(--color-ink)]"
+                          : "border-transparent text-[var(--color-muted)] hover:text-[var(--color-ink)]",
+                      )}
+                      key={id}
+                      onClick={() => setActiveTab(id as ActiveTab)}
+                      type="button"
+                    >
+                      <Icon className="h-4 w-4" />
+                      {label}
+                    </button>
+                  ))}
+                </div>
+                <div className="pt-6">
+                  {activeTab === "notas" && <NotesTab storageKey={notesKey} />}
+                  {activeTab === "comentarios" && <CommentsTab courseSlug={course.slug} />}
+                </div>
               </div>
             </div>
-          </div>
+          ) : (
+            <>
+              {/* Non-PDF: original layout — VideoArea top + title below */}
+              <VideoArea resource={primaryResource} />
+              <div className="mx-auto max-w-3xl px-5 pb-16 pt-6 lg:px-8">
+                {/* Lesson title + meta */}
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="min-w-0">
+                    <h1 className="text-2xl font-bold leading-snug text-[var(--color-ink)]">
+                      {currentModule.title}
+                    </h1>
+                    <div className="mt-2 flex items-center gap-4 text-sm text-[var(--color-muted)]">
+                      <span className="flex items-center gap-1.5">
+                        <Clock className="h-3.5 w-3.5" />
+                        {currentModule.estimatedTime}
+                      </span>
+                      <span className="flex items-center gap-1.5">
+                        <PlayCircle className="h-3.5 w-3.5" />
+                        {lessonType}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Mark-as-complete form */}
+                  <div className="shrink-0">
+                    <CourseProgressToggleForm
+                      courseSlug={course.slug}
+                      isCompleted={currentModule.isCompleted}
+                      moduleId={currentModule.id}
+                      nextPath={
+                        nextHref ??
+                        `/mis-cursos/${course.slug}/leccion/${moduleIndex}`
+                      }
+                    />
+                  </div>
+                </div>
+
+                {/* Module description */}
+                {currentModule.description && (
+                  <p className="mt-4 text-sm leading-7 text-[var(--color-muted)]">
+                    {currentModule.description}
+                  </p>
+                )}
+
+                {/* Anterior / Siguiente navigation */}
+                <div className="mt-6 flex items-center justify-between border-t border-[var(--color-border)] pt-5">
+                  {prevHref ? (
+                    <Link
+                      className="flex items-center gap-2 rounded-xl border border-[var(--color-border)] bg-white px-5 py-2.5 text-sm font-semibold text-[var(--color-ink)] shadow-sm transition hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]"
+                      href={prevHref}
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                      Anterior
+                    </Link>
+                  ) : (
+                    <div />
+                  )}
+                  {nextHref ? (
+                    <Link
+                      className="flex items-center gap-2 rounded-xl bg-[var(--color-ink)] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:opacity-90"
+                      href={nextHref}
+                    >
+                      Siguiente
+                      <ChevronRight className="h-4 w-4" />
+                    </Link>
+                  ) : (
+                    <Link
+                      className="flex items-center gap-2 rounded-xl bg-emerald-500 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:opacity-90"
+                      href={`/mis-cursos/${course.slug}`}
+                    >
+                      Finalizar curso
+                      <CheckCheck className="h-4 w-4" />
+                    </Link>
+                  )}
+                </div>
+
+                {/* Tabs */}
+                <div className="mt-8">
+                  <div className="flex gap-6 border-b border-[var(--color-border)]">
+                    {(
+                      [
+                        { id: "recursos", label: "Recursos", icon: BookOpen },
+                        { id: "notas", label: "Notas Personales", icon: StickyNote },
+                        {
+                          id: "comentarios",
+                          label: "Comentarios",
+                          icon: MessageSquare,
+                        },
+                      ] as const
+                    ).map(({ id, label, icon: Icon }) => (
+                      <button
+                        className={cn(
+                          "flex items-center gap-2 border-b-2 pb-3 text-sm font-medium transition",
+                          activeTab === id
+                            ? "border-[var(--color-ink)] text-[var(--color-ink)]"
+                            : "border-transparent text-[var(--color-muted)] hover:text-[var(--color-ink)]",
+                        )}
+                        key={id}
+                        onClick={() => setActiveTab(id)}
+                        type="button"
+                      >
+                        <Icon className="h-4 w-4" />
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+
+                  <div className="pt-6">
+                    {activeTab === "recursos" && (
+                      <ResourcesTab
+                        courseSlug={course.slug}
+                        downloadableFiles={downloadableFiles}
+                        module={currentModule}
+                      />
+                    )}
+                    {activeTab === "notas" && <NotesTab storageKey={notesKey} />}
+                    {activeTab === "comentarios" && (
+                      <CommentsTab courseSlug={course.slug} />
+                    )}
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
         </main>
 
         {/* Right: course outline sidebar */}
