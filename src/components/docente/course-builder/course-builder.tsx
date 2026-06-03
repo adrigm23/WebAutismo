@@ -36,7 +36,6 @@ import {
   moveModuleAction,
   updateCourseCategoryAction,
   updateCourseModuleAction,
-  updateCourseResourceAction,
   updateCourseStatusAction,
 } from "@/actions/course-builder";
 import { cn } from "@/lib/utils";
@@ -362,18 +361,24 @@ const BUILDER_TABS: { id: Tab; label: string }[] = [
   { id: "participants", label: "Participantes" },
 ];
 
-function BuilderTopbar({ activeTab, course, status, onTabChange, onMobileMenuOpen, onSaveDraft, onPublish, saving }: {
+function BuilderTopbar({ activeTab, course, status, onTabChange, onMobileMenuOpen, onSaveDraft, onPublish, saving, embedded }: {
   activeTab: Tab; course: BuilderCourse; status: "ACTIVE" | "INACTIVE";
   onTabChange: (t: Tab) => void; onMobileMenuOpen: () => void;
   onSaveDraft: () => void; onPublish: () => void; saving: boolean;
+  embedded?: boolean;
 }) {
   return (
     <header className="sticky top-0 z-20 flex h-14 shrink-0 items-center justify-between border-b border-[rgba(22,60,88,0.08)] bg-white px-4 shadow-sm lg:px-6">
       <div className="flex min-w-0 items-center gap-3">
-        <button aria-label="Abrir menú" className="grid h-8 w-8 place-items-center rounded-lg text-[var(--color-muted)] transition hover:bg-[rgba(22,60,88,0.06)] lg:hidden" onClick={onMobileMenuOpen} type="button">
-          <Menu className="h-4 w-4" />
-        </button>
-        <span className="hidden truncate text-sm font-bold text-[var(--color-ink)] lg:block">Campus Autismo Córdoba</span>
+        {/* Mobile menu button — only when NOT embedded (TeacherShell has its own) */}
+        {!embedded && (
+          <button aria-label="Abrir menú" className="grid h-8 w-8 place-items-center rounded-lg text-[var(--color-muted)] transition hover:bg-[rgba(22,60,88,0.06)] lg:hidden" onClick={onMobileMenuOpen} type="button">
+            <Menu className="h-4 w-4" />
+          </button>
+        )}
+        {!embedded && (
+          <span className="hidden truncate text-sm font-bold text-[var(--color-ink)] lg:block">Campus Autismo Córdoba</span>
+        )}
       </div>
 
       <nav aria-label="Secciones del constructor" className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-0.5 lg:flex">
@@ -632,6 +637,7 @@ function ConfigPanel({ course, status, onStatusChange, onCategoryChange }: {
 
 // ─── Participants panel ───────────────────────────────────────────────────────
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function ParticipantsPanel({ courseSlug }: { courseSlug: string }) {
   return (
     <div className="flex flex-1 items-center justify-center">
@@ -647,7 +653,7 @@ function ParticipantsPanel({ courseSlug }: { courseSlug: string }) {
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
-export function CourseBuilder({ course }: { course: BuilderCourse }) {
+export function CourseBuilder({ course, embedded = false }: { course: BuilderCourse; embedded?: boolean }) {
   const [activeTab, setActiveTab] = useState<Tab>("constructor");
   const [mobileOpen, setMobileOpen] = useState(false);
   const [modules, setModules] = useState<BuilderModule[]>(course.modules);
@@ -759,13 +765,15 @@ export function CourseBuilder({ course }: { course: BuilderCourse }) {
 
   return (
     <div className="flex h-screen overflow-hidden bg-[#f5f6fa]">
-      {/* Desktop sidebar */}
-      <aside className="hidden w-52 shrink-0 border-r border-[rgba(22,60,88,0.08)] bg-white lg:flex lg:flex-col">
-        <BuilderSidebar onAddModule={() => setShowAddModule(true)} />
-      </aside>
+      {/* Desktop sidebar — hidden when embedded inside TeacherShell */}
+      {!embedded && (
+        <aside className="hidden w-52 shrink-0 border-r border-[rgba(22,60,88,0.08)] bg-white lg:flex lg:flex-col">
+          <BuilderSidebar onAddModule={() => setShowAddModule(true)} />
+        </aside>
+      )}
 
-      {/* Mobile sidebar overlay */}
-      {mobileOpen && (
+      {/* Mobile sidebar overlay — hidden when embedded */}
+      {!embedded && mobileOpen && (
         <div className="fixed inset-0 z-50 flex lg:hidden">
           <button aria-label="Cerrar menú" className="absolute inset-0 bg-[rgba(15,23,32,0.45)] backdrop-blur-sm" onClick={() => setMobileOpen(false)} type="button" />
           <aside className="relative z-10 w-52 flex-col bg-white shadow-2xl">
@@ -776,7 +784,7 @@ export function CourseBuilder({ course }: { course: BuilderCourse }) {
 
       {/* Right side */}
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
-        <BuilderTopbar activeTab={activeTab} course={course} status={status} onMobileMenuOpen={() => setMobileOpen(true)} onTabChange={setActiveTab} onSaveDraft={handleSaveDraft} onPublish={handlePublish} saving={saving} />
+        <BuilderTopbar activeTab={activeTab} course={course} status={status} onMobileMenuOpen={() => setMobileOpen(true)} onTabChange={setActiveTab} onSaveDraft={handleSaveDraft} onPublish={handlePublish} saving={saving} embedded={embedded} />
 
         <div className="flex min-h-0 flex-1 overflow-hidden">
           <main className="flex-1 overflow-y-auto" style={{ backgroundImage: "radial-gradient(circle, rgba(22,60,88,0.08) 1px, transparent 1px)", backgroundSize: "22px 22px" }}>

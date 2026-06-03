@@ -88,7 +88,7 @@ export default async function CourseBuilderPage({ params }: Props) {
       viewerInitials={viewerInitials}
       roleLabel="Docente"
     >
-      <CourseBuilder course={builderCourse} />
+      <CourseBuilder course={builderCourse} embedded={true} />
     </TeacherShell>
   );
 }
