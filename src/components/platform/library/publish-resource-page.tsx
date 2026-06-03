@@ -138,11 +138,11 @@ function Sidebar({ onClose }: { onClose?: () => void }) {
     <div className="flex h-full flex-col bg-[#f0f3ff]">
       {/* Brand */}
       <div className="mb-8 px-4 pt-6 flex items-center gap-3">
-        <div className="w-10 h-10 rounded-lg bg-[#022448] flex items-center justify-center text-white shrink-0">
+        <div className="w-10 h-10 rounded-lg bg-[var(--color-primary)] flex items-center justify-center text-white shrink-0">
           <Brain className="h-5 w-5" />
         </div>
         <div>
-          <p className="text-sm font-bold text-[#022448] leading-tight">Campus Autismo</p>
+          <p className="text-sm font-bold text-[var(--color-primary)] leading-tight">Campus Autismo</p>
           <p className="text-xs text-[#43474e] mt-0.5">Panel Profesional</p>
         </div>
       </div>
@@ -281,7 +281,7 @@ export function PublishResourcePage({
         <button
           type="button"
           onClick={handleCancel}
-          className="flex items-center justify-center gap-2 px-6 py-2 rounded-lg border border-[#022448] text-[#022448] text-sm font-medium hover:bg-[#f0f3ff] transition-colors w-full md:w-auto"
+          className="flex items-center justify-center gap-2 px-6 py-2 rounded-lg border border-[var(--color-primary)] text-[var(--color-primary)] text-sm font-medium hover:bg-[#f0f3ff] transition-colors w-full md:w-auto"
         >
           <X className="h-[18px] w-[18px]" />
           Cancelar
@@ -304,10 +304,10 @@ export function PublishResourcePage({
               className={cn(
                 "bg-white border-2 border-dashed rounded-xl p-8 md:p-12 flex flex-col items-center justify-center text-center transition-all cursor-pointer group",
                 dragging
-                  ? "border-[#022448] bg-[#f0f3ff]"
+                  ? "border-[var(--color-primary)] bg-[#f0f3ff]"
                   : file
-                    ? "border-[#022448] bg-[#f0f3ff]"
-                    : "border-[#c4c6cf] hover:border-[#022448] hover:bg-[#f0f3ff]",
+                    ? "border-[var(--color-primary)] bg-[#f0f3ff]"
+                    : "border-[#c4c6cf] hover:border-[var(--color-primary)] hover:bg-[#f0f3ff]",
               )}
               onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
               onDragLeave={() => setDragging(false)}
@@ -329,7 +329,7 @@ export function PublishResourcePage({
                   <button
                     type="button"
                     onClick={(e) => { e.stopPropagation(); setFile(null); }}
-                    className="flex items-center gap-1.5 text-xs text-[#43474e] hover:text-[#022448] transition-colors mt-1"
+                    className="flex items-center gap-1.5 text-xs text-[#43474e] hover:text-[var(--color-primary)] transition-colors mt-1"
                   >
                     <X className="h-3.5 w-3.5" /> Quitar archivo
                   </button>
@@ -338,7 +338,7 @@ export function PublishResourcePage({
                 /* Default empty state */
                 <>
                   {/* File type icons row */}
-                  <div className="flex gap-4 mb-6 text-[#43474e] group-hover:text-[#022448] transition-colors">
+                  <div className="flex gap-4 mb-6 text-[#43474e] group-hover:text-[var(--color-primary)] transition-colors">
                     {[
                       { Icon: FileText, title: "PDF" },
                       { Icon: Film, title: "MP4" },
@@ -401,7 +401,7 @@ export function PublishResourcePage({
                   <button
                     type="button"
                     onClick={() => setShowLinkInput(true)}
-                    className="text-sm text-[#43474e] hover:text-[#022448] transition-colors self-center flex items-center gap-1.5"
+                    className="text-sm text-[#43474e] hover:text-[var(--color-primary)] transition-colors self-center flex items-center gap-1.5"
                   >
                     <Link2 className="h-4 w-4" />
                     O pegar un enlace externo
@@ -412,7 +412,7 @@ export function PublishResourcePage({
                       <label className="text-sm font-medium text-[#111c2c] flex items-center gap-2">
                         <Link2 className="h-4 w-4" /> Enlace externo
                       </label>
-                      <button type="button" onClick={() => { setShowLinkInput(false); setExternalUrl(""); }} className="text-[#43474e] hover:text-[#022448]">
+                      <button type="button" onClick={() => { setShowLinkInput(false); setExternalUrl(""); }} className="text-[#43474e] hover:text-[var(--color-primary)]">
                         <X className="h-4 w-4" />
                       </button>
                     </div>
@@ -561,7 +561,7 @@ export function PublishResourcePage({
               style={{ boxShadow: "0px 4px 12px rgba(30,58,95,0.05)" }}
             >
               <h3 className="text-lg font-semibold text-[#111c2c] mb-4 flex items-center gap-2">
-                <Eye className="h-5 w-5 text-[#022448]" strokeWidth={2} />
+                <Eye className="h-5 w-5 text-[var(--color-primary)]" strokeWidth={2} />
                 Visibilidad
               </h3>
               <div className="flex flex-col gap-3">
@@ -573,7 +573,7 @@ export function PublishResourcePage({
                       className={cn(
                         "flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors",
                         isActive
-                          ? "bg-[#d5e3ff] border-[#022448]"
+                          ? "bg-[#d5e3ff] border-[var(--color-primary)]"
                           : "border-[#c4c6cf] hover:bg-[#f0f3ff]",
                       )}
                     >
@@ -588,16 +588,16 @@ export function PublishResourcePage({
                       {/* Custom radio */}
                       <div className={cn(
                         "mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-colors",
-                        isActive ? "border-[#022448]" : "border-[#c4c6cf]",
+                        isActive ? "border-[var(--color-primary)]" : "border-[#c4c6cf]",
                       )}>
                         {isActive && (
-                          <div className="h-2.5 w-2.5 rounded-full bg-[#022448]" />
+                          <div className="h-2.5 w-2.5 rounded-full bg-[var(--color-primary)]" />
                         )}
                       </div>
                       <div className="flex flex-col">
                         <span className={cn(
                           "text-sm font-semibold",
-                          isActive ? "text-[#022448]" : "text-[#111c2c]",
+                          isActive ? "text-[var(--color-primary)]" : "text-[#111c2c]",
                         )}>
                           {opt.label}
                         </span>
@@ -629,7 +629,7 @@ export function PublishResourcePage({
                 ) : externalUrl ? (
                   <div className="flex flex-col items-center gap-2">
                     <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white">
-                      <Link2 className="h-6 w-6 text-[#022448]" />
+                      <Link2 className="h-6 w-6 text-[var(--color-primary)]" />
                     </div>
                     <p className="text-xs text-[#43474e] truncate max-w-[150px]">
                       {(() => { try { return new URL(externalUrl).hostname; } catch { return externalUrl; } })()}
@@ -684,7 +684,7 @@ export function PublishResourcePage({
                 name="action"
                 value="publish"
                 disabled={pending}
-                className="w-full bg-[#022448] text-white text-sm font-medium py-3 px-6 rounded-lg hover:bg-[#1e3a5f] transition-colors flex justify-center items-center gap-2 disabled:opacity-60"
+                className="w-full bg-[var(--color-primary)] text-white text-sm font-medium py-3 px-6 rounded-lg hover:bg-[var(--color-primary-strong)] transition-colors flex justify-center items-center gap-2 disabled:opacity-60"
                 style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.12)" }}
               >
                 {pending ? <Loader2 className="h-[18px] w-[18px] animate-spin" /> : <Send className="h-[18px] w-[18px]" />}
@@ -695,7 +695,7 @@ export function PublishResourcePage({
                 name="action"
                 value="draft"
                 disabled={pending}
-                className="w-full bg-transparent border border-[#022448] text-[#022448] text-sm font-medium py-3 px-6 rounded-lg hover:bg-[#f0f3ff] transition-colors flex justify-center items-center gap-2 disabled:opacity-60"
+                className="w-full bg-transparent border border-[var(--color-primary)] text-[var(--color-primary)] text-sm font-medium py-3 px-6 rounded-lg hover:bg-[#f0f3ff] transition-colors flex justify-center items-center gap-2 disabled:opacity-60"
               >
                 {pending ? <Loader2 className="h-[18px] w-[18px] animate-spin" /> : <Save className="h-[18px] w-[18px]" />}
                 Guardar como Borrador
@@ -734,15 +734,15 @@ export function PublishResourcePage({
         {/* Mobile topbar */}
         <header className="md:hidden flex justify-between items-center w-full px-4 h-16 fixed top-0 left-0 right-0 z-40 bg-white border-b border-[#c4c6cf]">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-[#022448] flex items-center justify-center text-white">
+            <div className="w-8 h-8 rounded-lg bg-[var(--color-primary)] flex items-center justify-center text-white">
               <Brain className="h-4 w-4" />
             </div>
-            <span className="text-sm font-bold text-[#022448]">Campus Autismo</span>
+            <span className="text-sm font-bold text-[var(--color-primary)]">Campus Autismo</span>
           </div>
           <button
             type="button"
             onClick={() => setMobileNavOpen(true)}
-            className="p-2 rounded-lg text-[#022448] hover:bg-[#f0f3ff] transition-colors"
+            className="p-2 rounded-lg text-[var(--color-primary)] hover:bg-[#f0f3ff] transition-colors"
           >
             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />

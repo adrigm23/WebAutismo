@@ -82,7 +82,7 @@ function CourseProgram({ course }: { course: CatalogCourse }) {
               <span
                 className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
                   index === 0
-                    ? "bg-[var(--color-ink)] text-white"
+                    ? "bg-[var(--color-primary)] text-white"
                     : "border-2 border-[var(--color-border)] text-[var(--color-muted)]"
                 }`}
               >

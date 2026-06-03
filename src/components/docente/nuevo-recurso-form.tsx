@@ -308,14 +308,14 @@ export function NuevoRecursoForm({
                         className={cn(
                           "rounded-lg border-2 p-3.5 text-left transition",
                           resourceType === opt.value
-                            ? "border-[#022448] bg-[#f0f4f8]"
+                            ? "border-[var(--color-primary)] bg-[#f0f4f8]"
                             : "border-[#e5e7eb] bg-white hover:border-[#9ca3af]",
                         )}
                       >
                         <p
                           className={cn(
                             "text-sm font-semibold",
-                            resourceType === opt.value ? "text-[#022448]" : "text-[#374151]",
+                            resourceType === opt.value ? "text-[var(--color-primary)]" : "text-[#374151]",
                           )}
                         >
                           {opt.label}
@@ -365,7 +365,7 @@ export function NuevoRecursoForm({
                     className={cn(
                       "w-full rounded-lg border-2 p-3.5 text-left transition",
                       opt.value === "published"
-                        ? "border-[#022448] bg-[#022448]"
+                        ? "border-[var(--color-primary)] bg-[var(--color-primary)]"
                         : "border-[#e5e7eb] bg-white",
                     )}
                   >
@@ -467,7 +467,7 @@ export function NuevoRecursoForm({
               <button
                 type="submit"
                 disabled={isSubmitDisabled}
-                className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#022448] px-4 py-3 text-sm font-semibold text-white shadow-md transition hover:bg-[#0e3a6e] disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex w-full items-center justify-center gap-2 rounded-xl bg-[var(--color-primary)] px-4 py-3 text-sm font-semibold text-white shadow-md transition hover:bg-[var(--color-primary-strong)] disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {publishPending ? (
                   <Loader2 className="h-4 w-4 animate-spin" />

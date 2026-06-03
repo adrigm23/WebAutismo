@@ -78,7 +78,7 @@ export function ForumShell({
                 <Badge tone="outline" className="hidden sm:inline-flex">Foro integrado</Badge>
               </div>
             )}
-            <h2 className="text-2xl md:text-[28px] font-bold text-[#022448] mb-1 leading-tight">
+            <h2 className="text-2xl md:text-[28px] font-bold text-[var(--color-primary)] mb-1 leading-tight">
               Comunidad
             </h2>
             <p className="text-sm text-[#43474e]">
@@ -94,10 +94,10 @@ export function ForumShell({
             )}
             {/* Notifications bell */}
             <details className="relative">
-              <summary className="flex h-9 cursor-pointer list-none items-center justify-center rounded-full border border-[#c4c6cf] bg-white px-3 text-[#43474e] transition hover:border-[#022448] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#022448] focus-visible:ring-offset-2">
+              <summary className="flex h-9 cursor-pointer list-none items-center justify-center rounded-full border border-[#c4c6cf] bg-white px-3 text-[#43474e] transition hover:border-[var(--color-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#022448] focus-visible:ring-offset-2">
                 <Bell className="h-4 w-4" />
                 {forumNotifications.unreadCount ? (
-                  <span className="ml-1.5 inline-flex min-w-4 items-center justify-center rounded-full bg-[#022448] px-1.5 py-0.5 text-[10px] font-semibold text-white">
+                  <span className="ml-1.5 inline-flex min-w-4 items-center justify-center rounded-full bg-[var(--color-primary)] px-1.5 py-0.5 text-[10px] font-semibold text-white">
                     {forumNotifications.unreadCount > 9
                       ? "9+"
                       : forumNotifications.unreadCount}
@@ -119,7 +119,7 @@ export function ForumShell({
                     <form action={markAllForumNotificationsReadAction}>
                       <ForumShellNextPathInput />
                       <button
-                        className="text-sm font-medium text-[#022448] transition hover:text-[#1e3a5f] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#022448] focus-visible:ring-offset-2 focus-visible:ring-offset-white"
+                        className="text-sm font-medium text-[var(--color-primary)] transition hover:text-[#1e3a5f] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#022448] focus-visible:ring-offset-2 focus-visible:ring-offset-white"
                         type="submit"
                       >
                         Marcar todas
@@ -142,7 +142,7 @@ export function ForumShell({
                                 "inline-flex h-2.5 w-2.5 rounded-full",
                                 notification.readAt
                                   ? "bg-[#c4c6cf]"
-                                  : "bg-[#022448]",
+                                  : "bg-[var(--color-primary)]",
                               )}
                             />
                             <span className="text-xs uppercase tracking-[0.14em] text-[#43474e]">
@@ -157,7 +157,7 @@ export function ForumShell({
                           </p>
                           <div className="mt-3 flex flex-wrap items-center gap-3">
                             <Link
-                              className="text-sm font-medium text-[#022448] hover:text-[#1e3a5f] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#022448] focus-visible:ring-offset-2 focus-visible:ring-offset-white"
+                              className="text-sm font-medium text-[var(--color-primary)] hover:text-[#1e3a5f] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#022448] focus-visible:ring-offset-2 focus-visible:ring-offset-white"
                               href={notification.linkPath}
                             >
                               Abrir

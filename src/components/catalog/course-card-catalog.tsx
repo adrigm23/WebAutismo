@@ -56,7 +56,7 @@ export function CourseCardCatalog({ course }: Props) {
         </div>
 
         <Link
-          className="mt-4 block w-full rounded-lg border border-[var(--color-ink)] py-2.5 text-center text-sm font-semibold text-[var(--color-ink)] transition hover:bg-[var(--color-ink)] hover:text-white"
+          className="mt-4 block w-full rounded-lg border border-[var(--color-primary)] py-2.5 text-center text-sm font-semibold text-[var(--color-ink)] transition hover:bg-[var(--color-primary)] hover:text-white"
           href={`/cursos/${course.slug}`}
         >
           Ver Detalle

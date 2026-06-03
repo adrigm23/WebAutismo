@@ -102,8 +102,8 @@ export default async function ForumHomePage({
             className={cn(
               "px-4 py-1.5 rounded-full text-sm font-medium transition-all",
               filterValue !== "sin-respuesta"
-                ? "bg-[#022448] text-white shadow-sm"
-                : "text-[#43474e] hover:text-[#022448]",
+                ? "bg-[var(--color-primary)] text-white shadow-sm"
+                : "text-[#43474e] hover:text-[var(--color-primary)]",
             )}
           >
             Más recientes
@@ -113,8 +113,8 @@ export default async function ForumHomePage({
             className={cn(
               "px-4 py-1.5 rounded-full text-sm font-medium transition-all",
               filterValue === "sin-respuesta"
-                ? "bg-[#022448] text-white shadow-sm"
-                : "text-[#43474e] hover:text-[#022448]",
+                ? "bg-[var(--color-primary)] text-white shadow-sm"
+                : "text-[#43474e] hover:text-[var(--color-primary)]",
             )}
           >
             Sin respuesta
@@ -156,7 +156,7 @@ export default async function ForumHomePage({
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-2 flex-wrap">
                       {thread.isPinned && (
-                        <span className="flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-[#e7eeff] text-[#022448] border border-[#c4c6cf]">
+                        <span className="flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-[#e7eeff] text-[var(--color-primary)] border border-[#c4c6cf]">
                           <Pin className="h-3 w-3" /> Fijado
                         </span>
                       )}
@@ -172,7 +172,7 @@ export default async function ForumHomePage({
                         {formatRelativeTime(thread.lastActivityAt)}
                       </span>
                     </div>
-                    <h3 className="text-[18px] font-semibold text-[#111c2c] group-hover:text-[#022448] transition-colors leading-snug mb-2 line-clamp-2">
+                    <h3 className="text-[18px] font-semibold text-[#111c2c] group-hover:text-[var(--color-primary)] transition-colors leading-snug mb-2 line-clamp-2">
                       {thread.title}
                     </h3>
                     {thread.excerpt && (
@@ -189,7 +189,7 @@ export default async function ForumHomePage({
                         "w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold border shrink-0",
                         thread.isStaff
                           ? "border-[#25695c] bg-[#adf0df] text-[#2c6f62]"
-                          : "border-[#c4c6cf] bg-[#e7eeff] text-[#022448]",
+                          : "border-[#c4c6cf] bg-[#e7eeff] text-[var(--color-primary)]",
                       )}
                     >
                       {thread.authorInitials}
@@ -210,7 +210,7 @@ export default async function ForumHomePage({
           ) : (
             <div className="flex flex-col items-center justify-center py-20 text-center bg-white rounded-xl border border-[#c4c6cf]">
               <div className="w-16 h-16 rounded-full bg-[#e7eeff] flex items-center justify-center mb-4">
-                <MessageSquareText className="h-8 w-8 text-[#022448]" />
+                <MessageSquareText className="h-8 w-8 text-[var(--color-primary)]" />
               </div>
               <h3 className="text-lg font-semibold text-[#111c2c] mb-2">
                 Sin discusiones todavía
@@ -221,7 +221,7 @@ export default async function ForumHomePage({
               </p>
               <Link
                 href={`/mis-cursos/${course.slug}/foro/nuevo`}
-                className="flex items-center gap-2 bg-[#022448] text-white px-5 py-2.5 rounded-lg text-sm font-medium hover:bg-[#1e3a5f] transition-colors"
+                className="flex items-center gap-2 bg-[var(--color-primary)] text-white px-5 py-2.5 rounded-lg text-sm font-medium hover:bg-[var(--color-primary-strong)] transition-colors"
               >
                 <Plus className="h-4 w-4" /> Nueva Consulta
               </Link>
@@ -245,7 +245,7 @@ export default async function ForumHomePage({
             <div className="space-y-1">
               <Link
                 href={`/mis-cursos/${course.slug}/foro`}
-                className="flex items-center justify-between w-full px-3 py-2 rounded-full bg-[#022448] text-white text-sm font-medium"
+                className="flex items-center justify-between w-full px-3 py-2 rounded-full bg-[var(--color-primary)] text-white text-sm font-medium"
               >
                 <span>Todas las discusiones</span>
                 <span className="bg-white/20 rounded-full px-2 py-0.5 text-xs">
@@ -256,11 +256,11 @@ export default async function ForumHomePage({
                 <Link
                   key={cat.id}
                   href={`/mis-cursos/${course.slug}/foro/${cat.slug}`}
-                  className="flex items-center justify-between w-full px-3 py-2 rounded-full text-sm text-[#43474e] hover:bg-[#f0f3ff] hover:text-[#022448] transition-colors"
+                  className="flex items-center justify-between w-full px-3 py-2 rounded-full text-sm text-[#43474e] hover:bg-[#f0f3ff] hover:text-[var(--color-primary)] transition-colors"
                 >
                   <span className="truncate">{cat.title}</span>
                   {cat._count.threads > 0 && (
-                    <span className="ml-2 shrink-0 bg-[#e7eeff] text-[#022448] rounded-full px-2 py-0.5 text-xs font-medium">
+                    <span className="ml-2 shrink-0 bg-[#e7eeff] text-[var(--color-primary)] rounded-full px-2 py-0.5 text-xs font-medium">
                       {cat._count.threads}
                     </span>
                   )}
@@ -287,7 +287,7 @@ export default async function ForumHomePage({
                   <Link
                     key={cat.id}
                     href={`/mis-cursos/${course.slug}/foro/${cat.slug}`}
-                    className="px-3 py-1 rounded-full border border-[#c4c6cf] text-sm text-[#43474e] hover:border-[#022448] hover:text-[#022448] transition-colors"
+                    className="px-3 py-1 rounded-full border border-[#c4c6cf] text-sm text-[#43474e] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] transition-colors"
                   >
                     {cat.title}
                   </Link>
@@ -309,7 +309,7 @@ export default async function ForumHomePage({
             </p>
             <Link
               href="/soporte"
-              className="text-xs font-medium text-[#022448] hover:underline"
+              className="text-xs font-medium text-[var(--color-primary)] hover:underline"
             >
               Leer lineamientos
             </Link>
@@ -322,7 +322,7 @@ export default async function ForumHomePage({
               style={{ boxShadow: "0px 4px 12px rgba(30,58,95,0.03)" }}
             >
               <div className="flex items-center gap-2 mb-3">
-                <ShieldCheck className="h-4 w-4 text-[#022448]" />
+                <ShieldCheck className="h-4 w-4 text-[var(--color-primary)]" />
                 <h3 className="text-sm font-semibold text-[#111c2c]">
                   Moderación
                 </h3>
@@ -330,13 +330,13 @@ export default async function ForumHomePage({
               <div className="space-y-2">
                 <Link
                   href={`/mis-cursos/${course.slug}/foro/moderacion`}
-                  className="flex items-center gap-2 w-full px-3 py-2 rounded-lg text-sm text-[#43474e] border border-[#c4c6cf] hover:border-[#022448] hover:text-[#022448] transition-colors"
+                  className="flex items-center gap-2 w-full px-3 py-2 rounded-lg text-sm text-[#43474e] border border-[#c4c6cf] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] transition-colors"
                 >
                   Panel de moderación
                 </Link>
                 <Link
                   href={`/mis-cursos/${course.slug}/foro/historico`}
-                  className="flex items-center gap-2 w-full px-3 py-2 rounded-lg text-sm text-[#43474e] border border-[#c4c6cf] hover:border-[#022448] hover:text-[#022448] transition-colors"
+                  className="flex items-center gap-2 w-full px-3 py-2 rounded-lg text-sm text-[#43474e] border border-[#c4c6cf] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] transition-colors"
                 >
                   Ver histórico
                 </Link>

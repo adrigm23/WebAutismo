@@ -129,11 +129,11 @@ export default async function ForumThreadPage({ params, searchParams }: ForumThr
     <div>
       {/* Breadcrumb */}
       <nav className="mb-6 flex flex-wrap items-center gap-1.5 text-sm">
-        <Link href={`/mis-cursos/${course.slug}/foro`} className="text-[#43474e] hover:text-[#022448] transition-colors">
+        <Link href={`/mis-cursos/${course.slug}/foro`} className="text-[#43474e] hover:text-[var(--color-primary)] transition-colors">
           Comunidad
         </Link>
         <ChevronRight className="h-3.5 w-3.5 text-[#74777f]" />
-        <Link href={`/mis-cursos/${course.slug}/foro/${categorySlug}`} className="text-[#43474e] hover:text-[#022448] transition-colors">
+        <Link href={`/mis-cursos/${course.slug}/foro/${categorySlug}`} className="text-[#43474e] hover:text-[var(--color-primary)] transition-colors">
           {forumData.category.title}
         </Link>
         <ChevronRight className="h-3.5 w-3.5 text-[#74777f]" />
@@ -160,7 +160,7 @@ export default async function ForumThreadPage({ params, searchParams }: ForumThr
                   </span>
                 )}
                 {forumData.thread.type === "ANNOUNCEMENT" && (
-                  <span className="px-2 py-0.5 rounded text-[11px] font-medium bg-[#e7eeff] text-[#022448] border border-[#c4c6cf]">
+                  <span className="px-2 py-0.5 rounded text-[11px] font-medium bg-[#e7eeff] text-[var(--color-primary)] border border-[#c4c6cf]">
                     Anuncio
                   </span>
                 )}
@@ -188,7 +188,7 @@ export default async function ForumThreadPage({ params, searchParams }: ForumThr
                     <span>·</span>
                     <Link
                       href={`/mis-cursos/${course.slug}/foro/${categorySlug}/${threadId}/editar`}
-                      className="flex items-center gap-1 text-[#022448] hover:underline"
+                      className="flex items-center gap-1 text-[var(--color-primary)] hover:underline"
                     >
                       <PencilLine className="h-3.5 w-3.5" /> Editar
                     </Link>
@@ -196,7 +196,7 @@ export default async function ForumThreadPage({ params, searchParams }: ForumThr
                 )}
                 <Link
                   href={`/mis-cursos/${course.slug}/foro/${categorySlug}`}
-                  className="ml-auto text-[#43474e] hover:text-[#022448] transition-colors"
+                  className="ml-auto text-[#43474e] hover:text-[var(--color-primary)] transition-colors"
                 >
                   Volver a la categoría
                 </Link>
@@ -212,7 +212,7 @@ export default async function ForumThreadPage({ params, searchParams }: ForumThr
                     "w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold shrink-0",
                     canModerateCourse(forumData.thread.authorRole)
                       ? "bg-[#adf0df] text-[#2c6f62] border border-[#91d3c3]"
-                      : "bg-[#e7eeff] text-[#022448] border border-[#c4c6cf]"
+                      : "bg-[#e7eeff] text-[var(--color-primary)] border border-[#c4c6cf]"
                   )}>
                     {forumData.thread.author.name.split(" ").slice(0, 2).map((n: string) => n[0]).join("").toUpperCase()}
                   </div>
@@ -257,9 +257,9 @@ export default async function ForumThreadPage({ params, searchParams }: ForumThr
                         href={href}
                         target={isExternal ? "_blank" : undefined}
                         rel={isExternal ? "noreferrer" : undefined}
-                        className="inline-flex items-center gap-3 rounded-xl border border-[#c4c6cf] bg-[#f8fafc] px-4 py-3 text-sm text-[#111c2c] hover:border-[#022448] hover:bg-white transition-all"
+                        className="inline-flex items-center gap-3 rounded-xl border border-[#c4c6cf] bg-[#f8fafc] px-4 py-3 text-sm text-[#111c2c] hover:border-[var(--color-primary)] hover:bg-white transition-all"
                       >
-                        <div className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-[#e7eeff] text-[#022448]">
+                        <div className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-[#e7eeff] text-[var(--color-primary)]">
                           <Icon className="h-4 w-4" />
                         </div>
                         <div>
@@ -293,7 +293,7 @@ export default async function ForumThreadPage({ params, searchParams }: ForumThr
                   <input name="threadId" type="hidden" value={threadId} />
                   <input name="nextPath" type="hidden" value={nextPath} />
                   <input name="reason" type="hidden" value="Revisar hilo por posible incumplimiento de las normas del foro." />
-                  <button type="submit" className="text-xs text-[#74777f] hover:text-[#022448] transition-colors">
+                  <button type="submit" className="text-xs text-[#74777f] hover:text-[var(--color-primary)] transition-colors">
                     Reportar hilo
                   </button>
                 </form>
@@ -323,7 +323,7 @@ export default async function ForumThreadPage({ params, searchParams }: ForumThr
                   <input name="categorySlug" type="hidden" value={categorySlug} />
                   <input name="threadId" type="hidden" value={threadId} />
                   <input name="nextPath" type="hidden" value={nextPath} />
-                  <button type="submit" className="flex items-center gap-1.5 rounded-lg border border-[#c4c6cf] px-3 py-1.5 text-sm text-[#43474e] hover:border-[#022448] hover:text-[#022448] transition-colors">
+                  <button type="submit" className="flex items-center gap-1.5 rounded-lg border border-[#c4c6cf] px-3 py-1.5 text-sm text-[#43474e] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] transition-colors">
                     {forumData.thread.isPinned
                       ? <><PinOff className="h-3.5 w-3.5" /> Quitar fijado</>
                       : <><Pin className="h-3.5 w-3.5" /> Fijar hilo</>}
@@ -334,7 +334,7 @@ export default async function ForumThreadPage({ params, searchParams }: ForumThr
                   <input name="categorySlug" type="hidden" value={categorySlug} />
                   <input name="threadId" type="hidden" value={threadId} />
                   <input name="nextPath" type="hidden" value={nextPath} />
-                  <button type="submit" className="flex items-center gap-1.5 rounded-lg border border-[#c4c6cf] px-3 py-1.5 text-sm text-[#43474e] hover:border-[#022448] hover:text-[#022448] transition-colors">
+                  <button type="submit" className="flex items-center gap-1.5 rounded-lg border border-[#c4c6cf] px-3 py-1.5 text-sm text-[#43474e] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] transition-colors">
                     {forumData.thread.isClosed
                       ? <><Unlock className="h-3.5 w-3.5" /> Reabrir hilo</>
                       : <><Lock className="h-3.5 w-3.5" /> Cerrar hilo</>}
@@ -383,7 +383,7 @@ export default async function ForumThreadPage({ params, searchParams }: ForumThr
                             <input name="threadId" type="hidden" value={threadId} />
                             <input name="postId" type="hidden" value={post.id} />
                             <input name="nextPath" type="hidden" value={nextPath} />
-                            <button type="submit" className="text-xs text-[#022448] hover:underline">Restaurar</button>
+                            <button type="submit" className="text-xs text-[var(--color-primary)] hover:underline">Restaurar</button>
                           </form>
                         )}
                       </div>
@@ -405,7 +405,7 @@ export default async function ForumThreadPage({ params, searchParams }: ForumThr
                               "w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold shrink-0",
                               canModerateCourse(post.authorRole)
                                 ? "bg-[#adf0df] text-[#2c6f62] border border-[#91d3c3]"
-                                : "bg-[#e7eeff] text-[#022448] border border-[#c4c6cf]"
+                                : "bg-[#e7eeff] text-[var(--color-primary)] border border-[#c4c6cf]"
                             )}>
                               {post.author.name.split(" ").slice(0, 2).map((n: string) => n[0]).join("").toUpperCase()}
                             </div>
@@ -457,9 +457,9 @@ export default async function ForumThreadPage({ params, searchParams }: ForumThr
                                   href={href}
                                   target={isExternal ? "_blank" : undefined}
                                   rel={isExternal ? "noreferrer" : undefined}
-                                  className="inline-flex items-center gap-2 rounded-lg border border-[#c4c6cf] bg-[#f8fafc] px-3 py-2 text-sm text-[#111c2c] hover:border-[#022448] transition-all"
+                                  className="inline-flex items-center gap-2 rounded-lg border border-[#c4c6cf] bg-[#f8fafc] px-3 py-2 text-sm text-[#111c2c] hover:border-[var(--color-primary)] transition-all"
                                 >
-                                  <Icon className="h-4 w-4 text-[#022448]" />
+                                  <Icon className="h-4 w-4 text-[var(--color-primary)]" />
                                   <span className="text-sm font-medium">{att.label}</span>
                                 </a>
                               );
@@ -472,7 +472,7 @@ export default async function ForumThreadPage({ params, searchParams }: ForumThr
                           {canEditPost && (
                             <Link
                               href={`/mis-cursos/${course.slug}/foro/${categorySlug}/${threadId}/respuesta/${post.id}/editar`}
-                              className="flex items-center gap-1 text-xs text-[#74777f] hover:text-[#022448] transition-colors"
+                              className="flex items-center gap-1 text-xs text-[#74777f] hover:text-[var(--color-primary)] transition-colors"
                             >
                               <PencilLine className="h-3.5 w-3.5" /> Editar
                             </Link>
@@ -485,7 +485,7 @@ export default async function ForumThreadPage({ params, searchParams }: ForumThr
                                 <input name="threadId" type="hidden" value={threadId} />
                                 <input name="postId" type="hidden" value={post.id} />
                                 <input name="nextPath" type="hidden" value={nextPath} />
-                                <button type="submit" className="flex items-center gap-1 text-xs text-[#74777f] hover:text-[#022448] transition-colors">
+                                <button type="submit" className="flex items-center gap-1 text-xs text-[#74777f] hover:text-[var(--color-primary)] transition-colors">
                                   <CheckCircle2 className="h-3.5 w-3.5" />
                                   {forumData.thread.resolvedPostId === post.id ? "Quitar resolución" : "Marcar resuelto"}
                                 </button>
@@ -513,7 +513,7 @@ export default async function ForumThreadPage({ params, searchParams }: ForumThr
                             <input name="postId" type="hidden" value={post.id} />
                             <input name="nextPath" type="hidden" value={nextPath} />
                             <input name="reason" type="hidden" value="Revisar respuesta por posible incumplimiento." />
-                            <button type="submit" className="text-xs text-[#74777f] hover:text-[#022448] transition-colors">
+                            <button type="submit" className="text-xs text-[#74777f] hover:text-[var(--color-primary)] transition-colors">
                               Reportar
                             </button>
                           </form>
@@ -530,7 +530,7 @@ export default async function ForumThreadPage({ params, searchParams }: ForumThr
                   {repliesPagination.page > 1 && (
                     <Link
                       href={`?page=${repliesPagination.page - 1}`}
-                      className="px-4 py-2 rounded-lg border border-[#c4c6cf] text-sm text-[#43474e] hover:border-[#022448] hover:text-[#022448] transition-colors"
+                      className="px-4 py-2 rounded-lg border border-[#c4c6cf] text-sm text-[#43474e] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] transition-colors"
                     >
                       Anterior
                     </Link>
@@ -541,7 +541,7 @@ export default async function ForumThreadPage({ params, searchParams }: ForumThr
                   {repliesPagination.page < repliesPagination.totalPages && (
                     <Link
                       href={`?page=${repliesPagination.page + 1}`}
-                      className="px-4 py-2 rounded-lg border border-[#c4c6cf] text-sm text-[#43474e] hover:border-[#022448] hover:text-[#022448] transition-colors"
+                      className="px-4 py-2 rounded-lg border border-[#c4c6cf] text-sm text-[#43474e] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] transition-colors"
                     >
                       Siguiente
                     </Link>
@@ -597,7 +597,7 @@ export default async function ForumThreadPage({ params, searchParams }: ForumThr
                     "w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold shrink-0",
                     canModerateCourse(participant.role)
                       ? "bg-[#adf0df] text-[#2c6f62] border border-[#91d3c3]"
-                      : "bg-[#e7eeff] text-[#022448] border border-[#c4c6cf]"
+                      : "bg-[#e7eeff] text-[var(--color-primary)] border border-[#c4c6cf]"
                   )}>
                     {participant.name.split(" ").slice(0, 2).map((n: string) => n[0]).join("").toUpperCase()}
                   </div>
@@ -621,7 +621,7 @@ export default async function ForumThreadPage({ params, searchParams }: ForumThr
                     href={`/mis-cursos/${course.slug}/foro/${categorySlug}/${related.id}`}
                     className="block group"
                   >
-                    <p className="text-sm font-medium text-[#111c2c] group-hover:text-[#022448] transition-colors line-clamp-2 leading-snug">
+                    <p className="text-sm font-medium text-[#111c2c] group-hover:text-[var(--color-primary)] transition-colors line-clamp-2 leading-snug">
                       {related.title}
                     </p>
                     <p className="text-xs text-[#74777f] mt-1">

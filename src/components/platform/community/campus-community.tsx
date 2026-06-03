@@ -51,7 +51,7 @@ function ThreadCard({ thread }: { thread: CommunityFeedThread }) {
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-2 flex-wrap">
             {thread.isPinned && (
-              <span className="flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-[#e7eeff] text-[#022448] border border-[#c4c6cf]">
+              <span className="flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-[#e7eeff] text-[var(--color-primary)] border border-[#c4c6cf]">
                 <Pin className="h-3 w-3" /> Fijado
               </span>
             )}
@@ -66,7 +66,7 @@ function ThreadCard({ thread }: { thread: CommunityFeedThread }) {
             <span className="text-xs text-[#43474e]">{timeAgo(thread.lastActivityAt)}</span>
           </div>
 
-          <h3 className="text-[18px] font-semibold text-[#111c2c] group-hover:text-[#022448] transition-colors leading-snug mb-2 line-clamp-2">
+          <h3 className="text-[18px] font-semibold text-[#111c2c] group-hover:text-[var(--color-primary)] transition-colors leading-snug mb-2 line-clamp-2">
             {thread.title}
           </h3>
 
@@ -84,7 +84,7 @@ function ThreadCard({ thread }: { thread: CommunityFeedThread }) {
             "w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold border shrink-0",
             thread.isStaff
               ? "border-[#25695c] bg-[#adf0df] text-[#2c6f62]"
-              : "border-[#c4c6cf] bg-[#e7eeff] text-[#022448]",
+              : "border-[#c4c6cf] bg-[#e7eeff] text-[var(--color-primary)]",
           )}>
             {thread.authorInitials}
           </div>
@@ -115,7 +115,7 @@ function EmptyState({ newThreadHref }: { newThreadHref: string | null }) {
   return (
     <div className="flex flex-col items-center justify-center py-20 text-center">
       <div className="w-16 h-16 rounded-full bg-[#e7eeff] flex items-center justify-center mb-4">
-        <Users className="h-8 w-8 text-[#022448]" />
+        <Users className="h-8 w-8 text-[var(--color-primary)]" />
       </div>
       <h3 className="text-lg font-semibold text-[#111c2c] mb-2">Sin discusiones todavía</h3>
       <p className="text-sm text-[#43474e] max-w-xs mb-6">
@@ -124,7 +124,7 @@ function EmptyState({ newThreadHref }: { newThreadHref: string | null }) {
       {newThreadHref && (
         <Link
           href={newThreadHref}
-          className="flex items-center gap-2 bg-[#022448] text-white px-5 py-2.5 rounded-lg text-sm font-medium hover:bg-[#1e3a5f] transition-colors"
+          className="flex items-center gap-2 bg-[var(--color-primary)] text-white px-5 py-2.5 rounded-lg text-sm font-medium hover:bg-[var(--color-primary-strong)] transition-colors"
         >
           <Plus className="h-4 w-4" /> Nueva Consulta
         </Link>
@@ -181,12 +181,12 @@ export function CampusCommunity({ threads, courses, newThreadHref, userInitials 
 
           <div className="relative z-10 max-w-2xl">
             {activeCourse && (
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#dee8ff] text-[#022448] mb-3 text-xs font-medium">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#dee8ff] text-[var(--color-primary)] mb-3 text-xs font-medium">
                 <BookOpen className="h-3.5 w-3.5" />
                 {courses.find((c) => c.courseSlug === activeCourse)?.courseTitle}
               </div>
             )}
-            <h2 className="text-2xl md:text-[32px] font-bold text-[#022448] mb-2 leading-tight">
+            <h2 className="text-2xl md:text-[32px] font-bold text-[var(--color-primary)] mb-2 leading-tight">
               Comunidad
             </h2>
             <p className="text-sm text-[#43474e]">
@@ -198,7 +198,7 @@ export function CampusCommunity({ threads, courses, newThreadHref, userInitials 
             <div className="relative z-10 shrink-0 w-full md:w-auto">
               <Link
                 href={activeCourse ? newThreadForCourse(activeCourse) : (newThreadHref ?? "#")}
-                className="flex items-center justify-center gap-2 bg-[#022448] text-white px-6 py-3 rounded-lg text-sm font-medium hover:bg-[#1e3a5f] transition-colors w-full md:w-auto"
+                className="flex items-center justify-center gap-2 bg-[var(--color-primary)] text-white px-6 py-3 rounded-lg text-sm font-medium hover:bg-[var(--color-primary-strong)] transition-colors w-full md:w-auto"
                 style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.12)" }}
               >
                 <Plus className="h-4 w-4" />
@@ -226,7 +226,7 @@ export function CampusCommunity({ threads, courses, newThreadHref, userInitials 
                   className={cn(
                     "px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors",
                     filter === "recientes"
-                      ? "bg-[#dee8ff] text-[#022448]"
+                      ? "bg-[#dee8ff] text-[var(--color-primary)]"
                       : "text-[#43474e] hover:bg-[#f0f3ff] hover:text-[#111c2c]",
                   )}
                 >
@@ -238,7 +238,7 @@ export function CampusCommunity({ threads, courses, newThreadHref, userInitials 
                   className={cn(
                     "px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors",
                     filter === "sin-respuesta"
-                      ? "bg-[#dee8ff] text-[#022448]"
+                      ? "bg-[#dee8ff] text-[var(--color-primary)]"
                       : "text-[#43474e] hover:bg-[#f0f3ff] hover:text-[#111c2c]",
                   )}
                 >
@@ -279,7 +279,7 @@ export function CampusCommunity({ threads, courses, newThreadHref, userInitials 
                 className="bg-[#ffffff] rounded-xl border border-[#c4c6cf] p-5"
                 style={{ boxShadow: "0px 4px 12px rgba(30,58,95,0.05)" }}
               >
-                <h4 className="text-base font-semibold text-[#022448] mb-4 flex items-center gap-2 border-b border-[#c4c6cf] pb-3">
+                <h4 className="text-base font-semibold text-[var(--color-primary)] mb-4 flex items-center gap-2 border-b border-[#c4c6cf] pb-3">
                   <Users className="h-5 w-5" />
                   Mis comunidades
                 </h4>
@@ -298,7 +298,7 @@ export function CampusCommunity({ threads, courses, newThreadHref, userInitials 
                       <span>Todas las discusiones</span>
                       <span className={cn(
                         "text-xs px-2 py-0.5 rounded-full",
-                        activeCourse === null ? "bg-white/20 text-white" : "bg-[#dee8ff] text-[#022448]",
+                        activeCourse === null ? "bg-white/20 text-white" : "bg-[#dee8ff] text-[var(--color-primary)]",
                       )}>
                         {threads.length}
                       </span>
@@ -321,7 +321,7 @@ export function CampusCommunity({ threads, courses, newThreadHref, userInitials 
                         <span className="truncate pr-2">{course.courseTitle}</span>
                         <span className={cn(
                           "text-xs px-2 py-0.5 rounded-full shrink-0",
-                          activeCourse === course.courseSlug ? "bg-white/20 text-white" : "bg-[#dee8ff] text-[#022448]",
+                          activeCourse === course.courseSlug ? "bg-white/20 text-white" : "bg-[#dee8ff] text-[var(--color-primary)]",
                         )}>
                           {course.threadCount}
                         </span>
@@ -337,7 +337,7 @@ export function CampusCommunity({ threads, courses, newThreadHref, userInitials 
               className="bg-[#ffffff] rounded-xl border border-[#c4c6cf] p-5"
               style={{ boxShadow: "0px 4px 12px rgba(30,58,95,0.05)" }}
             >
-              <h4 className="text-base font-semibold text-[#022448] mb-4 flex items-center gap-2 border-b border-[#c4c6cf] pb-3">
+              <h4 className="text-base font-semibold text-[var(--color-primary)] mb-4 flex items-center gap-2 border-b border-[#c4c6cf] pb-3">
                 <Tag className="h-5 w-5" />
                 Categorías activas
               </h4>
@@ -352,7 +352,7 @@ export function CampusCommunity({ threads, courses, newThreadHref, userInitials 
                         key={cat}
                         type="button"
                         onClick={() => setQ(cat)}
-                        className="px-3 py-1.5 bg-[#f9f9ff] border border-[#c4c6cf] rounded-md text-xs font-medium text-[#43474e] hover:text-[#022448] hover:border-[#022448] transition-colors"
+                        className="px-3 py-1.5 bg-[#f9f9ff] border border-[#c4c6cf] rounded-md text-xs font-medium text-[#43474e] hover:text-[var(--color-primary)] hover:border-[var(--color-primary)] transition-colors"
                       >
                         {cat}
                       </button>
@@ -366,12 +366,12 @@ export function CampusCommunity({ threads, courses, newThreadHref, userInitials 
               className="bg-[#f0f3ff] rounded-xl border border-[#c4c6cf] p-4 text-center"
               style={{ boxShadow: "0px 4px 12px rgba(30,58,95,0.03)" }}
             >
-              <Shield className="h-6 w-6 text-[#022448] mx-auto mb-2" />
+              <Shield className="h-6 w-6 text-[var(--color-primary)] mx-auto mb-2" />
               <h5 className="text-sm font-semibold text-[#111c2c] mb-1">Normas de la Comunidad</h5>
               <p className="text-xs text-[#43474e] mb-3 leading-relaxed">
                 Mantenemos un entorno seguro, respetuoso y basado en evidencia.
               </p>
-              <Link href="/soporte" className="text-xs text-[#022448] hover:underline font-medium">
+              <Link href="/soporte" className="text-xs text-[var(--color-primary)] hover:underline font-medium">
                 Leer lineamientos
               </Link>
             </div>

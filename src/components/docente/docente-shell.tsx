@@ -70,7 +70,7 @@ function SidebarContent({
       {/* New report button */}
       <div className="px-3 pb-4">
         <button
-          className="flex w-full items-center justify-center gap-2 rounded-xl bg-[var(--color-ink)] px-4 py-2.5 text-sm font-semibold text-white transition hover:opacity-90"
+          className="flex w-full items-center justify-center gap-2 rounded-xl bg-[var(--color-primary)] px-4 py-2.5 text-sm font-semibold text-white transition hover:opacity-90"
           type="button"
         >
           <Plus className="h-4 w-4" />

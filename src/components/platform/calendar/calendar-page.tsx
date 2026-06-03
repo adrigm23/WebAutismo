@@ -324,7 +324,7 @@ function AgendaSection({
             >
               <div className={cn("mt-0.5 h-2.5 w-2.5 shrink-0 rounded-full", cfg.dot)} />
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-semibold text-[#1a1f2e]">{e.title}</p>
+                <p className="truncate text-sm font-semibold text-[var(--color-primary)]">{e.title}</p>
                 <p className="mt-0.5 text-xs text-[#9ba3af]">
                   {formatDateShort(new Date(e.startsAt))} · {formatTime(new Date(e.startsAt))}
                   {e.courseTitle && ` · ${e.courseTitle}`}
@@ -400,7 +400,7 @@ function UpcomingEventsPanel({
 
   return (
     <div className="rounded-xl border border-[#eaecf0] bg-white p-4">
-      <h3 className="mb-3 text-sm font-semibold text-[#1a1f2e]">Próximos Eventos</h3>
+      <h3 className="mb-3 text-sm font-semibold text-[var(--color-primary)]">Próximos Eventos</h3>
       {upcoming.length === 0 ? (
         <p className="text-xs text-[#9ba3af]">Sin próximos eventos.</p>
       ) : (
@@ -420,10 +420,10 @@ function UpcomingEventsPanel({
                   <span className="text-[0.6rem] font-bold uppercase text-[#9ba3af]">
                     {MONTHS_ES[start.getMonth()].slice(0, 3).toUpperCase()}
                   </span>
-                  <span className="text-lg font-bold leading-none text-[#1a1f2e]">{start.getDate()}</span>
+                  <span className="text-lg font-bold leading-none text-[var(--color-primary)]">{start.getDate()}</span>
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="line-clamp-1 text-xs font-semibold text-[#1a1f2e]">{e.title}</p>
+                  <p className="line-clamp-1 text-xs font-semibold text-[var(--color-primary)]">{e.title}</p>
                   <p className="mt-0.5 text-[0.6rem] text-[#9ba3af]">
                     {formatTime(start)}{e.endsAt && !isSameDay(new Date(e.startsAt), new Date(e.endsAt)) ? "" : ` - ${formatTime(new Date(e.endsAt))}`} hs
                   </p>
@@ -594,7 +594,7 @@ function EventModal({
                   {statusCfg.label}
                 </span>
               </div>
-              <h2 className="text-base font-bold leading-snug text-[#1a1f2e]">{event.title}</h2>
+              <h2 className="text-base font-bold leading-snug text-[var(--color-primary)]">{event.title}</h2>
             </div>
             <button type="button" onClick={onClose} className="shrink-0 rounded-lg p-1 text-[#9ba3af] hover:bg-black/5">
               <X className="h-5 w-5" />
@@ -706,7 +706,7 @@ function CancelConfirmDialog({
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4">
       <div className="w-full max-w-sm rounded-xl bg-white p-6 shadow-2xl">
-        <h2 className="text-base font-semibold text-[#1a1f2e]">Cancelar evento</h2>
+        <h2 className="text-base font-semibold text-[var(--color-primary)]">Cancelar evento</h2>
         <p className="mt-2 text-sm text-[#6b7280]">
           ¿Cancelar &ldquo;{event.title}&rdquo;? Esta acción no se puede deshacer.
         </p>
@@ -766,10 +766,10 @@ function EventFormDialog({
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4">
       <div className="w-full max-w-lg overflow-hidden rounded-xl bg-white shadow-2xl">
         <div className="flex items-center justify-between border-b border-[#eaecf0] px-6 py-4">
-          <h2 className="text-base font-semibold text-[#1a1f2e]">
+          <h2 className="text-base font-semibold text-[var(--color-primary)]">
             {isEdit ? "Editar evento" : "Nuevo evento"}
           </h2>
-          <button type="button" onClick={onClose} className="text-[#9ba3af] hover:text-[#1a1f2e]">
+          <button type="button" onClick={onClose} className="text-[#9ba3af] hover:text-[var(--color-primary)]">
             <X className="h-5 w-5" />
           </button>
         </div>
@@ -991,7 +991,7 @@ export function CalendarPage({ events, courses, canManage }: CalendarPageProps) 
               </button>
             </div>
 
-            <h1 className="text-xl font-bold text-[#1a1f2e]">
+            <h1 className="text-xl font-bold text-[var(--color-primary)]">
               {viewMode === "week"
                 ? `${formatDateShort(weekDays[0])} – ${formatDateShort(weekDays[6])}`
                 : `${MONTHS_ES[viewMonth]} ${viewYear}`}
@@ -1084,7 +1084,7 @@ export function CalendarPage({ events, courses, canManage }: CalendarPageProps) 
               onClick={(e) => e.stopPropagation()}
             >
               <div className="mb-4 flex items-center justify-between">
-                <h2 className="text-sm font-semibold text-[#1a1f2e]">Filtros</h2>
+                <h2 className="text-sm font-semibold text-[var(--color-primary)]">Filtros</h2>
                 <button type="button" onClick={() => setShowFilters(false)} className="text-[#9ba3af]">
                   <X className="h-5 w-5" />
                 </button>

@@ -147,7 +147,7 @@ function MessageBubble({ msg }: { msg: Message }) {
             "rounded-xl px-4 py-3 text-sm leading-relaxed",
             isSent
               ? "rounded-tr-sm bg-[#1e3a5f] text-white"
-              : "rounded-tl-sm border border-[#e5e7eb] bg-white text-[#1a1f2e]",
+              : "rounded-tl-sm border border-[#e5e7eb] bg-white text-[var(--color-primary)]",
           )}
         >
           {msg.content}
@@ -164,7 +164,7 @@ function MessageBubble({ msg }: { msg: Message }) {
               <FileText className="h-5 w-5 text-red-500" />
             </div>
             <div>
-              <p className="text-sm font-semibold text-[#1a1f2e]">{msg.attachment.name}</p>
+              <p className="text-sm font-semibold text-[var(--color-primary)]">{msg.attachment.name}</p>
               <p className="text-xs text-[#9ba3af]">{msg.attachment.size}</p>
             </div>
           </div>
@@ -465,11 +465,11 @@ export function MessagingPage({
       <aside className="flex w-72 shrink-0 flex-col border-r border-[#e5e7eb]">
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4">
-          <h1 className="text-lg font-bold text-[#1a1f2e]">Mensajes</h1>
+          <h1 className="text-lg font-bold text-[var(--color-primary)]">Mensajes</h1>
           <div className="flex items-center gap-1">
             <Link
               href="/mis-cursos"
-              className="flex h-7 w-7 items-center justify-center rounded-lg text-[#9ba3af] transition hover:bg-[#f3f4f6] hover:text-[#1a1f2e]"
+              className="flex h-7 w-7 items-center justify-center rounded-lg text-[#9ba3af] transition hover:bg-[#f3f4f6] hover:text-[var(--color-primary)]"
               title="Volver al campus"
             >
               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -477,7 +477,7 @@ export function MessagingPage({
               </svg>
             </Link>
             <button
-              className="flex h-7 w-7 items-center justify-center rounded-lg text-[#9ba3af] transition hover:bg-[#f3f4f6] hover:text-[#1a1f2e]"
+              className="flex h-7 w-7 items-center justify-center rounded-lg text-[#9ba3af] transition hover:bg-[#f3f4f6] hover:text-[var(--color-primary)]"
               type="button"
               title="Nueva conversación"
             >
@@ -491,7 +491,7 @@ export function MessagingPage({
           <div className="flex items-center gap-2 rounded-xl bg-[#f3f4f6] px-3 py-2">
             <Search className="h-3.5 w-3.5 shrink-0 text-[#9ba3af]" />
             <input
-              className="flex-1 bg-transparent text-sm text-[#1a1f2e] placeholder:text-[#9ba3af] focus:outline-none"
+              className="flex-1 bg-transparent text-sm text-[var(--color-primary)] placeholder:text-[#9ba3af] focus:outline-none"
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Buscar conversaciones..."
               type="text"
@@ -592,7 +592,7 @@ export function MessagingPage({
                           <span
                             className={cn(
                               "text-sm font-semibold truncate",
-                              active?.id === dm.id ? "text-white" : "text-[#1a1f2e]",
+                              active?.id === dm.id ? "text-white" : "text-[var(--color-primary)]",
                             )}
                           >
                             {dm.name}
@@ -651,7 +651,7 @@ export function MessagingPage({
                 </div>
               )}
               <div>
-                <p className="text-sm font-bold text-[#1a1f2e]">{active.name}</p>
+                <p className="text-sm font-bold text-[var(--color-primary)]">{active.name}</p>
                 {active.kind === "dm" && (
                   <p className="flex items-center gap-1.5 text-xs text-emerald-600">
                     <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
@@ -667,7 +667,7 @@ export function MessagingPage({
             <div className="flex items-center gap-1">
               {[Phone, Video, MoreVertical].map((Icon, i) => (
                 <button
-                  className="flex h-8 w-8 items-center justify-center rounded-lg text-[#9ba3af] transition hover:bg-[#f3f4f6] hover:text-[#1a1f2e]"
+                  className="flex h-8 w-8 items-center justify-center rounded-lg text-[#9ba3af] transition hover:bg-[#f3f4f6] hover:text-[var(--color-primary)]"
                   key={i}
                   type="button"
                 >
@@ -713,7 +713,7 @@ export function MessagingPage({
         <div className="shrink-0 border-t border-[#e5e7eb] bg-white px-5 py-4">
           <div className="rounded-xl border border-[#e5e7eb] bg-white">
             <textarea
-              className="w-full resize-none rounded-t-2xl px-4 pt-3.5 text-sm text-[#1a1f2e] placeholder:text-[#9ba3af] focus:outline-none"
+              className="w-full resize-none rounded-t-2xl px-4 pt-3.5 text-sm text-[var(--color-primary)] placeholder:text-[#9ba3af] focus:outline-none"
               onKeyDown={handleKeyDown}
               onChange={(e) => setDraftText(e.target.value)}
               placeholder="Escribe un mensaje..."
@@ -724,14 +724,14 @@ export function MessagingPage({
             <div className="flex items-center justify-between border-t border-[#f0f0f0] px-4 py-2.5">
               <div className="flex items-center gap-1">
                 <button
-                  className="flex h-8 w-8 items-center justify-center rounded-lg text-[#9ba3af] transition hover:bg-[#f3f4f6] hover:text-[#1a1f2e]"
+                  className="flex h-8 w-8 items-center justify-center rounded-lg text-[#9ba3af] transition hover:bg-[#f3f4f6] hover:text-[var(--color-primary)]"
                   type="button"
                   title="Adjuntar archivo"
                 >
                   <Paperclip className="h-4 w-4" />
                 </button>
                 <button
-                  className="flex h-8 w-8 items-center justify-center rounded-lg text-[#9ba3af] transition hover:bg-[#f3f4f6] hover:text-[#1a1f2e]"
+                  className="flex h-8 w-8 items-center justify-center rounded-lg text-[#9ba3af] transition hover:bg-[#f3f4f6] hover:text-[var(--color-primary)]"
                   type="button"
                   title="Emoji"
                 >
@@ -759,12 +759,12 @@ export function MessagingPage({
             {/* Profile */}
             <div className="flex flex-col items-center border-b border-[#e5e7eb] px-5 py-6 text-center">
               <Avatar initials={active.initials} size="xl" />
-              <h2 className="mt-3 text-base font-bold text-[#1a1f2e]">{active.name}</h2>
+              <h2 className="mt-3 text-base font-bold text-[var(--color-primary)]">{active.name}</h2>
               <span className="mt-1.5 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
                 {active.role}
               </span>
               <p className="mt-2 text-xs text-[#9ba3af]">{active.department}</p>
-              <button className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl border border-[#e5e7eb] py-2 text-xs font-semibold text-[#1a1f2e] transition hover:bg-[#f3f4f6]">
+              <button className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl border border-[#e5e7eb] py-2 text-xs font-semibold text-[var(--color-primary)] transition hover:bg-[#f3f4f6]">
                 <User className="h-3.5 w-3.5" />
                 Ver Ficha Académica
               </button>
@@ -783,7 +783,7 @@ export function MessagingPage({
                         <FileText className="h-4 w-4 text-red-500" />
                       </div>
                       <div className="min-w-0">
-                        <p className="truncate text-xs font-semibold text-[#1a1f2e]">{file.name}</p>
+                        <p className="truncate text-xs font-semibold text-[var(--color-primary)]">{file.name}</p>
                         <p className="text-[0.65rem] text-[#9ba3af]">Hoy, {file.time}</p>
                       </div>
                     </div>
@@ -797,7 +797,7 @@ export function MessagingPage({
             <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[var(--color-surface)]">
               <Hash className="h-7 w-7 text-[var(--color-primary)]" />
             </div>
-            <p className="mt-3 text-sm font-bold text-[#1a1f2e]">{active.name}</p>
+            <p className="mt-3 text-sm font-bold text-[var(--color-primary)]">{active.name}</p>
             <p className="mt-1 text-xs text-[#9ba3af]">Canal del curso</p>
           </div>
         ) : null}

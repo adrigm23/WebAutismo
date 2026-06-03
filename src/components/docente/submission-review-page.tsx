@@ -185,7 +185,7 @@ function StudentCard({ submission }: { submission: SubmissionForReview }) {
         {submission.studentInitials}
       </div>
       <div className="min-w-0 flex-1">
-        <p className="text-sm font-semibold text-[#1a1f2e]">{submission.studentName}</p>
+        <p className="text-sm font-semibold text-[var(--color-primary)]">{submission.studentName}</p>
         <p className="truncate text-xs text-[#9ba3af]">{submission.studentEmail}</p>
       </div>
       <div className="shrink-0 text-right">
@@ -232,10 +232,10 @@ function RubricPanel({
       <div className="flex items-center justify-between border-b border-[#eaecf0] px-5 py-4">
         <div className="flex items-center gap-2">
           <FileText className="h-4 w-4 text-[#163c58]" />
-          <h3 className="text-sm font-bold text-[#1a1f2e]">Rúbrica de Evaluación</h3>
+          <h3 className="text-sm font-bold text-[var(--color-primary)]">Rúbrica de Evaluación</h3>
         </div>
         <div className="text-right">
-          <span className="text-lg font-bold text-[#1a1f2e]">{totalEarned}</span>
+          <span className="text-lg font-bold text-[var(--color-primary)]">{totalEarned}</span>
           <span className="text-sm text-[#9ba3af]">/{totalMax}</span>
         </div>
       </div>
@@ -251,7 +251,7 @@ function RubricPanel({
             <div key={criterion.id} className="py-4">
               <div className="flex items-start justify-between gap-2 mb-1">
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold text-[#1a1f2e]">{criterion.title}</p>
+                  <p className="text-sm font-semibold text-[var(--color-primary)]">{criterion.title}</p>
                   {criterion.description && (
                     <p className="mt-0.5 text-xs text-[#9ba3af] leading-snug">{criterion.description}</p>
                   )}
@@ -267,7 +267,7 @@ function RubricPanel({
                       const v = Math.min(criterion.maxPoints, Math.max(0, Number(e.target.value)));
                       setPoints(criterion.id, v);
                     }}
-                    className="w-14 rounded-lg border border-[#d0d5dd] px-2 py-1 text-right text-sm font-bold text-[#1a1f2e] outline-none focus:border-[#163c58] focus:ring-2 focus:ring-[#163c58]/10"
+                    className="w-14 rounded-lg border border-[#d0d5dd] px-2 py-1 text-right text-sm font-bold text-[var(--color-primary)] outline-none focus:border-[#163c58] focus:ring-2 focus:ring-[#163c58]/10"
                   />
                   <span className="text-xs text-[#9ba3af]">/{criterion.maxPoints}</span>
                 </div>
@@ -335,7 +335,7 @@ function GradingForm({
       <div className="rounded-xl border border-[#eaecf0] bg-white">
         <div className="flex items-center gap-2 border-b border-[#eaecf0] px-5 py-3.5">
           <MessageSquare className="h-4 w-4 text-[#163c58]" />
-          <h3 className="text-sm font-bold text-[#1a1f2e]">Feedback General</h3>
+          <h3 className="text-sm font-bold text-[var(--color-primary)]">Feedback General</h3>
         </div>
 
         <div className="p-4">
@@ -354,7 +354,7 @@ function GradingForm({
                   value={manualScore}
                   onChange={(e) => setManualScore(e.target.value)}
                   placeholder="Ej: 85"
-                  className="w-24 rounded-lg border border-[#d0d5dd] px-3 py-2 text-sm font-bold text-[#1a1f2e] outline-none focus:border-[#163c58] focus:ring-2 focus:ring-[#163c58]/10"
+                  className="w-24 rounded-lg border border-[#d0d5dd] px-3 py-2 text-sm font-bold text-[var(--color-primary)] outline-none focus:border-[#163c58] focus:ring-2 focus:ring-[#163c58]/10"
                 />
                 <span className="text-sm text-[#9ba3af]">/ 100 pts</span>
               </div>
@@ -528,7 +528,7 @@ export function SubmissionReviewPage({ submission }: SubmissionReviewPageProps) 
             </>
           )}
           <ChevronRight className="h-3 w-3" />
-          <span className="font-medium text-[#1a1f2e]">{submission.resourceTitle}</span>
+          <span className="font-medium text-[var(--color-primary)]">{submission.resourceTitle}</span>
         </nav>
 
         {/* ── Title row ── */}
@@ -541,7 +541,7 @@ export function SubmissionReviewPage({ submission }: SubmissionReviewPageProps) 
           </Link>
 
           <div className="min-w-0 flex-1">
-            <h1 className="text-xl font-bold tracking-tight text-[#1a1f2e] sm:text-2xl">
+            <h1 className="text-xl font-bold tracking-tight text-[var(--color-primary)] sm:text-2xl">
               {submission.resourceTitle}
             </h1>
             <p className="mt-0.5 text-sm text-[#6b7280]">

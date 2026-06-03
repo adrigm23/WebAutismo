@@ -79,7 +79,7 @@ function ProgressCard({
     <div className="min-w-[220px] rounded-xl border border-[#e5e7eb] bg-white p-5 shadow-sm">
       <div className="flex items-center justify-between text-sm">
         <span className="font-medium text-[#6b7280]">Progreso del curso</span>
-        <span className="text-xl font-bold text-[#1a1f2e]">{pct}%</span>
+        <span className="text-xl font-bold text-[var(--color-primary)]">{pct}%</span>
       </div>
       <div className="mt-3 h-2 overflow-hidden rounded-full bg-[#e5e7eb]">
         <div
@@ -88,7 +88,7 @@ function ProgressCard({
         />
       </div>
       <Link
-        className="mt-4 flex w-full items-center justify-center rounded-xl bg-[#1a1f2e] py-2.5 text-sm font-semibold text-white transition hover:opacity-90"
+        className="mt-4 flex w-full items-center justify-center rounded-xl bg-[var(--color-primary)] py-2.5 text-sm font-semibold text-white transition hover:opacity-90"
         href={href}
       >
         Continuar Módulo {Math.max(1, inProgressIndex + 1)}
@@ -157,7 +157,7 @@ function ModuleCard({
           <p
             className={cn(
               "text-sm font-semibold leading-snug",
-              status === "upcoming" ? "text-[#6b7280]" : "text-[#1a1f2e]",
+              status === "upcoming" ? "text-[#6b7280]" : "text-[var(--color-primary)]",
             )}
           >
             Módulo {moduleIndex + 1}: {module.title}
@@ -231,7 +231,7 @@ function ModuleCard({
                   {itemHref ? (
                     <Link
                       className={cn(
-                        "flex-1 text-sm leading-snug transition hover:text-[#022448]",
+                        "flex-1 text-sm leading-snug transition hover:text-[var(--color-primary)]",
                         isCurrent
                           ? "font-semibold text-emerald-700"
                           : isLessonCompleted
@@ -259,7 +259,7 @@ function ModuleCard({
 
                   {isCurrent ? (
                     <Link
-                      className="shrink-0 rounded-full bg-[#1a1f2e] px-3 py-1 text-xs font-semibold text-white transition hover:opacity-80"
+                      className="shrink-0 rounded-full bg-[var(--color-primary)] px-3 py-1 text-xs font-semibold text-white transition hover:opacity-80"
                       href={continueHref}
                     >
                       Continuar
@@ -300,7 +300,7 @@ function ModuleCard({
                 </span>
                 {status === "in-progress" ? (
                   <Link
-                    className="shrink-0 rounded-full bg-[#1a1f2e] px-3 py-1 text-xs font-semibold text-white transition hover:opacity-80"
+                    className="shrink-0 rounded-full bg-[var(--color-primary)] px-3 py-1 text-xs font-semibold text-white transition hover:opacity-80"
                     href={continueHref}
                   >
                     Continuar
@@ -350,7 +350,7 @@ function InstructorCard({ course }: { course: CatalogCourse }) {
           {initials}
         </div>
         <div className="min-w-0">
-          <p className="font-semibold text-[#1a1f2e]">{teacher.name}</p>
+          <p className="font-semibold text-[var(--color-primary)]">{teacher.name}</p>
           <p className="text-xs text-[#6b7280]">{teacher.role}</p>
         </div>
       </div>
@@ -390,7 +390,7 @@ function MaterialsCard({ resources }: { resources: CampusResourceItem[] }) {
               <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#f3f4f6] text-[#6b7280]">
                 <Icon className="h-4 w-4" />
               </div>
-              <span className="text-sm font-medium text-[#1a1f2e]">{m.title}</span>
+              <span className="text-sm font-medium text-[var(--color-primary)]">{m.title}</span>
             </a>
           );
         })}
@@ -433,10 +433,10 @@ function DatesCard({ course }: { course: CatalogCourse }) {
                 <span className="text-[0.55rem] font-bold uppercase text-[var(--color-primary)]">
                   {month}
                 </span>
-                <span className="text-base font-bold leading-none text-[#1a1f2e]">{day}</span>
+                <span className="text-base font-bold leading-none text-[var(--color-primary)]">{day}</span>
               </div>
               <div className="min-w-0">
-                <p className="text-sm font-semibold text-[#1a1f2e]">{label}</p>
+                <p className="text-sm font-semibold text-[var(--color-primary)]">{label}</p>
                 <p className="text-xs text-[#9ba3af]">{sublabel}</p>
               </div>
             </div>
@@ -450,7 +450,7 @@ function DatesCard({ course }: { course: CatalogCourse }) {
 function CertificateCard({ isCompleted }: { isCompleted: boolean }) {
   return (
     <div className="overflow-hidden rounded-xl border border-[#e5e7eb] bg-white p-5">
-      <p className="text-center text-sm font-bold text-[#1a1f2e]">
+      <p className="text-center text-sm font-bold text-[var(--color-primary)]">
         Certificado Oficial
       </p>
       <p className="mt-2 text-center text-xs leading-relaxed text-[#6b7280]">
@@ -522,7 +522,7 @@ export function CourseWorkspacePage({
                   )}
                 </div>
 
-                <h1 className="mt-4 text-[1.7rem] font-bold leading-tight tracking-tight text-[#1a1f2e] lg:text-[2rem]">
+                <h1 className="mt-4 text-[1.7rem] font-bold leading-tight tracking-tight text-[var(--color-primary)] lg:text-[2rem]">
                   {course.title}
                 </h1>
                 <p className="mt-3 text-sm leading-relaxed text-[#6b7280]">
@@ -545,7 +545,7 @@ export function CourseWorkspacePage({
 
           {/* About this course */}
           <div className="rounded-xl border border-[#e5e7eb] bg-white p-6 lg:p-7">
-            <h2 className="text-lg font-bold text-[#1a1f2e]">
+            <h2 className="text-lg font-bold text-[var(--color-primary)]">
               Acerca de este curso
             </h2>
             <div className="mt-4 space-y-4 text-sm leading-relaxed text-[#6b7280]">
@@ -562,7 +562,7 @@ export function CourseWorkspacePage({
                   {course.outcomes.map((outcome) => (
                     <div className="flex items-start gap-2.5" key={outcome}>
                       <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
-                      <span className="text-sm text-[#1a1f2e]">{outcome}</span>
+                      <span className="text-sm text-[var(--color-primary)]">{outcome}</span>
                     </div>
                   ))}
                 </div>
@@ -572,7 +572,7 @@ export function CourseWorkspacePage({
 
           {/* Course content */}
           <div>
-            <h2 className="mb-4 text-lg font-bold text-[#1a1f2e]">
+            <h2 className="mb-4 text-lg font-bold text-[var(--color-primary)]">
               Contenido del Curso
             </h2>
             <div className="space-y-3">

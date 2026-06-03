@@ -42,7 +42,7 @@ function ModuleStatusIcon({
 
   if (status === "current") {
     return (
-      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[var(--color-ink)] text-xs font-bold text-white">
+      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[var(--color-primary)] text-xs font-bold text-white">
         {index + 1}
       </span>
     );
@@ -97,7 +97,7 @@ export function LessonOutline({
               className={cn(
                 "group mx-2 mb-1 flex items-start gap-3 rounded-xl px-3 py-3 transition-all",
                 isCurrent
-                  ? "bg-[var(--color-ink)] text-white"
+                  ? "bg-[var(--color-primary)] text-white"
                   : "hover:bg-[var(--color-surface)]",
               )}
             >

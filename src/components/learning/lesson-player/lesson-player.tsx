@@ -599,7 +599,7 @@ export function LessonPlayer({
 
                 {nextHref ? (
                   <Link
-                    className="flex items-center gap-2 rounded-xl bg-[#022448] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:opacity-90"
+                    className="flex items-center gap-2 rounded-xl bg-[var(--color-primary)] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:opacity-90"
                     href={nextHref}
                   >
                     Siguiente Lección
@@ -629,7 +629,7 @@ export function LessonPlayer({
                       className={cn(
                         "flex items-center gap-2 border-b-2 pb-3 text-sm font-medium transition",
                         activeTab === id
-                          ? "border-[var(--color-ink)] text-[var(--color-ink)]"
+                          ? "border-[var(--color-primary)] text-[var(--color-ink)]"
                           : "border-transparent text-[var(--color-muted)] hover:text-[var(--color-ink)]",
                       )}
                       key={id}
@@ -706,7 +706,7 @@ export function LessonPlayer({
                   )}
                   {nextHref ? (
                     <Link
-                      className="flex items-center gap-2 rounded-xl bg-[var(--color-ink)] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:opacity-90"
+                      className="flex items-center gap-2 rounded-xl bg-[var(--color-primary)] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:opacity-90"
                       href={nextHref}
                     >
                       Siguiente
@@ -741,7 +741,7 @@ export function LessonPlayer({
                         className={cn(
                           "flex items-center gap-2 border-b-2 pb-3 text-sm font-medium transition",
                           activeTab === id
-                            ? "border-[var(--color-ink)] text-[var(--color-ink)]"
+                            ? "border-[var(--color-primary)] text-[var(--color-ink)]"
                             : "border-transparent text-[var(--color-muted)] hover:text-[var(--color-ink)]",
                         )}
                         key={id}

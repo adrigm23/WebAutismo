@@ -185,7 +185,7 @@ function ResourceCardGrid({
           <button
             type="button"
             onClick={() => setMenuOpen((v) => !v)}
-            className="flex h-7 w-7 items-center justify-center rounded-lg bg-white/90 text-[#6b7280] shadow-sm opacity-0 transition group-hover:opacity-100 hover:bg-white hover:text-[#1a1f2e]"
+            className="flex h-7 w-7 items-center justify-center rounded-lg bg-white/90 text-[#6b7280] shadow-sm opacity-0 transition group-hover:opacity-100 hover:bg-white hover:text-[var(--color-primary)]"
           >
             <MoreHorizontal className="h-4 w-4" />
           </button>
@@ -233,7 +233,7 @@ function ResourceCardGrid({
 
       {/* Card body */}
       <div className="flex flex-1 flex-col gap-1.5 p-4">
-        <h3 className="line-clamp-2 text-sm font-semibold leading-snug text-[#1a1f2e]">
+        <h3 className="line-clamp-2 text-sm font-semibold leading-snug text-[var(--color-primary)]">
           {resource.title}
         </h3>
 
@@ -285,7 +285,7 @@ function ResourceRowList({
       <ResourceTypeIcon type={resource.type} className="h-10 w-10 shrink-0" />
 
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-semibold text-[#1a1f2e]">{resource.title}</p>
+        <p className="truncate text-sm font-semibold text-[var(--color-primary)]">{resource.title}</p>
         <p className="mt-0.5 text-xs text-[#9ba3af]">
           {formatBytes(resource.fileSize)} · {formatDate(resource.createdAt)}
           {resource.courseTitle && ` · ${resource.courseTitle}`}
@@ -301,7 +301,7 @@ function ResourceRowList({
         <a
           href={resource.downloadHref}
           download
-          className="flex h-8 w-8 items-center justify-center rounded-lg text-[#9ba3af] hover:bg-[#f3f4f6] hover:text-[#1a1f2e]"
+          className="flex h-8 w-8 items-center justify-center rounded-lg text-[#9ba3af] hover:bg-[#f3f4f6] hover:text-[var(--color-primary)]"
           title="Descargar"
         >
           <Download className="h-4 w-4" />
@@ -311,7 +311,7 @@ function ResourceRowList({
           <button
             type="button"
             onClick={() => setMenuOpen((v) => !v)}
-            className="flex h-8 w-8 items-center justify-center rounded-lg text-[#9ba3af] hover:bg-[#f3f4f6] hover:text-[#1a1f2e]"
+            className="flex h-8 w-8 items-center justify-center rounded-lg text-[#9ba3af] hover:bg-[#f3f4f6] hover:text-[var(--color-primary)]"
           >
             <MoreHorizontal className="h-4 w-4" />
           </button>
@@ -383,10 +383,10 @@ function UploadDialog({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
       <div className="w-full max-w-md overflow-hidden rounded-xl bg-white shadow-2xl">
         <div className="flex items-center justify-between border-b border-[#eaecf0] px-6 py-4">
-          <h2 className="text-base font-semibold text-[#1a1f2e]">
+          <h2 className="text-base font-semibold text-[var(--color-primary)]">
             {isEdit ? "Editar recurso" : "Subir archivo"}
           </h2>
-          <button type="button" onClick={onClose} className="text-[#9ba3af] hover:text-[#1a1f2e]">
+          <button type="button" onClick={onClose} className="text-[#9ba3af] hover:text-[var(--color-primary)]">
             <X className="h-5 w-5" />
           </button>
         </div>
@@ -404,7 +404,7 @@ function UploadDialog({
               name="title"
               required
               defaultValue={editResource?.title ?? ""}
-              className="w-full rounded-lg border border-[#d0d5dd] px-3 py-2 text-sm outline-none focus:border-[#1a1f2e] focus:ring-2 focus:ring-[#1a1f2e]/10"
+              className="w-full rounded-lg border border-[#d0d5dd] px-3 py-2 text-sm outline-none focus:border-[var(--color-primary)] focus:ring-2 focus:ring-[#1a1f2e]/10"
               placeholder="Nombre del recurso"
             />
           </div>
@@ -415,7 +415,7 @@ function UploadDialog({
               name="description"
               rows={2}
               defaultValue={editResource?.description ?? ""}
-              className="w-full rounded-lg border border-[#d0d5dd] px-3 py-2 text-sm outline-none focus:border-[#1a1f2e] focus:ring-2 focus:ring-[#1a1f2e]/10"
+              className="w-full rounded-lg border border-[#d0d5dd] px-3 py-2 text-sm outline-none focus:border-[var(--color-primary)] focus:ring-2 focus:ring-[#1a1f2e]/10"
               placeholder="Descripción opcional"
             />
           </div>
@@ -453,7 +453,7 @@ function UploadDialog({
               <select
                 name="category"
                 defaultValue={editResource?.category ?? ""}
-                className="w-full rounded-lg border border-[#d0d5dd] px-3 py-2 text-sm outline-none focus:border-[#1a1f2e]"
+                className="w-full rounded-lg border border-[#d0d5dd] px-3 py-2 text-sm outline-none focus:border-[var(--color-primary)]"
               >
                 <option value="">Sin categoría</option>
                 {Object.entries(CATEGORY_LABELS).map(([k, v]) => (
@@ -468,7 +468,7 @@ function UploadDialog({
                 name="visibility"
                 required
                 defaultValue={editResource?.visibility ?? "PRIVATE"}
-                className="w-full rounded-lg border border-[#d0d5dd] px-3 py-2 text-sm outline-none focus:border-[#1a1f2e]"
+                className="w-full rounded-lg border border-[#d0d5dd] px-3 py-2 text-sm outline-none focus:border-[var(--color-primary)]"
               >
                 {Object.entries(VISIBILITY_LABELS).map(([k, v]) => (
                   <option key={k} value={k}>{v}</option>
@@ -483,7 +483,7 @@ function UploadDialog({
               <select
                 name="courseId"
                 defaultValue={editResource?.courseId ?? ""}
-                className="w-full rounded-lg border border-[#d0d5dd] px-3 py-2 text-sm outline-none focus:border-[#1a1f2e]"
+                className="w-full rounded-lg border border-[#d0d5dd] px-3 py-2 text-sm outline-none focus:border-[var(--color-primary)]"
               >
                 <option value="">Sin curso específico</option>
                 {courses.map((c) => (
@@ -499,7 +499,7 @@ function UploadDialog({
               <select
                 name="folderId"
                 defaultValue={editResource?.folderId ?? ""}
-                className="w-full rounded-lg border border-[#d0d5dd] px-3 py-2 text-sm outline-none focus:border-[#1a1f2e]"
+                className="w-full rounded-lg border border-[#d0d5dd] px-3 py-2 text-sm outline-none focus:border-[var(--color-primary)]"
               >
                 <option value="">Sin carpeta</option>
                 {folders.map((f) => (
@@ -520,7 +520,7 @@ function UploadDialog({
             <button
               type="submit"
               disabled={pending}
-              className="flex items-center gap-2 rounded-lg bg-[#1a1f2e] px-4 py-2 text-sm font-medium text-white hover:bg-[#2d3748] disabled:opacity-60"
+              className="flex items-center gap-2 rounded-lg bg-[var(--color-primary)] px-4 py-2 text-sm font-medium text-white hover:bg-[var(--color-primary-strong)] disabled:opacity-60"
             >
               {pending && <Loader2 className="h-4 w-4 animate-spin" />}
               {isEdit ? "Guardar cambios" : "Subir archivo"}
@@ -555,8 +555,8 @@ function FolderDialog({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
       <div className="w-full max-w-sm overflow-hidden rounded-xl bg-white shadow-2xl">
         <div className="flex items-center justify-between border-b border-[#eaecf0] px-6 py-4">
-          <h2 className="text-base font-semibold text-[#1a1f2e]">Nueva carpeta</h2>
-          <button type="button" onClick={onClose} className="text-[#9ba3af] hover:text-[#1a1f2e]">
+          <h2 className="text-base font-semibold text-[var(--color-primary)]">Nueva carpeta</h2>
+          <button type="button" onClick={onClose} className="text-[#9ba3af] hover:text-[var(--color-primary)]">
             <X className="h-5 w-5" />
           </button>
         </div>
@@ -571,7 +571,7 @@ function FolderDialog({
             <input
               name="name"
               required
-              className="w-full rounded-lg border border-[#d0d5dd] px-3 py-2 text-sm outline-none focus:border-[#1a1f2e]"
+              className="w-full rounded-lg border border-[#d0d5dd] px-3 py-2 text-sm outline-none focus:border-[var(--color-primary)]"
               placeholder="Nombre de la carpeta"
             />
           </div>
@@ -580,7 +580,7 @@ function FolderDialog({
             <label className="mb-1 block text-xs font-medium text-[#374151]">Descripción</label>
             <input
               name="description"
-              className="w-full rounded-lg border border-[#d0d5dd] px-3 py-2 text-sm outline-none focus:border-[#1a1f2e]"
+              className="w-full rounded-lg border border-[#d0d5dd] px-3 py-2 text-sm outline-none focus:border-[var(--color-primary)]"
               placeholder="Opcional"
             />
           </div>
@@ -590,7 +590,7 @@ function FolderDialog({
               <label className="mb-1 block text-xs font-medium text-[#374151]">Curso</label>
               <select
                 name="courseId"
-                className="w-full rounded-lg border border-[#d0d5dd] px-3 py-2 text-sm outline-none focus:border-[#1a1f2e]"
+                className="w-full rounded-lg border border-[#d0d5dd] px-3 py-2 text-sm outline-none focus:border-[var(--color-primary)]"
               >
                 <option value="">Global (sin curso)</option>
                 {courses.map((c) => (
@@ -611,7 +611,7 @@ function FolderDialog({
             <button
               type="submit"
               disabled={pending}
-              className="flex items-center gap-2 rounded-lg bg-[#1a1f2e] px-4 py-2 text-sm font-medium text-white hover:bg-[#2d3748] disabled:opacity-60"
+              className="flex items-center gap-2 rounded-lg bg-[var(--color-primary)] px-4 py-2 text-sm font-medium text-white hover:bg-[var(--color-primary-strong)] disabled:opacity-60"
             >
               {pending && <Loader2 className="h-4 w-4 animate-spin" />}
               Crear carpeta
@@ -644,7 +644,7 @@ function DeleteConfirmDialog({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
       <div className="w-full max-w-sm overflow-hidden rounded-xl bg-white shadow-2xl">
         <div className="p-6">
-          <h2 className="text-base font-semibold text-[#1a1f2e]">Eliminar recurso</h2>
+          <h2 className="text-base font-semibold text-[var(--color-primary)]">Eliminar recurso</h2>
           <p className="mt-2 text-sm text-[#6b7280]">
             ¿Eliminar &ldquo;{resource.title}&rdquo;? Esta acción no se puede deshacer.
           </p>
@@ -716,7 +716,7 @@ function FolderCard({
     >
       <FolderOpen className={cn("h-8 w-8 shrink-0", folderColors[colorIdx])} />
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-semibold text-[#1a1f2e]">{folder.name}</p>
+        <p className="truncate text-sm font-semibold text-[var(--color-primary)]">{folder.name}</p>
         <p className="text-xs text-[#9ba3af]">{folder.resourceCount} archivos</p>
       </div>
 
@@ -725,7 +725,7 @@ function FolderCard({
           <button
             type="button"
             onClick={() => setMenuOpen((v) => !v)}
-            className="flex h-7 w-7 items-center justify-center rounded-lg text-[#9ba3af] opacity-0 transition group-hover:opacity-100 hover:bg-[#f3f4f6] hover:text-[#1a1f2e]"
+            className="flex h-7 w-7 items-center justify-center rounded-lg text-[#9ba3af] opacity-0 transition group-hover:opacity-100 hover:bg-[#f3f4f6] hover:text-[var(--color-primary)]"
           >
             <MoreHorizontal className="h-4 w-4" />
           </button>
@@ -767,7 +767,7 @@ function DeleteFolderConfirmDialog({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
       <div className="w-full max-w-sm overflow-hidden rounded-xl bg-white shadow-2xl">
         <div className="p-6">
-          <h2 className="text-base font-semibold text-[#1a1f2e]">Eliminar carpeta</h2>
+          <h2 className="text-base font-semibold text-[var(--color-primary)]">Eliminar carpeta</h2>
           <p className="mt-2 text-sm text-[#6b7280]">
             ¿Eliminar la carpeta &ldquo;{folder.name}&rdquo;? Los archivos dentro no se eliminarán.
           </p>
@@ -837,7 +837,7 @@ export function LibraryPage({ resources, folders, courses, canManage, newResourc
         {/* Header */}
         <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-[#1a1f2e] sm:text-[1.75rem]">
+            <h1 className="text-2xl font-bold tracking-tight text-[var(--color-primary)] sm:text-[1.75rem]">
               Biblioteca Central
             </h1>
             <p className="mt-1 text-sm text-[#6b7280]">
@@ -856,7 +856,7 @@ export function LibraryPage({ resources, folders, courses, canManage, newResourc
               {newResourceHref ? (
                 <Link
                   href={newResourceHref}
-                  className="flex items-center gap-2 rounded-lg bg-[#1a1f2e] px-4 py-2 text-sm font-medium text-white hover:bg-[#2d3748]"
+                  className="flex items-center gap-2 rounded-lg bg-[var(--color-primary)] px-4 py-2 text-sm font-medium text-white hover:bg-[var(--color-primary-strong)]"
                 >
                   <Plus className="h-4 w-4" /> Publicar Recurso
                 </Link>
@@ -864,7 +864,7 @@ export function LibraryPage({ resources, folders, courses, canManage, newResourc
                 <button
                   type="button"
                   onClick={() => setShowUpload(true)}
-                  className="flex items-center gap-2 rounded-lg bg-[#1a1f2e] px-4 py-2 text-sm font-medium text-white hover:bg-[#2d3748]"
+                  className="flex items-center gap-2 rounded-lg bg-[var(--color-primary)] px-4 py-2 text-sm font-medium text-white hover:bg-[var(--color-primary-strong)]"
                 >
                   <Upload className="h-4 w-4" /> Subir Archivo
                 </button>
@@ -883,7 +883,7 @@ export function LibraryPage({ resources, folders, courses, canManage, newResourc
               placeholder="Buscar recursos, archivos, temas..."
               value={filters.q}
               onChange={(e) => setFilters((f) => ({ ...f, q: e.target.value }))}
-              className="w-full rounded-lg border border-[#d0d5dd] bg-white py-2 pl-10 pr-4 text-sm outline-none focus:border-[#1a1f2e] focus:ring-2 focus:ring-[#1a1f2e]/10"
+              className="w-full rounded-lg border border-[#d0d5dd] bg-white py-2 pl-10 pr-4 text-sm outline-none focus:border-[var(--color-primary)] focus:ring-2 focus:ring-[#1a1f2e]/10"
             />
           </div>
 
@@ -891,7 +891,7 @@ export function LibraryPage({ resources, folders, courses, canManage, newResourc
           <select
             value={filters.type}
             onChange={(e) => setFilters((f) => ({ ...f, type: e.target.value as LibraryResourceType | "" }))}
-            className="rounded-lg border border-[#d0d5dd] bg-white px-3 py-2 text-sm text-[#374151] outline-none focus:border-[#1a1f2e]"
+            className="rounded-lg border border-[#d0d5dd] bg-white px-3 py-2 text-sm text-[#374151] outline-none focus:border-[var(--color-primary)]"
           >
             <option value="">Tipo de Archivo</option>
             {Object.entries(TYPE_LABELS).map(([k, v]) => (
@@ -903,7 +903,7 @@ export function LibraryPage({ resources, folders, courses, canManage, newResourc
           <select
             value={filters.category}
             onChange={(e) => setFilters((f) => ({ ...f, category: e.target.value as LibraryResourceCategory | "" }))}
-            className="rounded-lg border border-[#d0d5dd] bg-white px-3 py-2 text-sm text-[#374151] outline-none focus:border-[#1a1f2e]"
+            className="rounded-lg border border-[#d0d5dd] bg-white px-3 py-2 text-sm text-[#374151] outline-none focus:border-[var(--color-primary)]"
           >
             <option value="">Categoría</option>
             {Object.entries(CATEGORY_LABELS).map(([k, v]) => (
@@ -916,7 +916,7 @@ export function LibraryPage({ resources, folders, courses, canManage, newResourc
             <select
               value={filters.courseId}
               onChange={(e) => setFilters((f) => ({ ...f, courseId: e.target.value }))}
-              className="rounded-lg border border-[#d0d5dd] bg-white px-3 py-2 text-sm text-[#374151] outline-none focus:border-[#1a1f2e]"
+              className="rounded-lg border border-[#d0d5dd] bg-white px-3 py-2 text-sm text-[#374151] outline-none focus:border-[var(--color-primary)]"
             >
               <option value="">Todos los cursos</option>
               {courses.map((c) => (
@@ -929,19 +929,19 @@ export function LibraryPage({ resources, folders, courses, canManage, newResourc
           {hasActiveFilters && (
             <div className="flex flex-wrap gap-2">
               {filters.type && (
-                <span className="flex items-center gap-1 rounded-full bg-[#1a1f2e] px-3 py-1 text-xs text-white">
+                <span className="flex items-center gap-1 rounded-full bg-[var(--color-primary)] px-3 py-1 text-xs text-white">
                   {TYPE_LABELS[filters.type as LibraryResourceType]}
                   <button type="button" onClick={() => clearFilter("type")}><X className="h-3 w-3" /></button>
                 </span>
               )}
               {filters.category && (
-                <span className="flex items-center gap-1 rounded-full bg-[#1a1f2e] px-3 py-1 text-xs text-white">
+                <span className="flex items-center gap-1 rounded-full bg-[var(--color-primary)] px-3 py-1 text-xs text-white">
                   {CATEGORY_LABELS[filters.category as LibraryResourceCategory]}
                   <button type="button" onClick={() => clearFilter("category")}><X className="h-3 w-3" /></button>
                 </span>
               )}
               {filters.courseId && (
-                <span className="flex items-center gap-1 rounded-full bg-[#1a1f2e] px-3 py-1 text-xs text-white">
+                <span className="flex items-center gap-1 rounded-full bg-[var(--color-primary)] px-3 py-1 text-xs text-white">
                   {courses.find((c) => c.id === filters.courseId)?.title ?? "Curso"}
                   <button type="button" onClick={() => clearFilter("courseId")}><X className="h-3 w-3" /></button>
                 </span>
@@ -954,14 +954,14 @@ export function LibraryPage({ resources, folders, courses, canManage, newResourc
             <button
               type="button"
               onClick={() => setViewMode("grid")}
-              className={cn("rounded-lg p-2 transition", viewMode === "grid" ? "bg-[#1a1f2e] text-white" : "border border-[#d0d5dd] bg-white text-[#6b7280] hover:bg-[#f3f4f6]")}
+              className={cn("rounded-lg p-2 transition", viewMode === "grid" ? "bg-[var(--color-primary)] text-white" : "border border-[#d0d5dd] bg-white text-[#6b7280] hover:bg-[#f3f4f6]")}
             >
               <Grid3X3 className="h-4 w-4" />
             </button>
             <button
               type="button"
               onClick={() => setViewMode("list")}
-              className={cn("rounded-lg p-2 transition", viewMode === "list" ? "bg-[#1a1f2e] text-white" : "border border-[#d0d5dd] bg-white text-[#6b7280] hover:bg-[#f3f4f6]")}
+              className={cn("rounded-lg p-2 transition", viewMode === "list" ? "bg-[var(--color-primary)] text-white" : "border border-[#d0d5dd] bg-white text-[#6b7280] hover:bg-[#f3f4f6]")}
             >
               <LayoutList className="h-4 w-4" />
             </button>
@@ -971,7 +971,7 @@ export function LibraryPage({ resources, folders, courses, canManage, newResourc
         {/* Folders */}
         {featuredFolders.length > 0 && activeFolderId === undefined && !hasActiveFilters && !filters.q && (
           <section className="mb-6">
-            <h2 className="mb-3 text-sm font-semibold text-[#1a1f2e]">Carpetas Destacadas</h2>
+            <h2 className="mb-3 text-sm font-semibold text-[var(--color-primary)]">Carpetas Destacadas</h2>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {featuredFolders.map((folder) => (
                 <FolderCard
@@ -994,14 +994,14 @@ export function LibraryPage({ resources, folders, courses, canManage, newResourc
             <button
               type="button"
               onClick={() => setActiveFolderId(undefined)}
-              className="text-sm text-[#9ba3af] hover:text-[#1a1f2e]"
+              className="text-sm text-[#9ba3af] hover:text-[var(--color-primary)]"
             >
               ← Todas las carpetas
             </button>
             {activeFolderId && (
               <>
                 <span className="text-[#d0d5dd]">/</span>
-                <span className="text-sm font-medium text-[#1a1f2e]">
+                <span className="text-sm font-medium text-[var(--color-primary)]">
                   {folders.find((f) => f.id === activeFolderId)?.name}
                 </span>
               </>
@@ -1012,7 +1012,7 @@ export function LibraryPage({ resources, folders, courses, canManage, newResourc
         {/* Resources section */}
         <section>
           <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-[#1a1f2e]">
+            <h2 className="text-sm font-semibold text-[var(--color-primary)]">
               {activeFolderId ? "Archivos en esta carpeta" : "Archivos Recientes"}
               {filtered.length > 0 && (
                 <span className="ml-2 text-[#9ba3af] font-normal">({filtered.length})</span>
@@ -1032,7 +1032,7 @@ export function LibraryPage({ resources, folders, courses, canManage, newResourc
                 newResourceHref ? (
                   <Link
                     href={newResourceHref}
-                    className="mt-4 inline-flex items-center gap-2 rounded-full bg-[#1a1f2e] px-4 py-1.5 text-sm font-medium text-white hover:bg-[#2d3748]"
+                    className="mt-4 inline-flex items-center gap-2 rounded-full bg-[var(--color-primary)] px-4 py-1.5 text-sm font-medium text-white hover:bg-[var(--color-primary-strong)]"
                   >
                     <Plus className="h-4 w-4" /> Publicar primer recurso
                   </Link>
@@ -1040,7 +1040,7 @@ export function LibraryPage({ resources, folders, courses, canManage, newResourc
                   <button
                     type="button"
                     onClick={() => setShowUpload(true)}
-                    className="mt-4 flex items-center gap-2 rounded-full bg-[#1a1f2e] px-4 py-1.5 text-sm font-medium text-white hover:bg-[#2d3748]"
+                    className="mt-4 flex items-center gap-2 rounded-full bg-[var(--color-primary)] px-4 py-1.5 text-sm font-medium text-white hover:bg-[var(--color-primary-strong)]"
                   >
                     <Upload className="h-4 w-4" /> Subir primer archivo
                   </button>

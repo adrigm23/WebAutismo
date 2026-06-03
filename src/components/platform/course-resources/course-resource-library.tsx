@@ -152,7 +152,7 @@ function ResourceCard({
       {!isUnpublished && resource.href && (
         <a
           aria-label="Abrir recurso"
-          className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-lg text-[#9ba3af] opacity-0 transition hover:bg-[#f3f4f6] hover:text-[#1a1f2e] group-hover:opacity-100"
+          className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-lg text-[#9ba3af] opacity-0 transition hover:bg-[#f3f4f6] hover:text-[var(--color-primary)] group-hover:opacity-100"
           href={resource.href}
           rel={resource.isExternal ? "noopener noreferrer" : undefined}
           target={resource.isExternal ? "_blank" : undefined}
@@ -170,7 +170,7 @@ function ResourceCard({
       </p>
 
       {/* Title */}
-      <h3 className="mt-1 text-sm font-semibold leading-snug text-[#1a1f2e] line-clamp-2">
+      <h3 className="mt-1 text-sm font-semibold leading-snug text-[var(--color-primary)] line-clamp-2">
         {resource.href ? (
           <a
             className="transition hover:text-[var(--color-primary)]"
@@ -239,7 +239,7 @@ function TasksCard({ resources, courseSlug }: { resources: CampusResourceItem[];
     return (
       <div className="rounded-xl border border-[#eaecf0] bg-white p-5">
         <div className="flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-[#1a1f2e]">Tareas y Entregas</h2>
+          <h2 className="text-sm font-semibold text-[var(--color-primary)]">Tareas y Entregas</h2>
         </div>
         <p className="mt-3 text-xs text-[#9ba3af]">No hay tareas asignadas en este momento.</p>
       </div>
@@ -249,7 +249,7 @@ function TasksCard({ resources, courseSlug }: { resources: CampusResourceItem[];
   return (
     <div className="rounded-xl border border-[#eaecf0] bg-white p-5">
       <div className="flex items-center justify-between">
-        <h2 className="text-sm font-semibold text-[#1a1f2e]">Tareas y Entregas</h2>
+        <h2 className="text-sm font-semibold text-[var(--color-primary)]">Tareas y Entregas</h2>
       </div>
 
       <div className="mt-4 space-y-3">
@@ -272,7 +272,7 @@ function TasksCard({ resources, courseSlug }: { resources: CampusResourceItem[];
                 <ClipboardList className="h-4 w-4" />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="truncate text-xs font-medium text-[#1a1f2e]">{task.title}</p>
+                <p className="truncate text-xs font-medium text-[var(--color-primary)]">{task.title}</p>
                 {submission ? (
                   <p className="mt-0.5 text-[0.65rem] text-emerald-600">
                     Estado: {submission.statusLabel}
@@ -345,7 +345,7 @@ function ActivityCard({ resources }: { resources: CampusResourceItem[] }) {
   if (activityItems.length === 0) {
     return (
       <div className="rounded-xl border border-[#eaecf0] bg-white p-5">
-        <h2 className="text-sm font-semibold text-[#1a1f2e]">Actividad Reciente</h2>
+        <h2 className="text-sm font-semibold text-[var(--color-primary)]">Actividad Reciente</h2>
         <p className="mt-3 text-xs text-[#9ba3af]">Sin actividad reciente.</p>
       </div>
     );
@@ -353,7 +353,7 @@ function ActivityCard({ resources }: { resources: CampusResourceItem[] }) {
 
   return (
     <div className="rounded-xl border border-[#eaecf0] bg-white p-5">
-      <h2 className="text-sm font-semibold text-[#1a1f2e]">Actividad Reciente</h2>
+      <h2 className="text-sm font-semibold text-[var(--color-primary)]">Actividad Reciente</h2>
 
       <div className="mt-4 space-y-4">
         {activityItems.slice(0, 5).map((item) => (
@@ -431,7 +431,7 @@ export function CourseResourceLibrary({
                 </span>
                 <span className="text-xs text-[#9ba3af]">{course.title}</span>
               </div>
-              <h1 className="text-2xl font-bold tracking-tight text-[#1a1f2e] sm:text-[1.75rem]">
+              <h1 className="text-2xl font-bold tracking-tight text-[var(--color-primary)] sm:text-[1.75rem]">
                 Biblioteca de Recursos
               </h1>
               <p className="mt-2 max-w-xl text-sm leading-relaxed text-[#6b7280]">
@@ -443,15 +443,15 @@ export function CourseResourceLibrary({
             {/* Metrics */}
             <div className="flex shrink-0 items-center divide-x divide-[#eaecf0] rounded-xl border border-[#eaecf0] bg-[#f8fafc]">
               <div className="flex flex-col items-center px-5 py-3">
-                <span className="text-xl font-bold text-[#1a1f2e]">{materialCount}</span>
+                <span className="text-xl font-bold text-[var(--color-primary)]">{materialCount}</span>
                 <span className="mt-0.5 text-[0.65rem] font-medium text-[#9ba3af]">Materiales</span>
               </div>
               <div className="flex flex-col items-center px-5 py-3">
-                <span className="text-xl font-bold text-[#1a1f2e]">{videoCount}</span>
+                <span className="text-xl font-bold text-[var(--color-primary)]">{videoCount}</span>
                 <span className="mt-0.5 text-[0.65rem] font-medium text-[#9ba3af]">Vídeos</span>
               </div>
               <div className="flex flex-col items-center px-5 py-3">
-                <span className="text-xl font-bold text-[#1a1f2e]">{exerciseCount}</span>
+                <span className="text-xl font-bold text-[var(--color-primary)]">{exerciseCount}</span>
                 <span className="mt-0.5 text-[0.65rem] font-medium text-[#9ba3af]">Ejercicios</span>
               </div>
             </div>
@@ -469,8 +469,8 @@ export function CourseResourceLibrary({
                 className={cn(
                   "whitespace-nowrap rounded-full px-4 py-1.5 text-sm font-medium transition",
                   activeFilter === f.id
-                    ? "bg-[#1a1f2e] text-white"
-                    : "border border-[#e5e7eb] bg-white text-[#6b7280] hover:border-[#d0d5dd] hover:text-[#1a1f2e]",
+                    ? "bg-[var(--color-primary)] text-white"
+                    : "border border-[#e5e7eb] bg-white text-[#6b7280] hover:border-[#d0d5dd] hover:text-[var(--color-primary)]",
                 )}
               >
                 {f.label}
@@ -482,7 +482,7 @@ export function CourseResourceLibrary({
           {canModerate && (
             <Link
               href={`/mis-cursos/${course.slug}`}
-              className="flex shrink-0 items-center gap-1.5 rounded-full bg-[#1a1f2e] px-4 py-1.5 text-sm font-medium text-white transition hover:bg-[#2d3748]"
+              className="flex shrink-0 items-center gap-1.5 rounded-full bg-[var(--color-primary)] px-4 py-1.5 text-sm font-medium text-white transition hover:bg-[var(--color-primary-strong)]"
             >
               <Plus className="h-4 w-4" />
               Publicar recurso
@@ -504,7 +504,7 @@ export function CourseResourceLibrary({
                 {canModerate && (
                   <Link
                     href={`/mis-cursos/${course.slug}`}
-                    className="mt-4 flex items-center gap-1.5 rounded-full bg-[#1a1f2e] px-4 py-1.5 text-sm font-medium text-white transition hover:bg-[#2d3748]"
+                    className="mt-4 flex items-center gap-1.5 rounded-full bg-[var(--color-primary)] px-4 py-1.5 text-sm font-medium text-white transition hover:bg-[var(--color-primary-strong)]"
                   >
                     <Plus className="h-4 w-4" />
                     Añadir recurso
