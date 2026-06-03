@@ -8,15 +8,12 @@ import {
   CheckCircle2,
   ChevronDown,
   Circle,
-  Clock,
   FileArchive,
   FileText,
-  Lock,
-  MonitorPlay,
   PlayCircle,
   Video,
 } from "lucide-react";
-import { cn, formatDateTime } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import type { CatalogCourse } from "@/lib/course-catalog";
 import type { CourseProgressDetails, CourseModuleProgressState } from "@/lib/course-progress";
 import type { CampusResourceItem } from "@/lib/course-resources";
@@ -69,12 +66,11 @@ function ProgressCard({
   progress,
   courseSlug,
   inProgressIndex,
-  inProgressTitle,
 }: {
   progress: CourseProgressDetails;
   courseSlug: string;
   inProgressIndex: number;
-  inProgressTitle: string;
+  inProgressTitle?: string;
 }) {
   const pct = Math.round(progress.completionRate);
   const href = `/mis-cursos/${courseSlug}/leccion/${Math.max(0, inProgressIndex)}`;
@@ -134,11 +130,10 @@ function ModuleCard({
             : "border-[#e5e7eb] bg-[#f9fafb]",
       )}
     >
-      {/* Module header */}
+      {/* Module header — always clickable */}
       <button
         className="flex w-full items-center gap-4 p-4 text-left"
-        disabled={status === "upcoming"}
-        onClick={() => status !== "upcoming" && setOpen((v) => !v)}
+        onClick={() => setOpen((v) => !v)}
         type="button"
       >
         {/* Status icon */}
@@ -153,8 +148,8 @@ function ModuleCard({
           </span>
         )}
         {status === "upcoming" && (
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#e5e7eb]">
-            <Lock className="h-4 w-4 text-[#9ba3af]" />
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border-2 border-[#e5e7eb] bg-white text-xs font-bold text-[#9ba3af]">
+            {moduleIndex + 1}
           </span>
         )}
 
@@ -162,7 +157,7 @@ function ModuleCard({
           <p
             className={cn(
               "text-sm font-semibold leading-snug",
-              status === "upcoming" ? "text-[#9ba3af]" : "text-[#1a1f2e]",
+              status === "upcoming" ? "text-[#6b7280]" : "text-[#1a1f2e]",
             )}
           >
             Módulo {moduleIndex + 1}: {module.title}
@@ -177,29 +172,36 @@ function ModuleCard({
           >
             {status === "completed" && `${lessonLabel} · ${module.estimatedTime}`}
             {status === "in-progress" && `En curso · ${module.estimatedTime}`}
-            {status === "upcoming" &&
-              `Se desbloquea al completar el Módulo ${moduleIndex}`}
+            {status === "upcoming" && `${lessonLabel} · ${module.estimatedTime}`}
           </p>
         </div>
 
-        {status !== "upcoming" && (
-          <ChevronDown
-            className={cn(
-              "h-4 w-4 shrink-0 text-[#9ba3af] transition-transform",
-              open && "-rotate-180",
-            )}
-          />
-        )}
+        <ChevronDown
+          className={cn(
+            "h-4 w-4 shrink-0 text-[#9ba3af] transition-transform",
+            open && "-rotate-180",
+          )}
+        />
       </button>
 
-      {/* Lesson items */}
-      {open && status !== "upcoming" && (
+      {/* Lesson items — always accessible */}
+      {open && (
         <div className="divide-y divide-[#f0f0f0] border-t border-[#f0f0f0] px-4">
           {moduleResources.length > 0 ? (
             moduleResources.map((resource, rIdx) => {
               const LessonIcon = getLessonIcon(resource);
               const isCurrent = status === "in-progress" && rIdx === 0;
               const isLessonCompleted = status === "completed";
+
+              // Determine href: exercises → submission page, others → resource href
+              const itemHref = resource.href ?? (status !== "upcoming" ? continueHref : null);
+              const typeLabel = resource.isExercise
+                ? "Tarea"
+                : resource.mimeType === "application/pdf"
+                  ? "PDF"
+                  : resource.mimeType?.startsWith("video/") || resource.linkUrl
+                    ? "Video"
+                    : "Material";
 
               return (
                 <div
@@ -219,18 +221,37 @@ function ModuleCard({
                       )}
                     />
                   )}
-                  <span
-                    className={cn(
-                      "flex-1 text-sm leading-snug",
-                      isCurrent
-                        ? "font-semibold text-emerald-700"
-                        : isLessonCompleted
-                          ? "text-[#6b7280]"
+
+                  {/* Title — always a link if href exists */}
+                  {itemHref ? (
+                    <Link
+                      className={cn(
+                        "flex-1 text-sm leading-snug transition hover:text-[#022448]",
+                        isCurrent
+                          ? "font-semibold text-emerald-700"
+                          : isLessonCompleted
+                            ? "text-[#6b7280]"
+                            : "text-[#6b7280]",
+                      )}
+                      href={itemHref}
+                      rel={resource.isExternal ? "noopener noreferrer" : undefined}
+                      target={resource.isExternal ? "_blank" : undefined}
+                    >
+                      {resource.title}
+                    </Link>
+                  ) : (
+                    <span
+                      className={cn(
+                        "flex-1 text-sm leading-snug",
+                        isCurrent
+                          ? "font-semibold text-emerald-700"
                           : "text-[#6b7280]",
-                    )}
-                  >
-                    {resource.title}
-                  </span>
+                      )}
+                    >
+                      {resource.title}
+                    </span>
+                  )}
+
                   {isCurrent ? (
                     <Link
                       className="shrink-0 rounded-full bg-[#1a1f2e] px-3 py-1 text-xs font-semibold text-white transition hover:opacity-80"
@@ -240,12 +261,7 @@ function ModuleCard({
                     </Link>
                   ) : (
                     <span className="shrink-0 text-xs text-[#9ba3af]">
-                      {resource.mimeType === "application/pdf"
-                        ? "PDF"
-                        : resource.mimeType?.startsWith("video/") ||
-                            resource.linkUrl
-                          ? "Video"
-                          : "Material"}
+                      {typeLabel}
                     </span>
                   )}
                 </div>
