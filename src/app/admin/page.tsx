@@ -136,11 +136,14 @@ export default async function AdminDashboardPage() {
 
   const now = new Date();
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const startOfPrevMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const endOfPrevMonth = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
   const db = getDb();
 
   const [
     activeUsers,
     monthlyRevenue,
+    prevMonthRevenue,
     activeEnrollmentsCount,
     activeCoursesCount,
     coursesWithoutTeachers,
@@ -152,6 +155,10 @@ export default async function AdminDashboardPage() {
     db.purchase.aggregate({
       _sum: { totalInCents: true },
       where: { status: "PAID", createdAt: { gte: startOfMonth } },
+    }),
+    db.purchase.aggregate({
+      _sum: { totalInCents: true },
+      where: { status: "PAID", createdAt: { gte: startOfPrevMonth, lte: endOfPrevMonth } },
     }),
     db.courseEnrollment.count({ where: { status: "ACTIVE" } }),
     db.course.count({ where: { status: "ACTIVE" } }),
@@ -216,6 +223,13 @@ export default async function AdminDashboardPage() {
   const openIncidentsCount = coursesWithoutTeachers.length + (postAccessEditions.length > 0 ? 1 : 0);
 
   const revenueEuros = (monthlyRevenue._sum.totalInCents ?? 0) / 100;
+  const prevRevenueEuros = (prevMonthRevenue._sum.totalInCents ?? 0) / 100;
+  const revenueChangePct = prevRevenueEuros > 0
+    ? ((revenueEuros - prevRevenueEuros) / prevRevenueEuros * 100)
+    : null;
+  const revenueChangeStr = revenueChangePct !== null
+    ? `${revenueChangePct >= 0 ? "+" : ""}${revenueChangePct.toFixed(1)}%`
+    : null;
 
   return (
     <div className="space-y-6">
@@ -239,15 +253,15 @@ export default async function AdminDashboardPage() {
       {/* KPI cards */}
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <KpiCard
-          change="+12%"
-          changeLabel="vs ayer"
           icon={Users}
-          label="Usuarios Activos Hoy"
+          label="Usuarios Registrados"
           value={formatCompactNumber(activeUsers)}
+          changeLabel="Usuarios activos en la plataforma"
         />
         <KpiCard
-          change="+5.2%"
-          changeLabel="vs mes anterior"
+          change={revenueChangeStr ?? undefined}
+          changeLabel={revenueChangeStr ? "vs mes anterior" : prevRevenueEuros === 0 ? "Sin ventas el mes anterior" : undefined}
+          positive={revenueChangePct !== null ? revenueChangePct >= 0 : true}
           icon={Wallet}
           label="Ingresos Netos (Mes)"
           value={formatPrice(revenueEuros * 100)}
@@ -259,8 +273,7 @@ export default async function AdminDashboardPage() {
           value={formatCompactNumber(activeEnrollmentsCount)}
         />
         <KpiCard
-          change="+2.1%"
-          changeLabel="mejora"
+          changeLabel="Cursos publicados"
           icon={Flag}
           label="Cursos Activos"
           value={String(activeCoursesCount)}
@@ -313,7 +326,7 @@ export default async function AdminDashboardPage() {
                           {actionLabel.toLowerCase()}
                         </span>{" "}
                         {detail && (
-                          <span className="font-medium">"{detail}"</span>
+                          <span className="font-medium">&ldquo;{detail}&rdquo;</span>
                         )}
                       </p>
                       <p className="mt-1 text-xs text-[var(--color-muted)]">
