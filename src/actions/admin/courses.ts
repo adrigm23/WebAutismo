@@ -19,38 +19,68 @@ export async function createCourseAction(formData: FormData) {
     actorId: admin.id,
     redirectTo: "/admin/courses"
   });
-  const slug = String(formData.get("slug") ?? "").trim();
+
+  const slug = String(formData.get("slug") ?? "")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, "-")
+    .replace(/[^a-z0-9-]/g, "");
   const title = String(formData.get("title") ?? "").trim();
   const shortDescription = String(formData.get("shortDescription") ?? "").trim();
-  const priceInCents = Number(formData.get("priceInCents") ?? 0);
+  const description =
+    String(formData.get("description") ?? "").trim() || shortDescription;
+  const priceInCents = Math.max(0, Number(formData.get("priceInCents") ?? 0));
+  const duration =
+    String(formData.get("duration") ?? "").trim() || "Pendiente de configurar";
+  const level = String(formData.get("level") ?? "General").trim();
+  const category = String(formData.get("category") ?? "General").trim();
+  const accentFrom = String(formData.get("accentFrom") ?? "#163c58").trim();
+  const accentTo = String(formData.get("accentTo") ?? "#2e6b8a").trim();
+  const status =
+    formData.get("status") === "ACTIVE"
+      ? ("ACTIVE" as const)
+      : ("INACTIVE" as const);
+  const teacherIds = formData
+    .getAll("teacherIds")
+    .map(String)
+    .filter(Boolean);
 
-  if (!slug || !title || !shortDescription || Number.isNaN(priceInCents)) {
-    redirect("/admin?error=course-create");
+  if (!slug || !title || !shortDescription) {
+    redirect("/admin/courses?error=course-create");
   }
 
-  const course = await getDb().course.create({
+  const db = getDb();
+  const existing = await db.course.findUnique({
+    where: { slug },
+    select: { id: true }
+  });
+  if (existing) {
+    redirect("/admin/courses/nuevo?error=slug-taken");
+  }
+
+  const course = await db.course.create({
     data: {
       slug,
       title,
       shortDescription,
-      description: shortDescription,
+      description,
       priceInCents,
-      duration: "Pendiente de configurar",
+      duration,
       format: "Campus online",
-      level: "General",
-      accentFrom: "#0b6357",
-      accentTo: "#f08968",
-      category: "General",
+      level,
+      accentFrom,
+      accentTo,
+      category,
       audienceJson: [],
       outcomesJson: [],
       methodologyJson: [],
       faqJson: [],
       seoTitle: title,
       seoDescription: shortDescription,
-      status: "ACTIVE",
+      status,
       editions: {
         create: {
-          label: "Edicion 1",
+          label: "Edición 1",
           editionNumber: 1,
           status: "ACTIVE",
           isActive: true,
@@ -60,15 +90,20 @@ export async function createCourseAction(formData: FormData) {
     }
   });
 
+  if (teacherIds.length > 0) {
+    await db.courseTeacherAssignment.createMany({
+      data: teacherIds.map((userId) => ({ courseId: course.id, userId })),
+      skipDuplicates: true
+    });
+  }
+
   await writeAuditLog({
     actorId: admin.id,
     action: "COURSE_CREATED",
     entityType: "COURSE",
     entityId: course.id,
     entityLabel: course.title,
-    metadata: {
-      slug: course.slug
-    }
+    metadata: { slug }
   });
 
   revalidateAdminViews();

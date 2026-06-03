@@ -112,10 +112,10 @@ function getPrimaryAction(input: {
   }
 
   if (input.pathname.startsWith("/admin/courses")) {
-    return { href: "/admin/courses#create-course", label: "+ Nuevo curso" };
+    return { href: "/admin/courses/nuevo", label: "+ Nuevo curso" };
   }
 
-  return { href: "/admin/courses#create-course", label: "+ Nuevo curso" };
+  return { href: "/admin/courses/nuevo", label: "+ Nuevo curso" };
 }
 
 export function AdminShell({ user, children }: AdminShellProps) {
