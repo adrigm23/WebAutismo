@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { randomUUID } from "crypto";
 import path from "path";
 import type { CourseResourceSource, CourseResourceType, CourseStatus } from "@prisma/client";
@@ -308,9 +309,12 @@ export async function addCourseResourceAction(
     const source = formData.get("source");
     const linkUrl = formData.get("linkUrl");
     const file = formData.get("file");
+    const description = formData.get("description");
+    const isPublishedRaw = formData.get("isPublished");
+    const isPublished = isPublishedRaw !== "false"; // default true
 
     if (typeof courseId !== "string" || !courseId) return { error: "Curso no válido." };
-    if (typeof moduleId !== "string" || !moduleId) return { error: "Módulo no válido." };
+    if (moduleId !== null && (typeof moduleId !== "string" || !moduleId)) return { error: "Módulo no válido." };
     if (typeof title !== "string" || title.trim().length < 2)
       return { error: "El título debe tener al menos 2 caracteres." };
     if (type !== "MATERIAL" && type !== "EXERCISE") return { error: "Tipo de lección no válido." };
@@ -348,24 +352,29 @@ export async function addCourseResourceAction(
     const resource = await db.courseResource.create({
       data: {
         courseId,
-        moduleId,
+        moduleId: typeof moduleId === "string" ? moduleId : null,
         createdById: user.id,
         type: type as CourseResourceType,
         source: source as CourseResourceSource,
         title: title.trim(),
-        description: null,
+        description: typeof description === "string" && description.trim() ? description.trim() : null,
         linkUrl: resolvedLinkUrl ?? null,
         storageKey: storageKey ?? null,
         mimeType: mimeType ?? null,
         sizeInBytes: sizeInBytes ?? null,
         sortOrder: count,
-        isPublished: true,
+        isPublished,
       },
       select: { id: true, title: true, type: true, source: true, mimeType: true, linkUrl: true },
     });
 
     const course = await db.course.findUnique({ where: { id: courseId }, select: { slug: true } });
     if (course) revalidateCourse(course.slug);
+
+    const redirectTo = formData.get("redirectTo");
+    if (typeof redirectTo === "string" && redirectTo.startsWith("/")) {
+      redirect(redirectTo);
+    }
 
     return { resource };
   } catch (e) {

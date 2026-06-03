@@ -196,7 +196,7 @@ function ContenidoTab({
               {/* Add element footer */}
               <div className="border-t border-[rgba(22,60,88,0.06)] px-5 py-3">
                 <Link
-                  href={`/docente/cursos/${courseSlug}/constructor`}
+                  href={`/docente/cursos/${courseSlug}/nuevo-recurso?moduleId=${module.id}&back=/docente/cursos/${courseSlug}`}
                   className="flex items-center gap-1.5 text-sm text-[var(--color-ink-muted)] transition hover:text-[var(--color-primary)]"
                 >
                   <Plus className="h-3.5 w-3.5" />
