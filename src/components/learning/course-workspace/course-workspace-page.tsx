@@ -193,8 +193,13 @@ function ModuleCard({
               const isCurrent = status === "in-progress" && rIdx === 0;
               const isLessonCompleted = status === "completed";
 
-              // Determine href: exercises → submission page, others → resource href
-              const itemHref = resource.href ?? (status !== "upcoming" ? continueHref : null);
+              // Exercises → submission form; external links → external URL;
+              // everything else (PDF, video, file material) → lesson player
+              const itemHref = resource.isExercise
+                ? resource.href
+                : resource.isExternal
+                  ? resource.href
+                  : continueHref;
               const typeLabel = resource.isExercise
                 ? "Tarea"
                 : resource.mimeType === "application/pdf"
