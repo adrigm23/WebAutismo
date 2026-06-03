@@ -380,7 +380,7 @@ export function CourseLearningShell({
         : focusedStudentExercise.viewerSubmission.status === "CHANGES_REQUESTED"
           ? "Cambios solicitados"
           : focusedStudentExercise.viewerSubmission.status === "SUBMITTED"
-            ? "En revision"
+            ? "En revisión"
             : "Revisada"
     : "Pendiente";
 

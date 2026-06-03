@@ -43,7 +43,7 @@ export async function generateMetadata({
   const course = await getCatalogCourseBySlug(slug);
 
   return {
-    title: course ? `Moderacion del foro | ${course.title}` : "Moderacion del foro",
+    title: course ? `Moderación del foro | ${course.title}` : "Moderación del foro",
     robots: {
       index: false,
       follow: false
@@ -151,7 +151,7 @@ export default async function ForumModerationPage({
               </Badge>
             </span>
           }
-          title="Panel de moderacion"
+          title="Panel de moderación"
         />
 
         <div className="mt-5 grid gap-3 border-t border-[rgba(22,60,88,0.08)] pt-4 md:grid-cols-2 xl:grid-cols-4">
@@ -268,7 +268,7 @@ export default async function ForumModerationPage({
                           reportId={report.id}
                           variant="primary"
                         >
-                          Accion tomada
+                          Acción tomada
                         </ReportResolutionForm>
                         <ReportResolutionForm
                           courseSlug={course.slug}

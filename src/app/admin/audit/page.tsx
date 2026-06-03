@@ -154,8 +154,8 @@ export default async function AdminAuditPage({ searchParams }: AuditPageProps) {
               Volver al panel
             </ButtonLink>
           }
-          description="Registro demo para validar la experiencia visual de la auditoria mientras la base real sigue desconectada."
-          title="Registro de auditoria"
+          description="Registro demo para validar la experiencia visual de la auditoría mientras la base real sigue desconectada."
+          title="Registro de auditoría"
         />
 
         <SurfaceCard padding="md">
@@ -374,7 +374,7 @@ export default async function AdminAuditPage({ searchParams }: AuditPageProps) {
           </ButtonLink>
         }
         description="Traza operativa del campus con actor, entidad, resumen tecnico y metadatos de cada evento."
-        title="Registro de auditoria"
+        title="Registro de auditoría"
       />
 
       <SurfaceCard padding="md">

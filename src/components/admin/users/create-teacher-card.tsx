@@ -37,7 +37,7 @@ export function CreateTeacherCard() {
         <Input
           minLength={8}
           name="password"
-          placeholder="Contrasena temporal"
+          placeholder="Contraseña temporal"
           required
           type="password"
         />

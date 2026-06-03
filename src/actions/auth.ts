@@ -37,18 +37,18 @@ const registerSchema = z
   .object({
     name: z.string().min(2, "Introduce tu nombre."),
     email: z.string().email("Introduce un email valido."),
-    password: z.string().min(8, "La contrasena debe tener al menos 8 caracteres."),
-    confirmPassword: z.string().min(8, "Confirma la contrasena."),
+    password: z.string().min(8, "La contraseña debe tener al menos 8 caracteres."),
+    confirmPassword: z.string().min(8, "Confirma la contraseña."),
     next: z.string().optional()
   })
   .refine((data) => data.password === data.confirmPassword, {
-    message: "Las contrasenas no coinciden.",
+    message: "Las contraseñas no coinciden.",
     path: ["confirmPassword"]
   });
 
 const loginSchema = z.object({
   email: z.string().email("Introduce un email valido."),
-  password: z.string().min(8, "La contrasena debe tener al menos 8 caracteres."),
+  password: z.string().min(8, "La contraseña debe tener al menos 8 caracteres."),
   next: z.string().optional()
 });
 
@@ -490,7 +490,7 @@ export async function loginAction(
           durationMs: Date.now() - startedAt
         });
         return {
-          error: "Debes verificar tu correo electronico antes de acceder al campus.",
+          error: "Debes verificar tu correo electrónico antes de acceder al campus.",
           fields: getLoginFieldState(formData)
         };
       }

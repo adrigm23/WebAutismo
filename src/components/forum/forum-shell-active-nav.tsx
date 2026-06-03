@@ -93,7 +93,7 @@ export function ForumShellDesktopModerationLinks({
         href={`${forumRootPath}/moderacion`}
       >
         <ShieldCheck className="h-4 w-4" />
-        <span>Panel de moderacion</span>
+        <span>Panel de moderación</span>
       </Link>
       <Link
         className={cn(

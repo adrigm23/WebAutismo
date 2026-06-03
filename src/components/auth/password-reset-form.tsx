@@ -19,12 +19,12 @@ export function PasswordResetForm({ token }: { token: string }) {
     <form action={formAction} className="flex flex-col gap-5">
       <input name="token" type="hidden" value={token} />
 
-      <FormField htmlFor="reset-password" label="Nueva contrasena" required>
+      <FormField htmlFor="reset-password" label="Nueva contraseña" required>
         <Input
           autoComplete="new-password"
           id="reset-password"
           name="password"
-          placeholder="Introduce tu nueva contrasena"
+          placeholder="Introduce tu nueva contraseña"
           required
           type="password"
         />
@@ -32,14 +32,14 @@ export function PasswordResetForm({ token }: { token: string }) {
 
       <FormField
         htmlFor="reset-confirm-password"
-        label="Confirmar contrasena"
+        label="Confirmar contraseña"
         required
       >
         <Input
           autoComplete="new-password"
           id="reset-confirm-password"
           name="confirmPassword"
-          placeholder="Repite tu nueva contrasena"
+          placeholder="Repite tu nueva contraseña"
           required
           type="password"
         />
@@ -56,9 +56,9 @@ export function PasswordResetForm({ token }: { token: string }) {
 
       <SubmitButton
         className="w-full"
-        pendingLabel="Actualizando contrasena..."
+        pendingLabel="Actualizando contraseña..."
       >
-        Guardar nueva contrasena
+        Guardar nueva contraseña
       </SubmitButton>
     </form>
   );

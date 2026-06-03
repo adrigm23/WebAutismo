@@ -26,7 +26,7 @@ export function DemoAccessCard() {
 
       <StateBanner
         className="mt-5"
-        description="Define DEMO_AUTH_ENABLED=true, ALLOW_DEMO_AUTH=true y una contrasena segura solo en tu entorno local."
+        description="Define DEMO_AUTH_ENABLED=true, ALLOW_DEMO_AUTH=true y una contraseña segura solo en tu entorno local."
         tone="info"
       />
     </SurfaceCard>

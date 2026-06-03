@@ -118,7 +118,7 @@ export async function sendPasswordResetEmail(input: {
   token: string;
   expiresAt: Date;
 }) {
-  const resetUrl = absoluteUrl(`/restablecer-contrasena?token=${encodeURIComponent(input.token)}`);
+  const resetUrl = absoluteUrl(`/restablecer-contraseña?token=${encodeURIComponent(input.token)}`);
 
   await sendNotificationEmail({
     email: input.email,

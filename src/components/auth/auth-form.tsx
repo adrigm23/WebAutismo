@@ -54,7 +54,7 @@ export function AuthForm({
         </FormField>
       ) : null}
 
-      <FormField htmlFor="auth-email" label="Correo electronico" required>
+      <FormField htmlFor="auth-email" label="Correo electrónico" required>
         <Input
           autoComplete="email"
           defaultValue={fieldValues.email}
@@ -67,12 +67,12 @@ export function AuthForm({
         />
       </FormField>
 
-      <FormField htmlFor="auth-password" label="Contrasena" required>
+      <FormField htmlFor="auth-password" label="Contraseña" required>
         <Input
           autoComplete={mode === "login" ? "current-password" : "new-password"}
           id="auth-password"
           name="password"
-          placeholder="Introduce tu contrasena"
+          placeholder="Introduce tu contraseña"
           required
           type="password"
         />
@@ -82,9 +82,9 @@ export function AuthForm({
         <div className="-mt-2 flex justify-end">
           <Link
             className="text-sm font-medium text-[var(--color-primary)] underline-offset-4 hover:underline"
-            href="/recuperar-contrasena"
+            href="/recuperar-contraseña"
           >
-            Has olvidado tu contrasena
+            Has olvidado tu contraseña
           </Link>
         </div>
       ) : null}
@@ -92,14 +92,14 @@ export function AuthForm({
       {mode === "register" ? (
         <FormField
           htmlFor="auth-confirm-password"
-          label="Confirmar contrasena"
+          label="Confirmar contraseña"
           required
         >
           <Input
             autoComplete="new-password"
             id="auth-confirm-password"
             name="confirmPassword"
-            placeholder="Repite tu contrasena"
+            placeholder="Repite tu contraseña"
             required
             type="password"
           />

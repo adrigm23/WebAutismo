@@ -28,11 +28,11 @@ const passwordResetRequestSchema = z.object({
 const passwordResetSchema = z
   .object({
     token: z.string().min(1, "Falta el token de recuperacion."),
-    password: z.string().min(8, "La contrasena debe tener al menos 8 caracteres."),
-    confirmPassword: z.string().min(8, "Confirma la contrasena.")
+    password: z.string().min(8, "La contraseña debe tener al menos 8 caracteres."),
+    confirmPassword: z.string().min(8, "Confirma la contraseña.")
   })
   .refine((data) => data.password === data.confirmPassword, {
-    message: "Las contrasenas no coinciden.",
+    message: "Las contraseñas no coinciden.",
     path: ["confirmPassword"]
   });
 
@@ -120,7 +120,7 @@ export async function requestPasswordResetAction(
 
   return {
     success:
-      "Si existe una cuenta activa asociada a ese correo, acabamos de enviar instrucciones para restablecer la contrasena."
+      "Si existe una cuenta activa asociada a ese correo, acabamos de enviar instrucciones para restablecer la contraseña."
   };
 }
 
@@ -141,7 +141,7 @@ export async function resetPasswordAction(
 
   if (!parsed.success) {
     return {
-      error: parsed.error.issues[0]?.message ?? "Revisa la nueva contrasena."
+      error: parsed.error.issues[0]?.message ?? "Revisa la nueva contraseña."
     };
   }
 
@@ -157,7 +157,7 @@ export async function resetPasswordAction(
       result: "rate-limited"
     });
     return {
-      error: `Has alcanzado el limite temporal para restablecer la contrasena. Espera ${rateLimit.retryAfterSeconds} segundos antes de volver a intentarlo.`
+      error: `Has alcanzado el limite temporal para restablecer la contraseña. Espera ${rateLimit.retryAfterSeconds} segundos antes de volver a intentarlo.`
     };
   }
 

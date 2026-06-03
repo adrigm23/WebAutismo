@@ -518,7 +518,7 @@ export function CourseResourceManager({
     }
 
     if (resource.viewerSubmission.status === "SUBMITTED") {
-      return <Badge tone="muted">En revision</Badge>;
+      return <Badge tone="muted">En revisión</Badge>;
     }
 
     return <Badge tone="teacher">Revisada</Badge>;
@@ -586,7 +586,7 @@ export function CourseResourceManager({
             {!canModerate && resource.isExercise ? (
               <p className="text-sm leading-7 text-[var(--color-muted)]">
                 {!resource.viewerSubmission
-                  ? "Accion recomendada: abre el formulario de esta tarjeta y registra tu entrega."
+                  ? "Acción recomendada: abre el formulario de esta tarjeta y registra tu entrega."
                   : resource.viewerSubmission.status === "CHANGES_REQUESTED"
                     ? "Tu docente ha pedido cambios. Revisa el feedback y vuelve a enviar la actividad desde aqui."
                     : resource.viewerSubmission.status === "SUBMITTED"

@@ -711,7 +711,7 @@ function getStudentResourceStateLabel(resource: CampusResourceItem) {
   }
 
   if (resource.viewerSubmission.status === "SUBMITTED") {
-    return "En revision";
+    return "En revisión";
   }
 
   return "Visto";

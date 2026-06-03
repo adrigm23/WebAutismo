@@ -208,7 +208,7 @@ export function AdminShell({ user, children }: AdminShellProps) {
                   type="submit"
                 >
                   <LogOut className="h-[1.05rem] w-[1.05rem]" strokeWidth={2} />
-                  <span>Cerrar sesion</span>
+                  <span>Cerrar sesión</span>
                 </button>
               </form>
             </div>

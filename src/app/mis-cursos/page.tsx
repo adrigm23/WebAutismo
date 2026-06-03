@@ -269,7 +269,7 @@ function buildStudentSteps(input: {
             id: `submitted-${resource.resourceId}`,
             href,
             icon: ClipboardList,
-            eyebrow: "En revision",
+            eyebrow: "En revisión",
             title: resource.title,
             description: `Entrega enviada en ${resource.courseTitle}.`,
             ctaLabel: "Ver estado",

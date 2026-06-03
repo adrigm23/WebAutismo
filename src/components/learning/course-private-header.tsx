@@ -131,7 +131,7 @@ export function CoursePrivateHeader({
             </Link>
             <form action={logoutAction}>
               <Button
-                aria-label="Cerrar sesion"
+                aria-label="Cerrar sesión"
                 className="min-h-10 min-w-10 px-0 shadow-none"
                 size="sm"
                 type="submit"

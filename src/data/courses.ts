@@ -138,7 +138,7 @@ export const courses: Course[] = [
   }),
   defineCourse({
     slug: "comunicacion-funcional-en-autismo",
-    title: "Comunicacion funcional en autismo",
+    title: "Comunicación funcional en autismo",
     shortDescription:
       "Claves para favorecer una comunicacion util, comprensible y funcional en diferentes contextos.",
     description:
@@ -159,7 +159,7 @@ export const courses: Course[] = [
     modules: [
       {
         id: "bases-de-comunicacion-funcional",
-        title: "Bases de comunicacion funcional",
+        title: "Bases de comunicación funcional",
         description: "Intencion comunicativa, contexto y significado.",
         estimatedTime: "40 minutos",
         resourcesSummary: "Mapa de funciones comunicativas",
@@ -195,9 +195,9 @@ export const courses: Course[] = [
       role: "Formación especializada",
       bio: "Equipo centrado en comunicacion, accesibilidad cognitiva y apoyos visuales.",
     },
-    seoTitle: "Curso online de comunicacion funcional en autismo",
+    seoTitle: "Curso online de comunicación funcional en autismo",
     seoDescription:
-      "Compra el curso de comunicacion funcional en autismo y accede al contenido siempre desde tu cuenta.",
+      "Compra el curso de comunicación funcional en autismo y accede al contenido siempre desde tu cuenta.",
   }),
   defineCourse({
     slug: "adaptaciones-en-el-aula-para-estudiantes-con-autismo",

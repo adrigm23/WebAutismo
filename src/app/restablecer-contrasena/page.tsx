@@ -5,7 +5,7 @@ import { ButtonLink } from "@/components/ui/button";
 import { StateBanner } from "@/components/ui/state-banner";
 
 export const metadata: Metadata = {
-  title: "Restablecer contrasena",
+  title: "Restablecer contraseña",
   robots: {
     index: false,
     follow: false,
@@ -37,13 +37,13 @@ export default async function ResetPasswordPage({
           />
         )
       }
-      description="Define una nueva contrasena segura para recuperar el acceso al campus."
+      description="Define una nueva contraseña segura para recuperar el acceso al campus."
       footer={
-        <ButtonLink href="/recuperar-contrasena" size="sm" variant="subtle">
+        <ButtonLink href="/recuperar-contraseña" size="sm" variant="subtle">
           Solicitar otro enlace
         </ButtonLink>
       }
-      title="Restablecer contrasena"
+      title="Restablecer contraseña"
     />
   );
 }

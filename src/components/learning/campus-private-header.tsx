@@ -141,7 +141,7 @@ export function CampusPrivateHeader({
 
               <form action={logoutAction}>
                 <Button
-                  aria-label="Cerrar sesion"
+                  aria-label="Cerrar sesión"
                   className="px-3 py-2"
                   size="sm"
                   type="submit"

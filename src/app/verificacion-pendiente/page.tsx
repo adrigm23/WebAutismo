@@ -102,7 +102,7 @@ export default async function VerificationPendingPage({
 
               <form action={logoutAction}>
                 <Button type="submit" variant="neutral">
-                  Cerrar sesion
+                  Cerrar sesión
                 </Button>
               </form>
             </div>

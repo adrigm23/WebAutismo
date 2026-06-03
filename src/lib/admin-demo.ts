@@ -11,7 +11,7 @@ export const demoAdminTeachers = [
     courseAssignments: [
       {
         id: "demo-course-acompanamiento",
-        title: "Estrategias de intervencion temprana",
+        title: "Estrategias de intervención temprana",
         slug: "estrategias-intervencion-temprana",
         editions: ["Edición Otoño 2024"],
       },
@@ -41,7 +41,7 @@ export const demoAdminTeachers = [
     courseAssignments: [
       {
         id: "demo-course-acompanamiento",
-        title: "Estrategias de intervencion temprana",
+        title: "Estrategias de intervención temprana",
         slug: "estrategias-intervencion-temprana",
         editions: ["Edición Otoño 2024"],
       },
@@ -82,7 +82,7 @@ export const demoAdminTeachers = [
 export const demoAdminCourses = [
   {
     id: "demo-course-acompanamiento",
-    title: "Estrategias de intervencion temprana",
+    title: "Estrategias de intervención temprana",
     slug: "estrategias-intervencion-temprana",
     shortDescription:
       "Recursos aplicados para deteccion, apoyo y acompanamiento familiar.",
@@ -125,7 +125,7 @@ export const demoAdminEditions = [
   {
     id: "demo-edition-otono",
     courseId: "demo-course-acompanamiento",
-    courseTitle: "Estrategias de intervencion temprana",
+    courseTitle: "Estrategias de intervención temprana",
     label: "Edición Otoño 2024",
     status: "ACTIVE",
     startsAt: new Date("2024-09-15T09:00:00.000Z"),
@@ -187,7 +187,7 @@ export const demoAdminPromotions = [
     amountInCents: 5000,
     scope: "COURSE",
     courseId: "demo-course-acompanamiento",
-    courseTitle: "Estrategias de intervencion temprana",
+    courseTitle: "Estrategias de intervención temprana",
     validFrom: new Date("2024-10-01T00:00:00.000Z"),
     validUntil: null,
     usageLimit: null,
@@ -217,7 +217,7 @@ export const demoAdminAuditLogs = [
     action: "COURSE_UPDATED",
     entityType: "COURSE",
     entityId: "demo-course-acompanamiento",
-    entityLabel: "Estrategias de intervencion temprana",
+    entityLabel: "Estrategias de intervención temprana",
     createdAt: new Date("2026-05-08T09:10:00.000Z"),
     actor: { name: "Admin Demo", email: "admin.demo@autismo.local" },
     metadata: {
@@ -261,7 +261,7 @@ export const demoAdminSupervisionRows = [
     id: "demo-enrollment-1",
     studentName: "Ana Lopez",
     studentEmail: "ana.lopez@demo.local",
-    courseTitle: "Estrategias de intervencion temprana",
+    courseTitle: "Estrategias de intervención temprana",
     editionLabel: "Edición Otoño 2024",
     status: "ACTIVE",
     accessState: "active",

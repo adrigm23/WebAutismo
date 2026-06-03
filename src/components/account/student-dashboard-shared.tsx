@@ -151,7 +151,7 @@ export function buildStudentPendingItems(pendingSources: StudentDashboardPending
         title: resource.title,
         description: "Tu entrega ya esta enviada y pendiente de revision docente.",
         meta: courseLabel,
-        badgeLabel: "En revision",
+        badgeLabel: "En revisión",
         badgeTone: "outline",
         priority: 2,
         dueAt: resource.dueAt,

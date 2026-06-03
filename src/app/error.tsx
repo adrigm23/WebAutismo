@@ -65,7 +65,7 @@ export default function ErrorPage({ error, reset }: ErrorPageProps) {
           No hemos podido cargar esta pantalla
         </h1>
         <p className="mt-4 max-w-3xl text-[1.05rem] leading-8 text-[var(--color-muted)]">
-          El error ya se ha registrado. Puedes volver a intentarlo sin perder la sesion actual.
+          El error ya se ha registrado. Puedes volver a intentarlo sin perder la sesión actual.
         </p>
         <div className="mt-8 flex flex-wrap gap-3">
           <Button onClick={reset} type="button">

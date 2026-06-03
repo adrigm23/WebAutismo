@@ -42,7 +42,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
         showVerificationMessage
           ? "Tu cuenta se ha creado. Revisa tu correo y verifica tu direccion antes de acceder."
           : showResetMessage
-            ? "Tu contrasena se ha actualizado. Ya puedes iniciar sesion con la nueva clave."
+            ? "Tu contraseña se ha actualizado. Ya puedes iniciar sesion con la nueva clave."
             : null
       }
     />

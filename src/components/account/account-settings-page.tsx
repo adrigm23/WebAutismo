@@ -355,7 +355,7 @@ function SecurityCard({
               <p className="mt-0.5 text-xs text-[var(--color-muted)]">Última actualización hace 3 meses</p>
             </div>
             <Link
-              href="/recuperar-contrasena"
+              href="/recuperar-contraseña"
               className="rounded-xl border border-[rgba(22,60,88,0.15)] px-4 py-2 text-sm font-medium text-[var(--color-ink)] transition hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]"
             >
               Cambiar

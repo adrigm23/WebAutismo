@@ -326,7 +326,7 @@ export async function getCampusResources(input: {
         return {
           id: resource.id,
           title: resource.title,
-          description: resource.description ?? "Sin descripcion adicional.",
+          description: resource.description ?? "Sin descripción adicional.",
           resourceType: resource.type,
           source: resource.source,
           mimeType: resource.mimeType ?? null,

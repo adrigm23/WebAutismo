@@ -175,7 +175,7 @@ export default async function AdminSupervisionPage({ searchParams }: Supervision
       <div className="space-y-9">
         <AdminPageHeader
           description="Seguimiento demo del alumnado y de la vigencia de sus accesos."
-          title="Supervision academica"
+          title="Supervisión académica"
         />
         <SupervisionFiltersCard
           accessState={accessStateFilter}
@@ -445,7 +445,7 @@ export default async function AdminSupervisionPage({ searchParams }: Supervision
     <div className="space-y-9">
       <AdminPageHeader
         description="Monitoriza progreso del alumnado, vigencia de accesos y coherencia entre matricula, edicion y ventana posterior."
-        title="Supervision academica"
+        title="Supervisión académica"
       />
 
       <SupervisionFiltersCard

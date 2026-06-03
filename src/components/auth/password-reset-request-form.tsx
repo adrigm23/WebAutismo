@@ -23,7 +23,7 @@ export function PasswordResetRequestForm() {
       <FormField
         description="Usa el correo con el que accedes habitualmente al campus."
         htmlFor="reset-request-email"
-        label="Correo electronico"
+        label="Correo electrónico"
         required
       >
         <Input
