@@ -336,6 +336,11 @@ export default async function CourseTrackingPage({
     redirect(`/checkout/${slug}`);
   }
 
+  // Docentes y admins redirigen al nuevo portal docente
+  if (user.globalRole === "TEACHER" || user.globalRole === "ADMIN") {
+    redirect(`/docente/cursos/${slug}?tab=contenido`);
+  }
+
   if (
     !canViewCourseProgress({
       globalRole: user.globalRole,

@@ -1,7 +1,9 @@
 import type { UserGlobalRole } from "@prisma/client";
 
 export function getDefaultPrivateRedirect(globalRole: UserGlobalRole) {
-  return globalRole === "ADMIN" ? "/admin" : "/mis-cursos";
+  if (globalRole === "ADMIN") return "/admin";
+  if (globalRole === "TEACHER") return "/docente";
+  return "/mis-cursos";
 }
 
 export function getSafeRedirect(target: string | null | undefined, fallback = "/mis-cursos") {
@@ -25,6 +27,10 @@ export function getPostLoginRedirect(
 
   if (globalRole === "ADMIN" && /^\/mi-cuenta(?:$|[?#])/.test(safeTarget)) {
     return "/admin";
+  }
+
+  if (globalRole === "TEACHER" && /^\/mi-cuenta(?:$|[?#])/.test(safeTarget)) {
+    return "/docente";
   }
 
   return safeTarget;
