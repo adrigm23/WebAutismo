@@ -3,11 +3,11 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { logoutAction } from "@/actions/session";
 import {
   LayoutDashboard,
   BookOpen,
   CalendarDays,
-  Users,
   FolderOpen,
   MessageCircle,
   HelpCircle,
@@ -17,7 +17,6 @@ import {
   Settings,
   Plus,
   Menu,
-  X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -125,7 +124,7 @@ function SidebarContent({
             {item.label}
           </Link>
         ))}
-        <form action="/api/auth/logout" method="POST">
+        <form action={logoutAction}>
           <button
             className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-red-500 transition hover:bg-red-50"
             type="submit"

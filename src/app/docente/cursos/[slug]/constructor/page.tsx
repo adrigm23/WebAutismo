@@ -6,6 +6,8 @@ import {
 } from "@/components/docente/course-builder/course-builder";
 import { requireUser } from "@/lib/auth";
 import { getDb } from "@/lib/prisma";
+import { TeacherShell } from "@/components/docente/teacher-shell";
+import { getInitials } from "@/lib/utils";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -54,6 +56,9 @@ export default async function CourseBuilderPage({ params }: Props) {
     redirect("/mis-cursos");
   }
 
+  const viewerName = user.name ?? user.email;
+  const viewerInitials = getInitials(viewerName);
+
   const builderCourse: BuilderCourse = {
     id: course.id,
     slug: course.slug,
@@ -77,5 +82,13 @@ export default async function CourseBuilderPage({ params }: Props) {
     })),
   };
 
-  return <CourseBuilder course={builderCourse} />;
+  return (
+    <TeacherShell
+      viewerName={viewerName}
+      viewerInitials={viewerInitials}
+      roleLabel="Docente"
+    >
+      <CourseBuilder course={builderCourse} />
+    </TeacherShell>
+  );
 }

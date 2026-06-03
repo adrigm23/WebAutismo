@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { requireUser } from "@/lib/auth";
-import { canAccessCourseCommunityForCourse, canModerateCourse, getRoleLabel } from "@/lib/course-community";
+import { canAccessCourseCommunityForCourse, canModerateCourse } from "@/lib/course-community";
 import { getCatalogCourseBySlug } from "@/lib/course-catalog";
 import { getSubmissionForReview } from "@/lib/submission-review";
 import { DocenteShell } from "@/components/docente/docente-shell";
