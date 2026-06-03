@@ -9,11 +9,13 @@ import {
 } from "@/lib/course-community";
 import { getCampusResources } from "@/lib/course-resources";
 import { CourseWorkspaceShell } from "@/components/learning/course-workspace/course-workspace-shell";
-import { CourseResourceLibrary } from "@/components/platform/course-resources/course-resource-library";
+import { CourseResourceManager } from "@/components/learning/course-resource-manager";
 import { getInitials } from "@/lib/utils";
+import { normalizeCourseResourceQueryValue } from "@/lib/course-navigation";
 
 type ResourcesPageProps = {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 };
 
 export async function generateMetadata({ params }: ResourcesPageProps): Promise<Metadata> {
@@ -25,8 +27,11 @@ export async function generateMetadata({ params }: ResourcesPageProps): Promise<
   };
 }
 
-export default async function CourseResourcesPage({ params }: ResourcesPageProps) {
+export default async function CourseResourcesPage({ params, searchParams }: ResourcesPageProps) {
   const { slug } = await params;
+  const sp = await searchParams;
+  const rawResource = typeof sp.resource === "string" ? sp.resource : Array.isArray(sp.resource) ? sp.resource[0] : null;
+  const focusedResourceId = normalizeCourseResourceQueryValue(rawResource);
   const course = await getCatalogCourseBySlug(slug);
 
   if (!course) notFound();
@@ -60,11 +65,12 @@ export default async function CourseResourcesPage({ params }: ResourcesPageProps
       viewerInitials={getInitials(viewerName)}
       viewerName={viewerName}
     >
-      <CourseResourceLibrary
+      <CourseResourceManager
         canModerate={canModerate}
         course={course}
+        focusedResourceId={focusedResourceId}
         resources={resources}
-        role={access.role}
+        roleLabel={getRoleLabel(access.role)}
       />
     </CourseWorkspaceShell>
   );

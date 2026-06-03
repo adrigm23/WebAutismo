@@ -334,9 +334,11 @@ export async function getCampusResources(input: {
           resourceTypeLabel: getResourceTypeLabel(resource.type),
           accessLabel: getResourceAccessLabel(resource.source),
           href:
-            resource.source === "FILE"
-              ? buildProtectedCourseResourceUrl(resource.id)
-              : resource.linkUrl ?? null,
+            resource.type === "EXERCISE"
+              ? `/mis-cursos/${input.course.slug}/recursos?resource=${resource.id}#resource-${resource.id}`
+              : resource.source === "FILE"
+                ? buildProtectedCourseResourceUrl(resource.id)
+                : resource.linkUrl ?? null,
           linkUrl: resource.linkUrl ?? null,
           isExternal: resource.source === "LINK",
           isManaged: true,
