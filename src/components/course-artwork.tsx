@@ -12,7 +12,7 @@ type ArtworkTheme = {
   accent: string;
   secondary: string;
   tertiary: string;
-  shape: "slab" | "arch" | "portrait";
+  shape: "slab" | "arch" | "portrait" | "initials";
 };
 
 const artworkThemes: Record<string, ArtworkTheme> = {
@@ -46,9 +46,19 @@ function getArtworkTheme(course: CatalogCourse) {
       accent: "#cce6ff",
       secondary: "#ffe28a",
       tertiary: "#16324a",
-      shape: "slab"
+      shape: "initials" as const
     }
   );
+}
+
+const STOP_WORDS = new Set(["de", "del", "la", "el", "en", "para", "y", "e", "a", "con", "por", "sobre", "los", "las", "un", "una"]);
+
+function getCourseInitials(title: string): string {
+  const words = title.split(/\s+/).filter(Boolean).filter(w => !STOP_WORDS.has(w.toLowerCase()));
+  const initials = words.slice(0, 2).map(w => w[0]?.toUpperCase() ?? "").join("");
+  if (initials) return initials;
+  const first = title[0];
+  return first ? first.toUpperCase() : "C";
 }
 
 export function CourseArtwork({
@@ -85,11 +95,7 @@ export function CourseArtwork({
           />
           <div className="absolute left-1/2 top-[42%] h-px w-16 -translate-x-1/2 bg-white/70 md:w-20" />
           <div className="absolute left-[calc(50%+1.2rem)] top-[41.2%] h-2 w-2 rotate-45 border-r border-t border-white/80" />
-          {!isThumb ? (
-            <div className="absolute right-[10%] top-[14%] text-[clamp(1.4rem,3vw,3.4rem)] font-black uppercase tracking-[0.28em] text-white/18">
-              curso
-            </div>
-          ) : null}
+          {null}
         </>
       ) : null}
 
@@ -163,6 +169,45 @@ export function CourseArtwork({
               isThumb ? "right-[24%] top-[22%] h-2.5 w-2.5" : isPlayer ? "right-[24%] top-[24%] h-5 w-5" : variant === "hero" ? "right-[24%] top-[24%] h-4 w-4" : "right-[24%] top-[25%] h-3 w-3"
             )}
           />
+        </>
+      ) : null}
+
+      {/* Initials fallback — for courses without a specific artwork theme */}
+      {theme.shape === "initials" ? (
+        <>
+          {/* Background circle decoration */}
+          <div
+            className="absolute -right-8 -top-8 rounded-full opacity-20"
+            style={{
+              width: isThumb ? "80px" : "140px",
+              height: isThumb ? "80px" : "140px",
+              background: "rgba(255,255,255,0.3)"
+            }}
+          />
+          <div
+            className="absolute -bottom-6 -left-6 rounded-full opacity-15"
+            style={{
+              width: isThumb ? "60px" : "100px",
+              height: isThumb ? "60px" : "100px",
+              background: "rgba(255,255,255,0.4)"
+            }}
+          />
+          {/* Course initials — centered, prominent */}
+          {!isThumb ? (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <span
+                className="select-none font-black text-white drop-shadow-lg"
+                style={{
+                  fontSize: isPlayer ? "5rem" : variant === "hero" ? "4rem" : "3rem",
+                  letterSpacing: "-0.02em",
+                  textShadow: "0 2px 12px rgba(0,0,0,0.4)",
+                  opacity: 0.72
+                }}
+              >
+                {getCourseInitials(course.title)}
+              </span>
+            </div>
+          ) : null}
         </>
       ) : null}
 
