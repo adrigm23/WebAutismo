@@ -301,28 +301,29 @@ export async function addCourseResourceAction(
   _state: AddResourceResult,
   formData: FormData,
 ): Promise<AddResourceResult> {
+  const courseId = formData.get("courseId");
+  const moduleId = formData.get("moduleId");
+  const title = formData.get("title");
+  const type = formData.get("type");
+  const source = formData.get("source");
+  const linkUrl = formData.get("linkUrl");
+  const file = formData.get("file");
+  const description = formData.get("description");
+  const isPublishedRaw = formData.get("isPublished");
+  const isPublished = isPublishedRaw !== "false";
+
+  if (typeof courseId !== "string" || !courseId) return { error: "Curso no válido." };
+  if (moduleId !== null && (typeof moduleId !== "string" || !moduleId)) return { error: "Módulo no válido." };
+  if (typeof title !== "string" || title.trim().length < 2)
+    return { error: "El título debe tener al menos 2 caracteres." };
+  if (type !== "MATERIAL" && type !== "EXERCISE") return { error: "Tipo de lección no válido." };
+  if (source !== "FILE" && source !== "LINK") return { error: "Origen no válido." };
+
+  let resource: AddResourceResult["resource"];
+
   try {
-    const courseId = formData.get("courseId");
-    const moduleId = formData.get("moduleId");
-    const title = formData.get("title");
-    const type = formData.get("type");
-    const source = formData.get("source");
-    const linkUrl = formData.get("linkUrl");
-    const file = formData.get("file");
-    const description = formData.get("description");
-    const isPublishedRaw = formData.get("isPublished");
-    const isPublished = isPublishedRaw !== "false"; // default true
-
-    if (typeof courseId !== "string" || !courseId) return { error: "Curso no válido." };
-    if (moduleId !== null && (typeof moduleId !== "string" || !moduleId)) return { error: "Módulo no válido." };
-    if (typeof title !== "string" || title.trim().length < 2)
-      return { error: "El título debe tener al menos 2 caracteres." };
-    if (type !== "MATERIAL" && type !== "EXERCISE") return { error: "Tipo de lección no válido." };
-    if (source !== "FILE" && source !== "LINK") return { error: "Origen no válido." };
-
     const { user, db } = await requireBuilderAccess(courseId);
 
-    // Count resources in module to get sortOrder
     const count = await db.courseResource.count({ where: { moduleId } });
 
     let storageKey: string | undefined;
@@ -349,7 +350,7 @@ export async function addCourseResourceAction(
       sizeInBytes = validated.sizeInBytes;
     }
 
-    const resource = await db.courseResource.create({
+    const created = await db.courseResource.create({
       data: {
         courseId,
         moduleId: typeof moduleId === "string" ? moduleId : null,
@@ -371,15 +372,17 @@ export async function addCourseResourceAction(
     const course = await db.course.findUnique({ where: { id: courseId }, select: { slug: true } });
     if (course) revalidateCourse(course.slug);
 
-    const redirectTo = formData.get("redirectTo");
-    if (typeof redirectTo === "string" && redirectTo.startsWith("/")) {
-      redirect(redirectTo);
-    }
-
-    return { resource };
+    resource = created;
   } catch (e) {
     return { error: e instanceof Error ? e.message : "Error al añadir la lección." };
   }
+
+  const redirectTo = formData.get("redirectTo");
+  if (typeof redirectTo === "string" && redirectTo.startsWith("/")) {
+    redirect(redirectTo);
+  }
+
+  return { resource };
 }
 
 export async function updateCourseResourceAction(
