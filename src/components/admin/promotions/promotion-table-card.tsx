@@ -31,7 +31,7 @@ export function PromotionTableCard({
 }) {
   return (
     <Card className="min-w-0 overflow-hidden rounded-xl">
-      <div className="border-b border-[#dde4ec] px-7 py-6">
+      <div className="border-b border-[var(--color-border)] px-7 py-6">
         <form className="grid min-w-0 gap-3 md:grid-cols-[minmax(0,1fr)_220px_auto]">
           <Input defaultValue={q} name="q" placeholder="Buscar cupones..." />
           <select
@@ -63,7 +63,7 @@ export function PromotionTableCard({
                   <span className="block text-[1.18rem] font-semibold text-[var(--color-ink)]">
                     {promotion.code}
                   </span>
-                  <span className="mt-1 block text-sm text-[#647487]">
+                  <span className="mt-1 block text-sm text-[var(--color-ink-soft)]">
                     {promotion.validUntil
                       ? `Hasta ${formatDate(promotion.validUntil)}`
                       : "Sin caducidad"}
@@ -75,7 +75,7 @@ export function PromotionTableCard({
               </AdminStatusBadge>
             </div>
 
-            <div className="mt-4 grid grid-cols-2 gap-4 border-t border-[#e0e7ee] pt-4 text-sm text-[#32465a]">
+            <div className="mt-4 grid grid-cols-2 gap-4 border-t border-[var(--color-border)] pt-4 text-sm text-[var(--color-ink)]">
               <div>
                 <p className="text-meta-xs font-semibold text-[var(--color-ink-soft)]">
                   Descuento
@@ -98,7 +98,7 @@ export function PromotionTableCard({
               </div>
             </div>
 
-            <div className="mt-4 rounded-[var(--radius-md)] bg-[color:var(--color-bg-subtle)] px-4 py-3 text-sm text-[#32465a]">
+            <div className="mt-4 rounded-[var(--radius-md)] bg-[color:var(--color-bg-subtle)] px-4 py-3 text-sm text-[var(--color-ink)]">
               <p className="text-meta-xs font-semibold text-[var(--color-ink-soft)]">
                 Ambito
               </p>
@@ -115,7 +115,7 @@ export function PromotionTableCard({
       <div className="hidden max-w-full overflow-x-auto md:block">
         <table className="min-w-full text-left">
           <thead>
-            <tr className="border-b border-[#dde4ec] text-sm uppercase tracking-[0.16em] text-[#3b4f64]">
+            <tr className="border-b border-[var(--color-border)] text-sm uppercase tracking-[0.16em] text-[var(--color-ink-soft)]">
               <th className="px-7 py-4">Codigo</th>
               <th className="px-4 py-4">Descuento</th>
               <th className="px-4 py-4">Ambito</th>
@@ -123,7 +123,7 @@ export function PromotionTableCard({
               <th className="px-7 py-4">Estado</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-[#e0e7ee]">
+          <tbody className="divide-y divide-[var(--color-border)]">
             {promotions.map((promotion) => (
               <tr key={promotion.id}>
                 <td className="px-7 py-5">
@@ -131,25 +131,25 @@ export function PromotionTableCard({
                     <span className="block text-[1.18rem] font-semibold text-[var(--color-ink)]">
                       {promotion.code}
                     </span>
-                    <span className="mt-1 block text-sm text-[#647487]">
+                    <span className="mt-1 block text-sm text-[var(--color-ink-soft)]">
                       {promotion.validUntil
                         ? `Hasta ${formatDate(promotion.validUntil)}`
                         : "Sin caducidad"}
                     </span>
                   </Link>
                 </td>
-                <td className="px-4 py-5 text-[#32465a]">
+                <td className="px-4 py-5 text-[var(--color-ink)]">
                   {getPromotionDiscountSummary({
                     discountType: promotion.discountType,
                     amountInCents: promotion.amountInCents
                   })}
                 </td>
-                <td className="px-4 py-5 text-[#32465a]">
+                <td className="px-4 py-5 text-[var(--color-ink)]">
                   {promotion.scope === "GLOBAL"
                     ? "Global"
                     : promotion.courseTitle ?? "Curso especifico"}
                 </td>
-                <td className="px-4 py-5 text-[#32465a]">
+                <td className="px-4 py-5 text-[var(--color-ink)]">
                   {promotion.redemptionCount}
                   {promotion.usageLimit ? ` / ${promotion.usageLimit}` : " / ilimitado"}
                 </td>

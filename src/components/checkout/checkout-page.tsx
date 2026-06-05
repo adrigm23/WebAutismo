@@ -34,26 +34,26 @@ export type CheckoutPageProps = {
 // ─── Shared input class ────────────────────────────────────────────────────────
 
 const inputCls =
-  "h-11 w-full rounded-lg border border-[#dbe3ec] bg-white px-3.5 text-sm text-[#163c58] placeholder:text-[#9fb0c2] focus-visible:border-[#163c58] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#163c58] focus-visible:ring-offset-1";
+  "h-11 w-full rounded-lg border border-[var(--color-border)] bg-white px-3.5 text-sm text-[var(--color-primary)] placeholder:text-[var(--color-muted)] focus-visible:border-[var(--color-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-1";
 
 // ─── Header ───────────────────────────────────────────────────────────────────
 
 function CheckoutHeader() {
   return (
-    <header className="border-b border-[#dbe3ec] bg-white">
+    <header className="border-b border-[var(--color-border)] bg-white">
       <div className="mx-auto flex max-w-5xl items-center justify-between px-5 py-4 sm:px-8">
         <Link
-          className="flex items-center gap-2.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#163c58]"
+          className="flex items-center gap-2.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)]"
           href="/"
         >
-          <div className="grid h-8 w-8 place-items-center rounded-lg bg-[#163c58]">
+          <div className="grid h-8 w-8 place-items-center rounded-lg bg-[var(--color-primary)]">
             <span className="text-xs font-bold text-white">CA</span>
           </div>
-          <span className="text-[0.95rem] font-bold tracking-[-0.02em] text-[#163c58]">
+          <span className="text-[0.95rem] font-bold tracking-[-0.02em] text-[var(--color-primary)]">
             Campus Autismo Córdoba
           </span>
         </Link>
-        <div className="flex items-center gap-1.5 text-[0.75rem] font-semibold uppercase tracking-[0.12em] text-[#163c58]">
+        <div className="flex items-center gap-1.5 text-[0.75rem] font-semibold uppercase tracking-[0.12em] text-[var(--color-primary)]">
           <Lock className="h-3.5 w-3.5" strokeWidth={2} />
           Pago Seguro
         </div>
@@ -75,16 +75,16 @@ const COUNTRIES = [
 
 function CheckoutCustomerData({ user }: { user: CheckoutPageProps["user"] }) {
   return (
-    <div className="rounded-xl border border-[#dbe3ec] bg-white p-6 shadow-[0_1px_4px_rgba(22,60,88,0.06)]">
+    <div className="rounded-xl border border-[var(--color-border)] bg-white p-6 shadow-[0_1px_4px_rgba(22,60,88,0.06)]">
       <div className="mb-5 flex items-center gap-2.5">
-        <User className="h-4 w-4 text-[#163c58]" strokeWidth={2} />
-        <h2 className="text-[1rem] font-bold text-[#163c58]">Tus Datos</h2>
+        <User className="h-4 w-4 text-[var(--color-primary)]" strokeWidth={2} />
+        <h2 className="text-[1rem] font-bold text-[var(--color-primary)]">Tus Datos</h2>
       </div>
 
       <div className="grid gap-4">
         <div className="grid gap-4 sm:grid-cols-2">
           <label className="flex flex-col gap-1.5">
-            <span className="text-[0.78rem] font-semibold text-[#4a6780]">
+            <span className="text-[0.78rem] font-semibold text-[var(--color-ink-soft)]">
               Nombre Completo
             </span>
             <input
@@ -96,7 +96,7 @@ function CheckoutCustomerData({ user }: { user: CheckoutPageProps["user"] }) {
             />
           </label>
           <label className="flex flex-col gap-1.5">
-            <span className="text-[0.78rem] font-semibold text-[#4a6780]">
+            <span className="text-[0.78rem] font-semibold text-[var(--color-ink-soft)]">
               Correo Electrónico
             </span>
             <input
@@ -110,12 +110,12 @@ function CheckoutCustomerData({ user }: { user: CheckoutPageProps["user"] }) {
         </div>
 
         <label className="flex flex-col gap-1.5">
-          <span className="text-[0.78rem] font-semibold text-[#4a6780]">
+          <span className="text-[0.78rem] font-semibold text-[var(--color-ink-soft)]">
             País de Residencia
           </span>
           <div className="relative">
             <select
-              className="h-11 w-full cursor-pointer appearance-none rounded-lg border border-[#dbe3ec] bg-white px-3.5 pr-9 text-sm text-[#163c58] focus-visible:border-[#163c58] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#163c58]"
+              className="h-11 w-full cursor-pointer appearance-none rounded-lg border border-[var(--color-border)] bg-white px-3.5 pr-9 text-sm text-[var(--color-primary)] focus-visible:border-[var(--color-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)]"
               defaultValue="Argentina"
               name="country"
             >
@@ -125,7 +125,7 @@ function CheckoutCustomerData({ user }: { user: CheckoutPageProps["user"] }) {
                 </option>
               ))}
             </select>
-            <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[#9fb0c2]">
+            <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-muted)]">
               <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
                 <path d="M6 9l6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
@@ -135,9 +135,9 @@ function CheckoutCustomerData({ user }: { user: CheckoutPageProps["user"] }) {
       </div>
 
       {!user && (
-        <p className="mt-4 text-[0.8rem] text-[#9fb0c2]">
+        <p className="mt-4 text-[0.8rem] text-[var(--color-muted)]">
           ¿Ya tienes cuenta?{" "}
-          <Link className="text-[#163c58] underline hover:opacity-75" href="/acceder">
+          <Link className="text-[var(--color-primary)] underline hover:opacity-75" href="/acceder">
             Inicia sesión
           </Link>{" "}
           para pre-rellenar tus datos.
@@ -165,21 +165,21 @@ function CheckoutPaymentMethod({
   ];
 
   return (
-    <div className="rounded-xl border border-[#dbe3ec] bg-white p-6 shadow-[0_1px_4px_rgba(22,60,88,0.06)]">
+    <div className="rounded-xl border border-[var(--color-border)] bg-white p-6 shadow-[0_1px_4px_rgba(22,60,88,0.06)]">
       <div className="mb-5 flex items-center gap-2.5">
-        <CreditCard className="h-4 w-4 text-[#163c58]" strokeWidth={2} />
-        <h2 className="text-[1rem] font-bold text-[#163c58]">Método de Pago</h2>
+        <CreditCard className="h-4 w-4 text-[var(--color-primary)]" strokeWidth={2} />
+        <h2 className="text-[1rem] font-bold text-[var(--color-primary)]">Método de Pago</h2>
       </div>
 
       {/* Tabs */}
-      <div className="mb-5 grid grid-cols-3 gap-1.5 rounded-xl border border-[#dbe3ec] p-1">
+      <div className="mb-5 grid grid-cols-3 gap-1.5 rounded-xl border border-[var(--color-border)] p-1">
         {TABS.map(({ id, label, Icon }) => (
           <button
             className={cn(
               "flex items-center justify-center gap-1.5 rounded-lg px-3 py-2.5 text-sm font-semibold transition",
               activeTab === id
-                ? "bg-[#163c58] text-white shadow-sm"
-                : "text-[#4a6780] hover:bg-[rgba(22,60,88,0.05)]",
+                ? "bg-[var(--color-primary)] text-white shadow-sm"
+                : "text-[var(--color-ink-soft)] hover:bg-[rgba(22,60,88,0.05)]",
             )}
             key={id}
             onClick={() => setActiveTab(id)}
@@ -195,8 +195,8 @@ function CheckoutPaymentMethod({
       {activeTab === "tarjeta" && (
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <p className="text-[0.8rem] font-semibold text-[#4a6780]">Detalles de la Tarjeta</p>
-            <div className="flex items-center gap-1.5 text-[#9fb0c2]">
+            <p className="text-[0.8rem] font-semibold text-[var(--color-ink-soft)]">Detalles de la Tarjeta</p>
+            <div className="flex items-center gap-1.5 text-[var(--color-muted)]">
               <CreditCard className="h-4 w-4" strokeWidth={1.5} />
               <CreditCard className="h-4 w-4" strokeWidth={1.5} />
             </div>
@@ -205,14 +205,14 @@ function CheckoutPaymentMethod({
           {isStripeReady || isDemoMode ? (
             <div className="space-y-3">
               <div className="relative">
-                <CreditCard className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9fb0c2]" strokeWidth={2} />
+                <CreditCard className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--color-muted)]" strokeWidth={2} />
                 <input className={cn(inputCls, "pl-9")} placeholder="Número de Tarjeta" readOnly type="text" />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <input className={inputCls} placeholder="MM/AA" readOnly type="text" />
                 <div className="relative">
                   <input className={inputCls} placeholder="CVC" readOnly type="text" />
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9fb0c2]">
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-muted)]">
                     <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
                       <circle cx="12" cy="12" r="10" />
                       <path d="M12 16v-4M12 8h.01" strokeLinecap="round" strokeLinejoin="round" />
@@ -221,17 +221,17 @@ function CheckoutPaymentMethod({
                 </div>
               </div>
               <input className={inputCls} placeholder="Nombre en la tarjeta" readOnly type="text" />
-              <div className="flex items-start gap-2 rounded-lg border border-[#dbeafe] bg-[#eff6ff] p-3">
-                <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-[#2563eb]" strokeWidth={2} />
-                <p className="text-[0.74rem] leading-relaxed text-[#1e40af]">
+              <div className="flex items-start gap-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-primary-soft)] p-3">
+                <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-[var(--color-primary)]" strokeWidth={2} />
+                <p className="text-[0.74rem] leading-relaxed text-[var(--color-primary)]">
                   Los datos de tu tarjeta son gestionados por <strong>Stripe</strong>. Al pulsar
                   &ldquo;Finalizar y Pagar&rdquo; serás redirigido a la pasarela segura.
                 </p>
               </div>
             </div>
           ) : (
-            <div className="rounded-lg border border-[#fee2e2] bg-[#fef2f2] p-4">
-              <p className="text-sm text-[#991b1b]">
+            <div className="rounded-lg border border-[var(--color-danger)] bg-[var(--color-danger-soft)] p-4">
+              <p className="text-sm text-[var(--color-danger)]">
                 El pago con tarjeta no está disponible en este entorno.
               </p>
             </div>
@@ -241,9 +241,9 @@ function CheckoutPaymentMethod({
 
       {activeTab === "paypal" && (
         <div className="flex flex-col items-center gap-3 py-6 text-center">
-          <Wallet className="h-8 w-8 text-[#9fb0c2]" strokeWidth={1.5} />
-          <p className="text-sm font-medium text-[#4a6780]">PayPal no está disponible actualmente.</p>
-          <p className="text-[0.78rem] text-[#9fb0c2]">
+          <Wallet className="h-8 w-8 text-[var(--color-muted)]" strokeWidth={1.5} />
+          <p className="text-sm font-medium text-[var(--color-ink-soft)]">PayPal no está disponible actualmente.</p>
+          <p className="text-[0.78rem] text-[var(--color-muted)]">
             Usa el pago con tarjeta para completar tu inscripción.
           </p>
         </div>
@@ -251,11 +251,11 @@ function CheckoutPaymentMethod({
 
       {activeTab === "transferencia" && (
         <div className="flex flex-col items-center gap-3 py-6 text-center">
-          <Building2 className="h-8 w-8 text-[#9fb0c2]" strokeWidth={1.5} />
-          <p className="text-sm font-medium text-[#4a6780]">Transferencia bancaria — Próximamente</p>
-          <p className="text-[0.78rem] text-[#9fb0c2]">
+          <Building2 className="h-8 w-8 text-[var(--color-muted)]" strokeWidth={1.5} />
+          <p className="text-sm font-medium text-[var(--color-ink-soft)]">Transferencia bancaria — Próximamente</p>
+          <p className="text-[0.78rem] text-[var(--color-muted)]">
             Contacta en{" "}
-            <a className="text-[#163c58] underline" href={`mailto:${siteConfig.supportEmail}`}>
+            <a className="text-[var(--color-primary)] underline" href={`mailto:${siteConfig.supportEmail}`}>
               {siteConfig.supportEmail}
             </a>{" "}
             para gestionar una transferencia manual.
@@ -305,28 +305,28 @@ function CheckoutOrderSummary({
       : "Intentar Compra";
 
   return (
-    <div className="rounded-xl border border-[#dbe3ec] bg-white p-6 shadow-[0_1px_4px_rgba(22,60,88,0.06)] lg:sticky lg:top-6">
-      <h2 className="mb-5 text-[1rem] font-bold text-[#163c58]">Resumen del Pedido</h2>
+    <div className="rounded-xl border border-[var(--color-border)] bg-white p-6 shadow-[0_1px_4px_rgba(22,60,88,0.06)] lg:sticky lg:top-6">
+      <h2 className="mb-5 text-[1rem] font-bold text-[var(--color-primary)]">Resumen del Pedido</h2>
 
       {/* Course */}
       <div className="mb-5 flex items-start gap-3">
         <CourseArtwork className="h-16 w-20 shrink-0 rounded-lg" course={course} variant="thumb" />
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-bold leading-snug text-[#163c58]">{course.title}</p>
-          <p className="mt-1 text-[0.75rem] text-[#9fb0c2]">Acceso de por vida</p>
-          <p className="mt-2 text-sm font-bold text-[#163c58]">{formatPrice(course.priceInCents)}</p>
+          <p className="text-sm font-bold leading-snug text-[var(--color-primary)]">{course.title}</p>
+          <p className="mt-1 text-[0.75rem] text-[var(--color-muted)]">Acceso de por vida</p>
+          <p className="mt-2 text-sm font-bold text-[var(--color-primary)]">{formatPrice(course.priceInCents)}</p>
         </div>
       </div>
 
-      <div className="my-4 h-px bg-[#dbe3ec]" />
+      <div className="my-4 h-px bg-[var(--color-primary-soft)]" />
 
       {/* Promo code */}
       <div className="mb-4">
         <div className="flex gap-2">
           <div className="relative flex-1">
-            <Tag className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[#9fb0c2]" strokeWidth={2} />
+            <Tag className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[var(--color-muted)]" strokeWidth={2} />
             <input
-              className="h-10 w-full rounded-lg border border-[#dbe3ec] bg-white pl-9 pr-3 text-[0.82rem] uppercase tracking-wider placeholder:normal-case placeholder:tracking-normal placeholder:text-[#9fb0c2] focus-visible:border-[#163c58] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#163c58]"
+              className="h-10 w-full rounded-lg border border-[var(--color-border)] bg-white pl-9 pr-3 text-[0.82rem] uppercase tracking-wider placeholder:normal-case placeholder:tracking-normal placeholder:text-[var(--color-muted)] focus-visible:border-[var(--color-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)]"
               onChange={(e) => { setPromoCode(e.target.value); if (promoResult) setPromoResult(null); }}
               placeholder="CÓDIGO DE DESCUENTO"
               type="text"
@@ -334,7 +334,7 @@ function CheckoutOrderSummary({
             />
           </div>
           <button
-            className="h-10 rounded-lg border border-[#dbe3ec] bg-white px-4 text-[0.82rem] font-semibold text-[#163c58] transition hover:border-[#163c58] hover:bg-[rgba(22,60,88,0.04)] disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#163c58]"
+            className="h-10 rounded-lg border border-[var(--color-border)] bg-white px-4 text-[0.82rem] font-semibold text-[var(--color-primary)] transition hover:border-[var(--color-primary)] hover:bg-[rgba(22,60,88,0.04)] disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)]"
             disabled={isPending || !promoCode.trim()}
             onClick={handleApplyPromo}
             type="button"
@@ -350,11 +350,11 @@ function CheckoutOrderSummary({
         )}
       </div>
 
-      <div className="my-4 h-px bg-[#dbe3ec]" />
+      <div className="my-4 h-px bg-[var(--color-primary-soft)]" />
 
       {/* Pricing */}
       <div className="space-y-2.5 text-sm">
-        <div className="flex items-center justify-between text-[#4a6780]">
+        <div className="flex items-center justify-between text-[var(--color-ink-soft)]">
           <span>Subtotal</span>
           <span>{formatPrice(subtotal)}</span>
         </div>
@@ -364,7 +364,7 @@ function CheckoutOrderSummary({
             <span>-{formatPrice(appliedDiscount)}</span>
           </div>
         )}
-        <div className="flex items-center justify-between border-t border-[#dbe3ec] pt-3 text-base font-bold text-[#163c58]">
+        <div className="flex items-center justify-between border-t border-[var(--color-border)] pt-3 text-base font-bold text-[var(--color-primary)]">
           <span>Total</span>
           <span>{formatPrice(total)}</span>
         </div>
@@ -379,13 +379,13 @@ function CheckoutOrderSummary({
             <input name="promotionCode" type="hidden" value={appliedCode} />
 
             {formState.error && (
-              <p className="mb-3 rounded-lg border border-[#fee2e2] bg-[#fef2f2] px-3 py-2 text-[0.78rem] text-[#dc2626]">
+              <p className="mb-3 rounded-lg border border-[var(--color-danger)] bg-[var(--color-danger-soft)] px-3 py-2 text-[0.78rem] text-[var(--color-danger)]">
                 {formState.error}
               </p>
             )}
 
             <button
-              className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#002b55] px-6 py-3.5 text-[0.95rem] font-bold text-white shadow-[0_4px_12px_rgba(0,43,85,0.3)] transition hover:bg-[#163c58] hover:shadow-[0_4px_16px_rgba(0,43,85,0.4)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#163c58] active:scale-[0.99]"
+              className="flex w-full items-center justify-center gap-2 rounded-xl bg-[var(--color-primary)] px-6 py-3.5 text-[0.95rem] font-bold text-white shadow-[0_4px_12px_rgba(0,43,85,0.3)] transition hover:bg-[var(--color-primary)] hover:shadow-[0_4px_16px_rgba(0,43,85,0.4)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] active:scale-[0.99]"
               type="submit"
             >
               <Lock className="h-4 w-4" strokeWidth={2} />
@@ -395,15 +395,15 @@ function CheckoutOrderSummary({
         ) : (
           <div className="space-y-3">
             <Link
-              className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#002b55] px-6 py-3.5 text-[0.95rem] font-bold text-white transition hover:bg-[#163c58] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#163c58]"
+              className="flex w-full items-center justify-center gap-2 rounded-xl bg-[var(--color-primary)] px-6 py-3.5 text-[0.95rem] font-bold text-white transition hover:bg-[var(--color-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)]"
               href={`/registro?next=/checkout/${course.slug}`}
             >
               <Lock className="h-4 w-4" strokeWidth={2} />
               Crear cuenta y pagar
             </Link>
-            <p className="text-center text-[0.78rem] text-[#9fb0c2]">
+            <p className="text-center text-[0.78rem] text-[var(--color-muted)]">
               ¿Ya tienes cuenta?{" "}
-              <Link className="text-[#163c58] underline" href={`/acceder?next=/checkout/${course.slug}`}>
+              <Link className="text-[var(--color-primary)] underline" href={`/acceder?next=/checkout/${course.slug}`}>
                 Inicia sesión
               </Link>
             </p>
@@ -419,8 +419,8 @@ function CheckoutOrderSummary({
             </p>
           </div>
           <div className="flex items-center justify-center gap-1.5">
-            <Zap className="h-3.5 w-3.5 text-[#4a6780]" strokeWidth={2} />
-            <p className="text-center text-[0.75rem] text-[#4a6780]">
+            <Zap className="h-3.5 w-3.5 text-[var(--color-ink-soft)]" strokeWidth={2} />
+            <p className="text-center text-[0.75rem] text-[var(--color-ink-soft)]">
               Acceso Inmediato al Curso
             </p>
           </div>
@@ -434,13 +434,13 @@ function CheckoutOrderSummary({
 
 function CheckoutFooter() {
   return (
-    <footer className="border-t border-[#dbe3ec] bg-white">
-      <div className="mx-auto flex max-w-5xl flex-col items-center justify-between gap-3 px-5 py-5 text-[0.75rem] text-[#9fb0c2] sm:flex-row sm:px-8">
+    <footer className="border-t border-[var(--color-border)] bg-white">
+      <div className="mx-auto flex max-w-5xl flex-col items-center justify-between gap-3 px-5 py-5 text-[0.75rem] text-[var(--color-muted)] sm:flex-row sm:px-8">
         <p>© 2024 Campus Autismo Córdoba. Innovación y Empatía.</p>
         <nav className="flex items-center gap-4">
-          <Link className="hover:text-[#163c58]" href="/legal/terminos">Términos</Link>
-          <Link className="hover:text-[#163c58]" href="/legal/privacidad">Privacidad</Link>
-          <Link className="hover:text-[#163c58]" href="/soporte">Contacto</Link>
+          <Link className="hover:text-[var(--color-primary)]" href="/legal/terminos">Términos</Link>
+          <Link className="hover:text-[var(--color-primary)]" href="/legal/privacidad">Privacidad</Link>
+          <Link className="hover:text-[var(--color-primary)]" href="/soporte">Contacto</Link>
         </nav>
       </div>
     </footer>

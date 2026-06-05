@@ -94,7 +94,7 @@ export default async function ForumHomePage({
       {/* Filtros + búsqueda */}
       <div className="mb-6 flex flex-col sm:flex-row items-start sm:items-center gap-3">
         <div
-          className="flex gap-1 p-1 rounded-full border border-[#c4c6cf] bg-white"
+          className="flex gap-1 p-1 rounded-full border border-[var(--color-border)] bg-white"
           style={{ boxShadow: "0px 2px 8px rgba(30,58,95,0.04)" }}
         >
           <Link
@@ -126,7 +126,7 @@ export default async function ForumHomePage({
           className="flex-1 max-w-sm"
         >
           <div
-            className="relative flex items-center h-10 rounded-full border border-[#c4c6cf] bg-white px-4 gap-2"
+            className="relative flex items-center h-10 rounded-full border border-[var(--color-border)] bg-white px-4 gap-2"
             style={{ boxShadow: "0px 2px 8px rgba(30,58,95,0.04)" }}
           >
             <Search className="h-4 w-4 text-[#74777f] shrink-0" />
@@ -149,22 +149,22 @@ export default async function ForumHomePage({
               <Link
                 key={thread.id}
                 href={`/mis-cursos/${thread.courseSlug}/foro/${thread.categorySlug}/${thread.id}`}
-                className="block bg-white rounded-xl border border-[#c4c6cf] p-5 hover:border-[#74777f] transition-all cursor-pointer group"
+                className="block bg-white rounded-xl border border-[var(--color-border)] p-5 hover:border-[#74777f] transition-all cursor-pointer group"
                 style={{ boxShadow: "0px 4px 12px rgba(30,58,95,0.03)" }}
               >
                 <div className="flex items-start justify-between gap-4 mb-3">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-2 flex-wrap">
                       {thread.isPinned && (
-                        <span className="flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-[#e7eeff] text-[var(--color-primary)] border border-[#c4c6cf]">
+                        <span className="flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-[var(--color-primary-soft)] text-[var(--color-primary)] border border-[var(--color-border)]">
                           <Pin className="h-3 w-3" /> Fijado
                         </span>
                       )}
-                      <span className="px-2.5 py-0.5 rounded text-[12px] font-medium bg-[#adf0df] text-[#2c6f62] border border-[#91d3c3]">
+                      <span className="px-2.5 py-0.5 rounded text-[12px] font-medium bg-[var(--color-success-soft)] text-[var(--color-success)] border border-[var(--color-success)]">
                         {thread.categoryTitle}
                       </span>
                       {thread.isResolved && (
-                        <span className="flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-[#f0f3ff] text-[#25695c] border border-[#91d3c3]">
+                        <span className="flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-[var(--color-success-soft)] text-[var(--color-success)] border border-[var(--color-success)]">
                           <CheckCircle2 className="h-3 w-3" /> Resuelta
                         </span>
                       )}
@@ -182,14 +182,14 @@ export default async function ForumHomePage({
                     )}
                   </div>
                 </div>
-                <div className="flex items-center justify-between mt-4 pt-4 border-t border-[#c4c6cf]">
+                <div className="flex items-center justify-between mt-4 pt-4 border-t border-[var(--color-border)]">
                   <div className="flex items-center gap-3">
                     <div
                       className={cn(
                         "w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold border shrink-0",
                         thread.isStaff
-                          ? "border-[#25695c] bg-[#adf0df] text-[#2c6f62]"
-                          : "border-[#c4c6cf] bg-[#e7eeff] text-[var(--color-primary)]",
+                          ? "border-[var(--color-success)] bg-[var(--color-success-soft)] text-[var(--color-success)]"
+                          : "border-[var(--color-border)] bg-[var(--color-primary-soft)] text-[var(--color-primary)]",
                       )}
                     >
                       {thread.authorInitials}
@@ -208,8 +208,8 @@ export default async function ForumHomePage({
               </Link>
             ))
           ) : (
-            <div className="flex flex-col items-center justify-center py-20 text-center bg-white rounded-xl border border-[#c4c6cf]">
-              <div className="w-16 h-16 rounded-full bg-[#e7eeff] flex items-center justify-center mb-4">
+            <div className="flex flex-col items-center justify-center py-20 text-center bg-white rounded-xl border border-[var(--color-border)]">
+              <div className="w-16 h-16 rounded-full bg-[var(--color-primary-soft)] flex items-center justify-center mb-4">
                 <MessageSquareText className="h-8 w-8 text-[var(--color-primary)]" />
               </div>
               <h3 className="text-lg font-semibold text-[#111c2c] mb-2">
@@ -233,7 +233,7 @@ export default async function ForumHomePage({
         <div className="hidden lg:block space-y-4 mt-0">
           {/* Mis comunidades */}
           <div
-            className="bg-white rounded-xl border border-[#c4c6cf] p-4"
+            className="bg-white rounded-xl border border-[var(--color-border)] p-4"
             style={{ boxShadow: "0px 4px 12px rgba(30,58,95,0.03)" }}
           >
             <div className="flex items-center gap-2 mb-3">
@@ -260,7 +260,7 @@ export default async function ForumHomePage({
                 >
                   <span className="truncate">{cat.title}</span>
                   {cat._count.threads > 0 && (
-                    <span className="ml-2 shrink-0 bg-[#e7eeff] text-[var(--color-primary)] rounded-full px-2 py-0.5 text-xs font-medium">
+                    <span className="ml-2 shrink-0 bg-[var(--color-primary-soft)] text-[var(--color-primary)] rounded-full px-2 py-0.5 text-xs font-medium">
                       {cat._count.threads}
                     </span>
                   )}
@@ -271,7 +271,7 @@ export default async function ForumHomePage({
 
           {/* Categorías activas */}
           <div
-            className="bg-white rounded-xl border border-[#c4c6cf] p-4"
+            className="bg-white rounded-xl border border-[var(--color-border)] p-4"
             style={{ boxShadow: "0px 4px 12px rgba(30,58,95,0.03)" }}
           >
             <div className="flex items-center gap-2 mb-3">
@@ -287,7 +287,7 @@ export default async function ForumHomePage({
                   <Link
                     key={cat.id}
                     href={`/mis-cursos/${course.slug}/foro/${cat.slug}`}
-                    className="px-3 py-1 rounded-full border border-[#c4c6cf] text-sm text-[#43474e] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] transition-colors"
+                    className="px-3 py-1 rounded-full border border-[var(--color-border)] text-sm text-[#43474e] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] transition-colors"
                   >
                     {cat.title}
                   </Link>
@@ -297,7 +297,7 @@ export default async function ForumHomePage({
 
           {/* Normas de la Comunidad */}
           <div
-            className="bg-white rounded-xl border border-[#c4c6cf] p-4 text-center"
+            className="bg-white rounded-xl border border-[var(--color-border)] p-4 text-center"
             style={{ boxShadow: "0px 4px 12px rgba(30,58,95,0.03)" }}
           >
             <Shield className="h-8 w-8 text-[#43474e] mx-auto mb-2 opacity-60" />
@@ -318,7 +318,7 @@ export default async function ForumHomePage({
           {/* Para moderadores */}
           {canModerate && (
             <div
-              className="bg-white rounded-xl border border-[#c4c6cf] p-4"
+              className="bg-white rounded-xl border border-[var(--color-border)] p-4"
               style={{ boxShadow: "0px 4px 12px rgba(30,58,95,0.03)" }}
             >
               <div className="flex items-center gap-2 mb-3">
@@ -330,13 +330,13 @@ export default async function ForumHomePage({
               <div className="space-y-2">
                 <Link
                   href={`/mis-cursos/${course.slug}/foro/moderacion`}
-                  className="flex items-center gap-2 w-full px-3 py-2 rounded-lg text-sm text-[#43474e] border border-[#c4c6cf] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] transition-colors"
+                  className="flex items-center gap-2 w-full px-3 py-2 rounded-lg text-sm text-[#43474e] border border-[var(--color-border)] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] transition-colors"
                 >
                   Panel de moderación
                 </Link>
                 <Link
                   href={`/mis-cursos/${course.slug}/foro/historico`}
-                  className="flex items-center gap-2 w-full px-3 py-2 rounded-lg text-sm text-[#43474e] border border-[#c4c6cf] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] transition-colors"
+                  className="flex items-center gap-2 w-full px-3 py-2 rounded-lg text-sm text-[#43474e] border border-[var(--color-border)] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] transition-colors"
                 >
                   Ver histórico
                 </Link>

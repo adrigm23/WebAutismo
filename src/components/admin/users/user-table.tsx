@@ -102,7 +102,7 @@ function RowActions({ user }: { user: UserDirectoryItem }) {
                 "flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-sm font-medium transition hover:bg-[rgba(22,60,88,0.05)]",
                 user.isActive
                   ? "text-[var(--color-danger)]"
-                  : "text-[#059669]",
+                  : "text-[var(--color-success)]",
               )}
               disabled={isPending}
               type="submit"
@@ -144,14 +144,14 @@ function StatusBadge({ active }: { active: boolean }) {
       className={cn(
         "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold",
         active
-          ? "bg-[#dcfce7] text-[#166534]"
-          : "bg-[#fee2e2] text-[#991b1b]",
+          ? "bg-[var(--color-success-soft)] text-[var(--color-success)]"
+          : "bg-[var(--color-danger-soft)] text-[var(--color-danger)]",
       )}
     >
       <span
         className={cn(
           "h-1.5 w-1.5 rounded-full",
-          active ? "bg-[#16a34a]" : "bg-[#dc2626]",
+          active ? "bg-[var(--color-success)]" : "bg-[var(--color-danger)]",
         )}
       />
       {active ? "Activo" : "Bloqueado"}

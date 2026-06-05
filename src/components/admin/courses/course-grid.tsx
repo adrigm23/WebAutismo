@@ -33,8 +33,8 @@ function formatRevenue(cents: number): string {
 function StatusBadge({ status }: { status: "ACTIVE" | "INACTIVE" }) {
   if (status === "ACTIVE") {
     return (
-      <span className="inline-flex items-center gap-1.5 rounded-full bg-[#d1fae5] px-2.5 py-1 text-[0.72rem] font-semibold text-[#065f46]">
-        <span className="h-1.5 w-1.5 rounded-full bg-[#059669]" />
+      <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--color-success-soft)] px-2.5 py-1 text-[0.72rem] font-semibold text-[var(--color-success)]">
+        <span className="h-1.5 w-1.5 rounded-full bg-[var(--color-success)]" />
         Publicado
       </span>
     );

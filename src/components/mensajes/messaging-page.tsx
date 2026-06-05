@@ -146,7 +146,7 @@ function MessageBubble({ msg }: { msg: Message }) {
           className={cn(
             "rounded-xl px-4 py-3 text-sm leading-relaxed",
             isSent
-              ? "rounded-tr-sm bg-[#1e3a5f] text-white"
+              ? "rounded-tr-sm bg-[var(--color-primary)] text-white"
               : "rounded-tl-sm border border-[#e5e7eb] bg-white text-[var(--color-primary)]",
           )}
         >
@@ -528,7 +528,7 @@ export function MessagingPage({
                       className={cn(
                         "flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-left text-sm transition",
                         active?.id === ch.id
-                          ? "bg-[#1e3a5f] text-white"
+                          ? "bg-[var(--color-primary)] text-white"
                           : "text-[#4b5563] hover:bg-[#f3f4f6]",
                       )}
                       key={ch.id}
@@ -579,7 +579,7 @@ export function MessagingPage({
                       className={cn(
                         "flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition",
                         active?.id === dm.id
-                          ? "bg-[#1e3a5f]"
+                          ? "bg-[var(--color-primary)]"
                           : "hover:bg-[#f3f4f6]",
                       )}
                       key={dm.id}
@@ -634,7 +634,7 @@ export function MessagingPage({
       </aside>
 
       {/* ── CENTER: Chat area ────────────────────────────────────────── */}
-      <div className="flex min-w-0 flex-1 flex-col bg-[#f8f9fa]">
+      <div className="flex min-w-0 flex-1 flex-col bg-[#f7f4ef]">
         {/* Chat header */}
         {active ? (
           <header className="flex h-[3.75rem] shrink-0 items-center justify-between border-b border-[#e5e7eb] bg-white px-5">
@@ -739,7 +739,7 @@ export function MessagingPage({
                 </button>
               </div>
               <button
-                className="flex items-center gap-2 rounded-xl bg-[#1e3a5f] px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-50"
+                className="flex items-center gap-2 rounded-xl bg-[var(--color-primary)] px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-50"
                 disabled={!draftText.trim() || sending}
                 onClick={() => void handleSend()}
                 type="button"
@@ -760,7 +760,7 @@ export function MessagingPage({
             <div className="flex flex-col items-center border-b border-[#e5e7eb] px-5 py-6 text-center">
               <Avatar initials={active.initials} size="xl" />
               <h2 className="mt-3 text-base font-bold text-[var(--color-primary)]">{active.name}</h2>
-              <span className="mt-1.5 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
+              <span className="mt-1.5 rounded-full bg-[var(--color-success-soft)] px-3 py-1 text-xs font-semibold text-[var(--color-success)]">
                 {active.role}
               </span>
               <p className="mt-2 text-xs text-[#9ba3af]">{active.department}</p>

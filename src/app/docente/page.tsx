@@ -51,7 +51,7 @@ export default async function DocenteDashboardPage() {
       roleLabel="Docente"
       notificationsCount={notificationSnapshot.unreadCount}
     >
-      <div className="site-container py-8 sm:py-10 pb-20">
+      <div className="site-container py-8 sm:py-10 pb-12">
 
         {/* Header */}
         <section>
@@ -79,7 +79,7 @@ export default async function DocenteDashboardPage() {
           {/* Card: Revisiones pendientes */}
           <div className={`flex flex-col gap-1 rounded-xl border px-5 py-4 shadow-[var(--shadow-soft)] ${
             totalPendingReviews > 0
-              ? "border-[rgba(209,88,62,0.18)] bg-[rgba(252,238,233,0.7)]"
+              ? "border-[var(--color-danger-soft)] bg-[var(--color-danger-soft)]"
               : "border-[rgba(22,60,88,0.08)] bg-white/90"
           }`}>
             <div className={`flex items-center gap-2 ${totalPendingReviews > 0 ? "text-[var(--color-danger)]" : "text-[var(--color-ink-soft)]"}`}>
@@ -113,7 +113,7 @@ export default async function DocenteDashboardPage() {
               {allPendingItems.map((item) => (
                 <div
                   key={item.id}
-                  className="flex flex-col gap-2 rounded-lg border border-[rgba(209,88,62,0.16)] bg-[rgba(252,238,233,0.5)] px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
+                  className="flex flex-col gap-2 rounded-lg border border-[var(--color-danger-soft)] bg-[var(--color-danger-soft)] px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
                 >
                   <div className="min-w-0">
                     <p className="text-sm font-semibold text-[var(--color-ink)] truncate">

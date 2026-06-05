@@ -201,7 +201,7 @@ function VideoArea({ resource }: { resource: CampusResourceItem | null }) {
 
   if (!embed) {
     return (
-      <div className="flex aspect-video w-full items-center justify-center bg-[#0f1420]">
+      <div className="flex aspect-video w-full items-center justify-center bg-[#0e2236]">
         <div className="text-center">
           <PlayCircle className="mx-auto h-14 w-14 text-white/20" />
           <p className="mt-3 text-sm text-white/30">
@@ -216,7 +216,7 @@ function VideoArea({ resource }: { resource: CampusResourceItem | null }) {
 
   if (embed.kind === "embed") {
     return (
-      <div className="aspect-video w-full bg-[#0f1420]">
+      <div className="aspect-video w-full bg-[#0e2236]">
         <iframe
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
           allowFullScreen
@@ -230,7 +230,7 @@ function VideoArea({ resource }: { resource: CampusResourceItem | null }) {
 
   if (embed.kind === "video") {
     return (
-      <div className="aspect-video w-full bg-[#0f1420]">
+      <div className="aspect-video w-full bg-[#0e2236]">
         <video
           className="h-full w-full"
           controls
@@ -255,7 +255,7 @@ function VideoArea({ resource }: { resource: CampusResourceItem | null }) {
 
   if (embed.kind === "image") {
     return (
-      <div className="flex aspect-video w-full items-center justify-center bg-[#0f1420]">
+      <div className="flex aspect-video w-full items-center justify-center bg-[#0e2236]">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           alt={resource?.title ?? "Imagen"}
@@ -370,7 +370,7 @@ function NotesTab({
         className={cn(
           "inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition",
           saved
-            ? "bg-emerald-500 text-white"
+            ? "bg-[var(--color-success)] text-white"
             : "bg-[var(--color-primary)] text-white hover:opacity-90",
         )}
         onClick={handleSave}
@@ -480,12 +480,12 @@ export function LessonPlayer({
         <div className="flex shrink-0 items-center gap-4">
           <div className="hidden items-center gap-3 lg:flex">
             <span className="text-xs text-[var(--color-muted)]">Progreso del curso</span>
-            <span className="text-xs font-bold text-emerald-600">
+            <span className="text-xs font-bold text-[var(--color-success)]">
               {Math.round(progress.completionRate)}% Completado
             </span>
             <div className="h-1.5 w-24 overflow-hidden rounded-full bg-[var(--color-border)]">
               <div
-                className="h-full rounded-full bg-emerald-500 transition-all duration-500"
+                className="h-full rounded-full bg-[var(--color-success)] transition-all duration-500"
                 style={{ width: `${progress.completionRate}%` }}
               />
             </div>
@@ -524,7 +524,7 @@ export function LessonPlayer({
 
               {/* Description — highlighted like Stitch */}
               {currentModule.description && (
-                <p className="mb-6 rounded-lg border-l-4 border-[#3b82f6] bg-[#eff6ff] px-4 py-3 text-[1rem] leading-relaxed text-[#374151]">
+                <p className="mb-6 rounded-lg border-l-4 border-[var(--color-primary)] bg-[var(--color-primary-soft)] px-4 py-3 text-[1rem] leading-relaxed text-[var(--color-ink-soft)]">
                   {currentModule.description}
                 </p>
               )}
@@ -606,7 +606,7 @@ export function LessonPlayer({
                     </Link>
                   ) : (
                     <Link
-                      className="flex items-center gap-2 rounded-xl bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:opacity-90"
+                      className="flex items-center gap-2 rounded-xl bg-[var(--color-success)] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:opacity-90"
                       href={`/mis-cursos/${course.slug}`}
                     >
                       Finalizar
@@ -714,7 +714,7 @@ export function LessonPlayer({
                     </Link>
                   ) : (
                     <Link
-                      className="flex items-center gap-2 rounded-xl bg-emerald-500 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:opacity-90"
+                      className="flex items-center gap-2 rounded-xl bg-[var(--color-success)] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:opacity-90"
                       href={`/mis-cursos/${course.slug}`}
                     >
                       Finalizar

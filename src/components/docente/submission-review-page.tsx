@@ -35,10 +35,10 @@ const INITIAL_STATE: ReviewSubmissionState = {};
 
 function getStatusMeta(status: SubmissionForReview["status"]) {
   if (status === "REVIEWED")
-    return { label: "Corregida", color: "text-emerald-700 bg-emerald-50 border-emerald-200" };
+    return { label: "Corregida", color: "text-[var(--color-success)] bg-[var(--color-success-soft)] border-[var(--color-success)]" };
   if (status === "CHANGES_REQUESTED")
-    return { label: "Cambios solicitados", color: "text-blue-700 bg-blue-50 border-blue-200" };
-  return { label: "Pendiente de Corrección", color: "text-amber-700 bg-amber-50 border-amber-200" };
+    return { label: "Cambios solicitados", color: "text-[var(--color-primary)] bg-[var(--color-primary-soft)] border-[var(--color-primary)]" };
+  return { label: "Pendiente de Corrección", color: "text-[var(--color-warning)] bg-[var(--color-warning-soft)] border-[var(--color-warning)]" };
 }
 
 function buildInlineUrl(id: string) {
@@ -68,9 +68,9 @@ function DocumentViewer({ submission }: { submission: SubmissionForReview }) {
   function zoomOut() { setZoom((z) => Math.max(z - 25, 50)); }
 
   return (
-    <div className="overflow-hidden rounded-xl border border-[#eaecf0] bg-white shadow-sm">
+    <div className="overflow-hidden rounded-xl border border-[var(--color-border-subtle)] bg-white shadow-sm">
       {/* Toolbar */}
-      <div className="flex items-center gap-1 border-b border-[#eaecf0] bg-[#f8f9fa] px-3 py-2">
+      <div className="flex items-center gap-1 border-b border-[var(--color-border-subtle)] bg-[var(--color-surface)] px-3 py-2">
         <div className="flex items-center gap-1 text-[#6b7280]">
           <FileText className="h-3.5 w-3.5 text-red-500" />
           <span className="max-w-[140px] truncate text-[0.65rem] font-medium text-[#374151]">
@@ -180,7 +180,7 @@ function DocumentViewer({ submission }: { submission: SubmissionForReview }) {
 
 function StudentCard({ submission }: { submission: SubmissionForReview }) {
   return (
-    <div className="flex items-center gap-3 rounded-xl border border-[#eaecf0] bg-white px-4 py-3">
+    <div className="flex items-center gap-3 rounded-xl border border-[var(--color-border-subtle)] bg-white px-4 py-3">
       <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#163c58] text-sm font-bold text-white">
         {submission.studentInitials}
       </div>
@@ -227,9 +227,9 @@ function RubricPanel({
   if (criteria.length === 0) return null;
 
   return (
-    <div className="rounded-xl border border-[#eaecf0] bg-white">
+    <div className="rounded-xl border border-[var(--color-border-subtle)] bg-white">
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-[#eaecf0] px-5 py-4">
+      <div className="flex items-center justify-between border-b border-[var(--color-border-subtle)] px-5 py-4">
         <div className="flex items-center gap-2">
           <FileText className="h-4 w-4 text-[#163c58]" />
           <h3 className="text-sm font-bold text-[var(--color-primary)]">Rúbrica de Evaluación</h3>
@@ -278,7 +278,7 @@ function RubricPanel({
                 <div
                   className={cn(
                     "h-full rounded-full transition-all duration-300",
-                    pct >= 80 ? "bg-emerald-500" : pct >= 50 ? "bg-blue-500" : "bg-amber-400"
+                    pct >= 80 ? "bg-[var(--color-success)]" : pct >= 50 ? "bg-[var(--color-primary)]" : "bg-[var(--color-warning)]"
                   )}
                   style={{ width: `${pct}%` }}
                 />
@@ -332,8 +332,8 @@ function GradingForm({
   return (
     <div className="space-y-3">
       {/* ── Feedback ─────────────── */}
-      <div className="rounded-xl border border-[#eaecf0] bg-white">
-        <div className="flex items-center gap-2 border-b border-[#eaecf0] px-5 py-3.5">
+      <div className="rounded-xl border border-[var(--color-border-subtle)] bg-white">
+        <div className="flex items-center gap-2 border-b border-[var(--color-border-subtle)] px-5 py-3.5">
           <MessageSquare className="h-4 w-4 text-[#163c58]" />
           <h3 className="text-sm font-bold text-[var(--color-primary)]">Feedback General</h3>
         </div>
@@ -412,8 +412,8 @@ function GradingForm({
         <div className={cn(
           "flex items-center gap-2 rounded-xl border px-4 py-3 text-sm font-medium",
           toast.kind === "success"
-            ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-            : "border-red-200 bg-red-50 text-red-700"
+            ? "border-[var(--color-success)] bg-[var(--color-success-soft)] text-[var(--color-success)]"
+            : "border-[var(--color-danger)] bg-[var(--color-danger-soft)] text-[var(--color-danger)]"
         )}>
           {toast.kind === "success"
             ? <CheckCircle2 className="h-4 w-4 shrink-0" />
@@ -468,7 +468,7 @@ type Tab = "entrega" | "rubrica" | "feedback";
 
 function MobileTabs({ active, onChange, hasRubric }: { active: Tab; onChange: (t: Tab) => void; hasRubric: boolean }) {
   return (
-    <div className="flex overflow-hidden rounded-xl border border-[#eaecf0] bg-white lg:hidden">
+    <div className="flex overflow-hidden rounded-xl border border-[var(--color-border-subtle)] bg-white lg:hidden">
       {(["entrega", hasRubric ? "rubrica" : null, "feedback"] as (Tab | null)[])
         .filter(Boolean)
         .map((tab) => (

@@ -126,7 +126,7 @@ function ContenidoTab({
                           className={cn(
                             "mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg",
                             resource.isExercise
-                              ? "bg-[rgba(237,233,254,0.8)] text-[#7c3aed]"
+                              ? "bg-[var(--color-primary-soft)] text-[var(--color-primary)]"
                               : "bg-[var(--color-brand-soft)] text-[var(--color-primary)]",
                           )}
                         >
@@ -147,7 +147,7 @@ function ContenidoTab({
                           <p
                             className={cn(
                               "text-sm font-medium",
-                              resource.isExercise ? "text-[#7c3aed]" : "text-[var(--color-ink)]",
+                              resource.isExercise ? "text-[var(--color-primary)]" : "text-[var(--color-ink)]",
                             )}
                           >
                             {resource.isExercise ? "Actividad: " : ""}
@@ -358,7 +358,7 @@ function AlumnosTab({
                 <div className="sm:w-52 sm:shrink-0">
                   {lastActivity ? (
                     <div>
-                      <p className="text-[0.65rem] font-semibold uppercase tracking-wide text-[var(--color-ink-muted)]">
+                      <p className="text-[0.75rem] font-semibold uppercase tracking-wide text-[var(--color-ink-muted)]">
                         Última actividad
                       </p>
                       <p className="mt-0.5 text-sm text-[var(--color-ink-soft)]">
@@ -370,7 +370,7 @@ function AlumnosTab({
                     </div>
                   ) : row.lastCompletedAt ? (
                     <div>
-                      <p className="text-[0.65rem] font-semibold uppercase tracking-wide text-[var(--color-ink-muted)]">
+                      <p className="text-[0.75rem] font-semibold uppercase tracking-wide text-[var(--color-ink-muted)]">
                         Última actividad
                       </p>
                       <p className="mt-0.5 text-sm text-[var(--color-ink-soft)]">Completó módulo</p>
@@ -510,10 +510,10 @@ function EstadisticasTab({
           <h3 className="text-sm font-semibold text-[var(--color-ink)]">Distribución de progreso</h3>
           <div className="mt-4 space-y-3">
             {[
-              { label: "Sin iniciar", count: distBuckets.sin_iniciar, color: "bg-[#e5e7eb]" },
-              { label: "Iniciado (1–49%)", count: distBuckets.iniciado, color: "bg-amber-400" },
-              { label: "Avanzado (50–99%)", count: distBuckets.avanzado, color: "bg-blue-500" },
-              { label: "Completado (100%)", count: distBuckets.completado, color: "bg-emerald-500" },
+              { label: "Sin iniciar", count: distBuckets.sin_iniciar, color: "bg-[var(--color-border)]" },
+              { label: "Iniciado (1–49%)", count: distBuckets.iniciado, color: "bg-[var(--color-warning)]" },
+              { label: "Avanzado (50–99%)", count: distBuckets.avanzado, color: "bg-[var(--color-primary)]" },
+              { label: "Completado (100%)", count: distBuckets.completado, color: "bg-[var(--color-success)]" },
             ].map(({ label, count, color }) => (
               <div key={label}>
                 <div className="flex items-center justify-between text-xs text-[var(--color-ink-soft)]">
@@ -541,9 +541,9 @@ function EstadisticasTab({
           ) : (
             <div className="mt-4 space-y-3">
               {[
-                { label: "Revisadas", count: reviewedSubmissions, color: "bg-emerald-500" },
-                { label: "Pendientes de revisión", count: pendingSubmissions, color: "bg-amber-400" },
-                { label: "Cambios solicitados", count: changesRequested, color: "bg-red-400" },
+                { label: "Revisadas", count: reviewedSubmissions, color: "bg-[var(--color-success)]" },
+                { label: "Pendientes de revisión", count: pendingSubmissions, color: "bg-[var(--color-warning)]" },
+                { label: "Cambios solicitados", count: changesRequested, color: "bg-[var(--color-danger)]" },
               ].map(({ label, count, color }) => (
                 <div key={label}>
                   <div className="flex items-center justify-between text-xs text-[var(--color-ink-soft)]">
@@ -647,7 +647,7 @@ export default async function TeacherCourseWorkspacePage({ params, searchParams 
       roleLabel={roleLabel}
       notificationsCount={notificationSnapshot.unreadCount}
     >
-      <div className="site-container py-6 sm:py-8 pb-20">
+      <div className="site-container py-6 sm:py-8 pb-12">
 
         {/* Breadcrumb */}
         <nav className="flex items-center gap-2 text-sm text-[var(--color-ink-muted)]">
@@ -704,7 +704,7 @@ export default async function TeacherCourseWorkspacePage({ params, searchParams 
                   className="flex cursor-not-allowed items-center gap-1.5 border-b-2 border-transparent pb-3 text-[1rem] font-medium text-[var(--color-ink-muted)] opacity-50"
                 >
                   {t.label}
-                  <span className="rounded-full bg-[rgba(28,47,67,0.08)] px-1.5 py-0.5 text-[0.6rem] font-semibold uppercase tracking-wide">
+                  <span className="rounded-full bg-[rgba(28,47,67,0.08)] px-1.5 py-0.5 text-[0.75rem] font-semibold uppercase tracking-wide">
                     Próx.
                   </span>
                 </span>
@@ -722,12 +722,12 @@ export default async function TeacherCourseWorkspacePage({ params, searchParams 
                 >
                   {t.label}
                   {t.value === "alumnos" && activeEnrollmentCount > 0 && (
-                    <span className="ml-2 rounded-full bg-[var(--color-brand-soft)] px-1.5 py-0.5 text-[0.65rem] font-semibold text-[var(--color-primary)]">
+                    <span className="ml-2 rounded-full bg-[var(--color-brand-soft)] px-1.5 py-0.5 text-[0.75rem] font-semibold text-[var(--color-primary)]">
                       {activeEnrollmentCount}
                     </span>
                   )}
                   {t.value === "contenido" && pendingCount > 0 && (
-                    <span className="ml-2 rounded-full bg-[rgba(209,88,62,0.15)] px-1.5 py-0.5 text-[0.65rem] font-semibold text-[var(--color-danger)]">
+                    <span className="ml-2 rounded-full bg-[rgba(209,88,62,0.15)] px-1.5 py-0.5 text-[0.75rem] font-semibold text-[var(--color-danger)]">
                       {pendingCount}
                     </span>
                   )}

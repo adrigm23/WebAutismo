@@ -203,7 +203,7 @@ function SubmissionActionRow(input: {
       </Button>
       <Button
         aria-busy={pending}
-        className="border border-[#0f0f0f] bg-[#0f0f0f] px-5 text-white shadow-none hover:bg-[#1a1a1a] hover:shadow-none"
+        className="border border-[var(--color-primary)] bg-[var(--color-primary)] px-5 text-white shadow-none hover:bg-[var(--color-primary-strong)] hover:shadow-none"
         disabled={pending || input.disabled}
         type="submit"
         variant="neutral"
@@ -312,7 +312,7 @@ export function CourseExerciseSubmissionForm({
 
           {/* Badges row */}
           <div className="flex flex-wrap items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--color-success)] bg-[var(--color-success-soft)] px-3 py-1 text-xs font-semibold text-[var(--color-success)]">
               <FileCheck2 className="h-3.5 w-3.5" />
               Evaluable
             </span>
@@ -321,7 +321,7 @@ export function CourseExerciseSubmissionForm({
                 "inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold",
                 submissionStatus.color === "orange" && "border border-orange-200 bg-orange-50 text-orange-700",
                 submissionStatus.color === "blue" && "border border-blue-200 bg-blue-50 text-blue-700",
-                submissionStatus.color === "green" && "border border-emerald-200 bg-emerald-50 text-emerald-700",
+                submissionStatus.color === "green" && "border border-[var(--color-success)] bg-[var(--color-success-soft)] text-[var(--color-success)]",
                 submissionStatus.color === "red" && "border border-red-200 bg-red-50 text-red-700",
               )}
             >
@@ -373,10 +373,10 @@ export function CourseExerciseSubmissionForm({
                   <div className="grid gap-2 sm:grid-cols-3">
                     {taskCopy.instructionItems.map((item, i) => (
                       <div
-                        className="flex items-center gap-2 rounded-lg bg-emerald-50 px-3 py-2.5 text-sm text-emerald-800"
+                        className="flex items-center gap-2 rounded-lg bg-[var(--color-success-soft)] px-3 py-2.5 text-sm text-[var(--color-success)]"
                         key={`objective-${i}`}
                       >
-                        <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600" />
+                        <CheckCircle2 className="h-4 w-4 shrink-0 text-[var(--color-success)]" />
                         <span>{item}</span>
                       </div>
                     ))}
@@ -515,7 +515,7 @@ export function CourseExerciseSubmissionForm({
           <div className="overflow-hidden rounded-2xl border border-[rgba(22,60,88,0.09)] bg-white shadow-sm">
             {/* Status header */}
             {!existingSubmission ? (
-              <div className="rounded-t-2xl bg-[#fff5f3] px-5 py-5 text-center">
+              <div className="rounded-t-2xl bg-[var(--color-danger-soft)] px-5 py-5 text-center">
                 <FileX className="mx-auto h-10 w-10 text-[#e5533d]" />
                 <p className="mt-3 font-bold text-[#111c2c]">Pendiente de entrega</p>
                 <p className="mt-1 text-xs text-[var(--color-muted)]">Asegúrate de enviar tu trabajo antes de la fecha límite.</p>
@@ -577,12 +577,12 @@ export function CourseExerciseSubmissionForm({
               <p className="text-[0.68rem] font-bold uppercase tracking-[0.14em] text-[var(--color-muted)]">
                 Progreso del Curso
               </p>
-              <p className="mt-2 text-[2rem] font-bold leading-none text-emerald-600">
+              <p className="mt-2 text-[2rem] font-bold leading-none text-[var(--color-success)]">
                 {Math.round(completionRate)}%
               </p>
               <div className="mt-3 h-2 overflow-hidden rounded-full bg-[rgba(22,60,88,0.07)]">
                 <div
-                  className="h-2 rounded-full bg-emerald-500 transition-all"
+                  className="h-2 rounded-full bg-[var(--color-success)] transition-all"
                   style={{ width: `${Math.min(100, Math.max(0, completionRate))}%` }}
                 />
               </div>

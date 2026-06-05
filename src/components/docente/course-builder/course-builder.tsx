@@ -75,9 +75,9 @@ type Tab = "constructor" | "preview" | "config" | "participants";
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function getResourceIcon(resource: BuilderResource) {
-  if (resource.type === "EXERCISE") return { Icon: FileText, bg: "bg-[#ede9fe]", text: "text-[#7c3aed]" };
-  if (resource.mimeType?.startsWith("video/")) return { Icon: Video, bg: "bg-[#dbeafe]", text: "text-[#2563eb]" };
-  if (resource.mimeType === "application/pdf") return { Icon: FileText, bg: "bg-[#dcfce7]", text: "text-[#16a34a]" };
+  if (resource.type === "EXERCISE") return { Icon: FileText, bg: "bg-[var(--color-primary-soft)]", text: "text-[var(--color-primary)]" };
+  if (resource.mimeType?.startsWith("video/")) return { Icon: Video, bg: "bg-[var(--color-primary-soft)]", text: "text-[var(--color-primary)]" };
+  if (resource.mimeType === "application/pdf") return { Icon: FileText, bg: "bg-[var(--color-success-soft)]", text: "text-[var(--color-success)]" };
   return { Icon: FileText, bg: "bg-[rgba(22,60,88,0.08)]", text: "text-[var(--color-ink-soft)]" };
 }
 
@@ -100,7 +100,7 @@ function Toast({ msg, kind, onDismiss }: { msg: string; kind: "success" | "error
   return (
     <div className={cn(
       "fixed bottom-6 left-1/2 z-[100] flex -translate-x-1/2 items-center gap-3 rounded-xl px-5 py-3.5 text-sm font-medium text-white shadow-xl",
-      kind === "success" ? "bg-[#17624f]" : "bg-[#9f452e]",
+      kind === "success" ? "bg-[var(--color-success)]" : "bg-[var(--color-danger)]",
     )}>
       {kind === "success" ? <Check className="h-4 w-4 shrink-0" /> : <X className="h-4 w-4 shrink-0" />}
       {msg}
@@ -170,7 +170,7 @@ function ModuleDialog({ courseId, editModule, onClose }: {
             ? <input type="hidden" name="moduleId" value={editModule?.id} />
             : <input type="hidden" name="courseId" value={courseId} />
           }
-          {state.error && <div className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">{state.error}</div>}
+          {state.error && <div className="rounded-xl bg-[var(--color-danger-soft)] px-4 py-3 text-sm text-[var(--color-danger)]">{state.error}</div>}
           <div>
             <label className="mb-1.5 block text-sm font-medium text-[var(--color-ink)]">Título *</label>
             <input name="title" required defaultValue={editModule?.title ?? ""} placeholder="Ej. Módulo 1: Fundamentos" className="w-full rounded-xl border border-[rgba(22,60,88,0.15)] px-4 py-2.5 text-sm outline-none focus:border-[var(--color-primary)] focus:ring-2 focus:ring-[var(--color-primary)]/10" />
@@ -231,7 +231,7 @@ function AddLessonDialog({ courseId, moduleId, onClose }: {
           <input type="hidden" name="type" value={type} />
           <input type="hidden" name="source" value={source} />
 
-          {state.error && <div className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">{state.error}</div>}
+          {state.error && <div className="rounded-xl bg-[var(--color-danger-soft)] px-4 py-3 text-sm text-[var(--color-danger)]">{state.error}</div>}
 
           <div>
             <label className="mb-1.5 block text-sm font-medium text-[var(--color-ink)]">Título *</label>
@@ -393,7 +393,7 @@ function BuilderTopbar({ activeTab, course, status, onTabChange, onMobileMenuOpe
 
       <div className="flex shrink-0 items-center gap-2">
         {status === "ACTIVE" && (
-          <span className="hidden rounded-full bg-emerald-50 px-2.5 py-1 text-[0.7rem] font-semibold text-emerald-700 sm:inline-flex">● Publicado</span>
+          <span className="hidden rounded-full bg-[var(--color-success-soft)] px-2.5 py-1 text-[0.7rem] font-semibold text-[var(--color-success)] sm:inline-flex">● Publicado</span>
         )}
         <button disabled={saving} onClick={onSaveDraft}
           className="hidden items-center gap-2 rounded-xl border border-[rgba(22,60,88,0.2)] bg-white px-4 py-2 text-sm font-semibold text-[var(--color-ink)] transition hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] disabled:opacity-50 sm:flex">
@@ -443,7 +443,7 @@ function LessonRow({ resource, onDelete }: { resource: BuilderResource; onDelete
         {menuOpen && (
           <div className="absolute right-0 top-8 z-40 min-w-[130px] overflow-hidden rounded-xl border border-[rgba(22,60,88,0.1)] bg-white shadow-lg">
             <button type="button" onClick={() => { onDelete(resource.id); setMenuOpen(false); }}
-              className="flex w-full items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50">
+              className="flex w-full items-center gap-2 px-3 py-2 text-sm text-[var(--color-danger)] hover:bg-[var(--color-danger-soft)]">
               <Trash2 className="h-3.5 w-3.5" /> Eliminar
             </button>
           </div>
@@ -520,7 +520,7 @@ function ModuleCard({ module: mod, courseId, isFirst, isLast, onDelete, onEdit, 
                   <Edit2 className="h-3.5 w-3.5" /> Editar
                 </button>
                 <button type="button" onClick={() => { onDelete(mod.id); setMenuOpen(false); }}
-                  className="flex w-full items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50">
+                  className="flex w-full items-center gap-2 px-3 py-2 text-sm text-[var(--color-danger)] hover:bg-[var(--color-danger-soft)]">
                   <Trash2 className="h-3.5 w-3.5" /> Eliminar
                 </button>
               </div>

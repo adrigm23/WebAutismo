@@ -94,12 +94,12 @@ export function PromotionForm({
       {defaultValues &&
       defaultValues.usageLimit !== null &&
       defaultValues._count.redemptions > defaultValues.usageLimit ? (
-        <div className="rounded-xl border border-[#f3b8b2] bg-[#fff0ee] px-4 py-4 text-sm leading-7 text-[#b13b2f]">
+        <div className="rounded-xl border border-[var(--color-danger)] bg-[var(--color-danger-soft)] px-4 py-4 text-sm leading-7 text-[var(--color-danger)]">
           El limite es menor que los usos ya consumidos. La promocion quedara agotada de inmediato.
         </div>
       ) : null}
       {defaultValues ? (
-        <div className="rounded-xl border border-[#d9e1e8] bg-[#fbfcfd] px-4 py-4 text-sm leading-7 text-[#44586d]">
+        <div className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] px-4 py-4 text-sm leading-7 text-[var(--color-ink-soft)]">
           <strong>Descuento actual:</strong>{" "}
           {getPromotionDiscountSummary({
             discountType: defaultValues.discountType,

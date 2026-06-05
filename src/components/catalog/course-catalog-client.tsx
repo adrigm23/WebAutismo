@@ -92,7 +92,7 @@ export function CourseCatalogClient({ courses }: Props) {
       </section>
 
       {/* Catalog body */}
-      <div className="bg-[#f7f7f7] py-10">
+      <div className="bg-[#f7f4ef] py-10">
         <div className="site-container flex gap-8">
           {/* Sidebar — hidden on mobile, visible on lg+ */}
           <aside className="hidden w-52 shrink-0 lg:block">

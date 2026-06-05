@@ -195,7 +195,7 @@ export function StudentShell({
 
   return (
     <div className="min-h-screen lg:grid lg:grid-cols-[260px_minmax(0,1fr)]">
-      <aside className="sticky top-0 hidden h-screen overflow-y-auto border-r border-[rgba(28,47,67,0.08)] bg-[#eef0f5] lg:flex lg:w-[260px] lg:flex-col">
+      <aside className="sticky top-0 hidden h-screen overflow-y-auto border-r border-[rgba(28,47,67,0.08)] bg-[#f7f4ef] lg:flex lg:w-[260px] lg:flex-col">
         <SidebarBrand />
         <SidebarNav navItems={navItems} pathname={pathname} />
         <SidebarFooter />
@@ -209,7 +209,7 @@ export function StudentShell({
             onClick={closeMobileNav}
             type="button"
           />
-          <aside className="absolute inset-y-0 left-0 flex w-[280px] max-w-[85vw] flex-col overflow-y-auto border-r border-[rgba(28,47,67,0.08)] bg-[#eef0f5] shadow-2xl">
+          <aside className="absolute inset-y-0 left-0 flex w-[280px] max-w-[85vw] flex-col overflow-y-auto border-r border-[rgba(28,47,67,0.08)] bg-[#f7f4ef] shadow-2xl">
             <div className="flex items-start justify-between pr-3">
               <SidebarBrand />
               <button
@@ -232,7 +232,7 @@ export function StudentShell({
       ) : null}
 
       <div className="flex min-h-screen flex-col">
-        <header className="sticky top-0 z-20 border-b border-[rgba(28,47,67,0.08)] bg-[rgba(248,250,252,0.95)] backdrop-blur-md">
+        <header className="sticky top-0 z-20 border-b border-[rgba(28,47,67,0.08)] bg-[rgba(247,244,239,0.95)] backdrop-blur-md">
           <div className="flex items-center justify-between gap-3 px-4 py-3 sm:px-6">
             <div className="flex min-w-0 items-center gap-2.5">
               <button
@@ -286,7 +286,7 @@ export function StudentShell({
           </div>
         </header>
 
-        <main className="flex-1 bg-[#f8fafc]">{children}</main>
+        <main className="flex-1 bg-[#f7f4ef]">{children}</main>
       </div>
     </div>
   );
