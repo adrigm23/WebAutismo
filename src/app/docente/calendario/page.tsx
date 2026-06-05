@@ -4,7 +4,7 @@ import { requireUser } from "@/lib/auth";
 import { getDb } from "@/lib/prisma";
 import { getAllCalendarEvents, getCalendarViewerContext } from "@/lib/calendar";
 import { CalendarPage } from "@/components/platform/calendar/calendar-page";
-import { DocenteShell } from "@/components/docente/docente-shell";
+import { TeacherShell } from "@/components/docente/teacher-shell";
 import { getInitials } from "@/lib/utils";
 
 export const metadata: Metadata = {
@@ -38,12 +38,12 @@ export default async function DocenteCalendarioPage() {
   const viewerName = user.name ?? user.email;
 
   return (
-    <DocenteShell viewerName={viewerName} viewerInitials={getInitials(viewerName)}>
+    <TeacherShell viewerName={viewerName} viewerInitials={getInitials(viewerName)} roleLabel="Docente">
       <CalendarPage
         events={events}
         courses={courses}
         canManage={true}
       />
-    </DocenteShell>
+    </TeacherShell>
   );
 }

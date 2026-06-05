@@ -57,7 +57,7 @@ export async function createPromotionAction(formData: FormData) {
   });
 
   revalidateAdminViews();
-  redirect("/admin");
+  redirect("/admin/promotions");
 }
 
 export async function togglePromotionAction(formData: FormData) {

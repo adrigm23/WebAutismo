@@ -14,8 +14,6 @@ import {
   LayoutGrid,
   LogOut,
   Menu,
-  MessageSquareText,
-  Users,
   X,
 } from "lucide-react";
 import { logoutAction } from "@/actions/session";
@@ -32,9 +30,7 @@ type NavItem = {
 const NAV_ITEMS: NavItem[] = [
   { label: "Dashboard", href: "/docente", icon: LayoutGrid },
   { label: "Mis Cursos", href: "/docente/cursos", icon: GraduationCap },
-  { label: "Alumnos", href: "/docente/alumnos", icon: Users, disabled: true },
   { label: "Recursos", href: "/docente/biblioteca", icon: BookOpen },
-  { label: "Comunidad", href: "#", icon: MessageSquareText, disabled: true },
   { label: "Calendario", href: "/docente/calendario", icon: CalendarDays },
 ];
 

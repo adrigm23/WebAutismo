@@ -8,7 +8,7 @@ import {
   getViewerContext,
 } from "@/lib/library";
 import { LibraryPage } from "@/components/platform/library/library-page";
-import { DocenteShell } from "@/components/docente/docente-shell";
+import { TeacherShell } from "@/components/docente/teacher-shell";
 import { getInitials } from "@/lib/utils";
 
 export const metadata: Metadata = {
@@ -43,7 +43,7 @@ export default async function DocenteBibliotecaPage() {
   const viewerName = user.name ?? user.email;
 
   return (
-    <DocenteShell viewerName={viewerName} viewerInitials={getInitials(viewerName)}>
+    <TeacherShell viewerName={viewerName} viewerInitials={getInitials(viewerName)} roleLabel="Docente">
       <LibraryPage
         resources={resources}
         folders={folders}
@@ -52,6 +52,6 @@ export default async function DocenteBibliotecaPage() {
         role="teacher"
         newResourceHref="/docente/biblioteca/nuevo"
       />
-    </DocenteShell>
+    </TeacherShell>
   );
 }

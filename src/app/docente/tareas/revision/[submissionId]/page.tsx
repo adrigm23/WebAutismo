@@ -4,7 +4,7 @@ import { requireUser } from "@/lib/auth";
 import { canAccessCourseCommunityForCourse, canModerateCourse } from "@/lib/course-community";
 import { getCatalogCourseBySlug } from "@/lib/course-catalog";
 import { getSubmissionForReview } from "@/lib/submission-review";
-import { DocenteShell } from "@/components/docente/docente-shell";
+import { TeacherShell } from "@/components/docente/teacher-shell";
 import { SubmissionReviewPage } from "@/components/docente/submission-review-page";
 
 type Props = {
@@ -58,14 +58,15 @@ export default async function SubmissionReviewRoute({ params }: Props) {
   const viewerName = user.name ?? user.email;
 
   return (
-    <DocenteShell
+    <TeacherShell
       viewerInitials={buildInitials(viewerName)}
       viewerName={viewerName}
+      roleLabel="Docente"
     >
       <SubmissionReviewPage
         reviewerName={viewerName}
         submission={submission}
       />
-    </DocenteShell>
+    </TeacherShell>
   );
 }

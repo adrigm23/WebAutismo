@@ -30,6 +30,12 @@ export const adminNavigation: AdminNavigationItem[] = [
     icon: "users-round",
   },
   {
+    href: "/admin/teachers",
+    label: "Docentes",
+    shortLabel: "Docentes",
+    icon: "graduation-cap",
+  },
+  {
     href: "/admin/courses",
     label: "Cursos",
     shortLabel: "Cursos",

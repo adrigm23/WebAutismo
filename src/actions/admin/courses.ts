@@ -107,7 +107,8 @@ export async function createCourseAction(formData: FormData) {
   });
 
   revalidateAdminViews();
-  redirect(`/admin/courses?courseId=${course.id}#course-detail`);
+  const tabParam = status === "INACTIVE" ? "&tab=borradores" : "";
+  redirect(`/admin/courses?courseId=${course.id}${tabParam}#course-detail`);
 }
 
 export async function updateCourseAction(formData: FormData) {
@@ -191,7 +192,7 @@ export async function cloneCourseAction(formData: FormData) {
       },
       editions: {
         create: {
-          label: "Edicion 1",
+          label: "Edición 1",
           editionNumber: 1,
           status: "ACTIVE",
           isActive: true,
