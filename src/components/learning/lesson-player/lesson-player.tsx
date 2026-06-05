@@ -185,7 +185,7 @@ function PdfViewerCard({
         )}
       </div>
       {/* PDF iframe — tall */}
-      <div className="bg-[#f0f2f5]" style={{ height: "68vh", minHeight: "520px" }}>
+      <div className="bg-[#f0f2f5]" style={{ height: "82vh", minHeight: "640px" }}>
         <iframe
           className="h-full w-full"
           src={inlineSrc}
