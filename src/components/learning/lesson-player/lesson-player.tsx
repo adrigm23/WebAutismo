@@ -576,44 +576,44 @@ export function LessonPlayer({
                 </div>
               )}
 
-              {/* Bottom navigation — Anterior | Marcar como completado | Siguiente */}
-              <div className="mt-8 flex items-center justify-between border-t border-[#e5e7eb] pt-5">
-                {prevHref ? (
-                  <Link
-                    className="flex items-center gap-2 rounded-xl border border-[#e5e7eb] bg-white px-5 py-2.5 text-sm font-semibold text-[#374151] shadow-sm transition hover:border-[#3b82f6] hover:text-[#3b82f6]"
-                    href={prevHref}
-                  >
-                    <ChevronLeft className="h-4 w-4" />
-                    Anterior
-                  </Link>
-                ) : (
-                  <div />
-                )}
-
+              {/* Bottom navigation */}
+              <div className="mt-8 border-t border-[#e5e7eb] pt-5 space-y-3">
                 <CourseProgressToggleForm
                   courseSlug={course.slug}
                   isCompleted={currentModule.isCompleted}
                   moduleId={currentModule.id}
                   nextPath={nextHref ?? `/mis-cursos/${course.slug}/leccion/${moduleIndex}`}
                 />
-
-                {nextHref ? (
-                  <Link
-                    className="flex items-center gap-2 rounded-xl bg-[var(--color-primary)] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:opacity-90"
-                    href={nextHref}
-                  >
-                    Siguiente Lección
-                    <ChevronRight className="h-4 w-4" />
-                  </Link>
-                ) : (
-                  <Link
-                    className="flex items-center gap-2 rounded-xl bg-emerald-500 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:opacity-90"
-                    href={`/mis-cursos/${course.slug}`}
-                  >
-                    Finalizar curso
-                    <CheckCheck className="h-4 w-4" />
-                  </Link>
-                )}
+                <div className="flex items-center justify-between gap-3">
+                  {prevHref ? (
+                    <Link
+                      className="flex items-center gap-2 rounded-xl border border-[#e5e7eb] bg-white px-4 py-2.5 text-sm font-semibold text-[#374151] shadow-sm transition hover:border-[#3b82f6] hover:text-[#3b82f6]"
+                      href={prevHref}
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                      Anterior
+                    </Link>
+                  ) : (
+                    <div />
+                  )}
+                  {nextHref ? (
+                    <Link
+                      className="flex items-center gap-2 rounded-xl bg-[var(--color-primary)] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:opacity-90"
+                      href={nextHref}
+                    >
+                      Siguiente
+                      <ChevronRight className="h-4 w-4" />
+                    </Link>
+                  ) : (
+                    <Link
+                      className="flex items-center gap-2 rounded-xl bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:opacity-90"
+                      href={`/mis-cursos/${course.slug}`}
+                    >
+                      Finalizar
+                      <CheckCheck className="h-4 w-4" />
+                    </Link>
+                  )}
+                </div>
               </div>
 
               {/* Tabs — Notas y Comentarios still available for PDFs */}
@@ -717,7 +717,7 @@ export function LessonPlayer({
                       className="flex items-center gap-2 rounded-xl bg-emerald-500 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:opacity-90"
                       href={`/mis-cursos/${course.slug}`}
                     >
-                      Finalizar curso
+                      Finalizar
                       <CheckCheck className="h-4 w-4" />
                     </Link>
                   )}

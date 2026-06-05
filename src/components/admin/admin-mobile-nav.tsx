@@ -33,8 +33,9 @@ export function AdminMobileNav() {
 
       {open ? (
         <nav
-          className="mt-3 grid gap-2 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface-elevated)] p-3 shadow-[var(--shadow-soft)]"
+          className="mt-3 grid gap-2 overflow-y-auto rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface-elevated)] p-3 shadow-[var(--shadow-soft)]"
           id="admin-mobile-menu"
+          style={{ maxHeight: "calc(100dvh - 6rem)" }}
         >
           {adminNavigation.map((item) => {
             const isActive =

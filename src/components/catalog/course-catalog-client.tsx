@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Search, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
+import { Search, ChevronDown, ChevronLeft, ChevronRight, SlidersHorizontal, X } from "lucide-react";
 import type { CatalogCourse } from "@/lib/course-catalog";
 import { CourseCardCatalog } from "./course-card-catalog";
 
@@ -19,6 +19,7 @@ export function CourseCatalogClient({ courses }: Props) {
   const [selectedLevel, setSelectedLevel] = useState("Todos los niveles");
   const [sort, setSort] = useState("recent");
   const [page, setPage] = useState(1);
+  const [filtersOpen, setFiltersOpen] = useState(false);
 
   const categories = useMemo(() => {
     const cats = new Set(courses.map((c) => c.category));
@@ -93,8 +94,8 @@ export function CourseCatalogClient({ courses }: Props) {
       {/* Catalog body */}
       <div className="bg-[#f7f7f7] py-10">
         <div className="site-container flex gap-8">
-          {/* Sidebar */}
-          <aside className="w-52 shrink-0">
+          {/* Sidebar — hidden on mobile, visible on lg+ */}
+          <aside className="hidden w-52 shrink-0 lg:block">
             <div className="rounded-xl border border-[var(--color-border)] bg-white p-5">
               <p className="text-[0.7rem] font-bold uppercase tracking-[0.14em] text-[var(--color-muted)]">
                 Especialidad
@@ -142,6 +143,55 @@ export function CourseCatalogClient({ courses }: Props) {
 
           {/* Main */}
           <main className="min-w-0 flex-1">
+            {/* Mobile filters toggle */}
+            <div className="mb-4 lg:hidden">
+              <button
+                className="flex items-center gap-2 rounded-lg border border-[var(--color-border)] bg-white px-4 py-2.5 text-sm font-medium text-[var(--color-ink)] shadow-sm transition hover:border-[var(--color-primary)]"
+                onClick={() => setFiltersOpen((v) => !v)}
+                type="button"
+              >
+                {filtersOpen ? <X className="h-4 w-4" /> : <SlidersHorizontal className="h-4 w-4" />}
+                {filtersOpen ? "Cerrar filtros" : "Filtros"}
+              </button>
+              {filtersOpen && (
+                <div className="mt-3 rounded-xl border border-[var(--color-border)] bg-white p-5">
+                  <p className="text-[0.7rem] font-bold uppercase tracking-[0.14em] text-[var(--color-muted)]">Especialidad</p>
+                  <ul className="mt-3 space-y-2.5">
+                    {categories.map((cat) => (
+                      <li key={cat}>
+                        <label className="flex cursor-pointer items-center gap-2.5 text-sm text-[var(--color-ink)]">
+                          <input
+                            checked={selectedCategories.includes(cat)}
+                            className="h-4 w-4 rounded border-[var(--color-border)] accent-[var(--color-primary)]"
+                            onChange={() => toggleCategory(cat)}
+                            type="checkbox"
+                          />
+                          {cat}
+                        </label>
+                      </li>
+                    ))}
+                  </ul>
+                  <p className="mt-6 text-[0.7rem] font-bold uppercase tracking-[0.14em] text-[var(--color-muted)]">Nivel</p>
+                  <ul className="mt-3 space-y-2.5">
+                    {LEVELS.map((level) => (
+                      <li key={level}>
+                        <label className="flex cursor-pointer items-center gap-2.5 text-sm text-[var(--color-ink)]">
+                          <input
+                            checked={selectedLevel === level}
+                            className="h-4 w-4 accent-[var(--color-primary)]"
+                            name="level-filter-mobile"
+                            onChange={() => { setSelectedLevel(level); setPage(1); }}
+                            type="radio"
+                          />
+                          {level}
+                        </label>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+
             {/* Top bar */}
             <div className="mb-5 flex items-center justify-between">
               <span className="text-sm text-[var(--color-muted)]">
