@@ -36,8 +36,19 @@ function getVimeoEmbedUrl(rawUrl: string) {
       return null;
     }
 
-    const match = url.pathname.match(/\/(\d+)/);
-    return match ? `https://player.vimeo.com/video/${match[1]}` : null;
+    const match = url.pathname.match(/\/(\d+)(?:\/([a-f0-9]+))?/);
+    if (!match?.[1]) return null;
+
+    const params = new URLSearchParams({
+      color: "163c58",
+      title: "0",
+      byline: "0",
+      portrait: "0",
+      dnt: "1",
+    });
+    if (match[2]) params.set("h", match[2]);
+
+    return `https://player.vimeo.com/video/${match[1]}?${params}`;
   } catch {
     return null;
   }

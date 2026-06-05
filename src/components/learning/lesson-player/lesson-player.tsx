@@ -57,9 +57,18 @@ function getContentEmbed(resource: CampusResourceItem): ContentEmbed | null {
         if (id) return { kind: "embed", src: `https://www.youtube.com/embed/${id}` };
       }
       if (url.hostname.includes("vimeo.com")) {
-        const match = url.pathname.match(/\/(\d+)/);
-        if (match?.[1])
-          return { kind: "embed", src: `https://player.vimeo.com/video/${match[1]}` };
+        const match = url.pathname.match(/\/(\d+)(?:\/([a-f0-9]+))?/);
+        if (match?.[1]) {
+          const params = new URLSearchParams({
+            color: "163c58",
+            title: "0",
+            byline: "0",
+            portrait: "0",
+            dnt: "1",
+          });
+          if (match[2]) params.set("h", match[2]);
+          return { kind: "embed", src: `https://player.vimeo.com/video/${match[1]}?${params}` };
+        }
       }
     } catch {
       // ignore malformed URLs
@@ -218,7 +227,7 @@ function VideoArea({ resource }: { resource: CampusResourceItem | null }) {
     return (
       <div className="aspect-video w-full bg-[#0e2236]">
         <iframe
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen; web-share"
           allowFullScreen
           className="h-full w-full"
           src={embed.src}
