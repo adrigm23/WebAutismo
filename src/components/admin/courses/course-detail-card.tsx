@@ -43,7 +43,20 @@ export function CourseDetailCard({
         </AdminStatusBadge>
       </div>
 
-      <form action={updateCourseAction} className="mt-6 grid gap-4">
+      {course.status === "INACTIVE" && (
+        <form action={updateCourseAction} className="mt-6">
+          <input name="courseId" type="hidden" value={course.id} />
+          <input name="title" type="hidden" value={course.title} />
+          <input name="shortDescription" type="hidden" value={course.shortDescription} />
+          <input name="priceInCents" type="hidden" value={String(course.priceInCents)} />
+          <input name="status" type="hidden" value="ACTIVE" />
+          <SubmitButton className="w-full" pendingLabel="Publicando...">
+            Publicar curso
+          </SubmitButton>
+        </form>
+      )}
+
+      <form action={updateCourseAction} className="mt-4 grid gap-4">
         <input name="courseId" type="hidden" value={course.id} />
         <div className="grid gap-4 md:grid-cols-2">
           <Input defaultValue={course.title} name="title" />
