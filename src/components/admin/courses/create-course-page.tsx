@@ -60,42 +60,6 @@ export function CreateCoursePage({ teachers }: Props) {
 
   return (
     <div className="min-h-screen bg-[#f7f4ef]">
-      {/* Sticky action bar */}
-      <div className="sticky top-[var(--topbar-height,3.5rem)] z-10 border-b border-[var(--color-border-subtle)] bg-white/95 backdrop-blur-sm">
-        <div className="flex items-center justify-between gap-4 px-6 py-3 xl:px-10">
-          <span className="text-sm font-semibold text-[var(--color-ink)]">
-            Nuevo curso
-          </span>
-          <div className="flex items-center gap-2">
-            <Link
-              href="/admin/courses"
-              className="inline-flex items-center gap-1.5 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-white px-4 py-2 text-sm font-medium text-[var(--color-ink-soft)] transition hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]"
-            >
-              <Undo2 className="h-3.5 w-3.5" />
-              Cancelar
-            </Link>
-            <button
-              form="create-course-form"
-              name="status"
-              value="INACTIVE"
-              type="submit"
-              className="inline-flex items-center gap-1.5 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-white px-4 py-2 text-sm font-medium text-[var(--color-ink)] transition hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]"
-            >
-              Guardar borrador
-            </button>
-            <button
-              form="create-course-form"
-              name="status"
-              value="ACTIVE"
-              type="submit"
-              className="inline-flex items-center gap-1.5 rounded-[var(--radius-md)] bg-[var(--color-primary)] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[var(--color-primary-strong)]"
-            >
-              Publicar curso
-            </button>
-          </div>
-        </div>
-      </div>
-
       {/* Form content */}
       <form id="create-course-form" action={createCourseAction}>
         {/* Hidden fields for state */}
@@ -108,6 +72,44 @@ export function CreateCoursePage({ teachers }: Props) {
         ))}
 
         <div className="mx-auto max-w-[1200px] px-4 py-8 md:px-6 xl:px-10">
+          {/* Page header */}
+          <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h1 className="text-[1.9rem] font-bold tracking-[-0.04em] text-[var(--color-ink)]">
+                Nuevo curso
+              </h1>
+              <p className="mt-1 text-sm text-[var(--color-muted)]">
+                Rellena la información base. Podrás añadir módulos y recursos después.
+              </p>
+            </div>
+            <div className="flex shrink-0 items-center gap-2">
+              <Link
+                href="/admin/courses"
+                className="inline-flex items-center gap-1.5 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-white px-4 py-2 text-sm font-medium text-[var(--color-ink-soft)] transition hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]"
+              >
+                <Undo2 className="h-3.5 w-3.5" />
+                Cancelar
+              </Link>
+              <button
+                form="create-course-form"
+                name="status"
+                value="INACTIVE"
+                type="submit"
+                className="inline-flex items-center gap-1.5 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-white px-4 py-2 text-sm font-medium text-[var(--color-ink)] transition hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]"
+              >
+                Guardar borrador
+              </button>
+              <button
+                form="create-course-form"
+                name="status"
+                value="ACTIVE"
+                type="submit"
+                className="inline-flex items-center gap-1.5 rounded-[var(--radius-md)] bg-[var(--color-primary)] px-4 py-2 text-sm font-semibold text-white shadow-[var(--shadow-soft)] transition hover:bg-[var(--color-primary-strong)]"
+              >
+                Publicar curso
+              </button>
+            </div>
+          </div>
           <div className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_360px] xl:items-start">
             {/* ── Left column: form ── */}
             <div className="space-y-6">
