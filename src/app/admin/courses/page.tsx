@@ -5,7 +5,6 @@ import {
   CourseGrid,
   type CourseGridItem,
 } from "@/components/admin/courses/course-grid";
-import { CreateCourseCard } from "@/components/admin/courses/create-course-card";
 import { CourseDetailCard } from "@/components/admin/courses/course-detail-card";
 import { CreateCourseEditionCard } from "@/components/admin/courses/create-course-edition-card";
 import type {
@@ -160,7 +159,7 @@ export default async function AdminCoursesPage({
 
         <Link
           className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-[var(--color-primary)] px-4 py-2.5 text-sm font-semibold text-white shadow-[var(--shadow-soft)] transition hover:bg-[var(--color-primary-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2"
-          href="#create-course"
+          href="/admin/courses/nuevo"
         >
           <Plus className="h-4 w-4" strokeWidth={2.5} />
           Crear Nuevo Curso
@@ -211,19 +210,6 @@ export default async function AdminCoursesPage({
         </section>
       ) : null}
 
-      {/* ── Create course form ──────────────────────────────────────── */}
-      <section className="scroll-mt-24" id="create-course">
-        <div className="flex items-center gap-3 mb-5">
-          <div className="h-px flex-1 bg-[rgba(22,60,88,0.1)]" />
-          <span className="shrink-0 text-[0.72rem] font-semibold uppercase tracking-[0.12em] text-[var(--color-muted)]">
-            Crear nuevo curso
-          </span>
-          <div className="h-px flex-1 bg-[rgba(22,60,88,0.1)]" />
-        </div>
-        <div className="max-w-xl">
-          <CreateCourseCard />
-        </div>
-      </section>
     </div>
   );
 }

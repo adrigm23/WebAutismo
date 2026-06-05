@@ -9,7 +9,7 @@ const securityHeaders = [
     value: [
       "default-src 'self'",
       "base-uri 'self'",
-      "frame-ancestors 'none'",
+      "frame-ancestors 'self'",
       "form-action 'self' https://checkout.stripe.com",
       "object-src 'none'",
       // React / Next dev tooling (Fast Refresh, overlays) needs eval; never in production builds.
@@ -32,7 +32,7 @@ const securityHeaders = [
   },
   {
     key: "X-Frame-Options",
-    value: "DENY"
+    value: "SAMEORIGIN"
   },
   {
     key: "Permissions-Policy",
