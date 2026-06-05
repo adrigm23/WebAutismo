@@ -8,6 +8,7 @@ import {
   CheckCircle2,
   ChevronRight,
   ClipboardList,
+  Download,
   Edit2,
   FileText,
   Link2,
@@ -248,9 +249,11 @@ function getStudentStatus(
 function AlumnosTab({
   progressRows,
   allSubmissions,
+  courseSlug,
 }: {
   progressRows: CourseLearnerProgressRow[];
   allSubmissions: CampusResourceSubmissionItem[];
+  courseSlug: string;
 }) {
   const lastSubmissionByUser = new Map<string, Date>();
   for (const submission of allSubmissions) {
@@ -283,12 +286,13 @@ function AlumnosTab({
             Gestiona el progreso y la participación de los estudiantes.
           </p>
         </div>
-        <button
-          disabled
-          className="inline-flex cursor-not-allowed items-center gap-2 rounded-[var(--radius-md)] border border-[rgba(22,60,88,0.18)] px-4 py-2.5 text-sm font-medium text-[var(--color-ink-muted)] opacity-50"
+        <a
+          href={`/api/docente/export-students/${courseSlug}`}
+          className="inline-flex items-center gap-2 rounded-[var(--radius-md)] border border-[rgba(22,60,88,0.18)] bg-white px-4 py-2.5 text-sm font-medium text-[var(--color-ink)] transition hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]"
         >
-          Exportar
-        </button>
+          <Download className="h-4 w-4" />
+          Exportar CSV
+        </a>
       </div>
 
       {progressRows.length > 0 ? (
@@ -436,14 +440,131 @@ function ComunidadTab({ courseSlug, courseTitle }: { courseSlug: string; courseT
   );
 }
 
-function EstadisticasTab() {
+function EstadisticasTab({
+  progressRows,
+  allSubmissions,
+  totalModules,
+}: {
+  progressRows: CourseLearnerProgressRow[];
+  allSubmissions: CampusResourceSubmissionItem[];
+  totalModules: number;
+}) {
+  const totalAlumnos = progressRows.length;
+  const avgCompletion =
+    totalAlumnos > 0
+      ? Math.round(progressRows.reduce((sum, r) => sum + r.completionRate, 0) / totalAlumnos)
+      : 0;
+
+  const distBuckets = { sin_iniciar: 0, iniciado: 0, avanzado: 0, completado: 0 };
+  for (const r of progressRows) {
+    if (r.completionRate === 0) distBuckets.sin_iniciar++;
+    else if (r.completionRate < 50) distBuckets.iniciado++;
+    else if (r.completionRate < 100) distBuckets.avanzado++;
+    else distBuckets.completado++;
+  }
+
+  const atRisk = progressRows.filter((r) => r.completionRate === 0 && !r.lastCompletedAt).length;
+
+  const pendingSubmissions = allSubmissions.filter((s) => s.status === "SUBMITTED").length;
+  const reviewedSubmissions = allSubmissions.filter((s) => s.status === "REVIEWED").length;
+  const changesRequested = allSubmissions.filter((s) => s.status === "CHANGES_REQUESTED").length;
+  const totalSubmissions = allSubmissions.length;
+
+  if (totalAlumnos === 0) {
+    return (
+      <div className="rounded-xl border border-[rgba(22,60,88,0.08)] bg-white/60 px-6 py-12 text-center">
+        <BarChart3 className="mx-auto h-10 w-10 text-[var(--color-ink-muted)] opacity-50" />
+        <p className="mt-4 font-semibold text-[var(--color-ink)]">Sin datos todavía</p>
+        <p className="mt-2 text-sm text-[var(--color-ink-soft)]">
+          Las estadísticas aparecerán cuando haya alumnos matriculados.
+        </p>
+      </div>
+    );
+  }
+
   return (
-    <div className="rounded-xl border border-[rgba(22,60,88,0.08)] bg-white/60 px-6 py-12 text-center">
-      <BarChart3 className="mx-auto h-10 w-10 text-[var(--color-ink-muted)] opacity-50" />
-      <p className="mt-4 font-semibold text-[var(--color-ink)]">Estadísticas en desarrollo</p>
-      <p className="mt-2 text-sm text-[var(--color-ink-soft)]">
-        Próximamente: métricas de engagement, completions y rendimiento del curso.
-      </p>
+    <div className="space-y-6">
+      {/* KPIs */}
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+        {[
+          { label: "Alumnos", value: totalAlumnos, sub: "matriculados" },
+          { label: `${avgCompletion}%`, value: null, sub: "progreso medio" },
+          { label: atRisk > 0 ? atRisk : "—", value: null, sub: "sin actividad" },
+          { label: pendingSubmissions > 0 ? pendingSubmissions : "—", value: null, sub: "entregas pendientes" },
+        ].map((kpi) => (
+          <div
+            key={kpi.sub}
+            className="rounded-xl border border-[rgba(22,60,88,0.08)] bg-white px-5 py-4 shadow-[var(--shadow-xs)]"
+          >
+            <p className="text-2xl font-bold text-[var(--color-ink)]">
+              {kpi.value !== null ? kpi.value : kpi.label}
+            </p>
+            <p className="mt-1 text-xs text-[var(--color-ink-muted)]">{kpi.sub}</p>
+          </div>
+        ))}
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-2">
+        {/* Distribución de progreso */}
+        <div className="rounded-xl border border-[rgba(22,60,88,0.08)] bg-white p-5 shadow-[var(--shadow-xs)]">
+          <h3 className="text-sm font-semibold text-[var(--color-ink)]">Distribución de progreso</h3>
+          <div className="mt-4 space-y-3">
+            {[
+              { label: "Sin iniciar", count: distBuckets.sin_iniciar, color: "bg-[#e5e7eb]" },
+              { label: "Iniciado (1–49%)", count: distBuckets.iniciado, color: "bg-amber-400" },
+              { label: "Avanzado (50–99%)", count: distBuckets.avanzado, color: "bg-blue-500" },
+              { label: "Completado (100%)", count: distBuckets.completado, color: "bg-emerald-500" },
+            ].map(({ label, count, color }) => (
+              <div key={label}>
+                <div className="flex items-center justify-between text-xs text-[var(--color-ink-soft)]">
+                  <span>{label}</span>
+                  <span className="font-semibold">
+                    {count} alumno{count !== 1 ? "s" : ""}
+                  </span>
+                </div>
+                <div className="mt-1 h-2 w-full overflow-hidden rounded-full bg-[#f3f4f6]">
+                  <div
+                    className={`h-full rounded-full transition-all ${color}`}
+                    style={{ width: totalAlumnos > 0 ? `${(count / totalAlumnos) * 100}%` : "0%" }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Estado de entregas */}
+        <div className="rounded-xl border border-[rgba(22,60,88,0.08)] bg-white p-5 shadow-[var(--shadow-xs)]">
+          <h3 className="text-sm font-semibold text-[var(--color-ink)]">Estado de entregas</h3>
+          {totalSubmissions === 0 ? (
+            <p className="mt-4 text-sm text-[var(--color-ink-muted)]">No hay entregas registradas.</p>
+          ) : (
+            <div className="mt-4 space-y-3">
+              {[
+                { label: "Revisadas", count: reviewedSubmissions, color: "bg-emerald-500" },
+                { label: "Pendientes de revisión", count: pendingSubmissions, color: "bg-amber-400" },
+                { label: "Cambios solicitados", count: changesRequested, color: "bg-red-400" },
+              ].map(({ label, count, color }) => (
+                <div key={label}>
+                  <div className="flex items-center justify-between text-xs text-[var(--color-ink-soft)]">
+                    <span>{label}</span>
+                    <span className="font-semibold">{count}</span>
+                  </div>
+                  <div className="mt-1 h-2 w-full overflow-hidden rounded-full bg-[#f3f4f6]">
+                    <div
+                      className={`h-full rounded-full ${color}`}
+                      style={{ width: totalSubmissions > 0 ? `${(count / totalSubmissions) * 100}%` : "0%" }}
+                    />
+                  </div>
+                </div>
+              ))}
+              <p className="pt-1 text-xs text-[var(--color-ink-muted)]">
+                Total: {totalSubmissions} entrega{totalSubmissions !== 1 ? "s" : ""}
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
@@ -488,7 +609,7 @@ export default async function TeacherCourseWorkspacePage({ params, searchParams 
   }> = [];
   let progressRows: CourseLearnerProgressRow[] = [];
 
-  if (activeTab === "alumnos") {
+  if (activeTab === "alumnos" || activeTab === "estadisticas") {
     enrollments = await getDb().courseEnrollment.findMany({
       where: { course: { slug } },
       include: { user: { select: { id: true, name: true, email: true } } },
@@ -574,7 +695,7 @@ export default async function TeacherCourseWorkspacePage({ params, searchParams 
                 { label: "Contenido", value: "contenido", disabled: false },
                 { label: "Alumnos", value: "alumnos", disabled: false },
                 { label: "Comunidad", value: "comunidad", disabled: false },
-                { label: "Estadísticas", value: "estadisticas", disabled: true },
+                { label: "Estadísticas", value: "estadisticas", disabled: false },
               ] as Array<{ label: string; value: string; disabled: boolean }>
             ).map((t) =>
               t.disabled ? (
@@ -629,12 +750,19 @@ export default async function TeacherCourseWorkspacePage({ params, searchParams 
             <AlumnosTab
               progressRows={progressRows}
               allSubmissions={allSubmissions}
+              courseSlug={slug}
             />
           )}
           {activeTab === "comunidad" && (
             <ComunidadTab courseSlug={slug} courseTitle={course.title} />
           )}
-          {activeTab === "estadisticas" && <EstadisticasTab />}
+          {activeTab === "estadisticas" && (
+            <EstadisticasTab
+              progressRows={progressRows}
+              allSubmissions={allSubmissions}
+              totalModules={course.modules.length}
+            />
+          )}
         </div>
       </div>
     </TeacherShell>

@@ -116,13 +116,13 @@ export default async function TeacherEntregasPage({ params }: Props) {
               )}
             </div>
             <div className="flex shrink-0 flex-col gap-2 sm:flex-row xl:flex-col">
-              <button
-                disabled
-                className="inline-flex cursor-not-allowed items-center gap-2 rounded-[var(--radius-md)] border border-[rgba(22,60,88,0.18)] px-4 py-2.5 text-sm font-medium text-[var(--color-ink-muted)] opacity-50"
+              <a
+                href={`/api/docente/export-submissions/${resourceId}`}
+                className="inline-flex items-center gap-2 rounded-[var(--radius-md)] border border-[rgba(22,60,88,0.18)] bg-white px-4 py-2.5 text-sm font-medium text-[var(--color-ink)] transition hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]"
               >
                 <Download className="h-4 w-4" />
-                Descargar todas
-              </button>
+                Exportar CSV
+              </a>
               <button
                 disabled
                 className="inline-flex cursor-not-allowed items-center gap-2 rounded-[var(--radius-md)] border border-[rgba(22,60,88,0.18)] px-4 py-2.5 text-sm font-medium text-[var(--color-ink-muted)] opacity-50"
