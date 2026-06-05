@@ -529,6 +529,8 @@ export function CourseResourceManager({
       return (
         <CourseExerciseSubmissionForm
           courseSlug={course.slug}
+          courseName={course.title}
+          moduleTitle={resource.moduleTitle ?? undefined}
           dueAt={resource.dueAt}
           existingSubmission={resource.viewerSubmission}
           isSubmissionClosed={resource.isSubmissionClosed}
@@ -713,6 +715,8 @@ export function CourseResourceManager({
           ) : (
             <CourseExerciseSubmissionForm
               courseSlug={course.slug}
+              courseName={course.title}
+              moduleTitle={resource.moduleTitle ?? undefined}
               dueAt={resource.dueAt}
               existingSubmission={resource.viewerSubmission}
               isSubmissionClosed={resource.isSubmissionClosed}
