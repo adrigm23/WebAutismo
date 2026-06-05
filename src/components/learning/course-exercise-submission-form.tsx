@@ -12,7 +12,7 @@ import {
   Globe,
   Link2,
   Paperclip,
-  Plus,
+  Upload,
 } from "lucide-react";
 import {
   submitCourseResourceSubmissionAction,
@@ -273,268 +273,236 @@ export function CourseExerciseSubmissionForm({
 
   return (
     <main
-      className="mx-auto max-w-[58rem] scroll-mt-28 px-1 pb-8 sm:px-2 lg:pb-12"
+      className="mx-auto max-w-[1160px] scroll-mt-28 px-4 pb-12 pt-6 sm:px-6 xl:px-8"
       id={`resource-${resourceId}`}
     >
-      <div className="space-y-12 sm:space-y-14">
-        <section className="space-y-5">
-          <h1 className="font-premium max-w-[14ch] text-[clamp(2.75rem,6vw,4rem)] leading-[0.98] font-semibold tracking-[-0.065em] text-[var(--color-ink)] text-balance">
-            {resourceTitle}
-          </h1>
+      {/* 2-col grid */}
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_380px] lg:items-start">
 
-          <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-[0.98rem] text-[var(--color-ink-soft)]">
-            {dueAt ? (
-              <span className="inline-flex items-center gap-2">
-                <Calendar className="h-4 w-4" />
-                Vencimiento: {formatDateTime(dueAt)}
-              </span>
-            ) : null}
-            <span className="inline-flex items-center gap-2">
-              <FileCheck2 className="h-4 w-4" />
-              {formatTaskPointsLabel()}
-            </span>
-          </div>
+        {/* ── LEFT: task details + materials ── */}
+        <div className="space-y-8">
+          {/* Title + metadata + description */}
+          <section className="space-y-5">
+            <h1 className="font-premium max-w-[20ch] text-[clamp(2.2rem,5vw,3.2rem)] font-semibold leading-[1.0] tracking-[-0.065em] text-balance text-[var(--color-ink)]">
+              {resourceTitle}
+            </h1>
 
-          <div className="max-w-[42rem] space-y-4 text-[1.08rem] leading-[1.75] text-[var(--color-ink-soft)]">
-            {taskCopy.introParagraphs.length
-              ? taskCopy.introParagraphs.map((paragraph, index) => (
-                  <p key={`intro-${index}`}>{paragraph}</p>
-                ))
-              : resourceDescription ? <p>{resourceDescription}</p> : null}
-
-            {taskCopy.instructionItems.length ? (
-              <ul className="space-y-3.5 pl-5 text-[var(--color-ink-soft)]">
-                {taskCopy.instructionItems.map((item, index) => (
-                  <li
-                    className="pl-1 marker:text-[rgba(34,34,33,0.28)]"
-                    key={`instruction-${index}`}
-                  >
-                    {item}
-                  </li>
-                ))}
-              </ul>
-            ) : null}
-
-            {taskCopy.closingParagraphs.map((paragraph, index) => (
-              <p key={`closing-${index}`}>{paragraph}</p>
-            ))}
-          </div>
-        </section>
-
-        {supportMaterials.length ? (
-          <section className="rounded-xl border border-[rgba(22,60,88,0.08)] bg-[rgba(255,255,255,0.68)] p-5 sm:p-7">
-            <div className="flex items-center gap-2 text-[0.82rem] font-semibold uppercase tracking-[0.14em] text-[var(--color-ink)]">
-              <Paperclip className="h-4 w-4" />
-              Materiales de apoyo
-            </div>
-
-            <div className="mt-5 divide-y divide-[rgba(22,60,88,0.07)]">
-              {supportMaterials.map((resource) => (
-                <a
-                  className="group flex items-center gap-4 px-1 py-4 transition-colors duration-[var(--motion-duration-base)] hover:bg-[rgba(248,246,241,0.58)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[rgba(255,253,250,0.96)]"
-                  href={resource.href ?? "#"}
-                  key={resource.id}
-                  rel={resource.isExternal ? "noreferrer" : undefined}
-                  target={resource.isExternal ? "_blank" : undefined}
-                >
-                  <div className="grid h-11 w-11 shrink-0 place-items-center rounded-lg border border-[rgba(22,60,88,0.08)] bg-white text-[var(--color-ink)]">
-                    <SupportMaterialIcon resource={resource} />
-                  </div>
-
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-[1.04rem] font-medium tracking-[-0.02em] text-[var(--color-ink)]">
-                      {resource.title}
-                    </p>
-                    <p className="mt-1 text-sm text-[var(--color-muted)]">
-                      {getSupportMaterialMeta(resource)}
-                    </p>
-                  </div>
-
-                  {resource.isExternal ? (
-                    <ArrowUpRight className="h-4 w-4 shrink-0 text-[var(--color-ink-soft)] transition-transform duration-[var(--motion-duration-base)] group-hover:translate-x-[1px] group-hover:-translate-y-[1px]" />
-                  ) : null}
-                </a>
-              ))}
-            </div>
-          </section>
-        ) : null}
-
-        <section className="space-y-4">
-          <div className="space-y-2">
-            <h2 className="font-premium text-[1.95rem] leading-[1.05] font-semibold tracking-[-0.05em] text-[var(--color-ink)]">
-              Tu entrega
-            </h2>
-            <p className="max-w-[38rem] text-[1rem] leading-7 text-[var(--color-ink-soft)]">
-              Sube tu documento final en formato compatible o comparte un enlace alternativo.
-            </p>
-          </div>
-
-          {existingSubmission ? (
-            <div className="rounded-xl border border-[rgba(22,60,88,0.08)] bg-[rgba(251,248,244,0.92)] px-5 py-4 text-sm leading-7 text-[var(--color-ink-soft)]">
-              <p>
-                Ultima entrega registrada:{" "}
-                <strong className="font-medium text-[var(--color-ink)]">
-                  {formatDateTime(existingSubmission.submittedAt)}
-                </strong>
-                {" • "}
-                <strong className="font-medium text-[var(--color-ink)]">
-                  {existingSubmission.statusLabel}
-                </strong>
-              </p>
-              {existingSubmission.feedback ? (
-                <p className="mt-1.5 text-[var(--color-ink)]">
-                  {existingSubmission.feedback}
-                </p>
+            <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-[var(--color-ink-soft)]">
+              {dueAt ? (
+                <span className="inline-flex items-center gap-1.5">
+                  <Calendar className="h-4 w-4" />
+                  Vencimiento: {formatDateTime(dueAt)}
+                </span>
               ) : null}
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-[rgba(22,60,88,0.22)] px-3 py-0.5 text-[0.78rem] font-semibold text-[var(--color-primary)]">
+                <FileCheck2 className="h-3.5 w-3.5" />
+                {formatTaskPointsLabel()}
+              </span>
             </div>
-          ) : null}
 
-          {isSubmissionClosed ? (
-            <div className="rounded-xl border border-[rgba(159,69,46,0.16)] bg-[rgba(252,238,233,0.78)] px-5 py-4 text-sm leading-7 text-[var(--color-danger)]">
-              El plazo de entrega ya ha finalizado. Si necesitas una nueva ventana, el equipo docente debe reabrir la tarea.
-            </div>
-          ) : null}
-
-          <form action={formAction} className="space-y-8">
-            <input name="courseSlug" type="hidden" value={courseSlug} />
-            <input name="resourceId" type="hidden" value={resourceId} />
-            <input name="body" type="hidden" value={existingSubmission?.body ?? ""} />
-
-            <section className="space-y-4">
-              <input
-                accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.jpg,.jpeg,.png,.webp,.csv,.txt"
-                className="sr-only"
-                disabled={isSubmissionClosed}
-                id={inputId}
-                name="file"
-                onChange={(event) => handleFileSelection(event.target.files)}
-                ref={fileInputRef}
-                type="file"
-              />
-
-              <button
-                className={cn(
-                  "group flex min-h-[15rem] w-full flex-col items-center justify-center rounded-xl border border-dashed px-6 py-8 text-center transition-colors duration-[var(--motion-duration-base)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2",
-                  isSubmissionClosed
-                    ? "cursor-not-allowed border-[rgba(22,60,88,0.08)] bg-[rgba(248,246,241,0.52)] text-[var(--color-muted)]"
-                    : isDragging
-                      ? "border-[rgba(22,60,88,0.26)] bg-[rgba(251,248,244,0.94)]"
-                      : "border-[rgba(22,60,88,0.12)] bg-[rgba(255,255,255,0.34)] hover:bg-[rgba(251,248,244,0.74)]",
-                )}
-                disabled={isSubmissionClosed}
-                onClick={() => fileInputRef.current?.click()}
-                onDragEnter={(event) => {
-                  if (isSubmissionClosed) {
-                    return;
-                  }
-
-                  event.preventDefault();
-                  setIsDragging(true);
-                }}
-                onDragLeave={(event) => {
-                  if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
-                    setIsDragging(false);
-                  }
-                }}
-                onDragOver={(event) => {
-                  if (isSubmissionClosed) {
-                    return;
-                  }
-
-                  event.preventDefault();
-                  event.dataTransfer.dropEffect = "copy";
-                  setIsDragging(true);
-                }}
-                onDrop={(event) => {
-                  if (isSubmissionClosed) {
-                    return;
-                  }
-
-                  event.preventDefault();
-                  setIsDragging(false);
-
-                  if (!fileInputRef.current) {
-                    return;
-                  }
-
-                  fileInputRef.current.files = event.dataTransfer.files;
-                  handleFileSelection(event.dataTransfer.files);
-                }}
-                type="button"
-              >
-                <div className="grid h-12 w-12 place-items-center rounded-lg bg-[rgba(241,238,248,0.92)] text-[var(--color-ink-soft)] transition-transform duration-[var(--motion-duration-base)] group-hover:scale-[1.02]">
-                  <Plus className="h-5 w-5" />
-                </div>
-                <p className="mt-5 text-[1.08rem] font-medium tracking-[-0.02em] text-[var(--color-ink)]">
-                  Haz clic para buscar o arrastra y suelta un archivo
-                </p>
-                <p className="mt-2 text-sm text-[var(--color-muted)]">
-                  {ALLOWED_FORMATS_LABEL}
-                </p>
-                {selectedFileName ? (
-                  <p className="mt-4 text-sm font-medium text-[var(--color-ink)]">
-                    Archivo seleccionado: {selectedFileName}
-                  </p>
-                ) : existingAttachmentLabel ? (
-                  <p className="mt-4 text-sm text-[var(--color-ink-soft)]">
-                    Archivo actual: {existingAttachmentLabel}
-                  </p>
+            {(taskCopy.introParagraphs.length || resourceDescription) ? (
+              <div className="max-w-[44rem] space-y-4 text-[1.05rem] leading-[1.78] text-[var(--color-ink-soft)]">
+                {taskCopy.introParagraphs.length
+                  ? taskCopy.introParagraphs.map((p, i) => <p key={`intro-${i}`}>{p}</p>)
+                  : <p>{resourceDescription}</p>}
+                {taskCopy.instructionItems.length ? (
+                  <ul className="space-y-3 pl-5 text-[var(--color-ink-soft)]">
+                    {taskCopy.instructionItems.map((item, i) => (
+                      <li className="pl-1 marker:text-[rgba(34,34,33,0.28)]" key={`instruction-${i}`}>{item}</li>
+                    ))}
+                  </ul>
                 ) : null}
-              </button>
-            </section>
-
-            <section className="space-y-3">
-              <label
-                className="inline-flex items-center gap-2 text-[1rem] font-medium tracking-[-0.02em] text-[var(--color-ink)]"
-                htmlFor={`${inputId}-link`}
-              >
-                <Link2 className="h-4 w-4 text-[var(--color-ink-soft)]" />
-                Enlace alternativo (opcional)
-              </label>
-              <Input
-                className="h-[3.5rem] rounded-xl border-[rgba(22,60,88,0.12)] bg-white/88 px-5 text-[1rem] shadow-none"
-                controlSize="lg"
-                disabled={isSubmissionClosed}
-                id={`${inputId}-link`}
-                name="linkUrl"
-                onChange={(event) => setLinkValue(event.target.value)}
-                placeholder="Ej. enlace a Google Docs o Figma"
-                type="url"
-                value={linkValue}
-              />
-            </section>
-
-            {(state.error || state.success || draftNotice) ? (
-              <div className="space-y-3">
-                {state.error ? (
-                  <p className="rounded-xl border border-[rgba(159,69,46,0.18)] bg-[rgba(252,238,233,0.82)] px-4 py-3 text-sm text-[var(--color-danger)]">
-                    {state.error}
-                  </p>
-                ) : null}
-
-                {state.success ? (
-                  <p className="rounded-xl border border-[rgba(23,98,79,0.16)] bg-[rgba(228,241,235,0.82)] px-4 py-3 text-sm text-[var(--color-success)]">
-                    {state.success}
-                  </p>
-                ) : null}
-
-                {draftNotice ? (
-                  <p className="inline-flex items-center gap-2 text-sm text-[var(--color-muted)]">
-                    <CircleAlert className="h-4 w-4" />
-                    {draftNotice}
-                  </p>
-                ) : null}
+                {taskCopy.closingParagraphs.map((p, i) => <p key={`closing-${i}`}>{p}</p>)}
               </div>
             ) : null}
+          </section>
 
-            <div className="border-t border-[rgba(22,60,88,0.08)] pt-6">
-              <SubmissionActionRow
-                disabled={isSubmissionClosed}
-                onSaveDraft={handleDraftSave}
-              />
+          {/* Materials */}
+          {supportMaterials.length ? (
+            <section className="overflow-hidden rounded-2xl border border-[rgba(22,60,88,0.09)] bg-white shadow-[var(--shadow-xs)]">
+              <div className="flex items-center gap-2 border-b border-[rgba(22,60,88,0.07)] px-6 py-4">
+                <Paperclip className="h-4 w-4 text-[var(--color-muted)]" />
+                <span className="text-[0.72rem] font-bold uppercase tracking-[0.14em] text-[var(--color-muted)]">
+                  Materiales de apoyo
+                </span>
+              </div>
+              <div className="divide-y divide-[rgba(22,60,88,0.06)]">
+                {supportMaterials.map((resource) => (
+                  <a
+                    className="group flex items-center gap-4 px-6 py-4 transition-colors hover:bg-[rgba(248,246,241,0.6)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-inset"
+                    href={resource.href ?? "#"}
+                    key={resource.id}
+                    rel={resource.isExternal ? "noreferrer" : undefined}
+                    target={resource.isExternal ? "_blank" : undefined}
+                  >
+                    <div className="grid h-10 w-10 shrink-0 place-items-center rounded-lg border border-[rgba(22,60,88,0.08)] bg-[rgba(248,246,241,0.8)] text-[var(--color-ink-soft)]">
+                      <SupportMaterialIcon resource={resource} />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-[0.98rem] font-medium tracking-[-0.02em] text-[var(--color-ink)]">
+                        {resource.title}
+                      </p>
+                      <p className="mt-0.5 text-xs text-[var(--color-muted)]">
+                        {getSupportMaterialMeta(resource)}
+                      </p>
+                    </div>
+                    {resource.isExternal ? (
+                      <ArrowUpRight className="h-4 w-4 shrink-0 text-[var(--color-muted)] transition-transform group-hover:translate-x-[1px] group-hover:-translate-y-[1px]" />
+                    ) : (
+                      <ArrowUpRight className="h-4 w-4 shrink-0 rotate-90 text-[var(--color-muted)] opacity-0 transition-opacity group-hover:opacity-100" />
+                    )}
+                  </a>
+                ))}
+              </div>
+            </section>
+          ) : null}
+        </div>
+
+        {/* ── RIGHT: sticky submission card ── */}
+        <div className="lg:sticky lg:top-6">
+          <div className="overflow-hidden rounded-2xl border border-[rgba(22,60,88,0.09)] bg-white shadow-[var(--shadow-medium)]">
+            {/* Card header */}
+            <div className="border-b border-[rgba(22,60,88,0.07)] px-6 py-5">
+              <h2 className="text-[1.25rem] font-bold tracking-[-0.03em] text-[var(--color-ink)]">
+                Tu entrega
+              </h2>
+              <p className="mt-1 text-sm text-[var(--color-muted)]">
+                Sube tu documento final o comparte un enlace alternativo.
+              </p>
             </div>
-          </form>
-        </section>
+
+            <div className="space-y-5 px-6 py-6">
+              {/* Existing submission banner */}
+              {existingSubmission ? (
+                <div className="rounded-xl border border-[rgba(22,60,88,0.08)] bg-[rgba(251,248,244,0.92)] px-4 py-3 text-sm leading-6 text-[var(--color-ink-soft)]">
+                  <p>
+                    Última entrega:{" "}
+                    <strong className="font-medium text-[var(--color-ink)]">
+                      {formatDateTime(existingSubmission.submittedAt)}
+                    </strong>
+                    {" · "}
+                    <strong className="font-medium text-[var(--color-ink)]">
+                      {existingSubmission.statusLabel}
+                    </strong>
+                  </p>
+                  {existingSubmission.feedback ? (
+                    <p className="mt-1.5 text-[var(--color-ink)]">{existingSubmission.feedback}</p>
+                  ) : null}
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 rounded-xl border border-[rgba(22,60,88,0.1)] bg-[rgba(223,234,243,0.5)] px-4 py-3 text-sm text-[var(--color-primary)]">
+                  <CircleAlert className="h-4 w-4 shrink-0" />
+                  Aún no has entregado esta tarea.
+                </div>
+              )}
+
+              {/* Closed banner */}
+              {isSubmissionClosed ? (
+                <div className="rounded-xl border border-[rgba(159,69,46,0.16)] bg-[rgba(252,238,233,0.78)] px-4 py-3 text-sm text-[var(--color-danger)]">
+                  El plazo de entrega ya ha finalizado.
+                </div>
+              ) : null}
+
+              {/* Form */}
+              <form action={formAction} className="space-y-4">
+                <input name="courseSlug" type="hidden" value={courseSlug} />
+                <input name="resourceId" type="hidden" value={resourceId} />
+                <input name="body" type="hidden" value={existingSubmission?.body ?? ""} />
+
+                {/* File input */}
+                <input
+                  accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.jpg,.jpeg,.png,.webp,.csv,.txt"
+                  className="sr-only"
+                  disabled={isSubmissionClosed}
+                  id={inputId}
+                  name="file"
+                  onChange={(event) => handleFileSelection(event.target.files)}
+                  ref={fileInputRef}
+                  type="file"
+                />
+
+                {/* Dropzone */}
+                <button
+                  className={cn(
+                    "group flex w-full flex-col items-center justify-center rounded-xl border border-dashed px-4 py-6 text-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2",
+                    isSubmissionClosed
+                      ? "cursor-not-allowed border-[rgba(22,60,88,0.08)] bg-[rgba(248,246,241,0.5)] text-[var(--color-muted)]"
+                      : isDragging
+                        ? "border-[var(--color-primary)] bg-[rgba(223,234,243,0.25)]"
+                        : "border-[rgba(22,60,88,0.14)] bg-[rgba(248,246,241,0.5)] hover:border-[rgba(22,60,88,0.26)] hover:bg-[rgba(248,246,241,0.8)]",
+                  )}
+                  disabled={isSubmissionClosed}
+                  onClick={() => fileInputRef.current?.click()}
+                  onDragEnter={(e) => { if (!isSubmissionClosed) { e.preventDefault(); setIsDragging(true); } }}
+                  onDragLeave={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setIsDragging(false); }}
+                  onDragOver={(e) => { if (!isSubmissionClosed) { e.preventDefault(); e.dataTransfer.dropEffect = "copy"; setIsDragging(true); } }}
+                  onDrop={(e) => {
+                    if (isSubmissionClosed) return;
+                    e.preventDefault(); setIsDragging(false);
+                    if (fileInputRef.current) { fileInputRef.current.files = e.dataTransfer.files; handleFileSelection(e.dataTransfer.files); }
+                  }}
+                  type="button"
+                >
+                  <Upload className="h-7 w-7 text-[var(--color-muted)]" />
+                  <p className="mt-3 text-[0.92rem] font-semibold text-[var(--color-ink)]">
+                    {selectedFileName ?? (existingAttachmentLabel ? `Actual: ${existingAttachmentLabel}` : "Arrastra tu archivo aquí")}
+                  </p>
+                  <p className="mt-1 text-xs text-[var(--color-muted)]">
+                    PDF, DOCX, imágenes — máx. 10 MB
+                  </p>
+                  {!selectedFileName && !existingAttachmentLabel ? (
+                    <span className="mt-3 rounded-lg border border-[rgba(22,60,88,0.18)] bg-white px-3 py-1.5 text-xs font-medium text-[var(--color-ink)] transition group-hover:border-[rgba(22,60,88,0.34)]">
+                      Explorar archivos
+                    </span>
+                  ) : null}
+                </button>
+
+                {/* OR divider */}
+                <div className="flex items-center gap-3">
+                  <div className="h-px flex-1 bg-[rgba(22,60,88,0.08)]" />
+                  <span className="text-xs text-[var(--color-muted)]">o</span>
+                  <div className="h-px flex-1 bg-[rgba(22,60,88,0.08)]" />
+                </div>
+
+                {/* Link input */}
+                <div className="relative">
+                  <Link2 className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--color-muted)]" />
+                  <Input
+                    className="h-11 rounded-xl border-[rgba(22,60,88,0.12)] bg-white pl-10 text-sm shadow-none"
+                    disabled={isSubmissionClosed}
+                    id={`${inputId}-link`}
+                    name="linkUrl"
+                    onChange={(e) => setLinkValue(e.target.value)}
+                    placeholder="https://enlace-alternativo..."
+                    type="url"
+                    value={linkValue}
+                  />
+                </div>
+
+                {/* Feedback banners */}
+                {(state.error || state.success || draftNotice) ? (
+                  <div className="space-y-2">
+                    {state.error ? (
+                      <p className="rounded-lg border border-[rgba(159,69,46,0.18)] bg-[rgba(252,238,233,0.82)] px-3 py-2.5 text-xs text-[var(--color-danger)]">{state.error}</p>
+                    ) : null}
+                    {state.success ? (
+                      <p className="rounded-lg border border-[rgba(23,98,79,0.16)] bg-[rgba(228,241,235,0.82)] px-3 py-2.5 text-xs text-[var(--color-success)]">{state.success}</p>
+                    ) : null}
+                    {draftNotice ? (
+                      <p className="inline-flex items-center gap-1.5 text-xs text-[var(--color-muted)]">
+                        <CircleAlert className="h-3.5 w-3.5" />{draftNotice}
+                      </p>
+                    ) : null}
+                  </div>
+                ) : null}
+
+                {/* Action buttons */}
+                <SubmissionActionRow disabled={isSubmissionClosed} onSaveDraft={handleDraftSave} />
+              </form>
+            </div>
+          </div>
+        </div>
+
       </div>
     </main>
   );
