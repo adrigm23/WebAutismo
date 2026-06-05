@@ -4,7 +4,6 @@ import { useState, useMemo } from "react";
 import Link from "next/link";
 import {
   BookOpen,
-  ChevronRight,
   Info,
   Plus,
   Undo2,
@@ -61,30 +60,19 @@ export function CreateCoursePage({ teachers }: Props) {
 
   return (
     <div className="min-h-screen bg-[#f7f4ef]">
-      {/* Subheader — breadcrumb + acciones */}
+      {/* Sticky action bar */}
       <div className="sticky top-[var(--topbar-height,3.5rem)] z-10 border-b border-[var(--color-border-subtle)] bg-white/95 backdrop-blur-sm">
         <div className="flex items-center justify-between gap-4 px-6 py-3 xl:px-10">
-          {/* Breadcrumb */}
-          <nav className="flex items-center gap-2 text-sm">
-            <Link
-              href="/admin/courses"
-              className="text-[var(--color-muted)] hover:text-[var(--color-primary)] transition"
-            >
-              Cursos
-            </Link>
-            <ChevronRight className="h-3.5 w-3.5 text-[var(--color-muted)]" />
-            <span className="font-medium text-[var(--color-ink)]">
-              Crear curso
-            </span>
-          </nav>
-          {/* Actions */}
+          <span className="text-sm font-semibold text-[var(--color-ink)]">
+            Nuevo curso
+          </span>
           <div className="flex items-center gap-2">
             <Link
               href="/admin/courses"
               className="inline-flex items-center gap-1.5 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-white px-4 py-2 text-sm font-medium text-[var(--color-ink-soft)] transition hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]"
             >
               <Undo2 className="h-3.5 w-3.5" />
-              Deshacer
+              Cancelar
             </Link>
             <button
               form="create-course-form"
