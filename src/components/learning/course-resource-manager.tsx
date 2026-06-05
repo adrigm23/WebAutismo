@@ -1190,40 +1190,18 @@ export function CourseResourceManager({
         renderResourceCard(focusedResource)
       ) : filteredExerciseResources.length ? (
         <section className="space-y-4">
-          <SectionHeader
-            description={
-              canModerate
-                ? "Las actividades del alumnado se gestionan aqui, con revision y feedback dentro del propio campus."
-                : "Aqui veras primero las tareas del curso y podras entregar, actualizar o revisar tu estado desde cada tarjeta."
-            }
-            eyebrow="Recorrido"
-            size="md"
-            title="Ejercicios y entregas"
-          />
           {filteredExerciseResources.map(renderResourceCard)}
         </section>
       ) : null}
 
       {!isFocusedTaskView && filteredMaterialResources.length ? (
         <section className="space-y-4">
-          <SectionHeader
-            description="Guias, documentos y referencias de apoyo para seguir el curso con contexto."
-            eyebrow="Recorrido"
-            size="md"
-            title="Materiales del curso"
-          />
           {filteredMaterialResources.map(renderResourceCard)}
         </section>
       ) : null}
 
       {!isFocusedTaskView && filteredReferenceResources.length ? (
         <section className="space-y-4">
-          <SectionHeader
-            description="Informacion general del curso y del equipo docente."
-            eyebrow="Contexto"
-            size="md"
-            title="Referencias del campus"
-          />
           {filteredReferenceResources.map(renderResourceCard)}
         </section>
       ) : null}
