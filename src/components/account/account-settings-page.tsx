@@ -333,12 +333,20 @@ function PersonalInfoCard({
 
 // ─── security card ────────────────────────────────────────────────────────────
 
+function getProfileVisibilityLabel(role: UserGlobalRole): string {
+  if (role === "ADMIN") return "Toda la plataforma";
+  if (role === "TEACHER") return "Alumnos y docentes";
+  return "Solo alumnos";
+}
+
 function SecurityCard({
   sessions,
   isDemoUser,
+  globalRole,
 }: {
   sessions: ActiveSessionItem[];
   isDemoUser: boolean;
+  globalRole: UserGlobalRole;
 }) {
   const hasOtherSessions = sessions.some((s) => !s.isCurrent);
 
@@ -369,7 +377,7 @@ function SecurityCard({
               <p className="mt-0.5 text-xs text-[var(--color-muted)]">Quién puede ver tus datos de contacto</p>
             </div>
             <span className="rounded-xl border border-[rgba(22,60,88,0.15)] px-4 py-2 text-sm font-medium text-[var(--color-ink)]">
-              Solo Alumnos
+              {getProfileVisibilityLabel(globalRole)}
             </span>
           </div>
 
@@ -547,6 +555,7 @@ function AcademicActivityCard({ overviewPanel }: { overviewPanel: AccountOvervie
 export function AccountSettingsPage({
   email,
   fullName,
+  globalRole,
   isDemoUser,
   notificationSnapshot,
   overviewPanel,
@@ -587,6 +596,7 @@ export function AccountSettingsPage({
               <SecurityCard
                 sessions={sessions}
                 isDemoUser={isDemoUser}
+                globalRole={globalRole}
               />
             </div>
 

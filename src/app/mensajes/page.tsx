@@ -36,17 +36,20 @@ export default async function MensajesPage() {
           enrollments: { some: { userId: user.id, status: "ACTIVE" } },
         },
       },
-      include: { user: { select: { id: true, name: true } } },
+      include: { user: { select: { id: true, name: true, email: true } } },
       distinct: ["userId"],
     });
     contacts = assignments
       .filter((a) => a.user.id !== user.id)
-      .map((a) => ({
-        id: a.user.id,
-        name: a.user.name,
-        initials: getInitials(a.user.name),
-        role: "Docente",
-      }));
+      .map((a) => {
+        const displayName = a.user.name ?? a.user.email;
+        return {
+          id: a.user.id,
+          name: displayName,
+          initials: getInitials(displayName),
+          role: "Docente",
+        };
+      });
   } else {
     // Teacher/admin: get enrolled students
     const studentEnrollments = await getDb().courseEnrollment.findMany({
@@ -56,18 +59,21 @@ export default async function MensajesPage() {
         },
         status: "ACTIVE",
       },
-      include: { user: { select: { id: true, name: true } } },
+      include: { user: { select: { id: true, name: true, email: true } } },
       distinct: ["userId"],
       take: 20,
     });
     contacts = studentEnrollments
       .filter((e) => e.user.id !== user.id)
-      .map((e) => ({
-        id: e.user.id,
-        name: e.user.name,
-        initials: getInitials(e.user.name),
-        role: "Alumno",
-      }));
+      .map((e) => {
+        const displayName = e.user.name ?? e.user.email;
+        return {
+          id: e.user.id,
+          name: displayName,
+          initials: getInitials(displayName),
+          role: "Alumno",
+        };
+      });
   }
 
   const viewerName = user.name ?? user.email;

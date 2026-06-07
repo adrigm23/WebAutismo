@@ -548,8 +548,8 @@ export function CourseResourceManager({
         id={`resource-${resource.id}`}
         key={resource.id}
       >
-        <div className="flex items-start justify-between gap-4">
-          <div className="space-y-3">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div className="min-w-0 flex-1 space-y-3">
             <div className="flex flex-wrap items-center gap-2">
               <Badge tone={resource.isManaged ? "teacher" : "muted"}>
                 {resource.resourceTypeLabel}
@@ -626,7 +626,7 @@ export function CourseResourceManager({
             ) : null}
           </div>
 
-          <div className="flex shrink-0 flex-col items-end gap-3">
+          <div className="flex shrink-0 flex-row flex-wrap items-center gap-2 sm:flex-col sm:items-end sm:gap-3">
             {resource.href ? (
               <ButtonLink
                 className="min-h-9 rounded-[var(--radius-sm)] border-[rgba(22,60,88,0.12)] bg-white/84 px-3.5 shadow-none hover:bg-white"

@@ -441,6 +441,14 @@ export function MessagingPage({
     ? dmList.filter((d) => d.name.toLowerCase().includes(search.toLowerCase()))
     : dmList;
 
+  // Mobile: 'list' shows conversations, 'chat' shows active conversation
+  const [mobileView, setMobileView] = useState<"list" | "chat">("list");
+
+  function selectConversationMobile(conv: Conversation) {
+    selectConversation(conv);
+    setMobileView("chat");
+  }
+
   const currentMessages = active ? (messages[active.id] ?? []) : [];
 
   // Group messages by dateGroup
@@ -460,9 +468,16 @@ export function MessagingPage({
     .map((m) => ({ ...m.attachment!, time: m.time }));
 
   return (
-    <div className="flex h-screen overflow-hidden bg-white">
+    <div className="flex h-[100dvh] overflow-hidden bg-white">
       {/* ── LEFT: Conversations sidebar ─────────────────────────────── */}
-      <aside className="flex w-72 shrink-0 flex-col border-r border-[#e5e7eb]">
+      {/* Mobile: full screen when mobileView==='list', hidden when 'chat' */}
+      <aside className={[
+        "flex shrink-0 flex-col border-r border-[#e5e7eb]",
+        // Desktop: fixed width sidebar always visible
+        "md:flex md:w-72",
+        // Mobile: full width, hidden when chat is active
+        mobileView === "list" ? "flex w-full" : "hidden",
+      ].join(" ")}>
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4">
           <h1 className="text-lg font-bold text-[var(--color-primary)]">Mensajes</h1>
@@ -532,7 +547,7 @@ export function MessagingPage({
                           : "text-[#4b5563] hover:bg-[#f3f4f6]",
                       )}
                       key={ch.id}
-                      onClick={() => selectConversation(ch)}
+                      onClick={() => selectConversationMobile(ch)}
                       type="button"
                     >
                       {ch.name.startsWith("Curso") ? (
@@ -583,7 +598,7 @@ export function MessagingPage({
                           : "hover:bg-[#f3f4f6]",
                       )}
                       key={dm.id}
-                      onClick={() => selectConversation(dm)}
+                      onClick={() => selectConversationMobile(dm)}
                       type="button"
                     >
                       <Avatar initials={dm.initials} online={dm.isOnline} size="md" />
@@ -634,24 +649,37 @@ export function MessagingPage({
       </aside>
 
       {/* ── CENTER: Chat area ────────────────────────────────────────── */}
-      <div className="flex min-w-0 flex-1 flex-col bg-[#f7f4ef]">
+      {/* Mobile: full screen when mobileView==='chat', hidden when 'list' */}
+      <div className={[
+        "flex min-w-0 flex-col bg-[#f7f4ef]",
+        "md:flex md:flex-1",
+        mobileView === "chat" ? "flex flex-1" : "hidden",
+      ].join(" ")}>
         {/* Chat header */}
         {active ? (
-          <header className="flex h-[3.75rem] shrink-0 items-center justify-between border-b border-[#e5e7eb] bg-white px-5">
-            <div className="flex items-center gap-3">
+          <header className="flex h-[3.75rem] shrink-0 items-center justify-between border-b border-[#e5e7eb] bg-white px-3 sm:px-5">
+            <div className="flex items-center gap-2 sm:gap-3">
+              {/* Back button — mobile only */}
+              <button
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-[#9ba3af] transition hover:bg-[#f3f4f6] hover:text-[var(--color-primary)] md:hidden"
+                onClick={() => setMobileView("list")}
+                type="button"
+                aria-label="Volver a conversaciones"
+              >
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+
               {active.kind === "dm" ? (
-                <Avatar
-                  initials={active.initials}
-                  online={active.isOnline}
-                  size="lg"
-                />
+                <Avatar initials={active.initials} online={active.isOnline} size="lg" />
               ) : (
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--color-surface)]">
                   <Hash className="h-5 w-5 text-[var(--color-primary)]" />
                 </div>
               )}
-              <div>
-                <p className="text-sm font-bold text-[var(--color-primary)]">{active.name}</p>
+              <div className="min-w-0">
+                <p className="truncate text-sm font-bold text-[var(--color-primary)]">{active.name}</p>
                 {active.kind === "dm" && (
                   <p className="flex items-center gap-1.5 text-xs text-emerald-600">
                     <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
@@ -664,7 +692,7 @@ export function MessagingPage({
               </div>
             </div>
 
-            <div className="flex items-center gap-1">
+            <div className="flex shrink-0 items-center gap-1">
               {[Phone, Video, MoreVertical].map((Icon, i) => (
                 <button
                   className="flex h-8 w-8 items-center justify-center rounded-lg text-[#9ba3af] transition hover:bg-[#f3f4f6] hover:text-[var(--color-primary)]"

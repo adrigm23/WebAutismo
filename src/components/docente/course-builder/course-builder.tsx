@@ -488,22 +488,27 @@ function ModuleCard({ module: mod, courseId, isFirst, isLast, onDelete, onEdit, 
   return (
     <>
       <div className="overflow-hidden rounded-xl border border-[rgba(22,60,88,0.1)] bg-white shadow-[0_1px_4px_rgba(22,60,88,0.06)]">
-        <div className="flex items-center gap-3 px-5 py-4">
+        <div className="flex items-center gap-2 px-3 py-3 sm:gap-3 sm:px-5 sm:py-4">
           <GripVertical className="h-5 w-5 shrink-0 text-[var(--color-border)]" strokeWidth={2} />
-          <button className="flex-1 text-left text-[0.95rem] font-bold text-[var(--color-ink)] hover:text-[var(--color-primary)] transition" onClick={() => setOpen(v => !v)} type="button">
+          <button
+            className="min-w-0 flex-1 truncate text-left text-[0.95rem] font-bold text-[var(--color-ink)] transition hover:text-[var(--color-primary)]"
+            onClick={() => setOpen(v => !v)}
+            type="button"
+          >
             {mod.title}
           </button>
-          <span className="rounded-full bg-[rgba(22,60,88,0.07)] px-2.5 py-0.5 text-[0.7rem] font-semibold text-[var(--color-ink-soft)]">
-            {mod.resources.length} Lecciones
+          <span className="shrink-0 rounded-full bg-[rgba(22,60,88,0.07)] px-2 py-0.5 text-[0.7rem] font-semibold text-[var(--color-ink-soft)] sm:px-2.5">
+            {mod.resources.length}
+            <span className="hidden sm:inline"> Lecciones</span>
           </span>
 
-          {/* Move up/down */}
+          {/* Move up/down — hidden on mobile to avoid crowding */}
           <button type="button" disabled={isFirst || isPending} onClick={() => onMove(mod.id, "up")}
-            className="grid h-7 w-7 place-items-center rounded-lg text-[var(--color-muted)] transition hover:bg-[rgba(22,60,88,0.06)] disabled:opacity-30">
+            className="hidden h-7 w-7 place-items-center rounded-lg text-[var(--color-muted)] transition hover:bg-[rgba(22,60,88,0.06)] disabled:opacity-30 sm:grid">
             <ChevronUp className="h-4 w-4" strokeWidth={2} />
           </button>
           <button type="button" disabled={isLast || isPending} onClick={() => onMove(mod.id, "down")}
-            className="grid h-7 w-7 place-items-center rounded-lg text-[var(--color-muted)] transition hover:bg-[rgba(22,60,88,0.06)] disabled:opacity-30">
+            className="hidden h-7 w-7 place-items-center rounded-lg text-[var(--color-muted)] transition hover:bg-[rgba(22,60,88,0.06)] disabled:opacity-30 sm:grid">
             <ChevronDown className="h-4 w-4" strokeWidth={2} />
           </button>
 
