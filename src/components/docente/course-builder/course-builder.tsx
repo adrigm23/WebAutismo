@@ -151,8 +151,8 @@ function ModuleDialog({ courseId, editModule, onClose }: {
   }, [addState.module, onClose]);
 
   useEffect(() => {
-    if (editState.success) onClose(editModule ? { ...editModule } : undefined);
-  }, [editState.success, editModule, onClose]);
+    if (editState.module) onClose({ ...editModule!, title: editState.module.title });
+  }, [editState.module, editModule, onClose]);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
@@ -378,7 +378,7 @@ function BuilderTopbar({ course, status, onMobileMenuOpen, embedded }: {
 
 // ─── Lesson row ───────────────────────────────────────────────────────────────
 
-function LessonRow({ resource, onDelete }: { resource: BuilderResource; onDelete: (id: string) => void }) {
+function LessonRow({ resource, onRequestDelete }: { resource: BuilderResource; onRequestDelete: (id: string) => void }) {
   const { Icon, bg, text } = getResourceIcon(resource);
   const subtitle = getResourceSubtitle(resource);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -408,7 +408,7 @@ function LessonRow({ resource, onDelete }: { resource: BuilderResource; onDelete
         </button>
         {menuOpen && (
           <div className="absolute right-0 top-8 z-40 min-w-[130px] overflow-hidden rounded-xl border border-[rgba(22,60,88,0.1)] bg-white shadow-lg">
-            <button type="button" onClick={() => { onDelete(resource.id); setMenuOpen(false); }}
+            <button type="button" onClick={() => { onRequestDelete(resource.id); setMenuOpen(false); }}
               className="flex w-full items-center gap-2 px-3 py-2 text-sm text-[var(--color-danger)] hover:bg-[var(--color-danger-soft)]">
               <Trash2 className="h-3.5 w-3.5" /> Eliminar
             </button>
@@ -431,6 +431,7 @@ function ModuleCard({ module: mod, courseId, isFirst, isLast, onDelete, onEdit, 
   const [open, setOpen] = useState(mod.position === 1);
   const [showAddLesson, setShowAddLesson] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [deleteResourceId, setDeleteResourceId] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -503,7 +504,7 @@ function ModuleCard({ module: mod, courseId, isFirst, isLast, onDelete, onEdit, 
           <div className="space-y-2 border-t border-[rgba(22,60,88,0.07)] px-5 pb-4 pt-3">
             {mod.resources.length > 0
               ? mod.resources.map(res => (
-                <LessonRow key={res.id} resource={res} onDelete={handleDeleteResource} />
+                <LessonRow key={res.id} resource={res} onRequestDelete={setDeleteResourceId} />
               ))
               : <p className="py-2 text-sm text-[var(--color-muted)]">Sin lecciones todavía.</p>
             }
@@ -522,6 +523,16 @@ function ModuleCard({ module: mod, courseId, isFirst, isLast, onDelete, onEdit, 
             if (res) onResourceAdded(mod.id, res);
           }} />
       )}
+
+      {deleteResourceId && (
+        <ConfirmDialog
+          title="Eliminar lección"
+          desc="Se eliminará esta lección. Esta acción no se puede deshacer."
+          onConfirm={() => { handleDeleteResource(deleteResourceId); setDeleteResourceId(null); }}
+          onCancel={() => setDeleteResourceId(null)}
+          loading={isPending}
+        />
+      )}
     </>
   );
 }
@@ -530,10 +541,11 @@ function ModuleCard({ module: mod, courseId, isFirst, isLast, onDelete, onEdit, 
 
 const CATEGORIES = ["Intervención Clínica", "Educativo", "Herramientas", "Familia", "Terapia", "Diagnóstico", "Otro"];
 
-function ConfigPanel({ course, status, onStatusChange, onCategoryChange }: {
+function ConfigPanel({ course, status, onStatusChange, onCategoryChange, disabled }: {
   course: BuilderCourse; status: "ACTIVE" | "INACTIVE";
   onStatusChange: (s: "ACTIVE" | "INACTIVE") => void;
   onCategoryChange: (c: string) => void;
+  disabled?: boolean;
 }) {
   const visibilityMap = { INACTIVE: "draft", ACTIVE: "public" } as const;
   const visibility = visibilityMap[status] ?? "draft";
@@ -546,7 +558,10 @@ function ConfigPanel({ course, status, onStatusChange, onCategoryChange }: {
   return (
     <aside className="flex h-full flex-col overflow-y-auto border-l border-[rgba(22,60,88,0.1)] bg-white">
       <div className="border-b border-[rgba(22,60,88,0.08)] px-6 py-5">
-        <h2 className="text-[1rem] font-bold text-[var(--color-ink)]">Configuración del Curso</h2>
+        <div className="flex items-center justify-between gap-2">
+          <h2 className="text-[1rem] font-bold text-[var(--color-ink)]">Configuración del Curso</h2>
+          {disabled && <span className="text-xs text-[var(--color-ink-muted)]">Guardando…</span>}
+        </div>
         <p className="mt-0.5 text-[0.8rem] text-[var(--color-muted)]">Ajustes generales y metadatos.</p>
       </div>
 
@@ -567,10 +582,11 @@ function ConfigPanel({ course, status, onStatusChange, onCategoryChange }: {
             <Tag className="h-4 w-4 text-[var(--color-muted)]" strokeWidth={2} />
             <h3 className="text-sm font-semibold text-[var(--color-ink)]">Categoría</h3>
           </div>
-          <div className="relative">
+          <div className={cn("relative", disabled && "opacity-50 pointer-events-none")}>
             <select className="h-10 w-full cursor-pointer appearance-none rounded-xl border border-[rgba(22,60,88,0.15)] bg-white pl-3 pr-8 text-sm font-medium text-[var(--color-ink)] focus-visible:border-[var(--color-primary)] focus-visible:outline-none"
               value={course.category}
-              onChange={(e) => onCategoryChange(e.target.value)}>
+              onChange={(e) => onCategoryChange(e.target.value)}
+              disabled={disabled}>
               {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
             </select>
             <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-muted)]">
@@ -585,9 +601,9 @@ function ConfigPanel({ course, status, onStatusChange, onCategoryChange }: {
             <Eye className="h-4 w-4 text-[var(--color-muted)]" strokeWidth={2} />
             <h3 className="text-sm font-semibold text-[var(--color-ink)]">Estado de Visibilidad</h3>
           </div>
-          <div className="space-y-2">
+          <div className={cn("space-y-2", disabled && "opacity-50 pointer-events-none")}>
             {VISIBILITY_OPTIONS.map((opt) => (
-              <button key={opt.id} type="button" onClick={() => onStatusChange(opt.dbStatus)}
+              <button key={opt.id} type="button" onClick={() => onStatusChange(opt.dbStatus)} disabled={disabled}
                 className={cn("flex w-full items-center gap-3 rounded-xl border p-3.5 text-left transition",
                   visibility === opt.id ? "border-[var(--color-primary)] bg-[rgba(22,60,88,0.04)]" : "border-[rgba(22,60,88,0.12)] hover:border-[rgba(22,60,88,0.25)]")}>
                 <div className={cn("grid h-4 w-4 shrink-0 place-items-center rounded-full border-2", visibility === opt.id ? "border-[var(--color-primary)]" : "border-[rgba(22,60,88,0.2)]")}>
@@ -613,6 +629,7 @@ export function CourseBuilder({ course, embedded = false }: { course: BuilderCou
   const [modules, setModules] = useState<BuilderModule[]>(course.modules);
   const [status, setStatus] = useState<"ACTIVE" | "INACTIVE">(course.status);
   const [category, setCategory] = useState(course.category);
+  const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState<{ msg: string; kind: "success" | "error" } | null>(null);
 
   // Dialogs
@@ -630,10 +647,12 @@ export function CourseBuilder({ course, embedded = false }: { course: BuilderCou
   async function handleStatusChange(newStatus: "ACTIVE" | "INACTIVE") {
     const prev = status;
     setStatus(newStatus);
+    setSaving(true);
     const fd = new FormData();
     fd.set("courseId", course.id);
     fd.set("status", newStatus);
     const res = await updateCourseStatusAction({}, fd);
+    setSaving(false);
     if (res.error) { setStatus(prev); showToast(res.error, "error"); }
     else showToast(newStatus === "ACTIVE" ? "Curso publicado." : "Guardado como borrador.");
   }
@@ -643,10 +662,12 @@ export function CourseBuilder({ course, embedded = false }: { course: BuilderCou
   async function handleCategoryChange(newCategory: string) {
     const prev = category;
     setCategory(newCategory);
+    setSaving(true);
     const fd = new FormData();
     fd.set("courseId", course.id);
     fd.set("category", newCategory);
     const res = await updateCourseCategoryAction({}, fd);
+    setSaving(false);
     if (res.error) { setCategory(prev); showToast(res.error, "error"); }
   }
 
@@ -761,7 +782,7 @@ export function CourseBuilder({ course, embedded = false }: { course: BuilderCou
 
           {showConfig && (
             <div className="hidden w-[22rem] shrink-0 xl:flex xl:flex-col">
-              <ConfigPanel course={{ ...course, category }} status={status} onStatusChange={handleStatusChange} onCategoryChange={handleCategoryChange} />
+              <ConfigPanel course={{ ...course, category }} status={status} onStatusChange={handleStatusChange} onCategoryChange={handleCategoryChange} disabled={saving} />
             </div>
           )}
         </div>
@@ -775,7 +796,7 @@ export function CourseBuilder({ course, embedded = false }: { course: BuilderCou
                 <ChevronDown className="h-4 w-4 text-[var(--color-muted)] transition group-open:rotate-180" />
               </summary>
               <div className="max-h-[60vh] overflow-y-auto">
-                <ConfigPanel course={{ ...course, category }} status={status} onStatusChange={handleStatusChange} onCategoryChange={handleCategoryChange} />
+                <ConfigPanel course={{ ...course, category }} status={status} onStatusChange={handleStatusChange} onCategoryChange={handleCategoryChange} disabled={saving} />
               </div>
             </details>
           </div>

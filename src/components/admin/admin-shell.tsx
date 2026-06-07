@@ -136,11 +136,11 @@ export function AdminShell({ user, children }: AdminShellProps) {
 
   return (
     <div className="min-h-screen bg-[#f3f4f6] text-[var(--color-ink)]">
-      <div className="grid min-h-screen lg:grid-cols-[290px_minmax(0,1fr)]">
-        <aside className="sticky top-0 hidden h-screen overflow-y-auto border-r border-[var(--color-border-subtle)] bg-[linear-gradient(180deg,#f5f1eb_0%,#f4f7fb_100%)] lg:flex lg:flex-col">
+      <div className="grid min-h-screen lg:grid-cols-[260px_minmax(0,1fr)]">
+        <aside className="sticky top-0 hidden h-screen overflow-y-auto border-r border-[var(--color-border-subtle)] bg-white lg:flex lg:flex-col">
           <div className="px-8 pb-7 pt-10">
             <Link className="block" href="/admin">
-              <div className="text-[2.35rem] font-bold tracking-[-0.07em] text-[var(--color-primary)]">
+              <div className="text-[1.85rem] font-bold tracking-[-0.07em] text-[var(--color-primary)]">
                 {siteConfig.shortName}
               </div>
               <p className="mt-3 text-[0.74rem] font-semibold uppercase tracking-[0.28em] text-[var(--color-ink-soft)]">

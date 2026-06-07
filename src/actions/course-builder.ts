@@ -12,7 +12,7 @@ import { writeStoredObject } from "@/lib/object-storage";
 
 // ─── Shared ───────────────────────────────────────────────────────────────────
 
-export type BuilderActionState = { error?: string; success?: boolean };
+export type BuilderActionState = { error?: string; success?: boolean; module?: { id: string; title: string; position: number } };
 
 function slugify(text: string) {
   return text
@@ -173,7 +173,7 @@ export async function updateCourseModuleAction(
 
     const { db } = await requireBuilderAccess(mod.courseId);
 
-    await db.courseModule.update({
+    const updated = await db.courseModule.update({
       where: { id: moduleId },
       data: {
         title: title.trim(),
@@ -182,6 +182,7 @@ export async function updateCourseModuleAction(
           ? estimatedTime.trim()
           : undefined,
       },
+      select: { id: true, title: true, position: true },
     });
 
     const course = await db.course.findUnique({
@@ -190,7 +191,7 @@ export async function updateCourseModuleAction(
     });
     if (course) revalidateCourse(course.slug);
 
-    return { success: true };
+    return { success: true, module: { id: updated.id, title: updated.title, position: updated.position } };
   } catch (e) {
     return { error: e instanceof Error ? e.message : "Error al actualizar el módulo." };
   }

@@ -20,7 +20,7 @@ function buildNavItems(): StudentShellNavItem[] {
     { label: "Mi campus", href: "/mis-cursos", icon: "home" },
     { label: "Mensajes", href: "/mensajes", icon: "messages" },
     { label: "Comunidad", href: "/comunidad", icon: "community" },
-    { label: "Biblioteca", href: "/app/recursos", icon: "library", disabled: true },
+    { label: "Biblioteca", href: "/biblioteca", icon: "library" },
     { label: "Configuración", href: "/mi-cuenta", icon: "settings" },
   ];
 }

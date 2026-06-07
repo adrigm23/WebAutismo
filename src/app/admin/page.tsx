@@ -424,25 +424,6 @@ export default async function AdminDashboardPage() {
               </div>
             )}
 
-            {/* Resolved placeholder */}
-            {openIncidentsCount > 0 && (
-              <div className="flex items-start justify-between gap-3 py-4">
-                <div className="flex items-start gap-3">
-                  <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
-                  <div>
-                    <p className="text-sm font-semibold line-through text-[var(--color-muted)]">
-                      Última incidencia resuelta
-                    </p>
-                    <p className="mt-0.5 text-xs text-[var(--color-muted)]">
-                      Revisada hoy por el sistema
-                    </p>
-                  </div>
-                </div>
-                <span className="shrink-0 rounded-full bg-emerald-100 px-2.5 py-1 text-[0.65rem] font-bold text-emerald-700">
-                  Completado
-                </span>
-              </div>
-            )}
           </div>
 
           <div className="mt-4 border-t border-[var(--color-border-subtle)] pt-4">
@@ -477,7 +458,7 @@ export default async function AdminDashboardPage() {
           <table className="w-full min-w-[600px] text-sm">
             <thead>
               <tr className="border-b border-[var(--color-border-subtle)]">
-                {["Nombre del Curso", "Instructor", "Inscritos Activos", "Matrículas", "Tendencia"].map(
+                {["Nombre del Curso", "Instructor", "Inscritos Activos", "Tendencia"].map(
                   (col) => (
                     <th
                       className="pb-3 text-left text-xs font-semibold uppercase tracking-[0.1em] text-[var(--color-muted)]"
@@ -491,11 +472,10 @@ export default async function AdminDashboardPage() {
             </thead>
             <tbody className="divide-y divide-[var(--color-border-subtle)]">
               {topCourses.length > 0 ? (
-                topCourses.map((course, idx) => {
+                topCourses.map((course) => {
                   const instructor =
                     course.teacherAssignments[0]?.user.name ?? "—";
                   const enrolled = enrollmentMap[course.id] ?? 0;
-                  const approvalRate = enrolled > 0 ? Math.min(99, 70 + ((course.id.charCodeAt(0) % 28))) : 0;
 
                   return (
                     <tr className="group" key={course.id}>
@@ -511,22 +491,6 @@ export default async function AdminDashboardPage() {
                       <td className="py-3.5 pr-4 text-[var(--color-ink)]">
                         {formatCompactNumber(enrolled)}
                       </td>
-                      <td className="py-3.5 pr-4">
-                        {enrolled > 0 ? (
-                          <span
-                            className={cn(
-                              "rounded-full px-2.5 py-1 text-xs font-bold",
-                              approvalRate >= 80
-                                ? "bg-emerald-100 text-emerald-700"
-                                : "bg-amber-100 text-amber-700",
-                            )}
-                          >
-                            {approvalRate}%
-                          </span>
-                        ) : (
-                          <span className="text-[var(--color-muted)]">—</span>
-                        )}
-                      </td>
                       <td className="py-3.5">
                         <TrendingUp
                           className={cn(
@@ -540,7 +504,7 @@ export default async function AdminDashboardPage() {
                 })
               ) : (
                 <tr>
-                  <td className="py-8 text-center text-[var(--color-muted)]" colSpan={5}>
+                  <td className="py-8 text-center text-[var(--color-muted)]" colSpan={4}>
                     No hay cursos activos todavía.
                   </td>
                 </tr>
