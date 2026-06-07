@@ -1,20 +1,20 @@
 "use client";
 
-import { useState } from "react";
+// Placeholder shown until the client uploads /hero-image.jpg to /public
+// To activate the real image: add hero-image.jpg to /public and set SHOW_PLACEHOLDER to false
+const SHOW_PLACEHOLDER = true;
 
 export function HomeHeroImage() {
-  const [error, setError] = useState(false);
-
-  if (error) {
+  if (SHOW_PLACEHOLDER) {
     return (
       <div
         aria-hidden
-        className="flex h-[22rem] w-full items-center justify-center rounded-[var(--radius-xl)] bg-[linear-gradient(135deg,rgba(22,60,88,0.07)_0%,rgba(22,60,88,0.16)_100%)] lg:h-[28rem]"
+        className="flex h-[22rem] w-full items-center justify-center overflow-hidden rounded-[var(--radius-xl)] bg-[linear-gradient(135deg,rgba(22,60,88,0.06)_0%,rgba(22,60,88,0.14)_100%)] shadow-[var(--shadow-strong)] lg:h-[28rem]"
       >
         <div className="text-center">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[var(--color-brand-soft)]">
+          <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-white/60">
             <svg
-              className="h-8 w-8 text-[var(--color-primary)]"
+              className="h-9 w-9 text-[var(--color-primary)] opacity-50"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -27,7 +27,12 @@ export function HomeHeroImage() {
               />
             </svg>
           </div>
-          <p className="mt-3 text-sm text-[var(--color-muted)]">Imagen del hero</p>
+          <p className="mt-3 text-sm font-medium text-[var(--color-primary)] opacity-50">
+            Imagen del hero
+          </p>
+          <p className="mt-1 text-xs text-[var(--color-muted)] opacity-60">
+            Subir a /public/hero-image.jpg
+          </p>
         </div>
       </div>
     );
@@ -39,7 +44,6 @@ export function HomeHeroImage() {
       <img
         alt="Formación especializada en autismo"
         className="h-[22rem] w-full object-cover lg:h-[28rem]"
-        onError={() => setError(true)}
         src="/hero-image.jpg"
       />
     </div>

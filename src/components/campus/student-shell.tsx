@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useScrollLock } from "@/hooks/use-scroll-lock";
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -198,17 +199,8 @@ export function StudentShell({
     setIsMobileNavOpen(false);
   }, [pathname]);
 
-  // Prevent background scroll when drawer is open (important on iOS)
-  useEffect(() => {
-    if (isMobileNavOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [isMobileNavOpen]);
+  // Lock body scroll (iOS-safe)
+  useScrollLock(isMobileNavOpen);
 
   return (
     <div className="min-h-screen lg:grid lg:grid-cols-[260px_minmax(0,1fr)]">

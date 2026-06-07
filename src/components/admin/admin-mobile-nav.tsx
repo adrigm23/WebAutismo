@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LogOut, Menu, X } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useScrollLock } from "@/hooks/use-scroll-lock";
 import { logoutAction } from "@/actions/session";
 import { adminNavigation } from "@/lib/admin-console";
 import { siteConfig } from "@/lib/site";
@@ -18,17 +19,8 @@ export function AdminMobileNav() {
     setOpen(false);
   }, [pathname]);
 
-  // Prevent body scroll when drawer is open
-  useEffect(() => {
-    if (open) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [open]);
+  // Lock body scroll (iOS-safe)
+  useScrollLock(open);
 
   return (
     <div className="lg:hidden">
