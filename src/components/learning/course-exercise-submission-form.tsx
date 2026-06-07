@@ -223,7 +223,7 @@ export function CourseExerciseSubmissionForm({
   resourceDescription,
   resourceId,
   resourceTitle,
-  supportMaterials: _supportMaterials,
+  supportMaterials,
   courseName,
   moduleTitle,
   completionRate,
@@ -297,17 +297,21 @@ export function CourseExerciseSubmissionForm({
         {/* LEFT COLUMN */}
         <div className="space-y-6">
 
-          {/* Breadcrumb */}
+          {/* Breadcrumb — simplificado en móvil para no ocupar espacio */}
           <nav aria-label="Migas de pan" className="flex items-center gap-1.5 text-xs text-[var(--color-muted)]">
-            <span>Mis cursos</span>
-            <ChevronRight className="h-3 w-3" />
+            <a href="/mis-cursos" className="shrink-0 hover:text-[var(--color-primary)] hover:underline">
+              Mis cursos
+            </a>
             {courseName ? (
               <>
-                <span>{courseName}</span>
-                <ChevronRight className="h-3 w-3" />
+                <ChevronRight className="h-3 w-3 shrink-0" />
+                {/* Nombre del curso truncado — en móvil solo muestra puntos suspensivos */}
+                <span className="hidden max-w-[12rem] truncate sm:inline">{courseName}</span>
+                <span className="sm:hidden">…</span>
               </>
             ) : null}
-            <span>Actividad</span>
+            <ChevronRight className="h-3 w-3 shrink-0" />
+            <span className="shrink-0">Actividad</span>
           </nav>
 
           {/* Badges row */}
@@ -379,6 +383,39 @@ export function CourseExerciseSubmissionForm({
                         <CheckCircle2 className="h-4 w-4 shrink-0 text-[var(--color-success)]" />
                         <span>{item}</span>
                       </div>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+
+              {/* Support materials — PDFs, enlaces y archivos adjuntos del enunciado */}
+              {supportMaterials.length > 0 ? (
+                <div className="space-y-2">
+                  <p className="text-[0.68rem] font-bold uppercase tracking-[0.14em] text-[var(--color-muted)]">
+                    Material del enunciado
+                  </p>
+                  <div className="space-y-2">
+                    {supportMaterials.map((material) => (
+                      <a
+                        className="flex items-center gap-3 rounded-xl border border-[rgba(22,60,88,0.1)] bg-[var(--color-bg-subtle)] px-4 py-3 transition hover:border-[var(--color-primary)] hover:bg-white"
+                        href={material.href ?? "#"}
+                        key={material.id}
+                        rel="noopener noreferrer"
+                        target={material.isExternal ? "_blank" : "_self"}
+                      >
+                        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-[var(--color-brand-soft)] text-[var(--color-primary)]">
+                          <SupportMaterialIcon resource={material} />
+                        </span>
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-semibold text-[var(--color-ink)]">
+                            {material.title}
+                          </p>
+                          <p className="mt-0.5 text-xs text-[var(--color-muted)]">
+                            {getSupportMaterialMeta(material)}
+                          </p>
+                        </div>
+                        <ArrowUpRight className="h-4 w-4 shrink-0 text-[var(--color-muted)]" />
+                      </a>
                     ))}
                   </div>
                 </div>
