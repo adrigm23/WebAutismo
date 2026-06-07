@@ -135,7 +135,7 @@ export function AdminShell({ user, children }: AdminShellProps) {
   const navigationItems = adminNavigation;
 
   return (
-    <div className="min-h-screen bg-[linear-gradient(180deg,#f7f4ef_0%,#f3f6fa_52%,#fbfaf8_100%)] text-[var(--color-ink)]">
+    <div className="min-h-screen bg-[#f3f4f6] text-[var(--color-ink)]">
       <div className="grid min-h-screen lg:grid-cols-[290px_minmax(0,1fr)]">
         <aside className="sticky top-0 hidden h-screen overflow-y-auto border-r border-[var(--color-border-subtle)] bg-[linear-gradient(180deg,#f5f1eb_0%,#f4f7fb_100%)] lg:flex lg:flex-col">
           <div className="px-8 pb-7 pt-10">
@@ -216,7 +216,7 @@ export function AdminShell({ user, children }: AdminShellProps) {
         </aside>
 
         <div className="min-w-0">
-          <header className="sticky top-0 z-20 border-b border-[var(--color-border-subtle)] bg-[rgba(247,244,239,0.96)] backdrop-blur-md">
+          <header className="sticky top-0 z-20 border-b border-[var(--color-border-subtle)] bg-[rgba(255,255,255,0.96)] backdrop-blur-md">
             <div className="flex flex-col gap-3 px-4 py-3 sm:px-6 sm:py-4 xl:px-10">
               <div className="flex items-center justify-between gap-3 lg:hidden">
                 <div className="flex min-w-0 items-center gap-2.5">

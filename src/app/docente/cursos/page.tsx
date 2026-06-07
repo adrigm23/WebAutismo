@@ -46,7 +46,7 @@ export default async function DocenteCursosPage() {
       roleLabel="Docente"
       notificationsCount={notificationSnapshot.unreadCount}
     >
-      <div className="site-container py-8 sm:py-10 pb-20">
+      <div className="px-5 sm:px-8 xl:px-10 py-8 sm:py-10 pb-20">
         <div className="flex items-center justify-between gap-4">
           <div>
             <h1 className="font-premium text-display-md font-semibold text-[var(--color-ink)]">

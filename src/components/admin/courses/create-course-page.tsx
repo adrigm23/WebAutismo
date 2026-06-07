@@ -59,7 +59,7 @@ export function CreateCoursePage({ teachers }: Props) {
   const slug = slugOverride !== null ? slugOverride : generatedSlug;
 
   return (
-    <div className="min-h-screen bg-[#f7f4ef]">
+    <div className="min-h-screen bg-[#f3f4f6]">
       {/* Form content */}
       <form id="create-course-form" action={createCourseAction}>
         {/* Hidden fields for state */}

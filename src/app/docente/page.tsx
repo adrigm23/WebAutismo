@@ -51,7 +51,7 @@ export default async function DocenteDashboardPage() {
       roleLabel="Docente"
       notificationsCount={notificationSnapshot.unreadCount}
     >
-      <div className="site-container py-8 sm:py-10 pb-12">
+      <div className="px-5 sm:px-8 xl:px-10 py-8 sm:py-10 pb-12">
 
         {/* Header */}
         <section>

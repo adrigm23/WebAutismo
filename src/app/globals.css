@@ -40,11 +40,11 @@
   --font-mono-data:
     "JetBrains Mono", "SFMono-Regular", Consolas, "Liberation Mono", Menlo,
     monospace;
-  --color-bg-app: #f6f3ee;
-  --color-bg-subtle: #fbf8f4;
-  --color-surface: #f3eee7;
-  --color-surface-elevated: #fffdfa;
-  --color-surface-muted: #ede7df;
+  --color-bg-app: #f3f4f6;
+  --color-bg-subtle: #f9fafb;
+  --color-surface: #f0f2f5;
+  --color-surface-elevated: #ffffff;
+  --color-surface-muted: #e5e7eb;
   --color-ink: #222221;
   --color-ink-soft: #475467;
   --color-ink-muted: #667085;

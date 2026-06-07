@@ -651,7 +651,7 @@ export function MessagingPage({
       {/* ── CENTER: Chat area ────────────────────────────────────────── */}
       {/* Mobile: full screen when mobileView==='chat', hidden when 'list' */}
       <div className={[
-        "flex min-w-0 flex-col bg-[#f7f4ef]",
+        "flex min-w-0 flex-col bg-[#f3f4f6]",
         "md:flex md:flex-1",
         mobileView === "chat" ? "flex flex-1" : "hidden",
       ].join(" ")}>

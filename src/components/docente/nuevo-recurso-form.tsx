@@ -153,7 +153,7 @@ export function NuevoRecursoForm({
   const isSubmitDisabled = pending || (sourceType === "FILE" && !selectedFile);
 
   return (
-    <div className="min-h-screen bg-[#f7f4ef]">
+    <div className="min-h-screen bg-[#f3f4f6]">
       {/* Page header */}
       <div className="border-b border-[var(--color-border)] bg-white px-6 py-4 lg:px-10">
         <div className="flex items-center gap-3">

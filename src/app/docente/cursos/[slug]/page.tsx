@@ -647,7 +647,7 @@ export default async function TeacherCourseWorkspacePage({ params, searchParams 
       roleLabel={roleLabel}
       notificationsCount={notificationSnapshot.unreadCount}
     >
-      <div className="site-container py-6 sm:py-8 pb-12">
+      <div className="px-5 sm:px-8 xl:px-10 py-6 sm:py-8 pb-12">
 
         {/* Breadcrumb */}
         <nav className="flex items-center gap-2 text-sm text-[var(--color-ink-muted)]">
