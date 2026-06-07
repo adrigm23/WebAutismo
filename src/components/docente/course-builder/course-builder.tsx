@@ -4,21 +4,18 @@ import { useActionState, useEffect, useRef, useState, useTransition } from "reac
 import Link from "next/link";
 import { logoutAction } from "@/actions/session";
 import {
-  BarChart2,
-  BookOpen,
   Check,
   ChevronDown,
+  ChevronLeft,
   ChevronUp,
   Edit2,
   Eye,
+  ExternalLink,
   FileText,
-  FolderOpen,
   GripVertical,
-  LayoutDashboard,
   Loader2,
   LogOut,
   Menu,
-  MessageCircle,
   MoreHorizontal,
   Plus,
   Settings,
@@ -70,7 +67,6 @@ export type BuilderCourse = {
   modules: BuilderModule[];
 };
 
-type Tab = "constructor" | "preview" | "config" | "participants";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -294,11 +290,7 @@ function AddLessonDialog({ courseId, moduleId, onClose }: {
 // ─── Sidebar ──────────────────────────────────────────────────────────────────
 
 const SIDEBAR_NAV = [
-  { label: "Panel de Control", href: "/mis-cursos", icon: LayoutDashboard },
-  { label: "Mis Cursos", href: "/mis-cursos", icon: BookOpen },
-  { label: "Recursos", href: "#", icon: FolderOpen, disabled: true },
-  { label: "Comunidad", href: "#", icon: MessageCircle, disabled: true },
-  { label: "Reportes", href: "#", icon: BarChart2, disabled: true },
+  { label: "Mis Cursos", href: "/docente/cursos" },
 ];
 
 function BuilderSidebar({ onClose, onAddModule }: { onClose?: () => void; onAddModule: () => void }) {
@@ -306,10 +298,7 @@ function BuilderSidebar({ onClose, onAddModule }: { onClose?: () => void; onAddM
     <div className="flex h-full flex-col bg-white">
       <div className="border-b border-[rgba(22,60,88,0.08)] px-5 py-5">
         <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm font-bold text-[var(--color-ink)]">Panel Docente</p>
-            <p className="text-xs text-[var(--color-muted)]">Constructor de Cursos</p>
-          </div>
+          <p className="text-sm font-bold text-[var(--color-ink)]">Constructor de Cursos</p>
           {onClose && (
             <button aria-label="Cerrar menú" className="grid h-8 w-8 place-items-center rounded-lg text-[var(--color-muted)] transition hover:bg-[rgba(22,60,88,0.06)]" onClick={onClose} type="button">
               <X className="h-4 w-4" />
@@ -318,20 +307,13 @@ function BuilderSidebar({ onClose, onAddModule }: { onClose?: () => void; onAddM
         </div>
       </div>
       <nav className="flex-1 space-y-0.5 overflow-y-auto px-3 py-4">
-        {SIDEBAR_NAV.map((item) => {
-          const isActive = item.label === "Mis Cursos";
-          return (
-            <Link aria-disabled={item.disabled}
-              className={cn("flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition",
-                isActive ? "bg-[var(--color-primary)] text-white"
-                  : item.disabled ? "cursor-not-allowed text-[var(--color-border)] opacity-50"
-                    : "text-[var(--color-muted)] hover:bg-[rgba(22,60,88,0.05)] hover:text-[var(--color-ink)]")}
-              href={item.disabled ? "#" : item.href} key={item.label} onClick={onClose}>
-              <item.icon className={cn("h-4 w-4 shrink-0", isActive && "text-white")} strokeWidth={2} />
-              {item.label}
-            </Link>
-          );
-        })}
+        {SIDEBAR_NAV.map((item) => (
+          <Link
+            className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-[var(--color-muted)] transition hover:bg-[rgba(22,60,88,0.05)] hover:text-[var(--color-ink)]"
+            href={item.href} key={item.label} onClick={onClose}>
+            {item.label}
+          </Link>
+        ))}
       </nav>
       <div className="px-3 pb-4">
         <button className="flex w-full items-center justify-center gap-2 rounded-xl bg-[var(--color-primary)] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[var(--color-primary-strong)]" onClick={onAddModule} type="button">
@@ -354,57 +336,41 @@ function BuilderSidebar({ onClose, onAddModule }: { onClose?: () => void; onAddM
 
 // ─── Topbar ───────────────────────────────────────────────────────────────────
 
-const BUILDER_TABS: { id: Tab; label: string }[] = [
-  { id: "constructor", label: "Constructor" },
-  { id: "preview", label: "Vista Previa" },
-  { id: "config", label: "Configuración" },
-  { id: "participants", label: "Participantes" },
-];
-
-function BuilderTopbar({ activeTab, course, status, onTabChange, onMobileMenuOpen, onSaveDraft, onPublish, saving, embedded }: {
-  activeTab: Tab; course: BuilderCourse; status: "ACTIVE" | "INACTIVE";
-  onTabChange: (t: Tab) => void; onMobileMenuOpen: () => void;
-  onSaveDraft: () => void; onPublish: () => void; saving: boolean;
-  embedded?: boolean;
+function BuilderTopbar({ course, status, onMobileMenuOpen, embedded }: {
+  course: BuilderCourse; status: "ACTIVE" | "INACTIVE";
+  onMobileMenuOpen: () => void; embedded?: boolean;
 }) {
   return (
     <header className="sticky top-0 z-20 flex h-14 shrink-0 items-center justify-between border-b border-[rgba(22,60,88,0.08)] bg-white px-4 shadow-sm lg:px-6">
-      <div className="flex min-w-0 items-center gap-3">
-        {/* Mobile menu button — only when NOT embedded (TeacherShell has its own) */}
+      <div className="flex min-w-0 items-center gap-2">
         {!embedded && (
           <button aria-label="Abrir menú" className="grid h-8 w-8 place-items-center rounded-lg text-[var(--color-muted)] transition hover:bg-[rgba(22,60,88,0.06)] lg:hidden" onClick={onMobileMenuOpen} type="button">
             <Menu className="h-4 w-4" />
           </button>
         )}
-        {!embedded && (
-          <span className="hidden truncate text-sm font-bold text-[var(--color-ink)] lg:block">Campus Autismo Córdoba</span>
-        )}
+        <Link
+          href={`/docente/cursos/${course.slug}`}
+          className="flex min-w-0 items-center gap-1.5 text-sm font-medium text-[var(--color-ink-soft)] transition hover:text-[var(--color-primary)]"
+        >
+          <ChevronLeft className="h-4 w-4 shrink-0" strokeWidth={2} />
+          <span className="truncate hidden sm:block">{course.title}</span>
+          <span className="sm:hidden">Volver</span>
+        </Link>
       </div>
-
-      <nav aria-label="Secciones del constructor" className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-0.5 lg:flex">
-        {BUILDER_TABS.map(({ id, label }) =>
-          id === "preview" ? (
-            <Link className="rounded-lg px-4 py-1.5 text-sm font-medium text-[var(--color-muted)] transition hover:text-[var(--color-ink)]" href={`/cursos/${course.slug}`} key={id} target="_blank">{label}</Link>
-          ) : (
-            <button className={cn("rounded-lg px-4 py-1.5 text-sm font-medium transition", activeTab === id ? "border-b-2 border-[var(--color-primary)] text-[var(--color-primary)]" : "text-[var(--color-muted)] hover:text-[var(--color-ink)]")} key={id} onClick={() => onTabChange(id)} type="button">{label}</button>
-          )
-        )}
-      </nav>
 
       <div className="flex shrink-0 items-center gap-2">
         {status === "ACTIVE" && (
           <span className="hidden rounded-full bg-[var(--color-success-soft)] px-2.5 py-1 text-[0.7rem] font-semibold text-[var(--color-success)] sm:inline-flex">● Publicado</span>
         )}
-        <button disabled={saving} onClick={onSaveDraft}
-          className="hidden items-center gap-2 rounded-xl border border-[rgba(22,60,88,0.2)] bg-white px-4 py-2 text-sm font-semibold text-[var(--color-ink)] transition hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] disabled:opacity-50 sm:flex">
-          {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
-          Guardar Borrador
-        </button>
-        <button disabled={saving} onClick={onPublish}
-          className="flex items-center gap-2 rounded-xl bg-[var(--color-primary)] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[var(--color-primary-strong)] disabled:opacity-50">
-          {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
-          Publicar Curso
-        </button>
+        <Link
+          href={`/cursos/${course.slug}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-2 rounded-xl border border-[rgba(22,60,88,0.2)] bg-white px-3.5 py-2 text-sm font-semibold text-[var(--color-ink)] transition hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]"
+        >
+          <ExternalLink className="h-3.5 w-3.5" strokeWidth={2} />
+          <span className="hidden sm:inline">Vista Previa</span>
+        </Link>
       </div>
     </header>
   );
@@ -640,31 +606,13 @@ function ConfigPanel({ course, status, onStatusChange, onCategoryChange }: {
   );
 }
 
-// ─── Participants panel ───────────────────────────────────────────────────────
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function ParticipantsPanel({ courseSlug }: { courseSlug: string }) {
-  return (
-    <div className="flex flex-1 items-center justify-center">
-      <div className="text-center">
-        <p className="text-[var(--color-ink-soft)]">Gestión de participantes</p>
-        <Link href={`/admin/courses`} className="mt-3 inline-flex items-center gap-2 rounded-xl bg-[var(--color-primary)] px-4 py-2 text-sm font-semibold text-white hover:bg-[var(--color-primary-strong)]">
-          Ver en admin
-        </Link>
-      </div>
-    </div>
-  );
-}
-
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export function CourseBuilder({ course, embedded = false }: { course: BuilderCourse; embedded?: boolean }) {
-  const [activeTab, setActiveTab] = useState<Tab>("constructor");
   const [mobileOpen, setMobileOpen] = useState(false);
   const [modules, setModules] = useState<BuilderModule[]>(course.modules);
   const [status, setStatus] = useState<"ACTIVE" | "INACTIVE">(course.status);
   const [category, setCategory] = useState(course.category);
-  const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState<{ msg: string; kind: "success" | "error" } | null>(null);
 
   // Dialogs
@@ -677,22 +625,18 @@ export function CourseBuilder({ course, embedded = false }: { course: BuilderCou
     setToast({ msg, kind });
   }
 
-  // ── Status (publish / draft) ──────────────────────────────────────────────
+  // ── Status ───────────────────────────────────────────────────────────────
 
   async function handleStatusChange(newStatus: "ACTIVE" | "INACTIVE") {
+    const prev = status;
     setStatus(newStatus);
-    setSaving(true);
     const fd = new FormData();
     fd.set("courseId", course.id);
     fd.set("status", newStatus);
     const res = await updateCourseStatusAction({}, fd);
-    setSaving(false);
-    if (res.error) { setStatus(status); showToast(res.error, "error"); }
+    if (res.error) { setStatus(prev); showToast(res.error, "error"); }
     else showToast(newStatus === "ACTIVE" ? "Curso publicado." : "Guardado como borrador.");
   }
-
-  async function handlePublish() { await handleStatusChange("ACTIVE"); }
-  async function handleSaveDraft() { await handleStatusChange("INACTIVE"); }
 
   // ── Category ─────────────────────────────────────────────────────────────
 
@@ -766,7 +710,7 @@ export function CourseBuilder({ course, embedded = false }: { course: BuilderCou
     showToast("Lección eliminada.");
   }
 
-  const showConfig = activeTab === "config" || activeTab === "constructor";
+  const showConfig = true;
 
   return (
     <div className="flex h-screen overflow-hidden bg-[#f5f6fa]">
@@ -789,35 +733,30 @@ export function CourseBuilder({ course, embedded = false }: { course: BuilderCou
 
       {/* Right side */}
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
-        <BuilderTopbar activeTab={activeTab} course={course} status={status} onMobileMenuOpen={() => setMobileOpen(true)} onTabChange={setActiveTab} onSaveDraft={handleSaveDraft} onPublish={handlePublish} saving={saving} embedded={embedded} />
+        <BuilderTopbar course={course} status={status} onMobileMenuOpen={() => setMobileOpen(true)} embedded={embedded} />
 
         <div className="flex min-h-0 flex-1 overflow-hidden">
           <main className="flex-1 overflow-y-auto" style={{ backgroundImage: "radial-gradient(circle, rgba(22,60,88,0.08) 1px, transparent 1px)", backgroundSize: "22px 22px" }}>
-            {activeTab === "participants" ? (
-              <ParticipantsPanel courseSlug={course.slug} />
-            ) : (
-              <div className="mx-auto max-w-2xl px-5 py-8 sm:px-8">
-                <h1 className="mb-7 text-[2rem] font-bold tracking-[-0.03em] text-[var(--color-ink)] sm:text-[2.4rem]">{course.title}</h1>
-                <div className="space-y-4">
-                  {modules.map((mod, i) => (
-                    <ModuleCard key={mod.id} module={mod} courseId={course.id}
-                      isFirst={i === 0} isLast={i === modules.length - 1}
-                      onDelete={handleDeleteModule} onEdit={setEditModule}
-                      onMove={handleMoveModule}
-                      onResourceAdded={handleResourceAdded}
-                      onResourceDeleted={handleResourceDeleted} />
-                  ))}
-                  {/* Add module zone */}
-                  <button type="button" onClick={() => setShowAddModule(true)}
-                    className="flex w-full flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-[rgba(22,60,88,0.15)] py-10 transition hover:border-[var(--color-primary)] hover:bg-[rgba(22,60,88,0.018)]">
-                    <div className="grid h-10 w-10 place-items-center rounded-xl border border-[rgba(22,60,88,0.15)] bg-white text-[var(--color-muted)]">
-                      <Plus className="h-5 w-5" strokeWidth={2} />
-                    </div>
-                    <span className="text-sm font-semibold text-[var(--color-muted)]">Añadir Nuevo Módulo</span>
-                  </button>
-                </div>
+            <div className="mx-auto max-w-2xl px-5 py-8 sm:px-8">
+              <h1 className="mb-7 text-[2rem] font-bold tracking-[-0.03em] text-[var(--color-ink)] sm:text-[2.4rem]">{course.title}</h1>
+              <div className="space-y-4">
+                {modules.map((mod, i) => (
+                  <ModuleCard key={mod.id} module={mod} courseId={course.id}
+                    isFirst={i === 0} isLast={i === modules.length - 1}
+                    onDelete={handleDeleteModule} onEdit={setEditModule}
+                    onMove={handleMoveModule}
+                    onResourceAdded={handleResourceAdded}
+                    onResourceDeleted={handleResourceDeleted} />
+                ))}
+                <button type="button" onClick={() => setShowAddModule(true)}
+                  className="flex w-full flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-[rgba(22,60,88,0.15)] py-10 transition hover:border-[var(--color-primary)] hover:bg-[rgba(22,60,88,0.018)]">
+                  <div className="grid h-10 w-10 place-items-center rounded-xl border border-[rgba(22,60,88,0.15)] bg-white text-[var(--color-muted)]">
+                    <Plus className="h-5 w-5" strokeWidth={2} />
+                  </div>
+                  <span className="text-sm font-semibold text-[var(--color-muted)]">Añadir Nuevo Módulo</span>
+                </button>
               </div>
-            )}
+            </div>
           </main>
 
           {showConfig && (
