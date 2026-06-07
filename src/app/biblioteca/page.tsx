@@ -4,15 +4,17 @@ import { getDb } from "@/lib/prisma";
 import {
   getLibraryResources,
   getViewerContext,
+  inferResourceType,
 } from "@/lib/library";
-import { StudentLibraryPage } from "@/components/platform/library/student-library-page";
+import { buildProtectedCourseResourceUrl } from "@/lib/course-resource-storage";
+import { StudentLibraryPage, type StudentCourseGroup, type StudentMaterial } from "@/components/platform/library/student-library-page";
 import { StudentShell, type StudentShellNavItem } from "@/components/campus/student-shell";
 import { getUserCourseSpaces } from "@/lib/course-community";
 import { getInitials } from "@/lib/utils";
 import { buildCourseForumHref } from "@/lib/course-navigation";
 
 export const metadata: Metadata = {
-  title: "Biblioteca Central",
+  title: "Biblioteca — Materiales",
   robots: { index: false, follow: false },
 };
 
@@ -30,7 +32,6 @@ function buildStudentNavItems(communityHref: string): StudentShellNavItem[] {
 export default async function BibliotecaStudentPage() {
   const user = await requireUser("/biblioteca");
 
-  // Run independent queries in parallel — enrolledCourses only needs user.id
   const [viewerCtx, spaces, enrolledCourses] = await Promise.all([
     getViewerContext({ userId: user.id, globalRole: user.globalRole }),
     getUserCourseSpaces({
@@ -45,21 +46,70 @@ export default async function BibliotecaStudentPage() {
     }),
   ]);
 
-  const resources = await getLibraryResources({}, viewerCtx);
+  const enrolledCourseIds = enrolledCourses.map((e) => e.course.id);
 
-  const courses = enrolledCourses.map((e) => ({
-    id: e.course.id,
-    title: e.course.title,
-    slug: e.course.slug,
-  }));
+  // Course materials (non-exercise, published) from enrolled courses
+  // + public LibraryResources without a course for "general resources"
+  const [courseMaterialRows, libraryResources] = await Promise.all([
+    enrolledCourseIds.length > 0
+      ? getDb().courseResource.findMany({
+          where: {
+            courseId: { in: enrolledCourseIds },
+            isPublished: true,
+            type: "MATERIAL",
+          },
+          include: {
+            module: { select: { title: true } },
+          },
+          orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
+        })
+      : Promise.resolve([]),
+    getLibraryResources({}, viewerCtx),
+  ]);
 
-  // Community href for nav
+  // Build course groups preserving enrollment order
+  const materialsByCourse = new Map<string, StudentMaterial[]>();
+  for (const row of courseMaterialRows) {
+    if (!materialsByCourse.has(row.courseId)) {
+      materialsByCourse.set(row.courseId, []);
+    }
+    const displayType =
+      row.source === "LINK" ? "LINK" : inferResourceType(row.mimeType ?? "");
+
+    materialsByCourse.get(row.courseId)!.push({
+      id: row.id,
+      title: row.title,
+      description: row.description,
+      source: row.source,
+      displayType,
+      mimeType: row.mimeType,
+      sizeInBytes: row.sizeInBytes,
+      href:
+        row.source === "FILE"
+          ? buildProtectedCourseResourceUrl(row.id)
+          : row.linkUrl,
+      externalUrl: row.linkUrl,
+      moduleTitle: row.module?.title ?? null,
+      createdAt: row.createdAt,
+    });
+  }
+
+  const courseGroups: StudentCourseGroup[] = enrolledCourses
+    .map((e) => ({
+      course: e.course,
+      materials: materialsByCourse.get(e.course.id) ?? [],
+    }))
+    .filter((g) => g.materials.length > 0);
+
+  // General resources: public LibraryResources not tied to any course
+  const generalResources = libraryResources.filter((r) => !r.courseId);
+
   const studentSpaces = spaces.filter((s) => s.role === "STUDENT");
   const communityHref =
     studentSpaces[0] ? buildCourseForumHref(studentSpaces[0].course.slug) : "/mis-cursos";
 
-  const isManager = user.globalRole === "TEACHER" || user.globalRole === "ADMIN";
   const viewerName = user.name ?? user.email;
+  const isManager = user.globalRole === "TEACHER" || user.globalRole === "ADMIN";
   const navItems = buildStudentNavItems(communityHref);
 
   return (
@@ -69,7 +119,7 @@ export default async function BibliotecaStudentPage() {
       roleLabel={isManager ? "Docente" : "Alumno"}
       navItems={navItems}
     >
-      <StudentLibraryPage resources={resources} courses={courses} />
+      <StudentLibraryPage courseGroups={courseGroups} generalResources={generalResources} />
     </StudentShell>
   );
 }
