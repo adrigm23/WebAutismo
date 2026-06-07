@@ -360,43 +360,6 @@ function InstructorCard({ course }: { course: CatalogCourse }) {
   );
 }
 
-function MaterialsCard({ resources }: { resources: CampusResourceItem[] }) {
-  const materials = resources
-    .filter(
-      (r) =>
-        r.source === "FILE" && r.isPublished && !r.isExercise && r.moduleId === null,
-    )
-    .slice(0, 5);
-
-  if (materials.length === 0) return null;
-
-  return (
-    <div className="rounded-xl border border-[#e5e7eb] bg-white p-5">
-      <p className="text-[0.65rem] font-bold uppercase tracking-[0.14em] text-[#9ba3af]">
-        Materiales Incluidos
-      </p>
-      <div className="mt-3 space-y-3">
-        {materials.map((m) => {
-          const Icon = getFileIcon(m.mimeType, m.resourceType as string);
-          return (
-            <a
-              className="flex items-center gap-3 transition hover:opacity-75"
-              href={m.href ?? "#"}
-              key={m.id}
-              rel="noreferrer"
-              target="_blank"
-            >
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#f3f4f6] text-[#6b7280]">
-                <Icon className="h-4 w-4" />
-              </div>
-              <span className="text-sm font-medium text-[var(--color-primary)]">{m.title}</span>
-            </a>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
 
 function DatesCard({ course }: { course: CatalogCourse }) {
   const edition = course.activeEdition;
@@ -566,7 +529,6 @@ export function CourseWorkspacePage({
         {/* ── Right sidebar ────────────────────────────── */}
         <div className="space-y-4 xl:sticky xl:top-5">
           <InstructorCard course={course} />
-          <MaterialsCard resources={resources} />
           <DatesCard course={course} />
         </div>
       </div>
