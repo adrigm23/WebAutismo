@@ -746,7 +746,7 @@ export function MessagingPage({
               onChange={(e) => setDraftText(e.target.value)}
               placeholder="Escribe un mensaje..."
               ref={textareaRef}
-              rows={3}
+              rows={2}
               value={draftText}
             />
             <div className="flex items-center justify-between border-t border-[#f0f0f0] px-4 py-2.5">

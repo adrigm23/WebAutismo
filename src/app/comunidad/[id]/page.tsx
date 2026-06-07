@@ -27,7 +27,6 @@ function buildNavItems(): StudentShellNavItem[] {
     { label: "Comunidad", href: "/comunidad", icon: "community" },
     { label: "Biblioteca", href: "/app/recursos", icon: "library", disabled: true },
     { label: "Configuración", href: "/mi-cuenta", icon: "settings" },
-    { label: "Soporte", href: "/soporte", icon: "support" },
   ];
 }
 

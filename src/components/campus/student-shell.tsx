@@ -219,7 +219,7 @@ export function StudentShell({
           {/* Backdrop */}
           <button
             aria-hidden="true"
-            className="absolute inset-0 bg-black/60"
+            className="absolute inset-0 bg-black/80"
             onClick={closeMobileNav}
             tabIndex={-1}
             type="button"
