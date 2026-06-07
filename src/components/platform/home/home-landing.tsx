@@ -9,7 +9,6 @@ import { HomeStats } from "@/components/platform/home/home-stats";
 import { HomeAudienceRoutes } from "@/components/platform/home/home-audience-routes";
 import { HomeHowItWorks } from "@/components/platform/home/home-how-it-works";
 import { HomeSectionHeader } from "@/components/platform/home/home-section-header";
-import { HomeSocialProof } from "@/components/platform/home/home-social-proof";
 import { HomeTestimonials } from "@/components/platform/home/home-testimonials";
 import { ButtonLink } from "@/components/ui/button";
 import { getFeaturedCatalogCourses } from "@/lib/course-catalog";
@@ -23,10 +22,7 @@ export async function HomeLanding() {
       {/* 1. Hero */}
       <HomeHero />
 
-      {/* 2. Social proof — quién la usa */}
-      <HomeSocialProof />
-
-      {/* 3. Stats numéricas */}
+      {/* 2. Stats numéricas */}
       <HomeStats />
 
       {/* 4. Rutas de especialización — segmentación por audiencia */}

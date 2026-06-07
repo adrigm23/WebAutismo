@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import { HomeProductShowcase } from "@/components/platform/home/home-product-showcase";
 import { ButtonLink } from "@/components/ui/button";
 
 export function HomeHero() {
@@ -18,7 +17,8 @@ export function HomeHero() {
         className="home-hero-grid pointer-events-none absolute inset-0 opacity-[0.45]"
       />
 
-      <div className="site-container relative grid grid-cols-1 gap-10 pb-16 pt-10 sm:pt-16 lg:grid-cols-[minmax(0,1fr)_minmax(28rem,0.88fr)] lg:items-start lg:gap-14 lg:pb-24 lg:pt-18">
+      <div className="site-container relative grid grid-cols-1 gap-10 pb-16 pt-10 sm:pt-16 lg:grid-cols-[minmax(0,1fr)_minmax(26rem,0.9fr)] lg:items-center lg:gap-14 lg:pb-24 lg:pt-20">
+        {/* Text column */}
         <div className="max-w-2xl">
           <div className="home-rise inline-flex items-center gap-2 rounded-[var(--radius-pill)] border border-[rgba(22,60,88,0.15)] bg-[var(--color-brand-soft)] px-3.5 py-1.5 text-[0.72rem] font-semibold tracking-[0.06em] text-[var(--color-primary)]">
             Formación especializada basada en evidencia
@@ -28,12 +28,13 @@ export function HomeHero() {
             className="home-rise home-rise-delay-1 mt-4 text-balance font-display text-[clamp(2.2rem,5.6vw,4.35rem)] font-semibold leading-[1.0] tracking-[-0.05em] text-[var(--color-ink)] sm:mt-5 sm:leading-[0.98] sm:tracking-[-0.06em]"
             id="home-hero-heading"
           >
-            Aprende a intervenir con personas autistas mediante formación práctica.
+            Formación Profesional Especializada en Autismo
           </h1>
 
           <p className="home-rise home-rise-delay-2 mt-4 text-pretty text-base leading-7 text-[var(--color-muted)] sm:mt-5 sm:text-[1.08rem] sm:leading-8">
-            Plataforma educativa diseñada para profesionales, educadores y
-            familias que buscan un enfoque actualizado y neuroafirmativo.
+            Desarrolla competencias prácticas basadas en evidencia. Un entorno
+            de aprendizaje estructurado, calmado y enfocado en mejorar la
+            calidad de vida de las personas neurodivergentes.
           </p>
 
           <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -57,9 +58,38 @@ export function HomeHero() {
           </p>
         </div>
 
-        {/* Visible on all breakpoints — compact on mobile, full on desktop */}
-        <div className="mt-2 sm:mt-0">
-          <HomeProductShowcase />
+        {/* Image column — placeholder until client provides photo */}
+        <div className="home-rise home-rise-delay-2 mt-2 sm:mt-0">
+          <div className="overflow-hidden rounded-[var(--radius-xl)] shadow-[var(--shadow-strong)]">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              alt="Formación especializada en autismo"
+              className="h-[22rem] w-full object-cover lg:h-[28rem]"
+              src="/hero-image.jpg"
+              onError={(e) => {
+                // Fallback decorative placeholder if image not yet provided
+                const target = e.currentTarget;
+                target.style.display = "none";
+                const placeholder = target.nextElementSibling as HTMLElement;
+                if (placeholder) placeholder.style.display = "flex";
+              }}
+            />
+            {/* Decorative placeholder shown if /hero-image.jpg doesn't exist yet */}
+            <div
+              aria-hidden
+              className="hidden h-[22rem] w-full items-center justify-center bg-[linear-gradient(135deg,rgba(22,60,88,0.08)_0%,rgba(22,60,88,0.18)_100%)] lg:h-[28rem]"
+              style={{ display: "none" }}
+            >
+              <div className="text-center">
+                <div className="mx-auto h-16 w-16 rounded-full bg-[var(--color-brand-soft)] flex items-center justify-center">
+                  <svg className="h-8 w-8 text-[var(--color-primary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                </div>
+                <p className="mt-3 text-sm text-[var(--color-muted)]">Imagen del hero</p>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </section>
