@@ -10,6 +10,7 @@ import {
 import { getCampusResources } from "@/lib/course-resources";
 import { CourseWorkspaceShell } from "@/components/learning/course-workspace/course-workspace-shell";
 import { CourseResourceManager } from "@/components/learning/course-resource-manager";
+import { CourseMaterialsLibrary } from "@/components/learning/course-materials-library";
 import { getInitials } from "@/lib/utils";
 import { normalizeCourseResourceQueryValue } from "@/lib/course-navigation";
 
@@ -65,13 +66,22 @@ export default async function CourseResourcesPage({ params, searchParams }: Reso
       viewerInitials={getInitials(viewerName)}
       viewerName={viewerName}
     >
-      <CourseResourceManager
-        canModerate={canModerate}
-        course={course}
-        focusedResourceId={focusedResourceId}
-        resources={resources}
-        roleLabel={getRoleLabel(access.role)}
-      />
+      {canModerate ? (
+        // Docentes y admin: gestor completo con materiales + ejercicios
+        <CourseResourceManager
+          canModerate={canModerate}
+          course={course}
+          focusedResourceId={focusedResourceId}
+          resources={resources}
+          roleLabel={getRoleLabel(access.role)}
+        />
+      ) : (
+        // Alumnos: solo materiales de contenido, sin tareas ni ejercicios
+        <CourseMaterialsLibrary
+          course={course}
+          resources={resources}
+        />
+      )}
     </CourseWorkspaceShell>
   );
 }
