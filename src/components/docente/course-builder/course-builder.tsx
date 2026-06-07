@@ -7,7 +7,6 @@ import {
   Check,
   ChevronDown,
   ChevronLeft,
-  ChevronUp,
   Edit2,
   Eye,
   ExternalLink,
@@ -26,11 +25,29 @@ import {
   X,
 } from "lucide-react";
 import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+  arrayMove,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import {
   addCourseModuleAction,
   addCourseResourceAction,
   deleteCourseModuleAction,
   deleteCourseResourceAction,
-  moveModuleAction,
+  reorderModulesAction,
+  updateCourseAccentAction,
   updateCourseCategoryAction,
   updateCourseModuleAction,
   updateCourseStatusAction,
@@ -421,13 +438,20 @@ function LessonRow({ resource, onRequestDelete }: { resource: BuilderResource; o
 
 // ─── Module card ──────────────────────────────────────────────────────────────
 
-function ModuleCard({ module: mod, courseId, isFirst, isLast, onDelete, onEdit, onMove, onResourceAdded, onResourceDeleted }: {
-  module: BuilderModule; courseId: string; isFirst: boolean; isLast: boolean;
+function ModuleCard({ module: mod, courseId, onDelete, onEdit, onResourceAdded, onResourceDeleted }: {
+  module: BuilderModule; courseId: string;
   onDelete: (id: string) => void; onEdit: (mod: BuilderModule) => void;
-  onMove: (id: string, dir: "up" | "down") => void;
   onResourceAdded: (moduleId: string, res: BuilderResource) => void;
   onResourceDeleted: (moduleId: string, resourceId: string) => void;
 }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: mod.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
   const [open, setOpen] = useState(mod.position === 1);
   const [showAddLesson, setShowAddLesson] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -454,9 +478,14 @@ function ModuleCard({ module: mod, courseId, isFirst, isLast, onDelete, onEdit, 
 
   return (
     <>
-      <div className="overflow-hidden rounded-xl border border-[rgba(22,60,88,0.1)] bg-white shadow-[0_1px_4px_rgba(22,60,88,0.06)]">
+      <div ref={setNodeRef} style={style} className="overflow-hidden rounded-xl border border-[rgba(22,60,88,0.1)] bg-white shadow-[0_1px_4px_rgba(22,60,88,0.06)]">
         <div className="flex items-center gap-2 px-3 py-3 sm:gap-3 sm:px-5 sm:py-4">
-          <GripVertical className="h-5 w-5 shrink-0 text-[var(--color-border)]" strokeWidth={2} />
+          <GripVertical
+            {...attributes}
+            {...listeners}
+            className="h-5 w-5 shrink-0 text-[var(--color-border)] cursor-grab active:cursor-grabbing"
+            strokeWidth={2}
+          />
           <button
             className="min-w-0 flex-1 truncate text-left text-[0.95rem] font-bold text-[var(--color-ink)] transition hover:text-[var(--color-primary)]"
             onClick={() => setOpen(v => !v)}
@@ -468,16 +497,6 @@ function ModuleCard({ module: mod, courseId, isFirst, isLast, onDelete, onEdit, 
             {mod.resources.length}
             <span className="hidden sm:inline"> Lecciones</span>
           </span>
-
-          {/* Move up/down — hidden on mobile to avoid crowding */}
-          <button type="button" disabled={isFirst || isPending} onClick={() => onMove(mod.id, "up")}
-            className="hidden h-7 w-7 place-items-center rounded-lg text-[var(--color-muted)] transition hover:bg-[rgba(22,60,88,0.06)] disabled:opacity-30 sm:grid">
-            <ChevronUp className="h-4 w-4" strokeWidth={2} />
-          </button>
-          <button type="button" disabled={isLast || isPending} onClick={() => onMove(mod.id, "down")}
-            className="hidden h-7 w-7 place-items-center rounded-lg text-[var(--color-muted)] transition hover:bg-[rgba(22,60,88,0.06)] disabled:opacity-30 sm:grid">
-            <ChevronDown className="h-4 w-4" strokeWidth={2} />
-          </button>
 
           {/* Menu */}
           <div ref={menuRef} className="relative">
@@ -541,10 +560,12 @@ function ModuleCard({ module: mod, courseId, isFirst, isLast, onDelete, onEdit, 
 
 const CATEGORIES = ["Intervención Clínica", "Educativo", "Herramientas", "Familia", "Terapia", "Diagnóstico", "Otro"];
 
-function ConfigPanel({ course, status, onStatusChange, onCategoryChange, disabled }: {
+function ConfigPanel({ course, status, onStatusChange, onCategoryChange, onAccentChange, onAccentSave, disabled }: {
   course: BuilderCourse; status: "ACTIVE" | "INACTIVE";
   onStatusChange: (s: "ACTIVE" | "INACTIVE") => void;
   onCategoryChange: (c: string) => void;
+  onAccentChange: (from: string, to: string) => void;
+  onAccentSave: (from: string, to: string) => void;
   disabled?: boolean;
 }) {
   const visibilityMap = { INACTIVE: "draft", ACTIVE: "public" } as const;
@@ -572,8 +593,44 @@ function ConfigPanel({ course, status, onStatusChange, onCategoryChange, disable
             <Upload className="h-4 w-4 text-[var(--color-muted)]" strokeWidth={2} />
             <h3 className="text-sm font-semibold text-[var(--color-ink)]">Miniatura del Curso</h3>
           </div>
-          <div className="overflow-hidden rounded-xl" style={{ background: `linear-gradient(135deg, ${course.accentFrom} 0%, ${course.accentTo} 100%)`, aspectRatio: "16/9" }} />
-          <p className="mt-2 text-[0.7rem] leading-relaxed text-[var(--color-muted)]">Resolución recomendada: 1280×720px. Formatos: JPG, PNG.</p>
+          {/* Live gradient preview */}
+          <div
+            className="overflow-hidden rounded-xl"
+            style={{
+              background: `linear-gradient(135deg, ${course.accentFrom} 0%, ${course.accentTo} 100%)`,
+              aspectRatio: "16/9"
+            }}
+          />
+          {/* Color pickers */}
+          <div className="mt-3 grid grid-cols-2 gap-3">
+            <div>
+              <label className="mb-1 block text-xs font-medium text-[var(--color-ink-soft)]">Color inicio</label>
+              <div className="flex items-center gap-2 rounded-lg border border-[rgba(22,60,88,0.15)] px-2 py-1.5">
+                <input
+                  type="color"
+                  value={course.accentFrom}
+                  onChange={e => onAccentChange(e.target.value, course.accentTo)}
+                  onBlur={e => onAccentSave(e.target.value, course.accentTo)}
+                  className="h-6 w-8 cursor-pointer rounded border-0 bg-transparent p-0"
+                />
+                <span className="text-xs font-mono text-[var(--color-ink-soft)]">{course.accentFrom}</span>
+              </div>
+            </div>
+            <div>
+              <label className="mb-1 block text-xs font-medium text-[var(--color-ink-soft)]">Color final</label>
+              <div className="flex items-center gap-2 rounded-lg border border-[rgba(22,60,88,0.15)] px-2 py-1.5">
+                <input
+                  type="color"
+                  value={course.accentTo}
+                  onChange={e => onAccentChange(course.accentFrom, e.target.value)}
+                  onBlur={e => onAccentSave(course.accentFrom, e.target.value)}
+                  className="h-6 w-8 cursor-pointer rounded border-0 bg-transparent p-0"
+                />
+                <span className="text-xs font-mono text-[var(--color-ink-soft)]">{course.accentTo}</span>
+              </div>
+            </div>
+          </div>
+          <p className="mt-2 text-[0.7rem] leading-relaxed text-[var(--color-muted)]">El gradiente se usa como portada del curso en el catálogo.</p>
         </section>
 
         {/* Categoría */}
@@ -629,6 +686,8 @@ export function CourseBuilder({ course, embedded = false }: { course: BuilderCou
   const [modules, setModules] = useState<BuilderModule[]>(course.modules);
   const [status, setStatus] = useState<"ACTIVE" | "INACTIVE">(course.status);
   const [category, setCategory] = useState(course.category);
+  const [accentFrom, setAccentFrom] = useState(course.accentFrom);
+  const [accentTo, setAccentTo] = useState(course.accentTo);
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState<{ msg: string; kind: "success" | "error" } | null>(null);
 
@@ -671,6 +730,22 @@ export function CourseBuilder({ course, embedded = false }: { course: BuilderCou
     if (res.error) { setCategory(prev); showToast(res.error, "error"); }
   }
 
+  // ── Accent colors ─────────────────────────────────────────────────────────
+
+  function handleAccentChange(from: string, to: string) {
+    setAccentFrom(from);
+    setAccentTo(to);
+  }
+
+  async function handleAccentSave(from: string, to: string) {
+    const fd = new FormData();
+    fd.set("courseId", course.id);
+    fd.set("accentFrom", from);
+    fd.set("accentTo", to);
+    const res = await updateCourseAccentAction({}, fd);
+    if (res.error) showToast(res.error, "error");
+  }
+
   // ── Modules ───────────────────────────────────────────────────────────────
 
   function handleModuleAdded(mod: BuilderModule) {
@@ -704,21 +779,31 @@ export function CourseBuilder({ course, embedded = false }: { course: BuilderCou
     });
   }
 
-  async function handleMoveModule(moduleId: string, dir: "up" | "down") {
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  async function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    const oldIndex = modules.findIndex(m => m.id === active.id);
+    const newIndex = modules.findIndex(m => m.id === over.id);
+
+    const newModules = arrayMove(modules, oldIndex, newIndex).map((m, i) => ({ ...m, position: i + 1 }));
+    setModules(newModules);
+
     const fd = new FormData();
-    fd.set("moduleId", moduleId);
-    fd.set("direction", dir);
-    const res = await moveModuleAction({}, fd);
-    if (res.error) { showToast(res.error, "error"); return; }
-    setModules(prev => {
-      const idx = prev.findIndex(m => m.id === moduleId);
-      if (idx === -1) return prev;
-      const newIdx = dir === "up" ? idx - 1 : idx + 1;
-      if (newIdx < 0 || newIdx >= prev.length) return prev;
-      const next = [...prev];
-      [next[idx], next[newIdx]] = [next[newIdx], next[idx]];
-      return next.map((m, i) => ({ ...m, position: i + 1 }));
-    });
+    fd.set("courseId", course.id);
+    fd.set("orderedIds", JSON.stringify(newModules.map(m => m.id)));
+    const res = await reorderModulesAction({}, fd);
+    if (res.error) {
+      setModules(modules); // revert
+      showToast(res.error, "error");
+    }
   }
 
   function handleResourceAdded(moduleId: string, res: BuilderResource) {
@@ -760,29 +845,31 @@ export function CourseBuilder({ course, embedded = false }: { course: BuilderCou
           <main className="flex-1 overflow-y-auto" style={{ backgroundImage: "radial-gradient(circle, rgba(22,60,88,0.08) 1px, transparent 1px)", backgroundSize: "22px 22px" }}>
             <div className="mx-auto max-w-2xl px-5 py-8 sm:px-8">
               <h1 className="mb-7 text-[2rem] font-bold tracking-[-0.03em] text-[var(--color-ink)] sm:text-[2.4rem]">{course.title}</h1>
-              <div className="space-y-4">
-                {modules.map((mod, i) => (
-                  <ModuleCard key={mod.id} module={mod} courseId={course.id}
-                    isFirst={i === 0} isLast={i === modules.length - 1}
-                    onDelete={handleDeleteModule} onEdit={setEditModule}
-                    onMove={handleMoveModule}
-                    onResourceAdded={handleResourceAdded}
-                    onResourceDeleted={handleResourceDeleted} />
-                ))}
-                <button type="button" onClick={() => setShowAddModule(true)}
-                  className="flex w-full flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-[rgba(22,60,88,0.15)] py-10 transition hover:border-[var(--color-primary)] hover:bg-[rgba(22,60,88,0.018)]">
-                  <div className="grid h-10 w-10 place-items-center rounded-xl border border-[rgba(22,60,88,0.15)] bg-white text-[var(--color-muted)]">
-                    <Plus className="h-5 w-5" strokeWidth={2} />
+              <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                <SortableContext items={modules.map(m => m.id)} strategy={verticalListSortingStrategy}>
+                  <div className="space-y-4">
+                    {modules.map((mod) => (
+                      <ModuleCard key={mod.id} module={mod} courseId={course.id}
+                        onDelete={handleDeleteModule} onEdit={setEditModule}
+                        onResourceAdded={handleResourceAdded}
+                        onResourceDeleted={handleResourceDeleted} />
+                    ))}
                   </div>
-                  <span className="text-sm font-semibold text-[var(--color-muted)]">Añadir Nuevo Módulo</span>
-                </button>
-              </div>
+                </SortableContext>
+              </DndContext>
+              <button type="button" onClick={() => setShowAddModule(true)}
+                className="mt-4 flex w-full flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-[rgba(22,60,88,0.15)] py-10 transition hover:border-[var(--color-primary)] hover:bg-[rgba(22,60,88,0.018)]">
+                <div className="grid h-10 w-10 place-items-center rounded-xl border border-[rgba(22,60,88,0.15)] bg-white text-[var(--color-muted)]">
+                  <Plus className="h-5 w-5" strokeWidth={2} />
+                </div>
+                <span className="text-sm font-semibold text-[var(--color-muted)]">Añadir Nuevo Módulo</span>
+              </button>
             </div>
           </main>
 
           {showConfig && (
             <div className="hidden w-[22rem] shrink-0 xl:flex xl:flex-col">
-              <ConfigPanel course={{ ...course, category }} status={status} onStatusChange={handleStatusChange} onCategoryChange={handleCategoryChange} disabled={saving} />
+              <ConfigPanel course={{ ...course, category, accentFrom, accentTo }} status={status} onStatusChange={handleStatusChange} onCategoryChange={handleCategoryChange} onAccentChange={handleAccentChange} onAccentSave={handleAccentSave} disabled={saving} />
             </div>
           )}
         </div>
@@ -796,7 +883,7 @@ export function CourseBuilder({ course, embedded = false }: { course: BuilderCou
                 <ChevronDown className="h-4 w-4 text-[var(--color-muted)] transition group-open:rotate-180" />
               </summary>
               <div className="max-h-[60vh] overflow-y-auto">
-                <ConfigPanel course={{ ...course, category }} status={status} onStatusChange={handleStatusChange} onCategoryChange={handleCategoryChange} disabled={saving} />
+                <ConfigPanel course={{ ...course, category, accentFrom, accentTo }} status={status} onStatusChange={handleStatusChange} onCategoryChange={handleCategoryChange} onAccentChange={handleAccentChange} onAccentSave={handleAccentSave} disabled={saving} />
               </div>
             </details>
           </div>

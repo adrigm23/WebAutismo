@@ -7,9 +7,11 @@ import {
   GraduationCap,
   Hash,
   Paperclip,
+  PenSquare,
   Send,
   Smile,
   Search,
+  X,
 } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
@@ -219,6 +221,10 @@ export function MessagingPage({
   const [search, setSearch] = useState("");
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [sending, setSending] = useState(false);
+  const [showNewConv, setShowNewConv] = useState(false);
+  const [newConvQuery, setNewConvQuery] = useState("");
+  const [newConvResults, setNewConvResults] = useState<{ id: string; name: string; globalRole: string }[]>([]);
+  const [newConvLoading, setNewConvLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -340,6 +346,52 @@ export function MessagingPage({
     }, 10000);
     return () => clearInterval(interval);
   }, [active?.id, active?.kind, viewerName, viewerInitials]);
+
+  // Debounced search for new conversation modal
+  useEffect(() => {
+    if (newConvQuery.length < 2) {
+      setNewConvResults([]);
+      return;
+    }
+    setNewConvLoading(true);
+    const t = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/users/search?q=${encodeURIComponent(newConvQuery)}`);
+        const data = await res.json();
+        setNewConvResults(Array.isArray(data) ? data : []);
+      } catch {
+        setNewConvResults([]);
+      } finally {
+        setNewConvLoading(false);
+      }
+    }, 300);
+    return () => clearTimeout(t);
+  }, [newConvQuery]);
+
+  function openConversationWith(userId: string, userName: string) {
+    const existing = conversations.find((c) => c.id === userId);
+    if (!existing) {
+      const newDm: DirectMessage = {
+        id: userId,
+        kind: "dm",
+        name: userName,
+        initials: getInitialsLocal(userName),
+        role: "",
+        department: "Campus Autismo",
+        lastMessage: "",
+        lastTime: "",
+        unread: 0,
+        isOnline: false,
+      };
+      setConversations((prev) => [newDm, ...prev]);
+      setActive(newDm);
+    } else {
+      setActive(existing);
+    }
+    setShowNewConv(false);
+    setNewConvQuery("");
+    setNewConvResults([]);
+  }
 
   function selectConversation(conv: Conversation) {
     if (conv.kind === "channel") {
@@ -477,6 +529,15 @@ export function MessagingPage({
         <div className="flex items-center justify-between px-5 py-4">
           <h1 className="text-lg font-bold text-[var(--color-primary)]">Mensajes</h1>
           <div className="flex items-center gap-1">
+            <button
+              type="button"
+              onClick={() => setShowNewConv(true)}
+              className="grid h-8 w-8 place-items-center rounded-lg text-[#9ba3af] transition hover:bg-[#f3f4f6] hover:text-[var(--color-primary)]"
+              aria-label="Nueva conversación"
+              title="Nueva conversación"
+            >
+              <PenSquare className="h-4 w-4" strokeWidth={2} />
+            </button>
             <Link
               href="/mis-cursos"
               className="flex h-7 w-7 items-center justify-center rounded-lg text-[#9ba3af] transition hover:bg-[#f3f4f6] hover:text-[var(--color-primary)]"
@@ -750,6 +811,66 @@ export function MessagingPage({
           </div>
         </div>
       </div>
+
+      {/* ── NEW CONVERSATION MODAL ──────────────────────────────────── */}
+      {showNewConv && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="w-full max-w-md overflow-hidden rounded-xl bg-white shadow-2xl">
+            <div className="flex items-center justify-between border-b border-[#e5e7eb] px-5 py-4">
+              <h2 className="text-base font-bold text-[var(--color-primary)]">Nueva conversación</h2>
+              <button
+                type="button"
+                onClick={() => { setShowNewConv(false); setNewConvQuery(""); setNewConvResults([]); }}
+                className="text-[#9ba3af] hover:text-[var(--color-primary)]"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="p-4">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9ba3af]" strokeWidth={2} />
+                <input
+                  autoFocus
+                  type="text"
+                  placeholder="Buscar por nombre…"
+                  value={newConvQuery}
+                  onChange={(e) => setNewConvQuery(e.target.value)}
+                  className="w-full rounded-xl border border-[#e5e7eb] py-2.5 pl-9 pr-4 text-sm outline-none focus:border-[var(--color-primary)] focus:ring-2 focus:ring-[var(--color-primary)]/10"
+                />
+              </div>
+              <div className="mt-2 max-h-60 overflow-y-auto">
+                {newConvLoading && (
+                  <p className="py-4 text-center text-sm text-[#9ba3af]">Buscando…</p>
+                )}
+                {!newConvLoading && newConvQuery.length >= 2 && newConvResults.length === 0 && (
+                  <p className="py-4 text-center text-sm text-[#9ba3af]">No se encontraron usuarios.</p>
+                )}
+                {!newConvLoading && newConvQuery.length < 2 && (
+                  <p className="py-4 text-center text-sm text-[#9ba3af]">Escribe al menos 2 caracteres.</p>
+                )}
+                {newConvResults.map((u) => (
+                  <button
+                    key={u.id}
+                    type="button"
+                    onClick={() => openConversationWith(u.id, u.name)}
+                    className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition hover:bg-[#f3f4f6]"
+                  >
+                    <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[var(--color-primary)] text-sm font-semibold text-white">
+                      {u.name.charAt(0).toUpperCase()}
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-[var(--color-primary)]">{u.name}</p>
+                      <p className="text-xs text-[#9ba3af]">
+                        {u.globalRole === "TEACHER" ? "Docente" : u.globalRole === "ADMIN" ? "Admin" : "Alumno"}
+                      </p>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── RIGHT: Profile / info panel ─────────────────────────────── */}
       <aside className="hidden w-64 shrink-0 flex-col border-l border-[#e5e7eb] xl:flex">

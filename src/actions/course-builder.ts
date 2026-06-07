@@ -454,3 +454,66 @@ export async function deleteCourseResourceAction(
     return { error: e instanceof Error ? e.message : "Error al eliminar la lección." };
   }
 }
+
+export async function updateCourseAccentAction(
+  _state: BuilderActionState,
+  formData: FormData,
+): Promise<BuilderActionState> {
+  try {
+    const courseId = formData.get("courseId");
+    const accentFrom = formData.get("accentFrom");
+    const accentTo = formData.get("accentTo");
+
+    if (typeof courseId !== "string" || !courseId) return { error: "Curso no válido." };
+    if (typeof accentFrom !== "string" || typeof accentTo !== "string") return { error: "Colores no válidos." };
+
+    const { db } = await requireBuilderAccess(courseId);
+
+    const course = await db.course.findUnique({ where: { id: courseId }, select: { slug: true } });
+    if (!course) return { error: "Curso no encontrado." };
+
+    await db.course.update({
+      where: { id: courseId },
+      data: { accentFrom: accentFrom.trim(), accentTo: accentTo.trim() },
+    });
+
+    revalidateCourse(course.slug);
+    return { success: true };
+  } catch (e) {
+    console.error(e);
+    return { error: "Error al actualizar los colores." };
+  }
+}
+
+export async function reorderModulesAction(
+  _state: BuilderActionState,
+  formData: FormData,
+): Promise<BuilderActionState> {
+  try {
+    const courseId = formData.get("courseId");
+    const orderedIds = formData.get("orderedIds");
+
+    if (typeof courseId !== "string" || !courseId) return { error: "Curso no válido." };
+    if (typeof orderedIds !== "string" || !orderedIds) return { error: "Orden no válido." };
+
+    const ids = JSON.parse(orderedIds) as string[];
+    if (!Array.isArray(ids) || ids.some(id => typeof id !== "string")) return { error: "Datos de orden inválidos." };
+
+    const { db } = await requireBuilderAccess(courseId);
+
+    // Update all positions in a transaction
+    await db.$transaction(
+      ids.map((id, index) =>
+        db.courseModule.update({
+          where: { id },
+          data: { position: index + 1 },
+        })
+      )
+    );
+
+    return { success: true };
+  } catch (e) {
+    console.error(e);
+    return { error: "Error al reordenar los módulos." };
+  }
+}

@@ -206,12 +206,28 @@ export default async function DocenteDashboardPage() {
           </section>
         ) : (
           <section className="mt-10">
-            <div className="rounded-xl border border-[rgba(22,60,88,0.08)] bg-white/60 px-6 py-12 text-center">
-              <BookOpen className="mx-auto h-10 w-10 text-[var(--color-primary)] opacity-40" />
-              <p className="mt-4 font-semibold text-[var(--color-ink)]">No tienes cursos asignados</p>
-              <p className="mt-2 text-sm text-[var(--color-ink-soft)]">
-                Contacta con el administrador para que te asigne cursos.
+            <div className="rounded-xl border border-[rgba(22,60,88,0.08)] bg-white px-8 py-14 text-center">
+              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-[var(--color-primary-soft)]">
+                <BookOpen className="h-8 w-8 text-[var(--color-primary)]" />
+              </div>
+              <h2 className="mt-5 text-xl font-bold text-[var(--color-ink)]">Aún no tienes cursos asignados</h2>
+              <p className="mx-auto mt-2 max-w-sm text-sm text-[var(--color-ink-soft)]">
+                El administrador debe asignarte a un curso para que puedas gestionarlo y añadir contenido.
               </p>
+              <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+                <a
+                  href="/mensajes"
+                  className="inline-flex items-center gap-2 rounded-xl bg-[var(--color-primary)] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[var(--color-primary-strong)]"
+                >
+                  Enviar mensaje al admin
+                </a>
+                <a
+                  href="mailto:formacion@autismocordoba.org"
+                  className="inline-flex items-center gap-2 rounded-xl border border-[rgba(22,60,88,0.2)] px-5 py-2.5 text-sm font-semibold text-[var(--color-ink)] transition hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]"
+                >
+                  Contactar por email
+                </a>
+              </div>
             </div>
           </section>
         )}
