@@ -5,9 +5,9 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  Award,
   Bell,
   BookOpen,
+  CalendarDays,
   CircleHelp,
   GraduationCap,
   LayoutGrid,
@@ -15,7 +15,6 @@ import {
   Menu,
   MessagesSquare,
   MessageSquareText,
-
   Settings2,
   X,
 } from "lucide-react";
@@ -49,6 +48,7 @@ function buildNavItems(courseSlug: string | null): NavItem[] {
     { label: "Mi campus", href: "/mis-cursos", icon: LayoutGrid },
     { label: "Mensajes", href: "/mensajes", icon: MessagesSquare },
     { label: "Comunidad", href: "/comunidad", icon: MessageSquareText },
+    { label: "Calendario", href: "/calendario", icon: CalendarDays },
     {
       label: "Biblioteca",
       href: courseSlug ? `/mis-cursos/${courseSlug}/recursos` : "/mis-cursos",
