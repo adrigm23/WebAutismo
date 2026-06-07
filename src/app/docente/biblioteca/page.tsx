@@ -4,10 +4,9 @@ import { requireUser } from "@/lib/auth";
 import { getDb } from "@/lib/prisma";
 import {
   getLibraryResources,
-  getLibraryFolders,
   getViewerContext,
 } from "@/lib/library";
-import { LibraryPage } from "@/components/platform/library/library-page";
+import { TeacherLibraryPage } from "@/components/platform/library/teacher-library-page";
 import { TeacherShell } from "@/components/docente/teacher-shell";
 import { getInitials } from "@/lib/utils";
 
@@ -25,9 +24,8 @@ export default async function DocenteBibliotecaPage() {
 
   const viewerCtx = await getViewerContext({ userId: user.id, globalRole: user.globalRole });
 
-  const [resources, folders, teacherCourses] = await Promise.all([
+  const [resources, teacherCourses] = await Promise.all([
     getLibraryResources({}, viewerCtx),
-    getLibraryFolders(viewerCtx),
     getDb().courseTeacherAssignment.findMany({
       where: { userId: user.id },
       include: { course: { select: { id: true, title: true, slug: true } } },
@@ -44,12 +42,10 @@ export default async function DocenteBibliotecaPage() {
 
   return (
     <TeacherShell viewerName={viewerName} viewerInitials={getInitials(viewerName)} roleLabel="Docente">
-      <LibraryPage
+      <TeacherLibraryPage
         resources={resources}
-        folders={folders}
         courses={courses}
-        canManage={true}
-        role="teacher"
+        userId={user.id}
         newResourceHref="/docente/biblioteca/nuevo"
       />
     </TeacherShell>

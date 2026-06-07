@@ -3,10 +3,9 @@ import { requireUser } from "@/lib/auth";
 import { getDb } from "@/lib/prisma";
 import {
   getLibraryResources,
-  getLibraryFolders,
   getViewerContext,
 } from "@/lib/library";
-import { LibraryPage } from "@/components/platform/library/library-page";
+import { StudentLibraryPage } from "@/components/platform/library/student-library-page";
 import { StudentShell, type StudentShellNavItem } from "@/components/campus/student-shell";
 import { getUserCourseSpaces } from "@/lib/course-community";
 import { getInitials } from "@/lib/utils";
@@ -46,11 +45,7 @@ export default async function BibliotecaStudentPage() {
     }),
   ]);
 
-  // resources and folders depend on viewerCtx — run in parallel after it resolves
-  const [resources, folders] = await Promise.all([
-    getLibraryResources({}, viewerCtx),
-    getLibraryFolders(viewerCtx),
-  ]);
+  const resources = await getLibraryResources({}, viewerCtx);
 
   const courses = enrolledCourses.map((e) => ({
     id: e.course.id,
@@ -74,14 +69,7 @@ export default async function BibliotecaStudentPage() {
       roleLabel={isManager ? "Docente" : "Alumno"}
       navItems={navItems}
     >
-      <LibraryPage
-        resources={resources}
-        folders={folders}
-        courses={courses}
-        canManage={isManager}
-        role={user.globalRole === "ADMIN" ? "admin" : isManager ? "teacher" : "student"}
-        newResourceHref={isManager ? "/docente/biblioteca/nuevo" : undefined}
-      />
+      <StudentLibraryPage resources={resources} courses={courses} />
     </StudentShell>
   );
 }
