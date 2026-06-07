@@ -147,6 +147,8 @@ function getPrimaryTeacherCourse(courses: TeacherCourseEntry[]) {
 }
 
 function getNextModule(course: StudentCourseEntry) {
+  // FIX #2: si el curso está completado, no mostrar "siguiente módulo" — no hay ninguno pendiente
+  if (course.progress.isCompleted) return null;
   return course.progress.modules.find((module) => !module.isCompleted) ?? course.progress.modules.at(-1) ?? null;
 }
 
@@ -570,6 +572,7 @@ export default async function MyCoursesPage({
         teacherSummaries,
         notificationSnapshot,
       });
+  // FIX #4: cuando no hay entregas, no mostrar "0% revisado" — es engañoso
   const teacherReviewCompletion =
     primaryTeacherSummary && primaryTeacherSummary.totalSubmissionCount > 0
       ? Math.round(
@@ -577,7 +580,7 @@ export default async function MyCoursesPage({
             primaryTeacherSummary.totalSubmissionCount) *
             100,
         )
-      : 0;
+      : null; // null = sin entregas aún (distinto de 0% = hay entregas sin revisar)
   const totalPendingReviews = teacherSummaries.reduce(
     (sum, s) => sum + s.pendingReviewItems.length,
     0,
@@ -726,12 +729,14 @@ export default async function MyCoursesPage({
                         <span className="font-semibold text-[#059669]">
                           {primaryStudentCourse
                             ? `${primaryStudentCourse.progress.completionRate}% completado`
-                            : `${teacherReviewCompletion}% revisado`}
+                            : teacherReviewCompletion !== null
+                              ? `${teacherReviewCompletion}% revisado`
+                              : "Sin entregas aún"}
                         </span>
                       </div>
                       <ProgressBar
                         tone={primaryStudentCourse?.progress.isCompleted ? "success" : "brand"}
-                        value={primaryStudentCourse ? primaryStudentCourse.progress.completionRate : teacherReviewCompletion}
+                        value={primaryStudentCourse ? primaryStudentCourse.progress.completionRate : (teacherReviewCompletion ?? 0)}
                       />
                     </div>
                   </div>

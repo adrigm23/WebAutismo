@@ -43,6 +43,11 @@ export default async function LessonPage({ params }: Props) {
     redirect(`/mis-cursos/${course.slug}/renovar-acceso`);
   }
 
+  // FIX #1: si el curso no tiene módulos, no hay lección que mostrar
+  if (course.modules.length === 0) {
+    redirect(`/mis-cursos/${slug}`);
+  }
+
   const parsed = Number.parseInt(moduleIndexRaw, 10);
   const clampedIndex =
     Number.isNaN(parsed) || parsed < 0

@@ -22,8 +22,10 @@ export default async function DocenteCursosPage() {
     redirect("/mis-cursos");
   }
 
+  // FIX #5: pasar email para resolver acceso por allowlist consistentemente con otras páginas
   const spaces = await getUserCourseSpaces({
     userId: user.id,
+    email: user.email,
     userGlobalRole: user.globalRole,
     userIsActive: user.isActive,
   });

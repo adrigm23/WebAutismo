@@ -102,11 +102,13 @@ function getDemoProgressRecords(input: {
     return [];
   }
 
-  return input.course.modules.slice(0, Math.min(2, input.course.modules.length)).map((module, index) => ({
-    moduleId: module.id,
-    moduleIndex: index,
-    completedAt: new Date(`2026-05-0${index + 5}T09:00:00.000Z`)
-  }));
+  // FIX #7: usar aritmética real de fechas — la interpolación de string generaba fechas inválidas (ej. "2026-05-010")
+  const baseDate = new Date("2026-05-05T09:00:00.000Z");
+  return input.course.modules.slice(0, Math.min(2, input.course.modules.length)).map((module, index) => {
+    const completedAt = new Date(baseDate);
+    completedAt.setDate(baseDate.getDate() + index);
+    return { moduleId: module.id, moduleIndex: index, completedAt };
+  });
 }
 
 function getModuleFromLegacyIndex(course: CourseProgressCourseShape, moduleIndex: number | null) {

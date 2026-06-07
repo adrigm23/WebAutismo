@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useLayoutEffect } from "react";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -53,7 +53,11 @@ function getContentEmbed(resource: CampusResourceItem): ContentEmbed | null {
         if (id) return { kind: "embed", src: `https://www.youtube.com/embed/${id}` };
       }
       if (url.hostname.includes("youtube.com")) {
-        const id = url.searchParams.get("v");
+        // FIX #3: soportar ?v=ID, /embed/ID, /shorts/ID y /live/ID
+        const id =
+          url.searchParams.get("v") ??
+          url.pathname.match(/\/(?:embed|shorts|live)\/([\w-]+)/)?.[1] ??
+          null;
         if (id) return { kind: "embed", src: `https://www.youtube.com/embed/${id}` };
       }
       if (url.hostname.includes("vimeo.com")) {
@@ -119,11 +123,13 @@ function getDownloadableFiles(
   resources: CampusResourceItem[],
   primaryId: string | null,
 ): CampusResourceItem[] {
+  // FIX #6: excluir ejercicios — no deben aparecer como archivos descargables del módulo
   return resources.filter(
     (r) =>
       r.moduleId === module.id &&
       r.isPublished &&
       r.source === "FILE" &&
+      !r.isExercise &&
       r.id !== primaryId,
   );
 }
@@ -371,7 +377,9 @@ function NotesTab({
       <p className="text-sm text-[var(--color-muted)]">
         Tus notas se guardan localmente en este dispositivo.
       </p>
+      {/* FIX #14: aria-label para lectores de pantalla (placeholder solo no es suficiente) */}
       <textarea
+        aria-label="Notas personales de esta lección"
         className="w-full rounded-xl border border-[var(--color-border)] bg-white px-4 py-3 text-sm text-[var(--color-ink)] placeholder:text-[var(--color-muted)] focus:border-[var(--color-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20"
         onChange={(e) => setNotes(e.target.value)}
         placeholder="Escribe tus notas sobre esta lección..."
@@ -431,8 +439,16 @@ export function LessonPlayer({
   viewerName,
   roleLabel,
 }: LessonPlayerProps) {
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  // FIX #10: en móvil el sidebar empieza cerrado para no comprimir el contenido principal
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<ActiveTab>("recursos");
+
+  // Abre el sidebar por defecto solo en pantallas >= lg (1024px)
+  useLayoutEffect(() => {
+    if (window.innerWidth >= 1024) {
+      setSidebarOpen(true);
+    }
+  }, []);
 
   const modules = progress.modules;
   const currentModule = modules[moduleIndex];
