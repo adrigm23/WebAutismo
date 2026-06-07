@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { useScrollLock } from "@/hooks/use-scroll-lock";
 import type { ReactNode } from "react";
 import Link from "next/link";
@@ -191,8 +192,11 @@ export function StudentShell({
 }: StudentShellProps) {
   const pathname = usePathname();
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
   const closeMobileNav = () => setIsMobileNavOpen(false);
+
+  useEffect(() => { setMounted(true); }, []);
 
   // Close drawer on route change
   useEffect(() => {
@@ -210,20 +214,19 @@ export function StudentShell({
         <SidebarFooter />
       </aside>
 
-      {isMobileNavOpen ? (
-        <div className="fixed inset-0 z-50 lg:hidden">
+      {isMobileNavOpen && mounted ? createPortal(
+        <div className="fixed inset-0 z-[9999] lg:hidden">
           {/* Backdrop */}
           <button
             aria-hidden="true"
-            className="absolute inset-0 bg-[rgba(15,23,32,0.45)] backdrop-blur-sm"
+            className="absolute inset-0 bg-black/60"
             onClick={closeMobileNav}
             tabIndex={-1}
             type="button"
           />
 
-          {/* Drawer — flex-col so footer is always pinned to bottom */}
+          {/* Drawer */}
           <aside className="absolute inset-y-0 left-0 flex w-[280px] max-w-[85vw] flex-col border-r border-[rgba(28,47,67,0.08)] bg-[#f7f4ef] shadow-2xl">
-            {/* Header with brand + close button */}
             <div className="flex shrink-0 items-start justify-between pr-3">
               <SidebarBrand />
               <button
@@ -236,7 +239,6 @@ export function StudentShell({
               </button>
             </div>
 
-            {/* Scrollable nav — flex-1 fills remaining space */}
             <div className="flex-1 overflow-y-auto">
               <SidebarNav
                 navItems={navItems}
@@ -245,12 +247,15 @@ export function StudentShell({
               />
             </div>
 
-            {/* Footer — shrink-0 keeps it always visible; pb respects iOS home bar */}
-            <div className="shrink-0 pb-[env(safe-area-inset-bottom,1rem)]">
+            <div
+              className="shrink-0"
+              style={{ paddingBottom: "max(env(safe-area-inset-bottom), 1rem)" }}
+            >
               <SidebarFooter onNavigate={closeMobileNav} />
             </div>
           </aside>
-        </div>
+        </div>,
+        document.body
       ) : null}
 
       <div className="flex min-h-screen flex-col">
