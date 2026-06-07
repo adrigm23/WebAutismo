@@ -168,8 +168,8 @@ export function CampusCommunity({ threads, courses, newThreadHref, userInitials 
   const primaryCourse = courses[0];
 
   return (
-    <div className="min-h-screen bg-[#f9f9ff]">
-      <div className="max-w-[1200px] mx-auto px-4 md:px-6 py-8">
+    <div className="min-h-screen">
+      <div className="px-5 py-8 sm:px-8 xl:px-10">
 
         {/* Hero header */}
         <header

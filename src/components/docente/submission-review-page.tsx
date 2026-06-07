@@ -511,7 +511,7 @@ export function SubmissionReviewPage({ submission }: SubmissionReviewPageProps) 
   const [activeTab, setActiveTab] = useState<Tab>("entrega");
 
   return (
-    <div className="min-h-screen bg-[#f7f8fc]">
+    <div className="min-h-screen">
       <div className="mx-auto max-w-[1400px] px-4 py-5 sm:px-6 lg:px-8">
 
         {/* ── Breadcrumb ── */}

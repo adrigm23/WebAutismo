@@ -831,8 +831,8 @@ export function LibraryPage({ resources, folders, courses, canManage, newResourc
   }
 
   return (
-    <div className="min-h-screen bg-[#f4f5f7]">
-      <div className="mx-auto max-w-[1280px] px-4 py-6 sm:px-6 lg:px-8">
+    <div className="min-h-screen">
+      <div className="px-5 py-8 sm:px-8 xl:px-10">
 
         {/* Header */}
         <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">

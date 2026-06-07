@@ -960,8 +960,8 @@ export function CalendarPage({ events, courses, canManage }: CalendarPageProps) 
   const hasActiveFilters = filters.types.size > 0 || filters.courseId !== "" || filters.statuses.size > 0;
 
   return (
-    <div className="min-h-screen bg-[#f7f8fc]">
-      <div className="mx-auto max-w-[1400px] px-4 py-6 sm:px-6 lg:px-8">
+    <div className="min-h-screen">
+      <div className="px-5 py-8 sm:px-8 xl:px-10">
 
         {/* ── Top header ── */}
         <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
