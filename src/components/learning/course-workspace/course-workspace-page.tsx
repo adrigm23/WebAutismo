@@ -4,7 +4,6 @@ import { useState } from "react";
 import Link from "next/link";
 import {
   Archive,
-  Award,
   CheckCircle2,
   ChevronDown,
   Circle,
@@ -447,40 +446,6 @@ function DatesCard({ course }: { course: CatalogCourse }) {
   );
 }
 
-function CertificateCard({ isCompleted }: { isCompleted: boolean }) {
-  return (
-    <div className="overflow-hidden rounded-xl border border-[#e5e7eb] bg-white p-5">
-      <p className="text-center text-sm font-bold text-[var(--color-primary)]">
-        Certificado Oficial
-      </p>
-      <p className="mt-2 text-center text-xs leading-relaxed text-[#6b7280]">
-        {isCompleted
-          ? "¡Felicitaciones! Tu certificado está listo para descargar."
-          : "Al completar el 100% de los módulos y aprobar la evaluación final, obtendrás un certificado avalado por Campus Autismo."}
-      </p>
-
-      {/* Certificate mockup */}
-      <div className="mt-4 flex h-24 items-center justify-center overflow-hidden rounded-xl border border-dashed border-[#d1d5db] bg-[#f9fafb]">
-        <p
-          className="select-none text-[1.8rem] font-black tracking-[0.28em] text-[#d1d5db]"
-          style={{ transform: "rotate(-12deg)" }}
-        >
-          CERT.
-        </p>
-      </div>
-
-      {isCompleted && (
-        <Link
-          className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-[var(--color-primary)] py-2.5 text-sm font-semibold text-white transition hover:opacity-90"
-          href="/mi-cuenta"
-        >
-          <Award className="h-4 w-4" />
-          Ver certificado
-        </Link>
-      )}
-    </div>
-  );
-}
 
 // ─── main component ───────────────────────────────────────────────────────────
 
@@ -603,7 +568,6 @@ export function CourseWorkspacePage({
           <InstructorCard course={course} />
           <MaterialsCard resources={resources} />
           <DatesCard course={course} />
-          <CertificateCard isCompleted={progress.isCompleted} />
         </div>
       </div>
     </div>
