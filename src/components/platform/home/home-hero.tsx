@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { ButtonLink } from "@/components/ui/button";
+import { HomeHeroImage } from "@/components/platform/home/home-hero-image";
 
 export function HomeHero() {
   return (
@@ -58,38 +59,9 @@ export function HomeHero() {
           </p>
         </div>
 
-        {/* Image column — placeholder until client provides photo */}
+        {/* Image column — HomeHeroImage es cliente para manejar el fallback */}
         <div className="home-rise home-rise-delay-2 mt-2 sm:mt-0">
-          <div className="overflow-hidden rounded-[var(--radius-xl)] shadow-[var(--shadow-strong)]">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              alt="Formación especializada en autismo"
-              className="h-[22rem] w-full object-cover lg:h-[28rem]"
-              src="/hero-image.jpg"
-              onError={(e) => {
-                // Fallback decorative placeholder if image not yet provided
-                const target = e.currentTarget;
-                target.style.display = "none";
-                const placeholder = target.nextElementSibling as HTMLElement;
-                if (placeholder) placeholder.style.display = "flex";
-              }}
-            />
-            {/* Decorative placeholder shown if /hero-image.jpg doesn't exist yet */}
-            <div
-              aria-hidden
-              className="hidden h-[22rem] w-full items-center justify-center bg-[linear-gradient(135deg,rgba(22,60,88,0.08)_0%,rgba(22,60,88,0.18)_100%)] lg:h-[28rem]"
-              style={{ display: "none" }}
-            >
-              <div className="text-center">
-                <div className="mx-auto h-16 w-16 rounded-full bg-[var(--color-brand-soft)] flex items-center justify-center">
-                  <svg className="h-8 w-8 text-[var(--color-primary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
-                </div>
-                <p className="mt-3 text-sm text-[var(--color-muted)]">Imagen del hero</p>
-              </div>
-            </div>
-          </div>
+          <HomeHeroImage />
         </div>
       </div>
     </section>
