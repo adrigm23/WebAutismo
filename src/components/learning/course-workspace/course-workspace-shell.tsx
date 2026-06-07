@@ -43,18 +43,13 @@ export type CourseWorkspaceShellProps = {
 
 // ─── Nav items ────────────────────────────────────────────────────────────────
 
-function buildNavItems(courseSlug: string | null): NavItem[] {
+function buildNavItems(_courseSlug: string | null): NavItem[] {
   return [
     { label: "Mi campus", href: "/mis-cursos", icon: LayoutGrid },
     { label: "Mensajes", href: "/mensajes", icon: MessagesSquare },
     { label: "Comunidad", href: "/comunidad", icon: MessageSquareText },
     { label: "Calendario", href: "/calendario", icon: CalendarDays },
-    {
-      label: "Biblioteca",
-      href: courseSlug ? `/mis-cursos/${courseSlug}/recursos` : "/mis-cursos",
-      icon: BookOpen,
-      disabled: !courseSlug,
-    },
+    { label: "Biblioteca", href: "/biblioteca", icon: BookOpen },
     { label: "Configuración", href: "/mi-cuenta", icon: Settings2 },
   ];
 }
