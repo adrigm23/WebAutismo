@@ -46,22 +46,55 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   allowedDevOrigins: ["127.0.0.1"],
+
+  // Enable gzip/brotli compression for all responses
+  compress: true,
+
+  // Optimize image handling
+  images: {
+    formats: ["image/avif", "image/webp"],
+    minimumCacheTTL: 60 * 60 * 24 * 30, // 30 days
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920],
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
+  },
+
   experimental: {
     // Keep the Next.js request buffering limit aligned with the Server Action body cap.
     // This app uses proxy, so both limits must stay above the app-level 10 MB validation.
     proxyClientMaxBodySize: uploadTransportBodySizeLimit,
     serverActions: {
-      bodySizeLimit: uploadTransportBodySizeLimit
-    }
+      bodySizeLimit: uploadTransportBodySizeLimit,
+    },
   },
+
   async headers() {
     return [
       {
         source: "/:path*",
-        headers: securityHeaders
-      }
+        headers: securityHeaders,
+      },
+      // Aggressive caching for static assets (JS, CSS, fonts, images)
+      {
+        source: "/_next/static/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=31536000, immutable",
+          },
+        ],
+      },
+      // Cache public assets (images, icons, manifests)
+      {
+        source: "/(.*)\\.(ico|png|jpg|jpeg|svg|webp|avif|woff|woff2|ttf|otf)",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=86400, stale-while-revalidate=604800",
+          },
+        ],
+      },
     ];
-  }
+  },
 };
 
 export default nextConfig;

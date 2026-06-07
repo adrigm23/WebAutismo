@@ -6,14 +6,18 @@ import { absoluteUrl, siteConfig } from "@/lib/site";
 
 const manrope = Manrope({
   subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"],
   variable: "--font-manrope",
   display: "swap",
+  preload: true,
 });
 
 const plusJakartaSans = Plus_Jakarta_Sans({
   subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
   variable: "--font-plus-jakarta",
   display: "swap",
+  preload: true,
 });
 
 export const metadata: Metadata = {

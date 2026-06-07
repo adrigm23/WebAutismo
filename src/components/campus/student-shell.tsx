@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -193,6 +193,23 @@ export function StudentShell({
 
   const closeMobileNav = () => setIsMobileNavOpen(false);
 
+  // Close drawer on route change
+  useEffect(() => {
+    setIsMobileNavOpen(false);
+  }, [pathname]);
+
+  // Prevent background scroll when drawer is open (important on iOS)
+  useEffect(() => {
+    if (isMobileNavOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isMobileNavOpen]);
+
   return (
     <div className="min-h-screen lg:grid lg:grid-cols-[260px_minmax(0,1fr)]">
       <aside className="sticky top-0 hidden h-screen overflow-y-auto border-r border-[rgba(28,47,67,0.08)] bg-[#f7f4ef] lg:flex lg:w-[260px] lg:flex-col">
@@ -202,15 +219,20 @@ export function StudentShell({
       </aside>
 
       {isMobileNavOpen ? (
-        <div className="fixed inset-0 z-40 lg:hidden">
+        <div className="fixed inset-0 z-50 lg:hidden">
+          {/* Backdrop */}
           <button
-            aria-label="Cerrar menú"
+            aria-hidden="true"
             className="absolute inset-0 bg-[rgba(15,23,32,0.45)] backdrop-blur-sm"
             onClick={closeMobileNav}
+            tabIndex={-1}
             type="button"
           />
-          <aside className="absolute inset-y-0 left-0 flex w-[280px] max-w-[85vw] flex-col overflow-y-auto border-r border-[rgba(28,47,67,0.08)] bg-[#f7f4ef] shadow-2xl">
-            <div className="flex items-start justify-between pr-3">
+
+          {/* Drawer — flex-col so footer is always pinned to bottom */}
+          <aside className="absolute inset-y-0 left-0 flex w-[280px] max-w-[85vw] flex-col border-r border-[rgba(28,47,67,0.08)] bg-[#f7f4ef] shadow-2xl">
+            {/* Header with brand + close button */}
+            <div className="flex shrink-0 items-start justify-between pr-3">
               <SidebarBrand />
               <button
                 aria-label="Cerrar menú"
@@ -221,12 +243,20 @@ export function StudentShell({
                 <X className="h-5 w-5" strokeWidth={2} />
               </button>
             </div>
-            <SidebarNav
-              navItems={navItems}
-              onNavigate={closeMobileNav}
-              pathname={pathname}
-            />
-            <SidebarFooter onNavigate={closeMobileNav} />
+
+            {/* Scrollable nav — flex-1 fills remaining space */}
+            <div className="flex-1 overflow-y-auto">
+              <SidebarNav
+                navItems={navItems}
+                onNavigate={closeMobileNav}
+                pathname={pathname}
+              />
+            </div>
+
+            {/* Footer — shrink-0 keeps it always visible; pb respects iOS home bar */}
+            <div className="shrink-0 pb-[env(safe-area-inset-bottom,1rem)]">
+              <SidebarFooter onNavigate={closeMobileNav} />
+            </div>
           </aside>
         </div>
       ) : null}

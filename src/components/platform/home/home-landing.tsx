@@ -5,6 +5,9 @@ import { HomeCertificates } from "@/components/platform/home/home-certificates";
 import { HomeCommunity } from "@/components/platform/home/home-community";
 import { HomeFeaturedCourseCard } from "@/components/platform/home/home-featured-course-card";
 import { HomeHero } from "@/components/platform/home/home-hero";
+import { HomeStats } from "@/components/platform/home/home-stats";
+import { HomeAudienceRoutes } from "@/components/platform/home/home-audience-routes";
+import { HomeHowItWorks } from "@/components/platform/home/home-how-it-works";
 import { HomeSectionHeader } from "@/components/platform/home/home-section-header";
 import { HomeSocialProof } from "@/components/platform/home/home-social-proof";
 import { HomeTestimonials } from "@/components/platform/home/home-testimonials";
@@ -17,11 +20,25 @@ export async function HomeLanding() {
 
   return (
     <div className="home-landing pb-8">
+      {/* 1. Hero */}
       <HomeHero />
 
+      {/* 2. Social proof — quién la usa */}
       <HomeSocialProof />
 
-      {/* Featured courses */}
+      {/* 3. Stats numéricas */}
+      <HomeStats />
+
+      {/* 4. Rutas de especialización — segmentación por audiencia */}
+      <HomeAudienceRoutes />
+
+      {/* 5. ¿Cómo funciona? — convencer antes de mostrar el precio */}
+      <HomeHowItWorks />
+
+      {/* 6. Campus por dentro — demostración del producto */}
+      <HomeCampusInside />
+
+      {/* 7. Cursos destacados — ahora el usuario ya confía */}
       <section
         aria-labelledby="home-courses-heading"
         className="border-t border-[rgba(12,113,195,0.08)] py-16 sm:py-20"
@@ -30,7 +47,7 @@ export async function HomeLanding() {
           <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
             <HomeSectionHeader
               description="Programas completos con objetivos, metodología y docente visibles antes de decidir."
-              eyebrow="Cursos destacados"
+              eyebrow="Formaciones disponibles"
               headingId="home-courses-heading"
               title="Explora el catálogo"
             />
@@ -53,34 +70,45 @@ export async function HomeLanding() {
         </div>
       </section>
 
-      <HomeCampusInside />
-
+      {/* 8. Comunidad */}
       <HomeCommunity />
 
+      {/* 9. Certificados — cierre de objeciones */}
       <HomeCertificates />
 
+      {/* 10. Testimonios — prueba social antes del CTA final */}
       <HomeTestimonials />
 
-      {/* CTA final */}
+      {/* 11. CTA final */}
       <section
         aria-labelledby="home-cta-heading"
         className="site-container py-14 sm:pb-24"
       >
-        <div className="rounded-[var(--radius-xl)] bg-[linear-gradient(135deg,var(--color-primary)_0%,var(--color-brand-strong)_100%)] px-6 py-12 text-center sm:px-12">
-          <p className="text-[0.7rem] font-semibold uppercase tracking-[0.2em] text-[rgba(255,255,255,0.65)]">
+        <div className="relative overflow-hidden rounded-[var(--radius-xl)] bg-[linear-gradient(135deg,var(--color-primary)_0%,var(--color-brand-strong)_100%)] px-6 py-14 text-center sm:px-12">
+          {/* Decorative circles */}
+          <div
+            aria-hidden
+            className="pointer-events-none absolute -right-16 -top-16 h-64 w-64 rounded-full bg-white opacity-[0.04]"
+          />
+          <div
+            aria-hidden
+            className="pointer-events-none absolute -bottom-20 -left-10 h-72 w-72 rounded-full bg-white opacity-[0.04]"
+          />
+
+          <p className="relative text-[0.7rem] font-semibold uppercase tracking-[0.2em] text-[rgba(255,255,255,0.65)]">
             Empieza hoy
           </p>
           <h2
-            className="mt-3 text-balance text-2xl font-semibold tracking-[-0.04em] text-white sm:text-4xl"
+            className="relative mt-3 text-balance text-2xl font-semibold tracking-[-0.04em] text-white sm:text-4xl"
             id="home-cta-heading"
           >
-            Empieza hoy tu formación especializada
+            Tu formación especializada en autismo
           </h2>
-          <p className="mx-auto mt-4 max-w-xl text-base leading-7 text-[rgba(255,255,255,0.75)]">
+          <p className="relative mx-auto mt-4 max-w-xl text-base leading-7 text-[rgba(255,255,255,0.75)]">
             Accede a cursos, recursos, comunidad y certificados diseñados
-            para profesionales y familias.
+            para profesionales, educadores y familias.
           </p>
-          <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+          <div className="relative mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <ButtonLink
               className="w-full justify-center sm:w-auto sm:min-w-[11rem]"
               href="/cursos"
@@ -94,9 +122,12 @@ export async function HomeLanding() {
               href="/registro"
               variant="neutral"
             >
-              Crear cuenta
+              Crear cuenta gratis
             </ButtonLink>
           </div>
+          <p className="relative mt-5 text-[0.75rem] text-[rgba(255,255,255,0.5)]">
+            Sin compromisos · Acceso inmediato al campus
+          </p>
         </div>
       </section>
     </div>

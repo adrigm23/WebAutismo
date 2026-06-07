@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LogOut, Menu, X } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { logoutAction } from "@/actions/session";
 import { adminNavigation } from "@/lib/admin-console";
 import { siteConfig } from "@/lib/site";
@@ -13,88 +13,148 @@ export function AdminMobileNav() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
+  // Close drawer on route change
+  useEffect(() => {
+    setOpen(false);
+  }, [pathname]);
+
+  // Prevent body scroll when drawer is open
+  useEffect(() => {
+    if (open) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [open]);
+
   return (
     <div className="lg:hidden">
+      {/* Toggle button */}
       <button
         aria-controls="admin-mobile-menu"
         aria-expanded={open}
-        aria-label={
-          open
-            ? "Cerrar menu de administracion"
-            : "Abrir menu de administracion"
-        }
-        className="inline-flex min-h-10 items-center gap-2 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface-elevated)] px-3.5 py-2 text-sm font-semibold text-[var(--color-ink)] shadow-[var(--shadow-inset-soft)] transition-[border-color,background-color,color] duration-[var(--motion-duration-base)] hover:border-[var(--color-border-strong)] hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-surface-canvas)]"
-        onClick={() => setOpen((value) => !value)}
+        aria-label={open ? "Cerrar menu" : "Abrir menu"}
+        className="inline-flex min-h-10 items-center gap-2 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface-elevated)] px-3.5 py-2 text-sm font-semibold text-[var(--color-ink)] shadow-[var(--shadow-inset-soft)] transition hover:border-[var(--color-border-strong)] hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2"
+        onClick={() => setOpen(true)}
         type="button"
       >
-        {open ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+        <Menu className="h-4 w-4" />
         Menu
       </button>
 
-      {open ? (
-        <nav
-          className="mt-3 grid gap-2 overflow-y-auto rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface-elevated)] p-3 shadow-[var(--shadow-soft)]"
-          id="admin-mobile-menu"
-          style={{ maxHeight: "calc(100dvh - 6rem)" }}
-        >
-          {adminNavigation.map((item) => {
-            const isActive =
-              item.href === "/admin"
-                ? pathname === item.href
-                : pathname === item.href ||
-                  pathname.startsWith(`${item.href}/`);
+      {/* Full-screen drawer overlay */}
+      {open && (
+        <div className="fixed inset-0 z-50 flex">
+          {/* Backdrop — tap to close */}
+          <button
+            aria-hidden="true"
+            className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+            onClick={() => setOpen(false)}
+            tabIndex={-1}
+            type="button"
+          />
 
-            return (
+          {/* Drawer panel */}
+          <nav
+            aria-label="Menu de administracion"
+            className="relative flex h-full w-[280px] max-w-[85vw] flex-col bg-[linear-gradient(180deg,#f5f1eb_0%,#f4f7fb_100%)] shadow-2xl"
+            id="admin-mobile-menu"
+          >
+            {/* Drawer header */}
+            <div className="flex items-center justify-between px-5 pb-4 pt-6">
               <Link
-                className={cn(
-                  "rounded-[var(--radius-md)] px-4 py-3 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-surface-canvas)]",
-                  isActive
-                    ? "ui-inverse-text bg-[var(--color-primary)]"
-                    : "text-[var(--color-ink)] hover:bg-[var(--color-surface)]",
-                )}
-                href={item.href}
-                key={item.href}
+                className="block"
+                href="/admin"
                 onClick={() => setOpen(false)}
               >
-                {item.label}
+                <div className="text-[1.7rem] font-bold tracking-[-0.06em] text-[var(--color-primary)]">
+                  {siteConfig.shortName}
+                </div>
+                <p className="mt-1 text-[0.65rem] font-semibold uppercase tracking-[0.22em] text-[var(--color-ink-soft)]">
+                  Admin
+                </p>
               </Link>
-            );
-          })}
-
-          <div className="mt-1 grid gap-1 border-t border-[var(--color-border-subtle)] pt-3">
-            <Link
-              className="rounded-[var(--radius-md)] px-4 py-3 text-sm font-medium text-[var(--color-ink-soft)] transition hover:bg-[var(--color-surface)] hover:text-[var(--color-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-surface-canvas)]"
-              href="/mi-cuenta"
-              onClick={() => setOpen(false)}
-            >
-              Mi cuenta
-            </Link>
-            <Link
-              className="rounded-[var(--radius-md)] px-4 py-3 text-sm font-medium text-[var(--color-ink-soft)] transition hover:bg-[var(--color-surface)] hover:text-[var(--color-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-surface-canvas)]"
-              href="/mi-cuenta#notificaciones"
-              onClick={() => setOpen(false)}
-            >
-              Notificaciones
-            </Link>
-            <Link
-              className="rounded-[var(--radius-md)] px-4 py-3 text-sm font-medium text-[var(--color-ink-soft)] transition hover:bg-[var(--color-surface)] hover:text-[var(--color-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-surface-canvas)]"
-              href={`mailto:${siteConfig.supportEmail}`}
-              onClick={() => setOpen(false)}
-            >
-              Soporte
-            </Link>
-            <form action={logoutAction}>
               <button
-                className="flex w-full items-center gap-2 rounded-[var(--radius-md)] px-4 py-3 text-sm font-medium text-[var(--color-danger)] transition hover:bg-[var(--color-danger-soft)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-danger)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-surface-canvas)]"
-                type="submit"
+                aria-label="Cerrar menu"
+                className="grid h-10 w-10 place-items-center rounded-full text-[var(--color-ink-soft)] transition hover:bg-white hover:text-[var(--color-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)]"
+                onClick={() => setOpen(false)}
+                type="button"
               >
-                <LogOut className="h-4 w-4" />
-                Cerrar sesión
+                <X className="h-5 w-5" />
               </button>
-            </form>
-          </div>
-        </nav>
-      ) : null}
+            </div>
+
+            {/* Scrollable nav items — flex-1 so it fills remaining height */}
+            <div className="flex-1 overflow-y-auto px-3 pb-2">
+              <div className="space-y-1">
+                {adminNavigation.map((item) => {
+                  const isActive =
+                    item.href === "/admin"
+                      ? pathname === item.href
+                      : pathname === item.href ||
+                        pathname.startsWith(`${item.href}/`);
+
+                  return (
+                    <Link
+                      className={cn(
+                        "flex items-center rounded-[var(--radius-md)] px-4 py-3.5 text-[1rem] font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)]",
+                        isActive
+                          ? "bg-[var(--color-primary)] text-white"
+                          : "text-[var(--color-ink)] hover:bg-white hover:text-[var(--color-primary)]",
+                      )}
+                      href={item.href}
+                      key={item.href}
+                      onClick={() => setOpen(false)}
+                    >
+                      {item.label}
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Footer — always visible, never scrolls away */}
+            <div className="shrink-0 border-t border-[var(--color-border-subtle)] px-3 pb-[env(safe-area-inset-bottom,1.25rem)] pt-3">
+              <div className="space-y-1">
+                <Link
+                  className="flex items-center rounded-[var(--radius-md)] px-4 py-3.5 text-[1rem] font-medium text-[var(--color-ink-soft)] transition hover:bg-white hover:text-[var(--color-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)]"
+                  href="/mi-cuenta"
+                  onClick={() => setOpen(false)}
+                >
+                  Mi cuenta
+                </Link>
+                <Link
+                  className="flex items-center rounded-[var(--radius-md)] px-4 py-3.5 text-[1rem] font-medium text-[var(--color-ink-soft)] transition hover:bg-white hover:text-[var(--color-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)]"
+                  href="/mi-cuenta#notificaciones"
+                  onClick={() => setOpen(false)}
+                >
+                  Notificaciones
+                </Link>
+                <Link
+                  className="flex items-center rounded-[var(--radius-md)] px-4 py-3.5 text-[1rem] font-medium text-[var(--color-ink-soft)] transition hover:bg-white hover:text-[var(--color-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)]"
+                  href={`mailto:${siteConfig.supportEmail}`}
+                  onClick={() => setOpen(false)}
+                >
+                  Soporte
+                </Link>
+
+                <form action={logoutAction}>
+                  <button
+                    className="flex w-full items-center gap-3 rounded-[var(--radius-md)] px-4 py-3.5 text-left text-[1rem] font-semibold text-[var(--color-danger)] transition hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-danger)]"
+                    type="submit"
+                  >
+                    <LogOut className="h-4 w-4 shrink-0" />
+                    Cerrar sesión
+                  </button>
+                </form>
+              </div>
+            </div>
+          </nav>
+        </div>
+      )}
     </div>
   );
 }

@@ -197,6 +197,7 @@ function PdfViewerCard({
       <div className="bg-[#f0f2f5]" style={{ height: "82vh", minHeight: "640px" }}>
         <iframe
           className="h-full w-full"
+          loading="lazy"
           src={inlineSrc}
           title={resource.title}
         />
@@ -230,6 +231,7 @@ function VideoArea({ resource }: { resource: CampusResourceItem | null }) {
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen; web-share"
           allowFullScreen
           className="h-full w-full"
+          loading="lazy"
           src={embed.src}
           title={resource?.title ?? "Lección"}
         />
@@ -255,6 +257,7 @@ function VideoArea({ resource }: { resource: CampusResourceItem | null }) {
       <div className="aspect-video w-full bg-[#f7f9fb]">
         <iframe
           className="h-full w-full"
+          loading="lazy"
           src={embed.src}
           title={resource?.title ?? "Documento"}
         />

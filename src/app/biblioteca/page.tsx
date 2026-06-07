@@ -32,7 +32,8 @@ function buildStudentNavItems(communityHref: string): StudentShellNavItem[] {
 export default async function BibliotecaStudentPage() {
   const user = await requireUser("/biblioteca");
 
-  const [viewerCtx, spaces] = await Promise.all([
+  // Run independent queries in parallel — enrolledCourses only needs user.id
+  const [viewerCtx, spaces, enrolledCourses] = await Promise.all([
     getViewerContext({ userId: user.id, globalRole: user.globalRole }),
     getUserCourseSpaces({
       userId: user.id,
@@ -40,18 +41,17 @@ export default async function BibliotecaStudentPage() {
       userGlobalRole: user.globalRole,
       userIsActive: user.isActive,
     }),
+    getDb().courseEnrollment.findMany({
+      where: { userId: user.id, status: "ACTIVE" },
+      include: { course: { select: { id: true, title: true, slug: true } } },
+    }),
   ]);
 
+  // resources and folders depend on viewerCtx — run in parallel after it resolves
   const [resources, folders] = await Promise.all([
     getLibraryResources({}, viewerCtx),
     getLibraryFolders(viewerCtx),
   ]);
-
-  // Courses the student is enrolled in (for filter display)
-  const enrolledCourses = await getDb().courseEnrollment.findMany({
-    where: { userId: user.id, status: "ACTIVE" },
-    include: { course: { select: { id: true, title: true, slug: true } } },
-  });
 
   const courses = enrolledCourses.map((e) => ({
     id: e.course.id,

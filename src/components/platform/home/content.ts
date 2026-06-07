@@ -1,3 +1,37 @@
+export const homeStats = [
+  { value: "500+", label: "Profesionales formados" },
+  { value: "12", label: "Cursos especializados" },
+  { value: "94%", label: "Satisfacción" },
+  { value: "3", label: "Áreas de especialización" },
+];
+
+export const homeAudienceRoutes = [
+  {
+    id: "docentes",
+    icon: "graduation" as const,
+    title: "Para Docentes",
+    description:
+      "Estrategias de inclusión en el aula, adaptaciones curriculares y manejo de entornos sensoriales para alumnos con TEA.",
+    tags: ["Inclusión educativa", "Adaptaciones curriculares", "Apoyo conductual"],
+  },
+  {
+    id: "salud",
+    icon: "health" as const,
+    title: "Profesionales de Salud",
+    description:
+      "Actualización clínica, herramientas de diagnóstico diferencial e intervención temprana basada en la evidencia más reciente.",
+    tags: ["Diagnóstico diferencial", "Intervención temprana", "Evidencia científica"],
+  },
+  {
+    id: "familias",
+    icon: "heart" as const,
+    title: "Familias y Entorno",
+    description:
+      "Recursos prácticos, comprensión profunda y herramientas para el apoyo cotidiano en el hogar y la vida familiar.",
+    tags: ["Apoyo familiar", "Rutinas adaptadas", "Comunicación funcional"],
+  },
+];
+
 export const homePillars = [
   {
     title: "Catálogo claro",
@@ -60,25 +94,28 @@ export const homeSocialProof = [
 export const homeTestimonials = [
   {
     quote:
-      "La formación es muy práctica y directa. Pude aplicar las estrategias de comunicación con mis alumnos desde la primera semana.",
-    name: "Laura M.",
+      "La formación es muy práctica y directa. Pude aplicar las estrategias de comunicación con mis alumnos desde la primera semana. La calidad del contenido y la accesibilidad del campus superaron mis expectativas.",
+    name: "Laura Martínez",
     role: "Maestra de Educación Especial",
-    detail: "Centro público, Sevilla"
+    detail: "Centro público, Sevilla",
+    initials: "LM",
   },
   {
     quote:
-      "El campus está muy bien organizado. Los recursos del foro y el seguimiento por módulos hacen que no te pierdas en ningún momento.",
-    name: "Carlos R.",
+      "El campus está muy bien organizado. Los recursos, el foro y el seguimiento por módulos hacen que no te pierdas en ningún momento. Como logopeda, la base clínica del contenido es exactamente lo que necesitaba.",
+    name: "Carlos Ruiz",
     role: "Logopeda",
-    detail: "Clínica privada, Madrid"
+    detail: "Clínica privada, Madrid",
+    initials: "CR",
   },
   {
     quote:
-      "Como familiar de una persona con autismo, encontrar formación rigurosa y accesible a la vez no es fácil. Aquí lo tienen muy bien resuelto.",
-    name: "Ana G.",
-    role: "Familiar",
-    detail: "Córdoba"
-  }
+      "Como familiar de una persona con autismo, encontrar formación rigurosa y accesible a la vez no es fácil. El curso de Apoyo Familiar me dio herramientas concretas que uso cada día en casa.",
+    name: "Ana González",
+    role: "Familiar y cuidadora",
+    detail: "Córdoba",
+    initials: "AG",
+  },
 ];
 
 export const homeCampusCallouts = [
