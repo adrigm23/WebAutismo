@@ -238,6 +238,7 @@ export function CourseExerciseSubmissionForm({
   const [linkValue, setLinkValue] = useState(
     existingSubmission?.linkUrl ?? storedDraft?.linkUrl ?? "",
   );
+  const [bodyText, setBodyText] = useState(existingSubmission?.body ?? "");
   const [selectedFileName, setSelectedFileName] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [draftNotice, setDraftNotice] = useState<string | null>(
@@ -421,27 +422,6 @@ export function CourseExerciseSubmissionForm({
                 </div>
               ) : null}
 
-              {/* Evaluation rubric */}
-              <div className="space-y-1">
-                <div className="flex items-center gap-2">
-                  <div className="h-4 w-1 rounded-full bg-[var(--color-primary)]" />
-                  <span className="text-sm font-semibold text-[var(--color-ink)]">Criterios de Evaluación</span>
-                </div>
-                <div className="mt-2 divide-y divide-[rgba(22,60,88,0.07)] rounded-xl border border-[rgba(22,60,88,0.08)]">
-                  <div className="flex items-center justify-between px-4 py-3 text-sm">
-                    <span className="text-[var(--color-ink-soft)]">Análisis del contexto</span>
-                    <span className="font-bold text-[var(--color-ink)]">40%</span>
-                  </div>
-                  <div className="flex items-center justify-between px-4 py-3 text-sm">
-                    <span className="text-[var(--color-ink-soft)]">Precisión técnica</span>
-                    <span className="font-bold text-[var(--color-ink)]">40%</span>
-                  </div>
-                  <div className="flex items-center justify-between px-4 py-3 text-sm">
-                    <span className="text-[var(--color-ink-soft)]">Claridad y formato</span>
-                    <span className="font-bold text-[var(--color-ink)]">20%</span>
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
 
@@ -462,7 +442,22 @@ export function CourseExerciseSubmissionForm({
             <form action={formAction} className="space-y-4">
               <input name="courseSlug" type="hidden" value={courseSlug} />
               <input name="resourceId" type="hidden" value={resourceId} />
-              <input name="body" type="hidden" value={existingSubmission?.body ?? ""} />
+
+              {/* Text response */}
+              <div>
+                <label className="mb-1.5 block text-xs font-semibold text-[var(--color-ink-soft)]">
+                  Respuesta escrita <span className="font-normal text-[var(--color-muted)]">(opcional)</span>
+                </label>
+                <textarea
+                  className="w-full resize-y rounded-xl border border-[rgba(22,60,88,0.12)] bg-white px-4 py-3 text-sm text-[var(--color-ink)] placeholder:text-[var(--color-muted)] focus:border-[var(--color-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20 disabled:cursor-not-allowed disabled:opacity-50"
+                  disabled={isSubmissionClosed}
+                  name="body"
+                  onChange={(e) => setBodyText(e.target.value)}
+                  placeholder="Escribe tu respuesta aquí..."
+                  rows={4}
+                  value={bodyText}
+                />
+              </div>
 
               {/* Dropzone */}
               <button

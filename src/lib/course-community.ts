@@ -492,11 +492,14 @@ export async function canAccessCourseCommunity(input: {
     const role = getDemoCourseRole(input.userId);
 
     if (!role) {
-      return {
-        allowed: false,
-        role: null,
-        enrollment: null,
-      };
+      return { allowed: false, role: null, enrollment: null };
+    }
+
+    // Demo users only access the single demo course
+    const demoSpaces = await buildDemoUserCourseSpaces(input.userId);
+    const demoSpace = demoSpaces.find((s) => s.course.slug === input.courseSlug);
+    if (!demoSpace) {
+      return { allowed: false, role: null, enrollment: null };
     }
 
     return {
@@ -553,11 +556,14 @@ export async function canAccessCourseCommunityForCourse(input: {
     const role = getDemoCourseRole(input.userId);
 
     if (!role) {
-      return {
-        allowed: false,
-        role: null,
-        enrollment: null,
-      };
+      return { allowed: false, role: null, enrollment: null };
+    }
+
+    // Demo users only access the single demo course
+    const demoSpaces = await buildDemoUserCourseSpaces(input.userId);
+    const demoSpace = demoSpaces.find((s) => s.course.id === input.course.id);
+    if (!demoSpace) {
+      return { allowed: false, role: null, enrollment: null };
     }
 
     return {

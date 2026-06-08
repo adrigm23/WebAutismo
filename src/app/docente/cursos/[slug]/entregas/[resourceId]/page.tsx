@@ -226,8 +226,7 @@ export default async function TeacherEntregasPage({ params }: Props) {
                       {isChangesRequested && (
                         <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--color-brand-soft)] px-2.5 py-1 text-xs font-semibold text-[var(--color-primary)]">
                           <span className="h-1.5 w-1.5 rounded-full bg-[var(--color-primary)]" />
-                          Calificado{submission.score !== null ? `: ${submission.score}/10` : ""}{" "}
-                          (Rehacer)
+                          Cambios solicitados
                         </span>
                       )}
                       <p className="mt-1 flex items-center gap-1 text-xs text-[var(--color-ink-muted)]">

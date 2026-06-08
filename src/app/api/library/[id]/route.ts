@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { buildPrivateFileHeaders } from "@/lib/download-response";
+import { isSafeHttpUrl } from "@/lib/file-security";
 import { getLibraryResourceById } from "@/lib/library";
 import { readStoredObjectContent } from "@/lib/object-storage";
 import { getDb } from "@/lib/prisma";
@@ -31,6 +32,11 @@ export async function GET(
       return NextResponse.json({ error: "Access denied." }, { status: 403 });
     }
     const target = resource.externalUrl || resource.fileUrl;
+    // Re-validate the stored URL at redirect time — defends against data corruption
+    // or stored values that bypass upload-time validation.
+    if (!isSafeHttpUrl(target)) {
+      return NextResponse.json({ error: "Resource URL is invalid." }, { status: 422 });
+    }
     return NextResponse.redirect(target);
   }
 

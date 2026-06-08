@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
-import { canAccessCourseCommunity } from "@/lib/course-community";
+import { canAccessCourseCommunity, canModerateCourse } from "@/lib/course-community";
 import { readStoredCourseResourceContent } from "@/lib/course-resource-storage";
 import { buildPrivateFileHeaders } from "@/lib/download-response";
 import { createRequestLogger, getRequestIdFromHeaders } from "@/lib/logger";
@@ -69,6 +69,18 @@ export async function GET(
       durationMs: Date.now() - startedAt
     });
     return NextResponse.json({ error: "Resource access denied." }, { status: 403 });
+  }
+
+  // Non-staff users cannot download unpublished resources
+  if (!resource.isPublished && !canModerateCourse(accessResult.role)) {
+    downloadLogger.warn("Course resource download denied because resource is not published.", {
+      userId: user.id,
+      resourceId,
+      courseSlug: resource.course.slug,
+      result: "not-published",
+      durationMs: Date.now() - startedAt
+    });
+    return NextResponse.json({ error: "Resource not found." }, { status: 404 });
   }
 
   const downloadRateLimit = await consumeRateLimit({

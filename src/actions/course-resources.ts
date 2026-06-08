@@ -824,9 +824,14 @@ export async function submitCourseResourceSubmissionAction(
       }
     },
     select: {
-      id: true
+      id: true,
+      status: true
     }
   });
+
+  if (previousSubmission?.status === "REVIEWED") {
+    return { error: "Tu entrega ya fue calificada. Si necesitas hacer cambios, contacta con tu docente." };
+  }
 
   try {
     const submission = await upsertCourseResourceSubmission({

@@ -5,6 +5,7 @@ import { getCatalogCourseBySlug } from "@/lib/course-catalog";
 import { getCourseProgressDetailsForUser } from "@/lib/course-progress";
 import {
   canAccessCourseCommunityForCourse,
+  canModerateCourse,
   getRoleLabel,
 } from "@/lib/course-community";
 import { getCampusResources } from "@/lib/course-resources";
@@ -60,7 +61,7 @@ export default async function LessonPage({ params }: Props) {
 
   const [progress, resources] = await Promise.all([
     getCourseProgressDetailsForUser({ userId: user.id, course }),
-    getCampusResources({ course, viewerUserId: user.id, canModerate: false }),
+    getCampusResources({ course, viewerUserId: user.id, canModerate: canModerateCourse(access.role) }),
   ]);
 
   return (

@@ -65,7 +65,7 @@ function ContenidoTab({
             Gestiona los módulos, lecciones y actividades.
           </p>
         </div>
-        <ButtonLink href={`/docente/cursos/${courseSlug}/constructor`} variant="primary">
+        <ButtonLink href={`/docente/cursos/${courseSlug}/constructor?action=new-module`} variant="primary">
           <Plus className="h-4 w-4" />
           Nuevo Módulo
         </ButtonLink>
@@ -103,7 +103,7 @@ function ContenidoTab({
                   </p>
                 </div>
                 <Link
-                  href={`/docente/cursos/${courseSlug}/constructor`}
+                  href={`/docente/cursos/${courseSlug}/constructor?moduleId=${module.id}`}
                   className="rounded p-1 text-[var(--color-ink-soft)] transition hover:text-[var(--color-primary)]"
                   title="Editar módulo"
                 >
@@ -180,7 +180,7 @@ function ContenidoTab({
                                 </Link>
                               )}
                               <Link
-                                href={`/docente/cursos/${courseSlug}/constructor`}
+                                href={`/docente/cursos/${courseSlug}/constructor?moduleId=${module.id}&resourceId=${resource.id}`}
                                 className="inline-flex items-center rounded-lg border border-[rgba(22,60,88,0.18)] px-2.5 py-1 text-xs font-medium text-[var(--color-ink-soft)] transition hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]"
                               >
                                 Editar
@@ -242,7 +242,8 @@ function getStudentStatus(
     : Infinity;
 
   if (daysSinceActivity <= 7) return "al-dia";
-  if (daysSinceActivity > 14 && row.completionRate < 30) return "en-riesgo";
+  // At risk: no activity in 14+ days AND low progress
+  if (daysSinceActivity > 14 && row.completionRate < 50) return "en-riesgo";
   return "sin-actividad";
 }
 
@@ -463,7 +464,13 @@ function EstadisticasTab({
     else distBuckets.completado++;
   }
 
-  const atRisk = progressRows.filter((r) => r.completionRate === 0 && !r.lastCompletedAt).length;
+  const now = Date.now();
+  const atRisk = progressRows.filter((r) => {
+    const daysSince = r.lastCompletedAt
+      ? (now - r.lastCompletedAt.getTime()) / (1000 * 60 * 60 * 24)
+      : Infinity;
+    return daysSince > 14 && r.completionRate < 50;
+  }).length;
 
   const pendingSubmissions = allSubmissions.filter((s) => s.status === "SUBMITTED").length;
   const reviewedSubmissions = allSubmissions.filter((s) => s.status === "REVIEWED").length;

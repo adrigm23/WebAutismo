@@ -43,11 +43,12 @@ export type CourseWorkspaceShellProps = {
 
 // ─── Nav items ────────────────────────────────────────────────────────────────
 
-function buildNavItems(_courseSlug: string | null): NavItem[] {
+function buildNavItems(courseSlug: string | null): NavItem[] {
+  const communityHref = courseSlug ? `/mis-cursos/${courseSlug}/foro` : "/comunidad";
   return [
     { label: "Mi campus", href: "/mis-cursos", icon: LayoutGrid },
     { label: "Mensajes", href: "/mensajes", icon: MessagesSquare },
-    { label: "Comunidad", href: "/comunidad", icon: MessageSquareText },
+    { label: "Foro del curso", href: communityHref, icon: MessageSquareText },
     { label: "Calendario", href: "/calendario", icon: CalendarDays },
     { label: "Biblioteca", href: "/biblioteca", icon: BookOpen },
     { label: "Configuración", href: "/mi-cuenta", icon: Settings2 },
@@ -69,13 +70,16 @@ function isNavItemActive(pathname: string, href: string, label: string) {
 function SidebarContent({
   pathname,
   onNavigate,
+  roleLabel,
 }: {
   pathname: string;
   onNavigate?: () => void;
+  roleLabel?: string;
 }) {
   const courseSlugMatch = pathname.match(/^\/mis-cursos\/([^/]+)/);
   const courseSlug = courseSlugMatch ? courseSlugMatch[1] ?? null : null;
   const navItems = buildNavItems(courseSlug);
+  const subtitle = roleLabel ?? "Campus";
 
   return (
     <div className="flex h-full flex-col">
@@ -86,7 +90,7 @@ function SidebarContent({
             {siteConfig.shortName}
           </div>
           <p className="mt-2 text-[0.7rem] font-semibold uppercase tracking-[0.26em] text-[var(--color-ink-soft)]">
-            Campus del alumno
+            {subtitle}
           </p>
         </Link>
       </div>
@@ -175,7 +179,7 @@ export function CourseWorkspaceShell({
     <div className="min-h-screen lg:grid lg:grid-cols-[260px_minmax(0,1fr)]">
       {/* Desktop sidebar — same width/bg as StudentShell */}
       <aside className="sticky top-0 hidden h-screen overflow-y-auto border-r border-[rgba(28,47,67,0.08)] bg-white lg:flex lg:w-[260px] lg:flex-col">
-        <SidebarContent pathname={pathname} />
+        <SidebarContent pathname={pathname} roleLabel={roleLabel} />
       </aside>
 
       {/* Mobile sidebar overlay */}
@@ -195,7 +199,7 @@ export function CourseWorkspaceShell({
                     {siteConfig.shortName}
                   </div>
                   <p className="mt-2 text-[0.7rem] font-semibold uppercase tracking-[0.26em] text-[var(--color-ink-soft)]">
-                    Campus del alumno
+                    {roleLabel ?? "Campus"}
                   </p>
                 </Link>
               </div>
@@ -208,7 +212,7 @@ export function CourseWorkspaceShell({
                 <X className="h-5 w-5" strokeWidth={2} />
               </button>
             </div>
-            <SidebarContent pathname={pathname} onNavigate={closeMobile} />
+            <SidebarContent pathname={pathname} onNavigate={closeMobile} roleLabel={roleLabel} />
           </aside>
         </div>
       )}

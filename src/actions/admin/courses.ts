@@ -309,6 +309,19 @@ export async function updateCourseEditionAction(formData: FormData) {
     }
   });
 
+  // When an edition is closed or cancelled, expire all active enrollments in it
+  if (edition.status === "CLOSED" || edition.status === "CANCELLED") {
+    await getDb().courseEnrollment.updateMany({
+      where: {
+        courseEditionId: edition.id,
+        status: "ACTIVE",
+      },
+      data: {
+        status: "EXPIRED",
+      },
+    });
+  }
+
   await writeAuditLog({
     actorId: admin.id,
     action: edition.status === "CLOSED" ? "EDITION_CLOSED" : "EDITION_UPDATED",

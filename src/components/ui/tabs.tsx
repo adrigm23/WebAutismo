@@ -149,10 +149,12 @@ export function TabsPanel({
 
   return (
     <div
+      aria-hidden={!isActive}
       aria-labelledby={`${baseId}-tab-${value}`}
       className={cn(!isActive && "hidden", className)}
       id={`${baseId}-panel-${value}`}
       role="tabpanel"
+      tabIndex={isActive ? 0 : -1}
       {...props}
     >
       {children}

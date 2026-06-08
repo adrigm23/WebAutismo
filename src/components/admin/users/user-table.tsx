@@ -61,23 +61,38 @@ function getRoleLabel(role: string) {
 function RowActions({ user }: { user: UserDirectoryItem }) {
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const [statusMsg, setStatusMsg] = useState("");
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!open) return;
-    function handleClick(e: MouseEvent) {
+    function handleOutsideClick(e: MouseEvent) {
       if (ref.current && !ref.current.contains(e.target as Node)) {
         setOpen(false);
       }
     }
-    document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") setOpen(false);
+    }
+    document.addEventListener("mousedown", handleOutsideClick);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", handleOutsideClick);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
   }, [open]);
 
   return (
     <div className="relative" ref={ref}>
+      {/* Live region for screen-reader feedback after actions */}
+      <span aria-live="polite" className="sr-only" role="status">
+        {statusMsg}
+      </span>
+
       <button
-        aria-label="Acciones del usuario"
+        aria-expanded={open}
+        aria-haspopup="menu"
+        aria-label={`Acciones para ${user.name}`}
         className="grid h-8 w-8 place-items-center rounded-full text-[var(--color-muted)] transition hover:bg-[rgba(22,60,88,0.08)] hover:text-[var(--color-ink)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)]"
         onClick={() => setOpen((v) => !v)}
         type="button"
@@ -86,12 +101,20 @@ function RowActions({ user }: { user: UserDirectoryItem }) {
       </button>
 
       {open && (
-        <div className="absolute right-0 top-9 z-30 min-w-[160px] overflow-hidden rounded-xl border border-[var(--color-border-subtle)] bg-white py-1 shadow-[0_8px_24px_rgba(22,60,88,0.12)]">
+        <div
+          className="absolute right-0 top-9 z-30 min-w-[160px] overflow-hidden rounded-xl border border-[var(--color-border-subtle)] bg-white py-1 shadow-[0_8px_24px_rgba(22,60,88,0.12)]"
+          role="menu"
+        >
           <form
             action={async (formData) => {
               startTransition(async () => {
                 await toggleUserActiveAction(formData);
                 setOpen(false);
+                setStatusMsg(
+                  user.isActive
+                    ? `${user.name} ha sido dado de baja.`
+                    : `${user.name} ha sido reactivado.`,
+                );
               });
             }}
           >
@@ -105,6 +128,7 @@ function RowActions({ user }: { user: UserDirectoryItem }) {
                   : "text-[var(--color-success)]",
               )}
               disabled={isPending}
+              role="menuitem"
               type="submit"
             >
               {user.isActive ? (
@@ -211,7 +235,7 @@ export function UserTable({ users }: { users: UserDirectoryItem[] }) {
         <table className="w-full min-w-[640px] border-collapse">
           <thead>
             <tr className="border-b border-[var(--color-border-subtle)]">
-              <th className="w-10 px-4 py-3 text-left">
+              <th className="w-10 px-4 py-3 text-left" scope="col">
                 <input
                   aria-label="Seleccionar todos"
                   checked={allSelected}
@@ -223,19 +247,19 @@ export function UserTable({ users }: { users: UserDirectoryItem[] }) {
                   type="checkbox"
                 />
               </th>
-              <th className="px-4 py-3 text-left text-[0.65rem] font-semibold uppercase tracking-[0.1em] text-[var(--color-muted)]">
+              <th className="px-4 py-3 text-left text-[0.65rem] font-semibold uppercase tracking-[0.1em] text-[var(--color-muted)]" scope="col">
                 Usuario
               </th>
-              <th className="px-4 py-3 text-left text-[0.65rem] font-semibold uppercase tracking-[0.1em] text-[var(--color-muted)]">
+              <th className="px-4 py-3 text-left text-[0.65rem] font-semibold uppercase tracking-[0.1em] text-[var(--color-muted)]" scope="col">
                 Rol
               </th>
-              <th className="px-4 py-3 text-left text-[0.65rem] font-semibold uppercase tracking-[0.1em] text-[var(--color-muted)]">
+              <th className="px-4 py-3 text-left text-[0.65rem] font-semibold uppercase tracking-[0.1em] text-[var(--color-muted)]" scope="col">
                 Estado
               </th>
-              <th className="hidden px-4 py-3 text-left text-[0.65rem] font-semibold uppercase tracking-[0.1em] text-[var(--color-muted)] sm:table-cell">
+              <th className="hidden px-4 py-3 text-left text-[0.65rem] font-semibold uppercase tracking-[0.1em] text-[var(--color-muted)] sm:table-cell" scope="col">
                 Última actividad
               </th>
-              <th className="px-4 py-3 text-right text-[0.65rem] font-semibold uppercase tracking-[0.1em] text-[var(--color-muted)]">
+              <th className="px-4 py-3 text-right text-[0.65rem] font-semibold uppercase tracking-[0.1em] text-[var(--color-muted)]" scope="col">
                 Acciones
               </th>
             </tr>

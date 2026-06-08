@@ -43,8 +43,8 @@ export const adminNavigation: AdminNavigationItem[] = [
   },
   {
     href: "/admin/editions",
-    label: "Contenido",
-    shortLabel: "Contenido",
+    label: "Ediciones",
+    shortLabel: "Ediciones",
     icon: "layers-3",
   },
   {

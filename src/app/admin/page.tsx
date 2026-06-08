@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { AdminPageHeader } from "@/components/admin/admin-page-header";
 import { ButtonLink } from "@/components/ui/button";
+import { MetricPanel } from "@/components/ui/metric-panel";
 import { getAuditActionLabel } from "@/lib/admin-console";
 import { requireAdminConsoleUser } from "@/lib/admin-console-server";
 import { parseAuditMetadata } from "@/lib/audit";
@@ -36,65 +37,17 @@ function buildActorInitials(name: string | null | undefined) {
 
 function getActivityIcon(action: string) {
   if (action.includes("ENROLLMENT") || action.includes("PURCHASE")) {
-    return { Icon: UserPlus, bg: "bg-emerald-50", color: "text-emerald-600" };
+    return { Icon: UserPlus, bg: "bg-[var(--color-success-soft)]", color: "text-[var(--color-success)]" };
   }
   if (action.includes("FORUM") || action.includes("POST")) {
-    return { Icon: MessageSquare, bg: "bg-blue-50", color: "text-blue-600" };
+    return { Icon: MessageSquare, bg: "bg-[var(--color-brand-soft)]", color: "text-[var(--color-primary)]" };
   }
   if (action.includes("MODULE") || action.includes("COMPLETE")) {
-    return { Icon: CheckCircle2, bg: "bg-gray-100", color: "text-gray-500" };
+    return { Icon: CheckCircle2, bg: "bg-[var(--color-surface)]", color: "text-[var(--color-ink-muted)]" };
   }
   return { Icon: Flag, bg: "bg-[var(--color-surface)]", color: "text-[var(--color-muted)]" };
 }
 
-// ─── KPI card ─────────────────────────────────────────────────────────────────
-
-function KpiCard({
-  label,
-  value,
-  change,
-  changeLabel,
-  icon: Icon,
-  positive = true,
-}: {
-  label: string;
-  value: string;
-  change?: string;
-  changeLabel?: string;
-  icon: React.ElementType;
-  positive?: boolean;
-}) {
-  return (
-    <div className="rounded-xl border border-[var(--color-border-subtle)] bg-white p-5 shadow-sm">
-      <div className="flex items-start justify-between">
-        <p className="text-sm font-medium text-[var(--color-muted)]">{label}</p>
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--color-surface)]">
-          <Icon className="h-4 w-4 text-[var(--color-muted)]" strokeWidth={1.8} />
-        </div>
-      </div>
-      <p className="mt-3 text-[2.4rem] font-bold leading-none tracking-[-0.04em] text-[var(--color-ink)]">
-        {value}
-      </p>
-      {change && (
-        <p
-          className={cn(
-            "mt-3 flex items-center gap-1 text-sm font-medium",
-            positive ? "text-emerald-600" : "text-[var(--color-danger)]",
-          )}
-        >
-          <TrendingUp className="h-3.5 w-3.5" />
-          {change}
-          {changeLabel && (
-            <span className="font-normal text-[var(--color-muted)]">{changeLabel}</span>
-          )}
-        </p>
-      )}
-      {!change && changeLabel && (
-        <p className="mt-3 text-sm text-[var(--color-muted)]">{changeLabel}</p>
-      )}
-    </div>
-  );
-}
 
 // ─── demo fallback ────────────────────────────────────────────────────────────
 
@@ -112,10 +65,10 @@ function DemoAdminDashboard() {
       />
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <KpiCard icon={Users} label="Usuarios Activos Hoy" value="3" changeLabel="Entorno de demo" />
-        <KpiCard icon={Wallet} label="Ingresos Netos (Mes)" value="€0" changeLabel="Sin pagos reales" />
-        <KpiCard icon={Award} label="Matrículas Activas" value="1" changeLabel="Demo" />
-        <KpiCard icon={Flag} label="Cursos Activos" value="3" changeLabel="Catálogo demo" />
+        <MetricPanel label="Usuarios Activos Hoy" value="3" detail="Entorno de demo" icon={<Users className="h-5 w-5" strokeWidth={1.8} />} />
+        <MetricPanel label="Ingresos Netos (Mes)" value="€0" detail="Sin pagos reales" icon={<Wallet className="h-5 w-5" strokeWidth={1.8} />} />
+        <MetricPanel label="Matrículas Activas" value="1" detail="Demo" icon={<Award className="h-5 w-5" strokeWidth={1.8} />} tone="brand" />
+        <MetricPanel label="Cursos Activos" value="3" detail="Catálogo demo" icon={<Flag className="h-5 w-5" strokeWidth={1.8} />} />
       </div>
 
       <p className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-surface)] px-5 py-4 text-sm text-[var(--color-muted)]">
@@ -186,21 +139,19 @@ export default async function AdminDashboardPage() {
           orderBy: { createdAt: "asc" },
           take: 1,
         },
+        _count: {
+          select: {
+            enrollments: { where: { status: "ACTIVE" } },
+          },
+        },
       },
       orderBy: { updatedAt: "desc" },
       take: 5,
     }),
   ]);
 
-  // Enrollment counts per top course
-  const topCourseIds = topCourses.map((c) => c.id);
-  const enrollmentGroups = await db.courseEnrollment.groupBy({
-    by: ["courseId"],
-    where: { status: "ACTIVE", courseId: { in: topCourseIds } },
-    _count: { id: true },
-  });
   const enrollmentMap = Object.fromEntries(
-    enrollmentGroups.map((g) => [g.courseId, g._count.id]),
+    topCourses.map((c) => [c.id, c._count.enrollments]),
   );
 
   // Derive incidents from real operational data
@@ -234,49 +185,53 @@ export default async function AdminDashboardPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-[var(--color-ink)]">Vista General</h1>
-          <p className="mt-1 text-sm text-[var(--color-muted)]">
-            Métricas clave y estado del sistema en tiempo real.
-          </p>
-        </div>
-        <Link
-          className="inline-flex shrink-0 items-center gap-2 rounded-xl border border-[var(--color-border-subtle)] bg-white px-4 py-2.5 text-sm font-semibold text-[var(--color-ink)] shadow-sm transition hover:bg-[var(--color-surface)]"
-          href="/admin/audit/export?range=30d&actorId=ALL&action=ALL&entity=ALL&q="
-        >
-          <Download className="h-4 w-4" />
-          Exportar Reporte
-        </Link>
-      </div>
+      <AdminPageHeader
+        title="Vista General"
+        description="Métricas clave y estado del sistema en tiempo real."
+        actions={
+          <ButtonLink
+            href="/admin/audit/export?range=30d&actorId=ALL&action=ALL&entity=ALL&q="
+            variant="neutral"
+          >
+            <Download className="h-4 w-4" />
+            Exportar Reporte
+          </ButtonLink>
+        }
+      />
 
       {/* KPI cards */}
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <KpiCard
-          icon={Users}
+        <MetricPanel
           label="Usuarios Registrados"
           value={formatCompactNumber(activeUsers)}
-          changeLabel="Usuarios activos en la plataforma"
+          detail="Usuarios activos en la plataforma"
+          icon={<Users className="h-5 w-5" strokeWidth={1.8} />}
         />
-        <KpiCard
-          change={revenueChangeStr ?? undefined}
-          changeLabel={revenueChangeStr ? "vs mes anterior" : prevRevenueEuros === 0 ? "Sin ventas el mes anterior" : undefined}
-          positive={revenueChangePct !== null ? revenueChangePct >= 0 : true}
-          icon={Wallet}
+        <MetricPanel
           label="Ingresos Netos (Mes)"
           value={formatPrice(revenueEuros * 100)}
+          detail={
+            revenueChangeStr
+              ? `${revenueChangeStr} vs mes anterior`
+              : prevRevenueEuros === 0
+                ? "Sin ventas el mes anterior"
+                : undefined
+          }
+          icon={<Wallet className="h-5 w-5" strokeWidth={1.8} />}
+          tone={revenueChangePct !== null && revenueChangePct >= 0 ? "success" : revenueChangePct !== null ? "warning" : "default"}
         />
-        <KpiCard
-          changeLabel="Matrículas activas"
-          icon={Award}
+        <MetricPanel
           label="Matrículas Activas"
           value={formatCompactNumber(activeEnrollmentsCount)}
+          detail="Matrículas activas"
+          icon={<Award className="h-5 w-5" strokeWidth={1.8} />}
+          tone="brand"
         />
-        <KpiCard
-          changeLabel="Cursos publicados"
-          icon={Flag}
+        <MetricPanel
           label="Cursos Activos"
           value={String(activeCoursesCount)}
+          detail="Cursos publicados"
+          icon={<Flag className="h-5 w-5" strokeWidth={1.8} />}
         />
       </div>
 
@@ -351,7 +306,7 @@ export default async function AdminDashboardPage() {
               Estado de Incidencias
             </h2>
             {openIncidentsCount > 0 && (
-              <span className="rounded-full bg-red-100 px-2.5 py-1 text-xs font-bold text-red-700">
+              <span className="rounded-full bg-[var(--color-danger-soft)] px-2.5 py-1 text-xs font-bold text-[var(--color-danger)]">
                 {openIncidentsCount} Abiertas
               </span>
             )}
@@ -378,7 +333,7 @@ export default async function AdminDashboardPage() {
                     </p>
                   </div>
                 </div>
-                <span className="shrink-0 rounded-full bg-red-100 px-2.5 py-1 text-[0.65rem] font-bold text-red-700">
+                <span className="shrink-0 rounded-full bg-[var(--color-danger-soft)] px-2.5 py-1 text-[0.65rem] font-bold text-[var(--color-danger)]">
                   Crítica
                 </span>
               </div>
@@ -398,7 +353,7 @@ export default async function AdminDashboardPage() {
                     </p>
                   </div>
                 </div>
-                <span className="shrink-0 rounded-full bg-amber-100 px-2.5 py-1 text-[0.65rem] font-bold text-amber-700">
+                <span className="shrink-0 rounded-full bg-[var(--color-warning-soft)] px-2.5 py-1 text-[0.65rem] font-bold text-[var(--color-warning)]">
                   Media
                 </span>
               </div>
@@ -418,7 +373,7 @@ export default async function AdminDashboardPage() {
                     </p>
                   </div>
                 </div>
-                <span className="shrink-0 rounded-full bg-emerald-100 px-2.5 py-1 text-[0.65rem] font-bold text-emerald-700">
+                <span className="shrink-0 rounded-full bg-[var(--color-success-soft)] px-2.5 py-1 text-[0.65rem] font-bold text-[var(--color-success)]">
                   OK
                 </span>
               </div>
@@ -446,16 +401,20 @@ export default async function AdminDashboardPage() {
             </p>
           </div>
           <Link
+            aria-label="Ver todos los cursos"
             className="flex h-8 w-8 items-center justify-center rounded-lg border border-[var(--color-border-subtle)] text-[var(--color-muted)] transition hover:bg-[var(--color-surface)]"
             href="/admin/courses"
             title="Ver todos los cursos"
           >
-            <ArrowUpRight className="h-4 w-4" />
+            <ArrowUpRight aria-hidden="true" className="h-4 w-4" />
           </Link>
         </div>
 
         <div className="mt-4 overflow-x-auto">
           <table className="w-full min-w-[600px] text-sm">
+            <caption className="sr-only">
+              Rendimiento de los 5 cursos activos con más inscripciones
+            </caption>
             <thead>
               <tr className="border-b border-[var(--color-border-subtle)]">
                 {["Nombre del Curso", "Instructor", "Inscritos Activos", "Tendencia"].map(
@@ -463,6 +422,7 @@ export default async function AdminDashboardPage() {
                     <th
                       className="pb-3 text-left text-xs font-semibold uppercase tracking-[0.1em] text-[var(--color-muted)]"
                       key={col}
+                      scope="col"
                     >
                       {col}
                     </th>
@@ -495,7 +455,7 @@ export default async function AdminDashboardPage() {
                         <TrendingUp
                           className={cn(
                             "h-4 w-4",
-                            enrolled > 0 ? "text-emerald-500" : "text-[var(--color-muted)]",
+                            enrolled > 0 ? "text-[var(--color-success)]" : "text-[var(--color-muted)]",
                           )}
                         />
                       </td>

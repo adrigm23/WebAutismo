@@ -75,14 +75,14 @@ function ProgressCard({
   const href = `/mis-cursos/${courseSlug}/leccion/${Math.max(0, inProgressIndex)}`;
 
   return (
-    <div className="min-w-[220px] rounded-xl border border-[#e5e7eb] bg-white p-5 shadow-sm">
+    <div className="min-w-[220px] rounded-xl border border-[var(--color-border)] bg-white p-5 shadow-[var(--shadow-xs)]">
       <div className="flex items-center justify-between text-sm">
-        <span className="font-medium text-[#6b7280]">Progreso del curso</span>
+        <span className="font-medium text-[var(--color-ink-soft)]">Progreso del curso</span>
         <span className="text-xl font-bold text-[var(--color-primary)]">{pct}%</span>
       </div>
-      <div className="mt-3 h-2 overflow-hidden rounded-full bg-[#e5e7eb]">
+      <div className="mt-3 h-2 overflow-hidden rounded-full bg-[var(--color-surface-muted)]">
         <div
-          className="h-full rounded-full bg-emerald-500 transition-all duration-500"
+          className="h-full rounded-full bg-[var(--color-success)] transition-all duration-500"
           style={{ width: `${pct}%` }}
         />
       </div>
@@ -123,10 +123,10 @@ function ModuleCard({
       className={cn(
         "overflow-hidden rounded-xl border transition",
         status === "in-progress"
-          ? "border-emerald-300 bg-white shadow-sm"
+          ? "border-[var(--color-success)] bg-white shadow-[var(--shadow-xs)]"
           : status === "completed"
-            ? "border-[#e5e7eb] bg-white"
-            : "border-[#e5e7eb] bg-[#f9fafb]",
+            ? "border-[var(--color-border)] bg-white"
+            : "border-[var(--color-border)] bg-[var(--color-bg-subtle)]",
       )}
     >
       {/* Module header — always clickable */}
@@ -137,17 +137,17 @@ function ModuleCard({
       >
         {/* Status icon */}
         {status === "completed" && (
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-500">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--color-success)]">
             <CheckCircle2 className="h-5 w-5 text-white" strokeWidth={2.5} />
           </span>
         )}
         {status === "in-progress" && (
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border-2 border-emerald-400 bg-emerald-50">
-            <PlayCircle className="h-5 w-5 text-emerald-600" />
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border-2 border-[var(--color-success)] bg-[var(--color-success-soft)]">
+            <PlayCircle className="h-5 w-5 text-[var(--color-success)]" />
           </span>
         )}
         {status === "upcoming" && (
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border-2 border-[#e5e7eb] bg-white text-xs font-bold text-[#9ba3af]">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border-2 border-[var(--color-border)] bg-white text-xs font-bold text-[var(--color-ink-muted)]">
             {moduleIndex + 1}
           </span>
         )}
@@ -156,7 +156,7 @@ function ModuleCard({
           <p
             className={cn(
               "text-sm font-semibold leading-snug",
-              status === "upcoming" ? "text-[#6b7280]" : "text-[var(--color-primary)]",
+              status === "upcoming" ? "text-[var(--color-ink-soft)]" : "text-[var(--color-primary)]",
             )}
           >
             Módulo {moduleIndex + 1}: {module.title}
@@ -165,8 +165,8 @@ function ModuleCard({
             className={cn(
               "mt-0.5 text-xs",
               status === "in-progress"
-                ? "font-medium text-emerald-600"
-                : "text-[#9ba3af]",
+                ? "font-medium text-[var(--color-success)]"
+                : "text-[var(--color-ink-muted)]",
             )}
           >
             {status === "completed" && `${lessonLabel} · ${module.estimatedTime}`}
@@ -177,7 +177,7 @@ function ModuleCard({
 
         <ChevronDown
           className={cn(
-            "h-4 w-4 shrink-0 text-[#9ba3af] transition-transform",
+            "h-4 w-4 shrink-0 text-[var(--color-ink-muted)] transition-transform",
             open && "-rotate-180",
           )}
         />
@@ -185,7 +185,7 @@ function ModuleCard({
 
       {/* Lesson items — always accessible */}
       {open && (
-        <div className="divide-y divide-[#f0f0f0] border-t border-[#f0f0f0] px-4">
+        <div className="divide-y divide-[var(--color-border-subtle)] border-t border-[var(--color-border-subtle)] px-4">
           {moduleResources.length > 0 ? (
             moduleResources.map((resource, rIdx) => {
               const LessonIcon = getLessonIcon(resource);
@@ -211,17 +211,17 @@ function ModuleCard({
                 <div
                   className={cn(
                     "flex items-center gap-3 py-3",
-                    isCurrent && "rounded-lg bg-emerald-50/50",
+                    isCurrent && "rounded-lg bg-[var(--color-success-soft)]/50",
                   )}
                   key={resource.id}
                 >
                   {isLessonCompleted ? (
-                    <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-500" />
+                    <CheckCircle2 className="h-4 w-4 shrink-0 text-[var(--color-success)]" />
                   ) : (
                     <LessonIcon
                       className={cn(
                         "h-4 w-4 shrink-0",
-                        isCurrent ? "text-emerald-600" : "text-[#9ba3af]",
+                        isCurrent ? "text-[var(--color-success)]" : "text-[var(--color-ink-muted)]",
                       )}
                     />
                   )}
@@ -232,10 +232,10 @@ function ModuleCard({
                       className={cn(
                         "flex-1 text-sm leading-snug transition hover:text-[var(--color-primary)]",
                         isCurrent
-                          ? "font-semibold text-emerald-700"
+                          ? "font-semibold text-[var(--color-success)]"
                           : isLessonCompleted
-                            ? "text-[#6b7280]"
-                            : "text-[#6b7280]",
+                            ? "text-[var(--color-ink-soft)]"
+                            : "text-[var(--color-ink-soft)]",
                       )}
                       href={itemHref}
                       rel={resource.isExternal ? "noopener noreferrer" : undefined}
@@ -248,8 +248,8 @@ function ModuleCard({
                       className={cn(
                         "flex-1 text-sm leading-snug",
                         isCurrent
-                          ? "font-semibold text-emerald-700"
-                          : "text-[#6b7280]",
+                          ? "font-semibold text-[var(--color-success)]"
+                          : "text-[var(--color-ink-soft)]",
                       )}
                     >
                       {resource.title}
@@ -264,7 +264,7 @@ function ModuleCard({
                       Continuar
                     </Link>
                   ) : (
-                    <span className="shrink-0 text-xs text-[#9ba3af]">
+                    <span className="shrink-0 text-xs text-[var(--color-ink-muted)]">
                       {typeLabel}
                     </span>
                   )}
@@ -276,14 +276,14 @@ function ModuleCard({
             <>
               <div className="flex items-center gap-3 py-3">
                 {status === "completed" ? (
-                  <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-500" />
+                  <CheckCircle2 className="h-4 w-4 shrink-0 text-[var(--color-success)]" />
                 ) : (
                   <PlayCircle
                     className={cn(
                       "h-4 w-4 shrink-0",
                       status === "in-progress"
-                        ? "text-emerald-600"
-                        : "text-[#9ba3af]",
+                        ? "text-[var(--color-success)]"
+                        : "text-[var(--color-ink-muted)]",
                     )}
                   />
                 )}
@@ -291,8 +291,8 @@ function ModuleCard({
                   className={cn(
                     "flex-1 text-sm",
                     status === "in-progress"
-                      ? "font-semibold text-emerald-700"
-                      : "text-[#6b7280]",
+                      ? "font-semibold text-[var(--color-success)]"
+                      : "text-[var(--color-ink-soft)]",
                   )}
                 >
                   {module.title}
@@ -305,18 +305,18 @@ function ModuleCard({
                     Continuar
                   </Link>
                 ) : (
-                  <span className="shrink-0 text-xs text-[#9ba3af]">
+                  <span className="shrink-0 text-xs text-[var(--color-ink-muted)]">
                     {module.estimatedTime}
                   </span>
                 )}
               </div>
               {module.resourcesSummary && (
                 <div className="flex items-center gap-3 py-3">
-                  <FileText className="h-4 w-4 shrink-0 text-[#9ba3af]" />
-                  <span className="flex-1 text-sm text-[#6b7280]">
+                  <FileText className="h-4 w-4 shrink-0 text-[var(--color-ink-muted)]" />
+                  <span className="flex-1 text-sm text-[var(--color-ink-soft)]">
                     {module.resourcesSummary}
                   </span>
-                  <span className="shrink-0 text-xs text-[#9ba3af]">PDF</span>
+                  <span className="shrink-0 text-xs text-[var(--color-ink-muted)]">PDF</span>
                 </div>
               )}
             </>
@@ -340,8 +340,8 @@ function InstructorCard({ course }: { course: CatalogCourse }) {
     .join("");
 
   return (
-    <div className="rounded-xl border border-[#e5e7eb] bg-white p-5">
-      <p className="text-[0.65rem] font-bold uppercase tracking-[0.14em] text-[#9ba3af]">
+    <div className="rounded-xl border border-[var(--color-border)] bg-white p-5">
+      <p className="text-[0.65rem] font-bold uppercase tracking-[0.14em] text-[var(--color-ink-muted)]">
         Instructora del Curso
       </p>
       <div className="mt-3 flex items-center gap-3">
@@ -350,11 +350,11 @@ function InstructorCard({ course }: { course: CatalogCourse }) {
         </div>
         <div className="min-w-0">
           <p className="font-semibold text-[var(--color-primary)]">{teacher.name}</p>
-          <p className="text-xs text-[#6b7280]">{teacher.role}</p>
+          <p className="text-xs text-[var(--color-ink-soft)]">{teacher.role}</p>
         </div>
       </div>
       {teacher.bio && (
-        <p className="mt-3 text-xs leading-relaxed text-[#6b7280]">{teacher.bio}</p>
+        <p className="mt-3 text-xs leading-relaxed text-[var(--color-ink-soft)]">{teacher.bio}</p>
       )}
     </div>
   );
@@ -382,8 +382,8 @@ function DatesCard({ course }: { course: CatalogCourse }) {
   if (dates.length === 0) return null;
 
   return (
-    <div className="rounded-xl border border-[#e5e7eb] bg-white p-5">
-      <p className="text-[0.65rem] font-bold uppercase tracking-[0.14em] text-[#9ba3af]">
+    <div className="rounded-xl border border-[var(--color-border)] bg-white p-5">
+      <p className="text-[0.65rem] font-bold uppercase tracking-[0.14em] text-[var(--color-ink-muted)]">
         Fechas Importantes
       </p>
       <div className="mt-3 space-y-3">
@@ -391,7 +391,7 @@ function DatesCard({ course }: { course: CatalogCourse }) {
           const { month, day } = formatMonthDay(date);
           return (
             <div className="flex items-start gap-3" key={label}>
-              <div className="flex w-10 shrink-0 flex-col items-center rounded-lg border border-[#e5e7eb] py-1 text-center">
+              <div className="flex w-10 shrink-0 flex-col items-center rounded-lg border border-[var(--color-border)] py-1 text-center">
                 <span className="text-[0.55rem] font-bold uppercase text-[var(--color-primary)]">
                   {month}
                 </span>
@@ -399,7 +399,7 @@ function DatesCard({ course }: { course: CatalogCourse }) {
               </div>
               <div className="min-w-0">
                 <p className="text-sm font-semibold text-[var(--color-primary)]">{label}</p>
-                <p className="text-xs text-[#9ba3af]">{sublabel}</p>
+                <p className="text-xs text-[var(--color-ink-muted)]">{sublabel}</p>
               </div>
             </div>
           );
@@ -435,16 +435,16 @@ export function CourseWorkspacePage({
         {/* ── Left column ─────────────────────────────── */}
         <div className="space-y-5">
           {/* Hero card */}
-          <div className="rounded-xl border border-[#e5e7eb] bg-white p-6 lg:p-7">
+          <div className="rounded-xl border border-[var(--color-border)] bg-white p-6 lg:p-7">
             <div className="flex flex-wrap items-start justify-between gap-5">
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-3">
-                  <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
-                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--color-success-soft)] bg-[var(--color-success-soft)] px-3 py-1 text-xs font-semibold text-[var(--color-success)]">
+                    <span className="h-1.5 w-1.5 rounded-full bg-[var(--color-success)]" />
                     En curso
                   </span>
                   {course.activeEdition?.label && (
-                    <span className="text-xs text-[#9ba3af]">
+                    <span className="text-xs text-[var(--color-ink-muted)]">
                       {course.activeEdition.label}
                     </span>
                   )}
@@ -453,7 +453,7 @@ export function CourseWorkspacePage({
                 <h1 className="mt-4 text-[1.7rem] font-bold leading-tight tracking-tight text-[var(--color-primary)] lg:text-[2rem]">
                   {course.title}
                 </h1>
-                <p className="mt-3 text-sm leading-relaxed text-[#6b7280]">
+                <p className="mt-3 text-sm leading-relaxed text-[var(--color-ink-soft)]">
                   {course.shortDescription}
                 </p>
               </div>
@@ -472,24 +472,24 @@ export function CourseWorkspacePage({
           </div>
 
           {/* About this course */}
-          <div className="rounded-xl border border-[#e5e7eb] bg-white p-6 lg:p-7">
+          <div className="rounded-xl border border-[var(--color-border)] bg-white p-6 lg:p-7">
             <h2 className="text-lg font-bold text-[var(--color-primary)]">
               Acerca de este curso
             </h2>
-            <div className="mt-4 space-y-4 text-sm leading-relaxed text-[#6b7280]">
+            <div className="mt-4 space-y-4 text-sm leading-relaxed text-[var(--color-ink-soft)]">
               <p>{course.description}</p>
             </div>
 
             {course.outcomes.length > 0 && (
               <>
-                <div className="my-5 border-t border-[#f0f0f0]" />
-                <p className="text-[0.65rem] font-bold uppercase tracking-[0.14em] text-[#9ba3af]">
+                <div className="my-5 border-t border-[var(--color-border-subtle)]" />
+                <p className="text-[0.65rem] font-bold uppercase tracking-[0.14em] text-[var(--color-ink-muted)]">
                   Lo que aprenderás
                 </p>
                 <div className="mt-3 grid gap-2.5 sm:grid-cols-2">
                   {course.outcomes.map((outcome) => (
                     <div className="flex items-start gap-2.5" key={outcome}>
-                      <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
+                      <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-[var(--color-success)]" />
                       <span className="text-sm text-[var(--color-primary)]">{outcome}</span>
                     </div>
                   ))}

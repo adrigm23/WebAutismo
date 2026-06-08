@@ -343,20 +343,21 @@ function GradingForm({
           {!hasRubric && (
             <div className="mb-4">
               <label className="mb-1.5 block text-xs font-semibold text-[#374151]">
-                Calificación (0–{submission.passingScore ? `${submission.passingScore} mín` : "100"})
+                Calificación (0–10{submission.passingScore ? `, mínimo ${submission.passingScore}` : ""})
               </label>
               <div className="flex items-center gap-2">
                 <input
                   name="scoreDisplay"
                   type="number"
                   min={0}
-                  max={100}
+                  max={10}
+                  step={0.1}
                   value={manualScore}
                   onChange={(e) => setManualScore(e.target.value)}
-                  placeholder="Ej: 85"
+                  placeholder="Ej: 8.5"
                   className="w-24 rounded-lg border border-[#d0d5dd] px-3 py-2 text-sm font-bold text-[var(--color-primary)] outline-none focus:border-[#163c58] focus:ring-2 focus:ring-[#163c58]/10"
                 />
-                <span className="text-sm text-[#9ba3af]">/ 100 pts</span>
+                <span className="text-sm text-[#9ba3af]">/ 10 pts</span>
               </div>
             </div>
           )}

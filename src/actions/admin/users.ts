@@ -98,6 +98,11 @@ export async function updateUserRoleAction(formData: FormData) {
     nextRole: nextRole as "STUDENT" | "TEACHER" | "ADMIN"
   });
 
+  const currentUser = await getDb().user.findUnique({
+    where: { id: userId },
+    select: { id: true, email: true, globalRole: true }
+  });
+
   const updatedUser = await getDb().user.update({
     where: {
       id: userId
@@ -107,19 +112,31 @@ export async function updateUserRoleAction(formData: FormData) {
     }
   });
 
+  // When demoting from TEACHER/ADMIN to STUDENT, clean up course assignments
+  if (nextRole === "STUDENT" && currentUser?.globalRole !== "STUDENT") {
+    await getDb().courseTeacherAssignment.deleteMany({ where: { userId } });
+    await getDb().courseEditionTeacherAssignment.deleteMany({ where: { userId } });
+  }
+
+  const prevRole = currentUser?.globalRole ?? "STUDENT";
+  const auditAction =
+    nextRole === "ADMIN"
+      ? "USER_ADMIN_GRANTED"
+      : nextRole === "TEACHER"
+        ? "USER_TEACHER_GRANTED"
+        : prevRole === "ADMIN"
+          ? "USER_ADMIN_REVOKED"
+          : "USER_TEACHER_REVOKED";
+
   await writeAuditLog({
     actorId: admin.id,
-    action:
-      nextRole === "ADMIN"
-        ? "USER_ADMIN_GRANTED"
-        : nextRole === "TEACHER"
-          ? "USER_TEACHER_GRANTED"
-          : "USER_ADMIN_REVOKED",
+    action: auditAction,
     entityType: "USER",
     entityId: updatedUser.id,
     entityLabel: updatedUser.email,
     metadata: {
-      nextRole
+      nextRole,
+      prevRole
     }
   });
 

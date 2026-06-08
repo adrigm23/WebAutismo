@@ -79,8 +79,8 @@ export async function reviewSubmissionAction(
   if (parsed.data.status === "REVIEWED") {
     const raw = parsed.data.score?.trim().replace(",", ".");
     const num = raw ? Number(raw) : Number.NaN;
-    if (Number.isNaN(num) || num < 0 || num > 100) {
-      return { error: "La calificación debe estar entre 0 y 100." };
+    if (Number.isNaN(num) || num < 0 || num > 10) {
+      return { error: "La calificación debe estar entre 0 y 10." };
     }
     score = num;
   }
@@ -171,6 +171,10 @@ export async function saveReviewDraftAction(
   // Update score + feedback without changing status
   const raw = parsed.data.score?.trim().replace(",", ".");
   const score = raw ? Number(raw) : null;
+
+  if (score !== null && !isNaN(score) && (score < 0 || score > 10)) {
+    return { error: "La calificación debe estar entre 0 y 10." };
+  }
 
   await getDb().courseResourceSubmission.update({
     where: { id: parsed.data.submissionId },

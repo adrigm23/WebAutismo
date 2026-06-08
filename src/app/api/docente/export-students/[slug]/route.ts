@@ -47,8 +47,15 @@ export async function GET(
     ]),
   ];
 
+  // Prefix cells that start with formula trigger chars to prevent CSV injection
+  // in spreadsheet apps (Excel/Sheets) when staff open the export.
+  function csvSafeCell(value: string): string {
+    const s = String(value);
+    return /^[=+\-@\t\r]/.test(s) ? `'${s}` : s;
+  }
+
   const csv = csvRows
-    .map((row) => row.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(","))
+    .map((row) => row.map((c) => `"${csvSafeCell(c).replace(/"/g, '""')}"`).join(","))
     .join("\n");
 
   const filename = `alumnos-${slug}-${new Date().toISOString().split("T")[0]}.csv`;

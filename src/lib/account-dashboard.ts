@@ -104,38 +104,52 @@ export async function getTeacherDashboardCourseSummaries(input: {
 
   const courseIds = input.spaces.map((space) => space.course.id);
   const db = getDb();
+
+  // Phase 1: load resources with only PENDING submissions (capped at 100 per resource).
+  // This replaces loading ALL submissions (could be thousands) with a minimal set.
   const resources = await db.courseResource.findMany({
-    where: {
-      courseId: {
-        in: courseIds
-      }
-    },
+    where: { courseId: { in: courseIds } },
     select: {
       id: true,
       courseId: true,
       title: true,
       type: true,
       submissions: {
+        where: { status: "SUBMITTED" },
         select: {
           id: true,
           status: true,
           submittedAt: true,
           reviewedAt: true,
-          student: {
-            select: {
-              name: true
-            }
-          }
+          student: { select: { name: true } }
         },
-        orderBy: {
-          submittedAt: "desc"
-        }
+        take: 100,
+        orderBy: { submittedAt: "desc" }
       }
     },
-    orderBy: {
-      createdAt: "desc"
-    }
+    orderBy: { createdAt: "desc" }
   });
+
+  const resourceIds = resources.map((r) => r.id);
+
+  // Phase 2: accurate submission counts via lightweight groupBy (no row data).
+  const [totalGroups, reviewedGroups] = resourceIds.length > 0
+    ? await Promise.all([
+        db.courseResourceSubmission.groupBy({
+          by: ["resourceId"],
+          where: { resourceId: { in: resourceIds } },
+          _count: { _all: true }
+        }),
+        db.courseResourceSubmission.groupBy({
+          by: ["resourceId"],
+          where: { resourceId: { in: resourceIds }, status: "REVIEWED" },
+          _count: { _all: true }
+        })
+      ])
+    : [[], []];
+
+  const totalCountById = new Map(totalGroups.map((g) => [g.resourceId, g._count._all]));
+  const reviewedCountById = new Map(reviewedGroups.map((g) => [g.resourceId, g._count._all]));
 
   const resourcesByCourseId = new Map<
     string,
@@ -177,27 +191,22 @@ export async function getTeacherDashboardCourseSummaries(input: {
         exerciseCount += 1;
       }
 
+      totalSubmissionCount += totalCountById.get(resource.id) ?? 0;
+      reviewedSubmissionCount += reviewedCountById.get(resource.id) ?? 0;
+
       for (const submission of resource.submissions) {
-        totalSubmissionCount += 1;
-
-        if (submission.status === "REVIEWED") {
-          reviewedSubmissionCount += 1;
-        }
-
-        if (submission.status === "SUBMITTED") {
-          pendingReviewItems.push({
-            id: submission.id,
-            href: buildTeacherTrackingDeepLink({
-              courseSlug: space.course.slug,
-              submissionId: submission.id
-            }),
-            courseTitle: space.course.title,
-            resourceTitle: resource.title,
-            learnerName: submission.student.name,
-            submittedAt: submission.submittedAt,
-            statusLabel: getSubmissionStatusLabel(submission.status)
-          });
-        }
+        pendingReviewItems.push({
+          id: submission.id,
+          href: buildTeacherTrackingDeepLink({
+            courseSlug: space.course.slug,
+            submissionId: submission.id
+          }),
+          courseTitle: space.course.title,
+          resourceTitle: resource.title,
+          learnerName: submission.student.name,
+          submittedAt: submission.submittedAt,
+          statusLabel: getSubmissionStatusLabel(submission.status)
+        });
 
         recentSubmissionActivity.push({
           id: `submission-${submission.id}`,
@@ -205,17 +214,11 @@ export async function getTeacherDashboardCourseSummaries(input: {
             courseSlug: space.course.slug,
             submissionId: submission.id
           }),
-          title:
-            submission.status === "REVIEWED"
-              ? `Entrega revisada en ${space.course.title}`
-              : `Nueva entrega en ${space.course.title}`,
-          body:
-            submission.status === "REVIEWED"
-              ? `${submission.student.name} ya tiene revision en "${resource.title}".`
-              : `${submission.student.name} ha enviado "${resource.title}".`,
-          createdAt: submission.reviewedAt ?? submission.submittedAt,
-          tone: submission.status === "REVIEWED" ? "teacher" : "student",
-          sourceLabel: submission.status === "REVIEWED" ? "Revision" : "Entrega"
+          title: `Nueva entrega en ${space.course.title}`,
+          body: `${submission.student.name} ha enviado "${resource.title}".`,
+          createdAt: submission.submittedAt,
+          tone: "student",
+          sourceLabel: "Entrega"
         });
       }
     }

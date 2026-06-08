@@ -160,10 +160,10 @@ function getStudentCourseMeta(course: StudentCourseEntry) {
   }
 
   if (course.progress.isCompleted) {
-    return `Curso completado · ${course.progress.totalModules} modulos revisados`;
+    return `Curso completado · ${course.progress.totalModules} módulos revisados`;
   }
 
-  return `Modulo ${nextModule.index + 1}: ${nextModule.title}`;
+  return `Módulo ${nextModule.index + 1}: ${nextModule.title}`;
 }
 
 function buildNotificationActivity(snapshot: DashboardNotificationSnapshot) {
@@ -461,6 +461,7 @@ function buildStudentNavItems(communityHref: string): StudentShellNavItem[] {
     { label: "Comunidad", href: communityHref, icon: "community" },
     { label: "Calendario", href: "/calendario", icon: "calendar" },
     { label: "Biblioteca", href: "/biblioteca", icon: "library" },
+    { label: "Certificados", href: "/certificados", icon: "certificates" },
     { label: "Configuración", href: "/mi-cuenta", icon: "settings" },
   ];
 }
@@ -679,9 +680,7 @@ export default async function MyCoursesPage({
               className="group block overflow-hidden rounded-xl border border-[rgba(22,60,88,0.09)] bg-white shadow-[0_2px_12px_rgba(30,58,95,0.06)] transition hover:shadow-[0_4px_20px_rgba(30,58,95,0.1)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)]"
               href={
                 primaryStudentCourse
-                  ? buildCourseContentHref(primaryStudentCourse.space.course.slug, {
-                      moduleIndex: nextModule?.index ?? 0,
-                    })
+                  ? `/mis-cursos/${primaryStudentCourse.space.course.slug}`
                   : primaryTeacherCourse?.teachingHref ?? "/soporte"
               }
             >
@@ -761,13 +760,13 @@ export default async function MyCoursesPage({
               Campus activo
             </p>
             <h2 className="mt-3 text-2xl font-bold text-[var(--color-ink)]">
-              Todavia no tienes recorridos activos
+              Todavía no tienes recorridos activos
             </h2>
             <p className="mt-2 max-w-[42rem] text-sm text-[var(--color-ink-soft)]">
-              Explora el catalogo y activa tu siguiente curso sin salir de la zona privada.
+              Explora el catálogo y activa tu siguiente curso.
             </p>
             <div className="mt-5">
-              <ButtonLink href="/cursos">Explorar catalogo</ButtonLink>
+              <ButtonLink href="/cursos">Explorar catálogo</ButtonLink>
             </div>
           </section>
         )}
@@ -1045,7 +1044,7 @@ export default async function MyCoursesPage({
                     </div>
                     <Link
                       className="mt-4 block w-full rounded-lg border border-[rgba(22,60,88,0.12)] px-4 py-2 text-center text-sm font-medium text-[var(--color-ink-soft)] transition hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]"
-                      href="/mis-cursos?tab=completados"
+                      href="/certificados"
                     >
                       Ver todos los certificados
                     </Link>

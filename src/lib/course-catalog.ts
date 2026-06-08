@@ -1,4 +1,5 @@
 import { cache } from "react";
+import { unstable_cache } from "next/cache";
 import { Prisma } from "@prisma/client";
 import type {
   Course as LegacyCourse,
@@ -349,11 +350,49 @@ async function fetchCatalogCoursesFromDb(where: Prisma.CourseWhereInput) {
   return records.map((record) => toCatalogCourse(record));
 }
 
+// Module-level unstable_cache wrappers — shared across all requests, revalidated every hour.
+// React.cache() deduplicates within a single request on top of this.
+const _fetchActiveCoursesStable = unstable_cache(
+  () => fetchCatalogCoursesFromDb({ status: "ACTIVE" }),
+  ["catalog-courses-active"],
+  { revalidate: 3600, tags: ["catalog-courses"] }
+);
+
+const _fetchAllCoursesStable = unstable_cache(
+  () => fetchCatalogCoursesFromDb({}),
+  ["catalog-courses-all"],
+  { revalidate: 3600, tags: ["catalog-courses"] }
+);
+
+const _fetchCourseBySlugStable = unstable_cache(
+  async (slug: string) => {
+    const record = await getDb().course.findUnique({
+      where: { slug },
+      include: {
+        modules: true,
+        editions: true,
+        teacherAssignments: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                globalRole: true,
+              },
+            },
+          },
+        },
+      },
+    });
+    return record ? toCatalogCourse(record) : null;
+  },
+  ["catalog-course-by-slug"],
+  { revalidate: 3600, tags: ["catalog-courses"] }
+);
+
 export const getCatalogCourses = cache(async (includeInactive = false) => {
   try {
-    return await fetchCatalogCoursesFromDb(
-      includeInactive ? {} : { status: "ACTIVE" },
-    );
+    return await (includeInactive ? _fetchAllCoursesStable : _fetchActiveCoursesStable)();
   } catch (error) {
     if (!shouldUseLegacyCatalogFallback(error)) {
       throw error;
@@ -392,26 +431,7 @@ export const getCatalogCoursesByIds = cache(
 
 export const getCatalogCourseBySlug = cache(async (slug: string) => {
   try {
-    const record = await getDb().course.findUnique({
-      where: { slug },
-      include: {
-        modules: true,
-        editions: true,
-        teacherAssignments: {
-          include: {
-            user: {
-              select: {
-                id: true,
-                name: true,
-                globalRole: true,
-              },
-            },
-          },
-        },
-      },
-    });
-
-    return record ? toCatalogCourse(record) : null;
+    return await _fetchCourseBySlugStable(slug);
   } catch (error) {
     if (!shouldUseLegacyCatalogFallback(error)) {
       throw error;

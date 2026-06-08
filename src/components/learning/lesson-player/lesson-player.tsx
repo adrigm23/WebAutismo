@@ -199,7 +199,7 @@ function PdfViewerCard({
           </a>
         )}
       </div>
-      {/* PDF iframe — tall */}
+      {/* PDF iframe — tall; fallback download link for iOS Safari */}
       <div className="bg-[#f0f2f5]" style={{ height: "82vh", minHeight: "640px" }}>
         <iframe
           className="h-full w-full"
@@ -208,6 +208,19 @@ function PdfViewerCard({
           title={resource.title}
         />
       </div>
+      {resource.href && (
+        <p className="mt-2 text-center text-xs text-[var(--color-muted)]">
+          ¿No se muestra el PDF?{" "}
+          <a
+            className="font-medium text-[var(--color-primary)] underline underline-offset-2 hover:opacity-80"
+            href={resource.href}
+            rel="noopener noreferrer"
+            target="_blank"
+          >
+            Abrirlo en una nueva pestaña
+          </a>
+        </p>
+      )}
     </div>
   );
 }
@@ -375,7 +388,7 @@ function NotesTab({
   return (
     <div className="space-y-3">
       <p className="text-sm text-[var(--color-muted)]">
-        Tus notas se guardan localmente en este dispositivo.
+        Tus notas se guardan solo en este dispositivo y navegador. Si cambias de dispositivo o limpias el historial del navegador, se perderán.
       </p>
       {/* FIX #14: aria-label para lectores de pantalla (placeholder solo no es suficiente) */}
       <textarea

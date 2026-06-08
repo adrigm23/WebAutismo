@@ -224,6 +224,23 @@
     transform var(--motion-duration-fast) var(--motion-ease-standard);
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .ui-card-base,
+  .ui-card-interactive,
+  .ui-control-base,
+  .ui-button {
+    transition: none;
+  }
+
+  .ui-card-interactive:hover {
+    transform: none;
+  }
+
+  html {
+    scroll-behavior: auto;
+  }
+}
+
 .ui-card-muted {
   background: color-mix(in srgb, var(--color-surface) 72%, white);
   border-color: color-mix(in srgb, var(--color-border) 84%, white);
@@ -255,7 +272,7 @@
 }
 
 .ui-control-base::placeholder {
-  color: color-mix(in srgb, var(--color-muted) 72%, white);
+  color: var(--color-muted);
 }
 
 .ui-control-base:focus {

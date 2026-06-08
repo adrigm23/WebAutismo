@@ -236,61 +236,62 @@ async function upgradeLegacyCourseProgressRecords(input: {
       }
     });
 
+    // Build the resolved (record, course, module) triples in memory — no DB calls here.
+    type ResolvedLegacyRecord = {
+      record: (typeof legacyRecords)[number];
+      course: NonNullable<ReturnType<typeof uniqueCourses.get>>;
+      courseModule: NonNullable<ReturnType<typeof getModuleFromLegacyIndex>>;
+    };
+
+    const resolved: ResolvedLegacyRecord[] = [];
+
     for (const record of legacyRecords) {
       const course = uniqueCourses.get(record.courseSlug);
-
-      if (!course) {
-        continue;
-      }
-
+      if (!course) continue;
       const courseModule = getModuleFromLegacyIndex(course, record.moduleIndex);
+      if (!courseModule) continue;
+      resolved.push({ record, course, courseModule });
+    }
 
-      if (!courseModule) {
-        continue;
+    if (resolved.length === 0) return;
+
+    // Batch-check for existing upgraded records — single query instead of N findFirst calls.
+    const allModuleIds = resolved.map((r) => r.courseModule.id);
+    const existingUpgraded = await db.courseModuleProgress.findMany({
+      where: {
+        userId: input.userId,
+        moduleId: { in: allModuleIds }
+      },
+      select: { id: true, moduleId: true }
+    });
+    const existingModuleIds = new Set(existingUpgraded.map((r) => r.moduleId));
+
+    const toDelete: string[] = [];
+    const toUpdate: Array<{ id: string; courseId: string | null; moduleId: string }> = [];
+
+    for (const { record, course, courseModule } of resolved) {
+      if (existingModuleIds.has(courseModule.id)) {
+        toDelete.push(record.id);
+      } else {
+        toUpdate.push({ id: record.id, courseId: course.id ?? null, moduleId: courseModule.id });
       }
+    }
 
-      const existing = await db.courseModuleProgress.findFirst({
-        where: {
-          userId: input.userId,
-          ...(course.id
-            ? {
-                OR: [
-                  {
-                    courseId: course.id
-                  },
-                  {
-                    courseSlug: record.courseSlug
-                  }
-                ]
-              }
-            : {
-                courseSlug: record.courseSlug
-              }),
-          moduleId: courseModule.id
-        },
-        select: {
-          id: true
-        }
-      });
+    // Batch delete obsolete legacy records.
+    if (toDelete.length > 0) {
+      await db.courseModuleProgress.deleteMany({ where: { id: { in: toDelete } } });
+    }
 
-      if (existing) {
-        await db.courseModuleProgress.delete({
-          where: {
-            id: record.id
-          }
-        });
-        continue;
-      }
-
-      await db.courseModuleProgress.update({
-        where: {
-          id: record.id
-        },
-        data: {
-          courseId: course.id ?? null,
-          moduleId: courseModule.id
-        }
-      });
+    // Batch update remaining legacy records in a single transaction.
+    if (toUpdate.length > 0) {
+      await db.$transaction(
+        toUpdate.map((item) =>
+          db.courseModuleProgress.update({
+            where: { id: item.id },
+            data: { courseId: item.courseId, moduleId: item.moduleId }
+          })
+        )
+      );
     }
   } catch (error) {
     if (isDatabaseSchemaDriftError(error)) {

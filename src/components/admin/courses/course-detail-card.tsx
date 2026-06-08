@@ -1,3 +1,4 @@
+import Link from "next/link";
 import {
   assignTeacherToCourseAction,
   cloneCourseAction,
@@ -38,9 +39,17 @@ export function CourseDetailCard({
             Slug: {course.slug}
           </p>
         </div>
-        <AdminStatusBadge tone={getCourseStatusTone(course.status)}>
-          {getCourseStatusLabel(course.status)}
-        </AdminStatusBadge>
+        <div className="flex flex-wrap items-center gap-2">
+          <AdminStatusBadge tone={getCourseStatusTone(course.status)}>
+            {getCourseStatusLabel(course.status)}
+          </AdminStatusBadge>
+          <Link
+            href={`/docente/cursos/${course.slug}/constructor`}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--color-border-subtle)] px-3 py-1.5 text-sm font-medium text-[var(--color-ink-soft)] transition hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]"
+          >
+            Abrir constructor
+          </Link>
+        </div>
       </div>
 
       {course.status === "INACTIVE" && (

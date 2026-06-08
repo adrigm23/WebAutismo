@@ -78,17 +78,19 @@ function SidebarNav({
 
         if (item.disabled) {
           return (
-            <div
+            <span
               aria-disabled="true"
               className="flex cursor-not-allowed items-center gap-3 rounded-[var(--radius-md)] px-4 py-3 text-[1.02rem] font-medium text-[var(--color-ink-soft)] opacity-50"
               key={item.label}
+              role="link"
+              tabIndex={-1}
             >
               <Icon className="h-5 w-5 shrink-0" strokeWidth={2} />
               <span className="flex-1">{item.label}</span>
               <span className="rounded-full bg-[rgba(28,47,67,0.08)] px-2 py-0.5 text-[0.62rem] font-semibold uppercase tracking-[0.08em] text-[var(--color-ink-soft)]">
                 Próx.
               </span>
-            </div>
+            </span>
           );
         }
 
@@ -134,6 +136,14 @@ function SidebarFooter({ onNavigate }: { onNavigate?: () => void }) {
       <div className="space-y-1">
         <Link
           className="flex items-center gap-3 rounded-[var(--radius-md)] px-4 py-3 text-[1.02rem] font-medium text-[var(--color-ink-soft)] transition hover:bg-white hover:text-[var(--color-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2"
+          href="/mis-cursos"
+          onClick={onNavigate}
+        >
+          <LayoutGrid className="h-5 w-5 shrink-0" strokeWidth={2} />
+          <span>Mi campus</span>
+        </Link>
+        <Link
+          className="flex items-center gap-3 rounded-[var(--radius-md)] px-4 py-3 text-[1.02rem] font-medium text-[var(--color-ink-soft)] transition hover:bg-white hover:text-[var(--color-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2"
           href="/soporte"
           onClick={onNavigate}
         >
@@ -174,11 +184,25 @@ export function TeacherShell({
     setIsMobileNavOpen(false);
   }, [pathname]);
 
+  // Close drawer on Escape key (WCAG 2.1 SC 2.4.3)
+  useEffect(() => {
+    if (!isMobileNavOpen) return;
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") closeMobileNav();
+    }
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [isMobileNavOpen]);
+
   // Lock body scroll (iOS-safe)
   useScrollLock(isMobileNavOpen);
 
   return (
     <div className="min-h-screen lg:grid lg:grid-cols-[260px_minmax(0,1fr)]">
+      <a className="skip-link" href="#main-content">
+        Saltar al contenido
+      </a>
+
       <aside className="sticky top-0 hidden h-screen overflow-y-auto border-r border-[rgba(28,47,67,0.08)] bg-white lg:flex lg:w-[260px] lg:flex-col">
         <SidebarBrand />
         <SidebarNav pathname={pathname} />
@@ -197,7 +221,12 @@ export function TeacherShell({
           />
 
           {/* Drawer */}
-          <aside className="absolute inset-y-0 left-0 flex w-[280px] max-w-[85vw] flex-col border-r border-[rgba(28,47,67,0.08)] bg-white shadow-2xl">
+          <aside
+            aria-label="Menú de navegación"
+            aria-modal="true"
+            className="absolute inset-y-0 left-0 flex w-[280px] max-w-[85vw] flex-col border-r border-[rgba(28,47,67,0.08)] bg-white shadow-2xl"
+            role="dialog"
+          >
             <div className="flex shrink-0 items-start justify-between pr-3">
               <SidebarBrand />
               <button
@@ -283,7 +312,7 @@ export function TeacherShell({
           </div>
         </header>
 
-        <main className="flex-1 bg-[#f3f4f6]">{children}</main>
+        <main className="flex-1 bg-[#f3f4f6]" id="main-content">{children}</main>
       </div>
     </div>
   );

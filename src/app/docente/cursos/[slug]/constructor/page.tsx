@@ -1,12 +1,17 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
-import {
-  CourseBuilder,
-  type BuilderCourse,
-} from "@/components/docente/course-builder/course-builder";
+import dynamic from "next/dynamic";
+import type { BuilderCourse } from "@/components/docente/course-builder/course-builder";
 import { requireUser } from "@/lib/auth";
 import { getDb } from "@/lib/prisma";
 import { TeacherShell } from "@/components/docente/teacher-shell";
+
+// Lazy-load the builder so @dnd-kit (heavy drag-and-drop library) is only
+// downloaded when a teacher actually opens the constructor route.
+const CourseBuilder = dynamic(
+  () => import("@/components/docente/course-builder/course-builder").then((m) => ({ default: m.CourseBuilder })),
+  { ssr: false }
+);
 import { getInitials } from "@/lib/utils";
 
 type Props = { params: Promise<{ slug: string }> };

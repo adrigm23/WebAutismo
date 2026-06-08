@@ -9,6 +9,7 @@ import { getTeacherDashboardCourseSummaries, getDashboardNotificationSnapshot } 
 import { CourseArtwork } from "@/components/course-artwork";
 import { Badge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button";
+import { MetricPanel } from "@/components/ui/metric-panel";
 import { TeacherShell } from "@/components/docente/teacher-shell";
 import { getInitials, formatRelativeTime } from "@/lib/utils";
 
@@ -66,43 +67,26 @@ export default async function DocenteDashboardPage() {
 
         {/* Métricas rápidas */}
         <section className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
-          {/* Card: Cursos activos */}
-          <div className="flex flex-col gap-1 rounded-xl border border-[rgba(22,60,88,0.08)] bg-white/90 px-5 py-4 shadow-[var(--shadow-soft)]">
-            <div className="flex items-center gap-2 text-[var(--color-ink-soft)]">
-              <GraduationCap className="h-4 w-4" />
-              <span className="text-xs font-medium uppercase tracking-wide">Cursos</span>
-            </div>
-            <p className="text-3xl font-bold text-[var(--color-ink)]">{staffSpaces.length}</p>
-            <p className="text-xs text-[var(--color-ink-muted)]">Cursos asignados</p>
-          </div>
-
-          {/* Card: Revisiones pendientes */}
-          <div className={`flex flex-col gap-1 rounded-xl border px-5 py-4 shadow-[var(--shadow-soft)] ${
-            totalPendingReviews > 0
-              ? "border-[var(--color-danger-soft)] bg-[var(--color-danger-soft)]"
-              : "border-[rgba(22,60,88,0.08)] bg-white/90"
-          }`}>
-            <div className={`flex items-center gap-2 ${totalPendingReviews > 0 ? "text-[var(--color-danger)]" : "text-[var(--color-ink-soft)]"}`}>
-              <ClipboardList className="h-4 w-4" />
-              <span className="text-xs font-medium uppercase tracking-wide">Revisiones</span>
-            </div>
-            <p className={`text-3xl font-bold ${totalPendingReviews > 0 ? "text-[var(--color-danger)]" : "text-[var(--color-ink)]"}`}>
-              {totalPendingReviews}
-            </p>
-            <p className={`text-xs ${totalPendingReviews > 0 ? "text-[var(--color-danger)]" : "text-[var(--color-ink-muted)]"}`}>
-              Pendientes de revisión
-            </p>
-          </div>
-
-          {/* Card: Alumnos activos */}
-          <div className="flex flex-col gap-1 rounded-xl border border-[rgba(22,60,88,0.08)] bg-white/90 px-5 py-4 shadow-[var(--shadow-soft)]">
-            <div className="flex items-center gap-2 text-[var(--color-ink-soft)]">
-              <Users className="h-4 w-4" />
-              <span className="text-xs font-medium uppercase tracking-wide">Alumnos</span>
-            </div>
-            <p className="text-3xl font-bold text-[var(--color-ink)]">{totalLearners}</p>
-            <p className="text-xs text-[var(--color-ink-muted)]">Alumnos activos</p>
-          </div>
+          <MetricPanel
+            label="Cursos"
+            value={staffSpaces.length}
+            detail="Cursos asignados"
+            icon={<GraduationCap className="h-5 w-5" strokeWidth={1.8} />}
+          />
+          <MetricPanel
+            label="Revisiones"
+            value={totalPendingReviews}
+            detail="Pendientes de revisión"
+            icon={<ClipboardList className="h-5 w-5" strokeWidth={1.8} />}
+            tone={totalPendingReviews > 0 ? "warning" : "default"}
+          />
+          <MetricPanel
+            label="Alumnos"
+            value={totalLearners}
+            detail="Alumnos activos"
+            icon={<Users className="h-5 w-5" strokeWidth={1.8} />}
+            tone="brand"
+          />
         </section>
 
         {/* Revisiones urgentes */}
@@ -113,27 +97,29 @@ export default async function DocenteDashboardPage() {
               {allPendingItems.map((item) => (
                 <div
                   key={item.id}
-                  className="flex flex-col gap-2 rounded-lg border border-[var(--color-danger-soft)] bg-[var(--color-danger-soft)] px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
+                  className="flex flex-col gap-2 rounded-lg border border-[var(--color-border-subtle)] bg-white px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
                 >
-                  <div className="min-w-0">
-                    <p className="text-sm font-semibold text-[var(--color-ink)] truncate">
-                      {item.learnerName}
-                    </p>
-                    <p className="text-xs text-[var(--color-ink-soft)]">
-                      {item.resourceTitle} · {item.courseTitle}
-                    </p>
+                  <div className="min-w-0 flex items-start gap-3">
+                    <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[var(--color-warning-soft)]">
+                      <ClipboardList className="h-3.5 w-3.5 text-[var(--color-warning)]" />
+                    </span>
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-[var(--color-ink)] truncate">
+                        {item.learnerName}
+                      </p>
+                      <p className="text-xs text-[var(--color-ink-soft)]">
+                        {item.resourceTitle} · {item.courseTitle}
+                      </p>
+                    </div>
                   </div>
                   <div className="flex shrink-0 items-center gap-3">
                     <span className="flex items-center gap-1 text-xs text-[var(--color-ink-muted)]">
                       <Clock className="h-3 w-3" />
                       {formatRelativeTime(item.submittedAt)}
                     </span>
-                    <Link
-                      href={item.href}
-                      className="inline-flex items-center gap-1 rounded-lg bg-[var(--color-primary)] px-3 py-1.5 text-xs font-semibold text-white hover:opacity-90 transition"
-                    >
+                    <ButtonLink href={item.href} variant="primary" size="sm">
                       Revisar
-                    </Link>
+                    </ButtonLink>
                   </div>
                 </div>
               ))}
@@ -215,15 +201,12 @@ export default async function DocenteDashboardPage() {
                 El administrador debe asignarte a un curso para que puedas gestionarlo y añadir contenido.
               </p>
               <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
-                <a
-                  href="/mensajes"
-                  className="inline-flex items-center gap-2 rounded-xl bg-[var(--color-primary)] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[var(--color-primary-strong)]"
-                >
+                <ButtonLink href="/mensajes" variant="primary">
                   Enviar mensaje al admin
-                </a>
+                </ButtonLink>
                 <a
                   href="mailto:formacion@autismocordoba.org"
-                  className="inline-flex items-center gap-2 rounded-xl border border-[rgba(22,60,88,0.2)] px-5 py-2.5 text-sm font-semibold text-[var(--color-ink)] transition hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]"
+                  className="inline-flex items-center gap-2 rounded-[var(--radius-md)] border border-[var(--color-border-strong)] px-5 py-2.5 text-sm font-semibold text-[var(--color-ink)] transition hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]"
                 >
                   Contactar por email
                 </a>

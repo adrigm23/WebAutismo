@@ -136,15 +136,19 @@ export function AdminShell({ user, children }: AdminShellProps) {
 
   return (
     <div className="min-h-screen bg-[#f3f4f6] text-[var(--color-ink)]">
+      <a className="skip-link" href="#main-content">
+        Saltar al contenido
+      </a>
+
       <div className="grid min-h-screen lg:grid-cols-[260px_minmax(0,1fr)]">
         <aside className="sticky top-0 hidden h-screen overflow-y-auto border-r border-[var(--color-border-subtle)] bg-white lg:flex lg:flex-col">
-          <div className="px-8 pb-7 pt-10">
+          <div className="px-6 pb-5 pt-8">
             <Link className="block" href="/admin">
-              <div className="text-[1.85rem] font-bold tracking-[-0.07em] text-[var(--color-primary)]">
+              <div className="text-[1.85rem] font-bold tracking-[-0.06em] text-[var(--color-primary)]">
                 {siteConfig.shortName}
               </div>
-              <p className="mt-3 text-[0.74rem] font-semibold uppercase tracking-[0.28em] text-[var(--color-ink-soft)]">
-                Control central del campus
+              <p className="mt-2 text-[0.7rem] font-semibold uppercase tracking-[0.26em] text-[var(--color-ink-soft)]">
+                Control central
               </p>
             </Link>
           </div>
@@ -164,7 +168,7 @@ export function AdminShell({ user, children }: AdminShellProps) {
             ) : null}
           </div>
 
-          <nav className="mt-10 flex-1 space-y-2 px-7">
+          <nav className="mt-8 flex-1 space-y-1 px-4">
             {navigationItems.map((item) => {
               const isActive =
                 item.href === "/admin"
@@ -175,7 +179,7 @@ export function AdminShell({ user, children }: AdminShellProps) {
               return (
                 <Link
                   className={cn(
-                    "flex items-center gap-4 rounded-[var(--radius-md)] px-4 py-3 text-[1.02rem] font-medium text-[var(--color-ink-soft)] transition duration-[var(--motion-duration-base)] hover:bg-white hover:text-[var(--color-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-surface-canvas)]",
+                    "flex items-center gap-3 rounded-[var(--radius-md)] px-4 py-3 text-[1.02rem] font-medium text-[var(--color-ink-soft)] transition duration-[var(--motion-duration-base)] hover:bg-white hover:text-[var(--color-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-surface-canvas)]",
                     isActive &&
                       "ui-inverse-text bg-[var(--color-primary)] shadow-[var(--shadow-soft)] hover:bg-[var(--color-primary)]",
                   )}
@@ -189,22 +193,22 @@ export function AdminShell({ user, children }: AdminShellProps) {
             })}
           </nav>
 
-          <div className="border-t border-[var(--color-border-subtle)] px-7 py-7">
-            <div className="space-y-2">
-              <a
-                className="flex items-center gap-4 rounded-[var(--radius-md)] px-4 py-3 text-[1.02rem] font-medium text-[var(--color-ink-soft)] transition duration-[var(--motion-duration-base)] hover:bg-white hover:text-[var(--color-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-surface-canvas)]"
-                href="mailto:formacion@autismocordoba.org"
+          <div className="border-t border-[var(--color-border-subtle)] px-4 py-5">
+            <div className="space-y-1">
+              <Link
+                className="flex items-center gap-3 rounded-[var(--radius-md)] px-4 py-3 text-[1.02rem] font-medium text-[var(--color-ink-soft)] transition duration-[var(--motion-duration-base)] hover:bg-white hover:text-[var(--color-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-surface-canvas)]"
+                href="/soporte"
               >
                 <CircleHelp
                   className="h-[1.05rem] w-[1.05rem]"
                   strokeWidth={2}
                 />
                 <span>Soporte</span>
-              </a>
+              </Link>
 
               <form action={logoutAction}>
                 <button
-                  className="flex w-full items-center gap-4 rounded-[var(--radius-md)] px-4 py-3 text-left text-[1.02rem] font-medium text-[var(--color-ink-soft)] transition duration-[var(--motion-duration-base)] hover:bg-white hover:text-[var(--color-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-surface-canvas)]"
+                  className="flex w-full items-center gap-3 rounded-[var(--radius-md)] px-4 py-3 text-left text-[1.02rem] font-medium text-[var(--color-ink-soft)] transition duration-[var(--motion-duration-base)] hover:bg-white hover:text-[var(--color-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-surface-canvas)]"
                   type="submit"
                 >
                   <LogOut className="h-[1.05rem] w-[1.05rem]" strokeWidth={2} />
@@ -239,10 +243,12 @@ export function AdminShell({ user, children }: AdminShellProps) {
                   </Link>
                   <Link
                     aria-label="Ir a mi cuenta"
-                    className="ui-inverse-text grid h-10 w-10 place-items-center rounded-full bg-[var(--color-primary)] text-sm font-semibold shadow-[var(--shadow-soft)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-surface-canvas)]"
+                    className="flex items-center gap-2 rounded-full border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] py-1 pl-1 pr-2 transition hover:border-[var(--color-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)]"
                     href="/mi-cuenta"
                   >
-                    {getUserInitials(user.name)}
+                    <span className="grid h-8 w-8 place-items-center rounded-full bg-[var(--color-primary)] text-xs font-semibold text-white">
+                      {getUserInitials(user.name)}
+                    </span>
                   </Link>
                 </div>
               </div>
@@ -257,7 +263,7 @@ export function AdminShell({ user, children }: AdminShellProps) {
                       value={value}
                     />
                   ))}
-                  <label className="relative flex min-h-11 items-center rounded-[var(--radius-pill)] border border-[var(--color-border)] bg-white px-4 text-[var(--color-muted)] shadow-[var(--shadow-inset-soft)] transition focus-within:border-[var(--color-primary)] focus-within:ring-2 focus-within:ring-[var(--color-primary)] focus-within:ring-offset-2 focus-within:ring-offset-[var(--color-surface-canvas)] sm:px-4 lg:min-h-[3.25rem] lg:px-5 lg:shadow-[var(--shadow-soft)]">
+                  <label className="relative flex min-h-11 items-center rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-white px-4 text-[var(--color-muted)] shadow-[var(--shadow-inset-soft)] transition focus-within:border-[var(--color-primary)] focus-within:ring-2 focus-within:ring-[var(--color-primary)] focus-within:ring-offset-2 focus-within:ring-offset-[var(--color-surface-canvas)] sm:px-4 lg:min-h-[var(--control-height-lg)] lg:px-5 lg:shadow-[var(--shadow-soft)]">
                     <span className="pointer-events-none mr-2 text-[var(--color-muted)] lg:mr-3">
                       <Search
                         className="h-4 w-4 sm:h-[1.05rem] sm:w-[1.05rem]"
@@ -265,6 +271,7 @@ export function AdminShell({ user, children }: AdminShellProps) {
                       />
                     </span>
                     <input
+                      aria-label={searchPlaceholder}
                       className="w-full min-w-0 bg-transparent text-sm text-[var(--color-ink)] outline-none placeholder:text-[var(--color-muted)] focus-visible:outline-2 focus-visible:outline-[var(--color-primary)] focus-visible:outline-offset-2 sm:text-[0.98rem]"
                       defaultValue={searchValue}
                       name="q"
@@ -283,9 +290,9 @@ export function AdminShell({ user, children }: AdminShellProps) {
                     <Bell className="h-5 w-5" strokeWidth={1.9} />
                   </Link>
                   <Link
-                    aria-label="Contactar con soporte"
+                    aria-label="Ir a soporte"
                     className="grid h-11 w-11 place-items-center rounded-full border border-transparent transition duration-[var(--motion-duration-base)] hover:border-[var(--color-border)] hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-surface-canvas)]"
-                    href={`mailto:${siteConfig.supportEmail}`}
+                    href="/soporte"
                   >
                     <CircleHelp className="h-5 w-5" strokeWidth={1.9} />
                   </Link>
@@ -298,17 +305,23 @@ export function AdminShell({ user, children }: AdminShellProps) {
                   </Link>
                   <Link
                     aria-label="Ir a mi cuenta"
-                    className="ui-inverse-text grid h-12 w-12 place-items-center rounded-full bg-[var(--color-primary)] text-sm font-semibold shadow-[var(--shadow-soft)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-surface-canvas)]"
+                    className="flex items-center gap-2.5 rounded-full border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] py-1 pl-1 pr-3 transition hover:border-[var(--color-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)]"
                     href="/mi-cuenta"
                   >
-                    {getUserInitials(user.name)}
+                    <span className="grid h-8 w-8 place-items-center rounded-full bg-[var(--color-primary)] text-xs font-semibold text-white">
+                      {getUserInitials(user.name)}
+                    </span>
+                    <span className="hidden min-w-0 flex-col leading-tight lg:flex">
+                      <span className="max-w-[120px] truncate text-sm font-semibold text-[var(--color-ink)]">{user.name}</span>
+                      <span className="text-[0.7rem] text-[var(--color-ink-soft)]">Administrador</span>
+                    </span>
                   </Link>
                 </div>
               </div>
             </div>
           </header>
 
-          <main className="px-5 py-8 sm:px-7 xl:px-10 xl:py-10">
+          <main className="px-5 py-8 sm:px-7 xl:px-10 xl:py-10" id="main-content">
             {children}
           </main>
         </div>

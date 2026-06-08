@@ -52,6 +52,29 @@ export function isDemoAuthEnabled() {
   return isDemoRuntimeEnabled("DEMO_AUTH_ENABLED") && getBooleanEnv("ALLOW_DEMO_AUTH", false);
 }
 
+/**
+ * Call at server startup (e.g. instrumentation.ts) to catch misconfigured staging
+ * boxes that accidentally expose demo credentials on a public hostname.
+ */
+export function assertNoDemoFlagsInHostedEnv() {
+  if (!isHostedDeploymentEnv()) return;
+
+  const dangerousFlags = [
+    "DEMO_AUTH_ENABLED",
+    "ALLOW_DEMO_AUTH",
+    "ALLOW_DEVELOPMENT_DEMO_PURCHASES",
+  ];
+
+  const enabled = dangerousFlags.filter((f) => getBooleanEnv(f, false));
+
+  if (enabled.length > 0) {
+    throw new Error(
+      `[security] Demo flags must never be enabled in a hosted deployment. ` +
+        `Detected: ${enabled.join(", ")}. Remove these from your production environment variables.`,
+    );
+  }
+}
+
 export function isLegacyCatalogFallbackEnabled() {
   return isDemoRuntimeEnabled("LEGACY_CATALOG_FALLBACK_ENABLED");
 }

@@ -557,6 +557,7 @@ export async function moveCourseResource(input: {
     select: {
       id: true,
       courseId: true,
+      moduleId: true,
       sortOrder: true
     }
   });
@@ -568,6 +569,7 @@ export async function moveCourseResource(input: {
   const target = await getDb().courseResource.findFirst({
     where: {
       courseId: current.courseId,
+      moduleId: current.moduleId,
       sortOrder: input.direction === "up" ? { lt: current.sortOrder } : { gt: current.sortOrder }
     },
     orderBy: {
