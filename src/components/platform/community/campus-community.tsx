@@ -79,7 +79,7 @@ function ThreadCard({ thread }: { thread: CommunityFeedThread }) {
       </div>
 
       <div className="flex items-center justify-between mt-4 pt-4 border-t border-[#c4c6cf]">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 min-w-0">
           <div className={cn(
             "w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold border shrink-0",
             thread.isStaff
