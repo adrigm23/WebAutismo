@@ -88,7 +88,7 @@ describe("auth server actions", () => {
     const result = await registerAction({}, formData);
 
     expect(result).toEqual({
-      error: "Las contrasenas no coinciden.",
+      error: "Las contraseñas no coinciden.",
       fields: {
         name: "Ana Lopez",
         email: "ana@example.com"

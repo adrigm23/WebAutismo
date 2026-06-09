@@ -59,39 +59,43 @@ export async function getAggregatedCommunityFeed(
 
   const spaceIds = activeSpaces.map((s) => s.id);
 
-  const rawThreads = await db.forumThread.findMany({
-    where: {
-      category: { forumSpaceId: { in: spaceIds } },
-      publishedAt: { not: null },
-      deletedAt: null,
-    },
-    orderBy: { lastActivityAt: "desc" },
-    take: limit,
-    select: {
-      id: true,
-      title: true,
-      body: true,
-      isPinned: true,
-      isResolved: true,
-      lastActivityAt: true,
-      authorRole: true,
-      author: { select: { name: true } },
-      category: { select: { slug: true, title: true, courseSlug: true } },
-      _count: { select: { posts: true } },
-    },
-  });
-
-  const courseThreadCounts: Record<string, number> = {};
-  for (const space of activeSpaces) {
-    const spaceThreads = await db.forumThread.count({
+  const [rawThreads, countEntries] = await Promise.all([
+    db.forumThread.findMany({
       where: {
-        category: { forumSpaceId: space.id },
+        category: { forumSpaceId: { in: spaceIds } },
         publishedAt: { not: null },
         deletedAt: null,
       },
-    });
-    courseThreadCounts[space.courseSlug] = spaceThreads;
-  }
+      orderBy: { lastActivityAt: "desc" },
+      take: limit,
+      select: {
+        id: true,
+        title: true,
+        body: true,
+        isPinned: true,
+        isResolved: true,
+        lastActivityAt: true,
+        authorRole: true,
+        author: { select: { name: true } },
+        category: { select: { slug: true, title: true, courseSlug: true } },
+        _count: { select: { posts: true } },
+      },
+    }),
+    Promise.all(
+      activeSpaces.map(async (space) => {
+        const count = await db.forumThread.count({
+          where: {
+            category: { forumSpaceId: space.id },
+            publishedAt: { not: null },
+            deletedAt: null,
+          },
+        });
+        return [space.courseSlug, count] as const;
+      })
+    ),
+  ]);
+
+  const courseThreadCounts: Record<string, number> = Object.fromEntries(countEntries);
 
   function initials(name: string): string {
     return name
@@ -151,8 +155,10 @@ export async function getForumCategories(
   viewerRole?: ForumViewerRole
 ): Promise<ForumCategorySummary[]> {
   try {
-    await publishDueAnnouncementsForCourse(courseSlug);
-    const activeSpace = await ensureCourseCommunity(courseSlug);
+    const [activeSpace] = await Promise.all([
+      ensureCourseCommunity(courseSlug),
+      publishDueAnnouncementsForCourse(courseSlug),
+    ]);
 
     const categories = await getDb().forumCategory.findMany({
       where: {

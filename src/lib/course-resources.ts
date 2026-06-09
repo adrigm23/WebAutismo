@@ -291,7 +291,18 @@ export async function getCampusResources(input: {
             : {
                 studentId: input.viewerUserId
               },
-          include: {
+          select: {
+            id: true,
+            studentId: true,
+            body: true,
+            linkUrl: true,
+            attachmentLabel: true,
+            storageKey: true,
+            status: true,
+            score: true,
+            feedback: true,
+            submittedAt: true,
+            reviewedAt: true,
             student: {
               select: {
                 name: true,
@@ -306,7 +317,8 @@ export async function getCampusResources(input: {
           },
           orderBy: {
             submittedAt: "desc"
-          }
+          },
+          take: input.canModerate ? 200 : 5
         }
       },
       orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }]

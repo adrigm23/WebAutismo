@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { requireAdminConsoleUser } from "@/lib/admin-console-server";
 import { getDb } from "@/lib/prisma";
 import { getAllCalendarEvents, getCalendarViewerContext } from "@/lib/calendar";
-import { CalendarPage } from "@/components/platform/calendar/calendar-page";
+import { CalendarPageClient } from "@/components/platform/calendar/calendar-page-client";
 
 export const metadata: Metadata = {
   title: "Calendario — Admin",
@@ -30,7 +30,7 @@ export default async function AdminCalendarioPage() {
   }));
 
   return (
-    <CalendarPage
+    <CalendarPageClient
       events={events}
       courses={courses}
       canManage={true}

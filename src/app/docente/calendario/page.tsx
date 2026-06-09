@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/auth";
 import { getDb } from "@/lib/prisma";
 import { getAllCalendarEvents, getCalendarViewerContext } from "@/lib/calendar";
-import { CalendarPage } from "@/components/platform/calendar/calendar-page";
+import { CalendarPageClient } from "@/components/platform/calendar/calendar-page-client";
 import { TeacherShell } from "@/components/docente/teacher-shell";
 import { getInitials } from "@/lib/utils";
 
@@ -39,7 +39,7 @@ export default async function DocenteCalendarioPage() {
 
   return (
     <TeacherShell viewerName={viewerName} viewerInitials={getInitials(viewerName)} roleLabel="Docente">
-      <CalendarPage
+      <CalendarPageClient
         events={events}
         courses={courses}
         canManage={true}

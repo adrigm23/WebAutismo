@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { requireUser } from "@/lib/auth";
 import { getDb } from "@/lib/prisma";
 import { getAllCalendarEvents, getCalendarViewerContext } from "@/lib/calendar";
-import { CalendarPage } from "@/components/platform/calendar/calendar-page";
+import { CalendarPageClient } from "@/components/platform/calendar/calendar-page-client";
 import { StudentShell, type StudentShellNavItem } from "@/components/campus/student-shell";
 import { getUserCourseSpaces } from "@/lib/course-community";
 import { buildCourseForumHref } from "@/lib/course-navigation";
@@ -64,7 +64,7 @@ export default async function CalendarioStudentPage() {
       roleLabel="Alumno"
       navItems={buildStudentNavItems(communityHref)}
     >
-      <CalendarPage
+      <CalendarPageClient
         events={events}
         courses={courses}
         canManage={false}

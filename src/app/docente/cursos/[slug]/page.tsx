@@ -601,11 +601,20 @@ export default async function TeacherCourseWorkspacePage({ params, searchParams 
     redirect("/mis-cursos");
   }
 
-  const campusResources = await getCampusResources({
-    course,
-    viewerUserId: user.id,
-    canModerate: true,
-  });
+  const needStudentData = activeTab === "alumnos" || activeTab === "estadisticas";
+
+  const [campusResources, notificationSnapshot, rawEnrollments] = await Promise.all([
+    getCampusResources({ course, viewerUserId: user.id, canModerate: true }),
+    getDashboardNotificationSnapshot({ userId: user.id, courseSlugs: [slug] }),
+    needStudentData
+      ? getDb().courseEnrollment.findMany({
+          where: { course: { slug } },
+          include: { user: { select: { id: true, name: true, email: true } } },
+          orderBy: { createdAt: "desc" },
+          take: 100,
+        })
+      : Promise.resolve(null),
+  ]);
 
   let enrollments: Array<{
     userId: string;
@@ -616,19 +625,10 @@ export default async function TeacherCourseWorkspacePage({ params, searchParams 
   }> = [];
   let progressRows: CourseLearnerProgressRow[] = [];
 
-  if (activeTab === "alumnos" || activeTab === "estadisticas") {
-    enrollments = await getDb().courseEnrollment.findMany({
-      where: { course: { slug } },
-      include: { user: { select: { id: true, name: true, email: true } } },
-      orderBy: { createdAt: "desc" },
-    });
+  if (rawEnrollments) {
+    enrollments = rawEnrollments;
     progressRows = await getLearnerProgressRowsForCatalogCourse(course, { enrollments });
   }
-
-  const notificationSnapshot = await getDashboardNotificationSnapshot({
-    userId: user.id,
-    courseSlugs: [slug],
-  });
 
   const exerciseResources = campusResources.filter((r) => r.isManaged && r.isExercise);
   const allSubmissions = exerciseResources.flatMap((r) => r.submissions);

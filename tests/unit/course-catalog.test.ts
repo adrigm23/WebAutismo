@@ -11,6 +11,12 @@ vi.mock("@/lib/env", () => ({
   isDevelopmentRuntime: isDevelopmentRuntimeMock
 }));
 
+// unstable_cache requires Next.js server runtime (incrementalCache) which is
+// not available in Vitest — replace it with a plain passthrough.
+vi.mock("next/cache", () => ({
+  unstable_cache: <T extends (...args: unknown[]) => unknown>(fn: T) => fn,
+}));
+
 describe("course catalog fallback", () => {
   beforeEach(() => {
     vi.resetModules();

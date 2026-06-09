@@ -37,10 +37,15 @@ export default async function CommunityPage() {
   });
 
   const courseSlugs = spaces.map((s) => s.course.slug);
-  const notificationSnapshot = await getDashboardNotificationSnapshot({
-    userId: user.id,
-    courseSlugs,
-  });
+  const feedSpaces = spaces.map((s) => ({
+    courseSlug: s.course.slug,
+    courseTitle: s.course.title,
+  }));
+
+  const [notificationSnapshot, { threads, courses }] = await Promise.all([
+    getDashboardNotificationSnapshot({ userId: user.id, courseSlugs }),
+    getAggregatedCommunityFeed(feedSpaces),
+  ]);
 
   const studentSpaces = spaces.filter((s) => !isStaffCourseRole(s.role));
   const staffSpaces = spaces.filter((s) => isStaffCourseRole(s.role));
@@ -51,13 +56,6 @@ export default async function CommunityPage() {
       : staffSpaces.length
         ? "Docente"
         : "Alumno";
-
-  const feedSpaces = spaces.map((s) => ({
-    courseSlug: s.course.slug,
-    courseTitle: s.course.title,
-  }));
-
-  const { threads, courses } = await getAggregatedCommunityFeed(feedSpaces);
 
   // "Nueva Consulta" → forum of the first course with an active space
   const primaryCourse = studentSpaces[0]?.course ?? staffSpaces[0]?.course ?? null;

@@ -123,8 +123,17 @@ export default async function AdminDashboardPage() {
     }),
     db.courseEdition.findMany({
       where: { isActive: true, status: { in: ["ACTIVE", "CLOSED"] } },
-      include: { course: { select: { title: true } } },
+      select: {
+        id: true,
+        status: true,
+        startsAt: true,
+        endsAt: true,
+        graceAccessDays: true,
+        accessUntil: true,
+        course: { select: { title: true } },
+      },
       orderBy: { updatedAt: "desc" },
+      take: 30,
     }),
     db.auditLog.findMany({
       include: { actor: { select: { name: true, email: true } } },

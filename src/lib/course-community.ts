@@ -685,6 +685,7 @@ export async function getUserCourseSpaces(input: {
         orderBy: {
           createdAt: "desc",
         },
+        take: 100,
         select: {
           id: true,
           courseId: true,
