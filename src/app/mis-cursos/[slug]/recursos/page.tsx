@@ -33,11 +33,13 @@ export default async function CourseResourcesPage({ params, searchParams }: Reso
   const sp = await searchParams;
   const rawResource = typeof sp.resource === "string" ? sp.resource : Array.isArray(sp.resource) ? sp.resource[0] : null;
   const focusedResourceId = normalizeCourseResourceQueryValue(rawResource);
-  const course = await getCatalogCourseBySlug(slug);
+  // Course lookup and auth are independent — run in parallel
+  const [course, user] = await Promise.all([
+    getCatalogCourseBySlug(slug),
+    requireUser(`/mis-cursos/${slug}/recursos`),
+  ]);
 
   if (!course) notFound();
-
-  const user = await requireUser(`/mis-cursos/${course.slug}/recursos`);
   const access = await canAccessCourseCommunityForCourse({
     userId: user.id,
     email: user.email,

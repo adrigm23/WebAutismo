@@ -33,7 +33,7 @@ import {
   resolvePlatformNotificationHref,
 } from "@/lib/course-navigation";
 import { getCourseProgressDetailsMapForUser, type CourseProgressDetails } from "@/lib/course-progress";
-import { getCampusResources } from "@/lib/course-resources";
+import { getDb } from "@/lib/prisma";
 import { isStaffCourseRole } from "@/lib/course-roles";
 import { siteConfig } from "@/lib/site";
 import { cn, formatDateTime, getInitials } from "@/lib/utils";
@@ -196,11 +196,20 @@ function buildNotificationActivity(snapshot: DashboardNotificationSnapshot) {
     .slice(0, 3);
 }
 
+type DashboardMaterialResource = {
+  id: string;
+  isManaged: boolean;
+  isExercise: boolean;
+  createdAt: Date | null;
+  title: string;
+  moduleTitle: string | null;
+};
+
 function buildRecentManagedResources(input: {
   resourcesByCourse: Array<{
     courseSlug: string;
     courseTitle: string;
-    resources: Awaited<ReturnType<typeof getCampusResources>>;
+    resources: DashboardMaterialResource[];
   }>;
 }) {
   return input.resourcesByCourse
@@ -495,17 +504,40 @@ export default async function MyCoursesPage({
         spaces: studentSpaces,
         userId: user.id,
       }),
-      Promise.all(
-        studentSpaces.map(async (space) => ({
+      // Single query for non-exercise materials across all student courses
+      // (dashboard only needs id/title/moduleTitle/createdAt for recent resources widget)
+      (async () => {
+        if (studentSpaces.length === 0) return [];
+        const materials = await getDb().courseResource.findMany({
+          where: {
+            courseId: { in: studentSpaces.map((s) => s.course.id) },
+            type: "MATERIAL",
+            isPublished: true,
+          },
+          select: {
+            id: true,
+            courseId: true,
+            title: true,
+            createdAt: true,
+            module: { select: { title: true } },
+          },
+          orderBy: { createdAt: "desc" },
+        });
+        return studentSpaces.map((space) => ({
           courseSlug: space.course.slug,
           courseTitle: space.course.title,
-          resources: await getCampusResources({
-            course: space.course,
-            viewerUserId: user.id,
-            canModerate: false,
-          }),
-        })),
-      ),
+          resources: materials
+            .filter((r) => r.courseId === space.course.id)
+            .map((r) => ({
+              id: r.id,
+              title: r.title,
+              moduleTitle: r.module?.title ?? null,
+              createdAt: r.createdAt,
+              isManaged: true,
+              isExercise: false,
+            })),
+        }));
+      })(),
       getTeacherDashboardCourseSummaries({
         spaces: staffSpaces,
         learnerSummariesByCourse: new Map(),

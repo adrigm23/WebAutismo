@@ -5,8 +5,9 @@ import {
   type UnifiedNotification,
 } from "@/components/platform/notifications/notification-center";
 import { requireUser } from "@/lib/auth";
-import { getDashboardNotificationSnapshot } from "@/lib/account-dashboard";
 import { getUserCourseSpaces } from "@/lib/course-community";
+import { getUserForumNotifications } from "@/lib/forum-user-notifications";
+import { ensureNotificationPreference, getUserPlatformNotifications } from "@/lib/notifications";
 import { isStaffCourseRole } from "@/lib/course-roles";
 import { getInitials } from "@/lib/utils";
 
@@ -136,26 +137,34 @@ function mapForumNotification(n: {
 export default async function NotificationsPage() {
   const user = await requireUser("/notificaciones");
 
-  const spaces = await getUserCourseSpaces({
-    userId: user.id,
-    email: user.email,
-    userGlobalRole: user.globalRole,
-    userIsActive: user.isActive,
-  });
+  // Platform notifications are independent of courseSlugs — run in parallel with spaces fetch.
+  // ensureNotificationPreference is included to preserve the side-effect previously handled
+  // by getDashboardNotificationSnapshot (creates the preference row on first visit).
+  const [spaces, platformResult] = await Promise.all([
+    getUserCourseSpaces({
+      userId: user.id,
+      email: user.email,
+      userGlobalRole: user.globalRole,
+      userIsActive: user.isActive,
+    }),
+    getUserPlatformNotifications({ userId: user.id, limit: 50 }),
+    ensureNotificationPreference(user.id),
+  ]);
 
-  const snapshot = await getDashboardNotificationSnapshot({
+  // Forum notifications require courseSlugs derived from spaces
+  const forumResult = await getUserForumNotifications({
     userId: user.id,
     courseSlugs: spaces.map((s) => s.course.slug),
-    platformLimit: 50,
-    forumLimit: 50,
+    limit: 50,
+    skipPublishDueAnnouncements: true,
   });
 
   const notifications: UnifiedNotification[] = [
-    ...snapshot.platformNotifications.notifications.map(mapPlatformNotification),
-    ...snapshot.forumNotifications.notifications.map(mapForumNotification),
+    ...platformResult.notifications.map(mapPlatformNotification),
+    ...forumResult.notifications.map(mapForumNotification),
   ].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 
-  const unreadCount = snapshot.unreadCount;
+  const unreadCount = platformResult.unreadCount + forumResult.unreadCount;
 
   const roleLabel = spaces.some((s) => isStaffCourseRole(s.role))
     ? "Docente"
