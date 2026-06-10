@@ -11,6 +11,7 @@ import { getCampusResources } from "@/lib/course-resources";
 import { CourseWorkspaceShell } from "@/components/learning/course-workspace/course-workspace-shell";
 import { CourseResourceManager } from "@/components/learning/course-resource-manager";
 import { CourseMaterialsLibrary } from "@/components/learning/course-materials-library";
+import { CourseExerciseSubmissionForm } from "@/components/learning/course-exercise-submission-form";
 import { getInitials } from "@/lib/utils";
 import { normalizeCourseResourceQueryValue } from "@/lib/course-navigation";
 
@@ -61,6 +62,13 @@ export default async function CourseResourcesPage({ params, searchParams }: Reso
 
   const viewerName = user.name ?? user.email;
 
+  const focusedExercise = !canModerate
+    ? resources.find(
+        (resource) =>
+          resource.id === focusedResourceId && resource.isExercise && resource.isPublished,
+      ) ?? null
+    : null;
+
   return (
     <CourseWorkspaceShell
       courseTitle={course.title}
@@ -76,6 +84,25 @@ export default async function CourseResourcesPage({ params, searchParams }: Reso
           focusedResourceId={focusedResourceId}
           resources={resources}
           roleLabel={getRoleLabel(access.role)}
+        />
+      ) : focusedExercise ? (
+        // Alumnos: pagina de la tarea seleccionada, con enunciado y entrega
+        <CourseExerciseSubmissionForm
+          courseName={course.title}
+          courseSlug={course.slug}
+          dueAt={focusedExercise.dueAt}
+          existingSubmission={focusedExercise.viewerSubmission}
+          isSubmissionClosed={focusedExercise.isSubmissionClosed}
+          moduleTitle={focusedExercise.moduleTitle ?? undefined}
+          resourceDescription={focusedExercise.description}
+          resourceId={focusedExercise.id}
+          resourceTitle={focusedExercise.title}
+          supportMaterials={resources.filter(
+            (resource) =>
+              !resource.isExercise &&
+              resource.isPublished &&
+              resource.moduleId === focusedExercise.moduleId,
+          )}
         />
       ) : (
         // Alumnos: solo materiales de contenido, sin tareas ni ejercicios

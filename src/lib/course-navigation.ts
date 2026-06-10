@@ -78,13 +78,16 @@ export function buildCourseContentHref(
 
 export function buildCourseResourcesHref(courseSlug: string, targetId = "resources-panel") {
   const resourceId = getCourseResourceIdFromTargetId(targetId);
+  const params = new URLSearchParams();
 
-  return buildWorkspaceHref({
-    courseSlug,
-    tab: "resources",
-    targetId,
-    resourceId
-  });
+  if (resourceId) {
+    params.set("resource", resourceId);
+  }
+
+  const query = params.toString();
+  const hash = targetId ? `#${targetId}` : "";
+
+  return `/mis-cursos/${courseSlug}/recursos${query ? `?${query}` : ""}${hash}`;
 }
 
 export function buildPublishedCourseResourceHref(
@@ -92,11 +95,10 @@ export function buildPublishedCourseResourceHref(
   resourceId: string,
 ) {
   const params = new URLSearchParams();
-  params.set("tab", "resources");
   params.set("resource", resourceId);
   params.set(COURSE_RESOURCE_PUBLISH_FEEDBACK_QUERY, "1");
 
-  return `/mis-cursos/${courseSlug}?${params.toString()}#resource-${resourceId}`;
+  return `/mis-cursos/${courseSlug}/recursos?${params.toString()}#resource-${resourceId}`;
 }
 
 export function buildCourseSupportHref(

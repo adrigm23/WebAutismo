@@ -128,7 +128,7 @@ describe("course resource actions", () => {
 
     expect(result).toEqual({
       success: "Recurso publicado con exito.",
-      redirectUrl: "/mis-cursos/curso-demo?tab=resources&resource=res-1&resourcePublished=1#resource-res-1"
+      redirectUrl: "/mis-cursos/curso-demo/recursos?resource=res-1&resourcePublished=1#resource-res-1"
     });
     expect(revalidatePathMock).toHaveBeenCalledWith("/mis-cursos/curso-demo");
   });
@@ -155,7 +155,7 @@ describe("course resource actions", () => {
 
     expect(result).toEqual({
       success: "Recurso publicado con exito.",
-      redirectUrl: "/mis-cursos/curso-demo?tab=resources&resource=res-link-1&resourcePublished=1#resource-res-link-1"
+      redirectUrl: "/mis-cursos/curso-demo/recursos?resource=res-link-1&resourcePublished=1#resource-res-link-1"
     });
     expect(createCourseResourceMock).toHaveBeenCalledWith(
       expect.objectContaining({

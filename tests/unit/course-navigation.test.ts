@@ -9,21 +9,21 @@ import {
 describe("course resource navigation", () => {
   test("keeps the manager anchor out of the resource query parameter", () => {
     expect(buildCourseResourcesHref("curso-demo", COURSE_RESOURCE_MANAGER_TARGET_ID)).toBe(
-      "/mis-cursos/curso-demo?tab=resources#resource-manager-top"
+      "/mis-cursos/curso-demo/recursos#resource-manager-top"
     );
     expect(getCourseResourceIdFromTargetId(COURSE_RESOURCE_MANAGER_TARGET_ID)).toBeNull();
   });
 
   test("keeps resource cards addressable with resource query and hash", () => {
     expect(buildCourseResourcesHref("curso-demo", "resource-res-1")).toBe(
-      "/mis-cursos/curso-demo?tab=resources&resource=res-1#resource-res-1"
+      "/mis-cursos/curso-demo/recursos?resource=res-1#resource-res-1"
     );
     expect(getCourseResourceIdFromTargetId("resource-res-1")).toBe("res-1");
   });
 
   test("adds a success flag after publishing a resource", () => {
     expect(buildPublishedCourseResourceHref("curso-demo", "res-1")).toBe(
-      "/mis-cursos/curso-demo?tab=resources&resource=res-1&resourcePublished=1#resource-res-1"
+      "/mis-cursos/curso-demo/recursos?resource=res-1&resourcePublished=1#resource-res-1"
     );
   });
 
