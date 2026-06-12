@@ -140,7 +140,7 @@ export default async function DocenteDashboardPage() {
               </Link>
             </div>
 
-            <div className="mt-5 grid grid-cols-1 gap-5 lg:grid-cols-2">
+            <div className="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
               {teacherSummaries.map((summary) => {
                 const course = summary.space.course;
                 const pendingCount = summary.pendingReviewItems.length;
