@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button";
 import { MetricPanel } from "@/components/ui/metric-panel";
 import { TeacherShell } from "@/components/docente/teacher-shell";
-import { getInitials, formatRelativeTime } from "@/lib/utils";
+import { cn, getInitials, formatRelativeTime } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: "Dashboard Docente",
@@ -143,33 +143,46 @@ export default async function DocenteDashboardPage() {
             <div className="mt-5 grid grid-cols-1 gap-5 lg:grid-cols-2">
               {teacherSummaries.map((summary) => {
                 const course = summary.space.course;
+                const pendingCount = summary.pendingReviewItems.length;
                 return (
                   <article
                     key={course.slug}
                     className="overflow-hidden rounded-xl border border-[rgba(22,60,88,0.09)] bg-white shadow-[var(--shadow-soft)]"
                   >
-                    <CourseArtwork
-                      course={course}
-                      className="h-32 w-full rounded-none border-0"
-                    />
-                    <div className="p-5">
+                    <div className="h-40 overflow-hidden">
+                      <CourseArtwork
+                        course={course}
+                        className="h-full w-full rounded-none border-0"
+                        variant="card"
+                      />
+                    </div>
+                    <div className="flex flex-1 flex-col p-4">
                       <div className="flex flex-wrap items-start gap-2">
-                        <h3 className="flex-1 text-base font-bold text-[var(--color-ink)]">
+                        <h3 className="flex-1 text-[0.95rem] font-semibold leading-snug text-[var(--color-ink)]">
                           {course.title}
                         </h3>
                         <Badge tone={course.activeEdition?.status === "ACTIVE" ? "success" : "outline"}>
                           {course.activeEdition?.status === "ACTIVE" ? "Activo" : "Inactivo"}
                         </Badge>
                       </div>
+                      <p className="mt-1 line-clamp-1 text-[0.8rem] text-[var(--color-ink-soft)]">
+                        {course.activeEdition?.label ?? "Sin edición activa"}
+                      </p>
 
-                      <div className="mt-3 flex flex-wrap gap-3 text-sm text-[var(--color-ink-soft)]">
-                        <span className="flex items-center gap-1">
+                      <div className="mt-3 flex items-center justify-between border-t border-[rgba(22,60,88,0.07)] pt-3">
+                        <span className="flex items-center gap-1.5 text-[0.8rem] text-[var(--color-ink-soft)]">
                           <Users className="h-3.5 w-3.5" />
                           {summary.learnerCount} alumno{summary.learnerCount !== 1 ? "s" : ""}
                         </span>
-                        <span className="flex items-center gap-1">
-                          <ClipboardList className="h-3.5 w-3.5" />
-                          {summary.pendingReviewItems.length} pendiente{summary.pendingReviewItems.length !== 1 ? "s" : ""}
+                        <span
+                          className={cn(
+                            "text-sm font-semibold",
+                            pendingCount > 0 ? "text-[var(--color-danger)]" : "text-[var(--color-ink-soft)]",
+                          )}
+                        >
+                          {pendingCount > 0
+                            ? `${pendingCount} pendiente${pendingCount !== 1 ? "s" : ""}`
+                            : "Sin pendientes"}
                         </span>
                       </div>
 
