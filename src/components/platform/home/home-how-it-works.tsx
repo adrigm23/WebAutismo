@@ -12,7 +12,7 @@ export function HomeHowItWorks() {
       <div className="site-container">
         <HomeSectionHeader
           align="center"
-          description="En tres pasos simples, desde explorar el catálogo hasta acceder al campus y obtener tu certificado."
+          description="En tres pasos simples, desde explorar el catálogo hasta acceder al campus y empezar tu formación."
           eyebrow="¿Cómo funciona?"
           headingId="home-how-heading"
           title="Empieza en menos de 10 minutos"

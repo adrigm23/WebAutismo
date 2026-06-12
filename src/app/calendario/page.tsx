@@ -20,7 +20,6 @@ function buildStudentNavItems(communityHref: string): StudentShellNavItem[] {
     { label: "Comunidad", href: communityHref, icon: "community" },
     { label: "Calendario", href: "/calendario", icon: "calendar" },
     { label: "Biblioteca", href: "/biblioteca", icon: "library" },
-    { label: "Certificados", href: "/certificados", icon: "certificates" },
     { label: "Configuración", href: "/mi-cuenta", icon: "settings" },
   ];
 }

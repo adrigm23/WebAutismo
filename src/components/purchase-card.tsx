@@ -1,5 +1,4 @@
 import {
-  Award,
   Download,
   Infinity,
   MonitorPlay,
@@ -27,7 +26,6 @@ export function PurchaseCard({ course, purchaseMode }: PurchaseCardProps) {
 
   const features = [
     { icon: Infinity, text: "Acceso de por vida" },
-    { icon: Award, text: "Certificado institucional incluido" },
     { icon: MonitorPlay, text: `${course.duration} de video bajo demanda` },
     { icon: Download, text: `${course.modules.length * 2} Recursos descargables` },
   ];

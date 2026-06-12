@@ -470,7 +470,6 @@ function buildStudentNavItems(communityHref: string): StudentShellNavItem[] {
     { label: "Comunidad", href: communityHref, icon: "community" },
     { label: "Calendario", href: "/calendario", icon: "calendar" },
     { label: "Biblioteca", href: "/biblioteca", icon: "library" },
-    { label: "Certificados", href: "/certificados", icon: "certificates" },
     { label: "Configuración", href: "/mi-cuenta", icon: "settings" },
   ];
 }
@@ -1045,49 +1044,6 @@ export default async function MyCoursesPage({
                 </p>
               ) : null}
             </div>
-
-            {/* Card 2: Certificados (solo alumnos) */}
-            {!isPureTeacher && (
-              <div className="rounded-xl border border-[rgba(22,60,88,0.09)] bg-white p-5 shadow-[0_1px_4px_rgba(30,58,95,0.06)]">
-                <div className="flex items-center gap-2.5">
-                  <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-[#d1fae5] text-[#059669]">
-                    <GraduationCap className="h-[1.1rem] w-[1.1rem]" strokeWidth={2} />
-                  </span>
-                  <h2 className="text-[0.95rem] font-bold text-[var(--color-ink)]">Certificados</h2>
-                </div>
-
-                {completedCourses.length > 0 ? (
-                  <>
-                    <div className="mt-4 divide-y divide-[rgba(22,60,88,0.07)]">
-                      {completedCourses.slice(0, 3).map((course) => (
-                        <div
-                          className="flex items-center justify-between gap-3 py-3 first:pt-0 last:pb-0"
-                          key={course.space.course.slug}
-                        >
-                          <div className="min-w-0 flex-1">
-                            <p className="line-clamp-1 text-sm font-medium text-[var(--color-ink)]">
-                              {course.space.course.title}
-                            </p>
-                            <p className="text-[0.75rem] text-[var(--color-ink-soft)]">Completado</p>
-                          </div>
-                          <CheckCircle2 className="h-4 w-4 shrink-0 text-[#059669]" />
-                        </div>
-                      ))}
-                    </div>
-                    <Link
-                      className="mt-4 block w-full rounded-lg border border-[rgba(22,60,88,0.12)] px-4 py-2 text-center text-sm font-medium text-[var(--color-ink-soft)] transition hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]"
-                      href="/certificados"
-                    >
-                      Ver todos los certificados
-                    </Link>
-                  </>
-                ) : (
-                  <p className="mt-4 text-sm text-[var(--color-ink-soft)]">
-                    Completa formaciones para obtener tus certificados de alumno.
-                  </p>
-                )}
-              </div>
-            )}
 
           </aside>
         </section>

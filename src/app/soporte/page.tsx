@@ -25,11 +25,6 @@ const faqs = [
       "Sí. Los recursos descargables de cada módulo están disponibles en la sección \"Recursos\" dentro de tu campus privado. Puedes descargarlos en cualquier momento mientras tengas acceso activo.",
   },
   {
-    question: "¿Cómo obtengo mi certificado al terminar?",
-    answer:
-      "El certificado se genera automáticamente cuando completas todos los módulos del curso. Puedes descargarlo desde la sección de recursos o desde tu perfil en el campus.",
-  },
-  {
     question: "¿Qué hago si tengo problemas técnicos con el campus?",
     answer:
       "Escríbenos a " +

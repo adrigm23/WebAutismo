@@ -304,13 +304,6 @@ function buildQuickLinks(input: {
     disabled: !input.libraryHref,
   });
 
-  items.push({
-    title: "Certificados",
-    description: "Apareceran cuando completes una ruta evaluable.",
-    icon: accountQuickLinkIcons.certificates,
-    disabled: true,
-  });
-
   if (input.globalRole === "ADMIN" && !input.hasCourseArea) {
     items[0] = {
       href: "/soporte",

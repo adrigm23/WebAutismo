@@ -6,7 +6,6 @@ import type { UserGlobalRole } from "@prisma/client";
 import {
   Activity,
   ArrowLeft,
-  Award,
   Bell,
   BookOpen,
   CheckCircle2,
@@ -74,7 +73,6 @@ export const accountQuickLinkIcons = {
   courses: GraduationCap,
   forum: MessageSquareText,
   library: BookOpen,
-  certificates: Award,
   support: Bell,
 } satisfies Record<string, LucideIcon>;
 

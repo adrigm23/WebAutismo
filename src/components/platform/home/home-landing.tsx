@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { HomeCampusInside } from "@/components/platform/home/home-campus-inside";
-import { HomeCertificates } from "@/components/platform/home/home-certificates";
 import { HomeCommunity } from "@/components/platform/home/home-community";
 import { HomeFeaturedCourseCard } from "@/components/platform/home/home-featured-course-card";
 import { HomeHero } from "@/components/platform/home/home-hero";
@@ -69,9 +68,6 @@ export async function HomeLanding() {
       {/* 8. Comunidad */}
       <HomeCommunity />
 
-      {/* 9. Certificados — cierre de objeciones */}
-      <HomeCertificates />
-
       {/* 10. Testimonios — prueba social antes del CTA final */}
       <HomeTestimonials />
 
@@ -101,7 +97,7 @@ export async function HomeLanding() {
             Tu formación especializada en autismo
           </h2>
           <p className="relative mx-auto mt-4 max-w-xl text-base leading-7 text-[rgba(255,255,255,0.75)]">
-            Accede a cursos, recursos, comunidad y certificados diseñados
+            Accede a cursos, recursos y comunidad diseñados
             para profesionales, educadores y familias.
           </p>
           <div className="relative mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">

@@ -4,7 +4,7 @@ import { absoluteUrl } from "@/lib/site";
 
 const title = "Autismo Córdoba | Formación especializada en autismo";
 const description =
-  "Plataforma educativa con cursos, recursos, comunidad y certificados para profesionales, docentes y familias que trabajan con personas autistas.";
+  "Plataforma educativa con cursos, recursos y comunidad para profesionales, docentes y familias que trabajan con personas autistas.";
 
 export const metadata: Metadata = {
   title,

@@ -7,7 +7,6 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  Award,
   Bell,
   BookOpen,
   CalendarDays,
@@ -34,7 +33,6 @@ export type StudentShellNavIcon =
   | "community"
   | "library"
   | "calendar"
-  | "certificates"
   | "settings"
   | "support";
 
@@ -62,7 +60,6 @@ const NAV_ICONS: Record<StudentShellNavIcon, LucideIcon> = {
   community: MessageSquareText,
   library: BookOpen,
   calendar: CalendarDays,
-  certificates: Award,
   settings: Settings2,
   support: CircleHelp,
 };
