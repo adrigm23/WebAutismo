@@ -78,6 +78,14 @@ export function CourseArtwork({
       )}
       style={{ background: theme.background }}
     >
+      {course.coverImageUrl ? (
+        <img
+          src={course.coverImageUrl}
+          alt={course.title}
+          className="absolute inset-0 h-full w-full object-cover"
+        />
+      ) : (
+        <>
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_25%_20%,rgba(255,255,255,0.18),transparent_28%),radial-gradient(circle_at_82%_16%,rgba(255,255,255,0.08),transparent_20%)]" />
       <div className="absolute inset-x-0 bottom-0 h-20 bg-[linear-gradient(180deg,transparent,rgba(0,0,0,0.28))]" />
 
@@ -210,6 +218,8 @@ export function CourseArtwork({
           ) : null}
         </>
       ) : null}
+        </>
+      )}
 
       {!isThumb ? (
         <div className="absolute inset-x-0 bottom-0 flex items-end justify-between px-5 pb-4 text-[10px] font-semibold uppercase tracking-[0.24em] text-white/55">

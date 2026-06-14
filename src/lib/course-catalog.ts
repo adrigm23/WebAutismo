@@ -38,6 +38,7 @@ export type CatalogCourse = Omit<LegacyCourse, "teacher" | "modules"> & {
   teachers: CourseTeacher[];
   editions: CatalogCourseEdition[];
   activeEdition: CatalogCourseEdition | null;
+  coverImageUrl: string | null;
   source: "database" | "legacy";
 };
 
@@ -126,6 +127,7 @@ function toCatalogCourse(record: {
   level: string;
   accentFrom: string;
   accentTo: string;
+  coverImageStorageKey: string | null;
   category: string;
   audienceJson: unknown;
   outcomesJson: unknown;
@@ -221,6 +223,9 @@ function toCatalogCourse(record: {
     seoDescription: record.seoDescription,
     editions,
     activeEdition: pickActiveEdition(editions),
+    coverImageUrl: record.coverImageStorageKey
+      ? `/api/courses/${record.slug}/cover`
+      : null,
     source: "database",
   };
 }
@@ -232,6 +237,7 @@ function toLegacyCatalogCourse(course: LegacyCourse): CatalogCourse {
     teachers: [course.teacher],
     editions: [],
     activeEdition: null,
+    coverImageUrl: null,
     source: "legacy",
   };
 }

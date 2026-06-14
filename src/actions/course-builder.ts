@@ -7,8 +7,12 @@ import path from "path";
 import type { CourseResourceSource, CourseResourceType, CourseStatus } from "@prisma/client";
 import { requireUser } from "@/lib/auth";
 import { getDb } from "@/lib/prisma";
-import { COURSE_RESOURCE_UPLOAD_POLICY, validateFileUpload } from "@/lib/file-security";
-import { writeStoredObject } from "@/lib/object-storage";
+import {
+  COURSE_COVER_IMAGE_UPLOAD_POLICY,
+  COURSE_RESOURCE_UPLOAD_POLICY,
+  validateFileUpload,
+} from "@/lib/file-security";
+import { deleteStoredObject, writeStoredObject } from "@/lib/object-storage";
 
 // ─── Shared ───────────────────────────────────────────────────────────────────
 
@@ -455,33 +459,48 @@ export async function deleteCourseResourceAction(
   }
 }
 
-export async function updateCourseAccentAction(
+export async function updateCourseCoverImageAction(
   _state: BuilderActionState,
   formData: FormData,
 ): Promise<BuilderActionState> {
   try {
     const courseId = formData.get("courseId");
-    const accentFrom = formData.get("accentFrom");
-    const accentTo = formData.get("accentTo");
+    const file = formData.get("file");
 
     if (typeof courseId !== "string" || !courseId) return { error: "Curso no válido." };
-    if (typeof accentFrom !== "string" || typeof accentTo !== "string") return { error: "Colores no válidos." };
+    if (!(file instanceof File) || file.size === 0) return { error: "Selecciona una imagen." };
+
+    const validated = validateFileUpload(file, COURSE_COVER_IMAGE_UPLOAD_POLICY);
 
     const { db } = await requireBuilderAccess(courseId);
 
-    const course = await db.course.findUnique({ where: { id: courseId }, select: { slug: true } });
+    const course = await db.course.findUnique({
+      where: { id: courseId },
+      select: { slug: true, coverImageStorageKey: true },
+    });
     if (!course) return { error: "Curso no encontrado." };
+
+    const ext = path.extname(validated.fileName);
+    const key = `course-covers/${courseId}/${randomUUID()}${ext}`;
+    await writeStoredObject({
+      storageKey: key,
+      content: new Uint8Array(await file.arrayBuffer()),
+      contentType: validated.mimeType,
+    });
+
+    if (course.coverImageStorageKey) {
+      await deleteStoredObject(course.coverImageStorageKey);
+    }
 
     await db.course.update({
       where: { id: courseId },
-      data: { accentFrom: accentFrom.trim(), accentTo: accentTo.trim() },
+      data: { coverImageStorageKey: key, coverImageMimeType: validated.mimeType },
     });
 
     revalidateCourse(course.slug);
     return { success: true };
   } catch (e) {
-    console.error(e);
-    return { error: "Error al actualizar los colores." };
+    return { error: e instanceof Error ? e.message : "Error al subir la imagen." };
   }
 }
 

@@ -9,6 +9,7 @@ export function runCourseCloningTests() {
     teachers: [courses[0].teacher],
     editions: [],
     activeEdition: null,
+    coverImageUrl: null,
     source: "legacy" as const
   };
 

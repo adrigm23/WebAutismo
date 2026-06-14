@@ -12,6 +12,7 @@ export type CourseGridItem = {
   status: "ACTIVE" | "INACTIVE";
   accentFrom: string;
   accentTo: string;
+  coverImageUrl: string | null;
   enrollmentCount: number;
   revenueInCents: number;
   editHref: string;
@@ -86,12 +87,21 @@ function CourseCard({ course }: { course: CourseGridItem }) {
     <article className="flex flex-col overflow-hidden rounded-xl border border-[rgba(22,60,88,0.09)] bg-white shadow-[0_2px_8px_rgba(22,60,88,0.06)] transition hover:shadow-[0_4px_16px_rgba(22,60,88,0.1)]">
       {/* Image / gradient area */}
       <div className="relative h-[11rem] overflow-hidden">
-        <div
-          className="h-full w-full"
-          style={{
-            background: `linear-gradient(135deg, ${course.accentFrom} 0%, ${course.accentTo} 100%)`,
-          }}
-        />
+        {course.coverImageUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={course.coverImageUrl}
+            alt={course.title}
+            className="h-full w-full object-cover"
+          />
+        ) : (
+          <div
+            className="h-full w-full"
+            style={{
+              background: `linear-gradient(135deg, ${course.accentFrom} 0%, ${course.accentTo} 100%)`,
+            }}
+          />
+        )}
         <div className="absolute right-3 top-3">
           <StatusBadge status={course.status} />
         </div>

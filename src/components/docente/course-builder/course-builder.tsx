@@ -12,6 +12,7 @@ import {
   ExternalLink,
   FileText,
   GripVertical,
+  ImageIcon,
   Loader2,
   LogOut,
   Menu,
@@ -47,7 +48,7 @@ import {
   deleteCourseModuleAction,
   deleteCourseResourceAction,
   reorderModulesAction,
-  updateCourseAccentAction,
+  updateCourseCoverImageAction,
   updateCourseCategoryAction,
   updateCourseModuleAction,
   updateCourseStatusAction,
@@ -79,8 +80,7 @@ export type BuilderCourse = {
   title: string;
   category: string;
   status: "ACTIVE" | "INACTIVE";
-  accentFrom: string;
-  accentTo: string;
+  coverImageUrl: string | null;
   modules: BuilderModule[];
 };
 
@@ -560,12 +560,12 @@ function ModuleCard({ module: mod, courseId, onDelete, onEdit, onResourceAdded, 
 
 const CATEGORIES = ["Intervención Clínica", "Educativo", "Herramientas", "Familia", "Terapia", "Diagnóstico", "Otro"];
 
-function ConfigPanel({ course, status, onStatusChange, onCategoryChange, onAccentChange, onAccentSave, disabled }: {
+function ConfigPanel({ course, status, onStatusChange, onCategoryChange, onCoverImageUpload, coverImageSaving, disabled }: {
   course: BuilderCourse; status: "ACTIVE" | "INACTIVE";
   onStatusChange: (s: "ACTIVE" | "INACTIVE") => void;
   onCategoryChange: (c: string) => void;
-  onAccentChange: (from: string, to: string) => void;
-  onAccentSave: (from: string, to: string) => void;
+  onCoverImageUpload: (file: File) => void;
+  coverImageSaving?: boolean;
   disabled?: boolean;
 }) {
   const visibilityMap = { INACTIVE: "draft", ACTIVE: "public" } as const;
@@ -593,44 +593,42 @@ function ConfigPanel({ course, status, onStatusChange, onCategoryChange, onAccen
             <Upload className="h-4 w-4 text-[var(--color-muted)]" strokeWidth={2} />
             <h3 className="text-sm font-semibold text-[var(--color-ink)]">Miniatura del Curso</h3>
           </div>
-          {/* Live gradient preview */}
-          <div
-            className="overflow-hidden rounded-xl"
-            style={{
-              background: `linear-gradient(135deg, ${course.accentFrom} 0%, ${course.accentTo} 100%)`,
-              aspectRatio: "16/9"
-            }}
-          />
-          {/* Color pickers */}
-          <div className="mt-3 grid grid-cols-2 gap-3">
-            <div>
-              <label className="mb-1 block text-xs font-medium text-[var(--color-ink-soft)]">Color inicio</label>
-              <div className="flex items-center gap-2 rounded-lg border border-[rgba(22,60,88,0.15)] px-2 py-1.5">
-                <input
-                  type="color"
-                  value={course.accentFrom}
-                  onChange={e => onAccentChange(e.target.value, course.accentTo)}
-                  onBlur={e => onAccentSave(e.target.value, course.accentTo)}
-                  className="h-6 w-8 cursor-pointer rounded border-0 bg-transparent p-0"
-                />
-                <span className="text-xs font-mono text-[var(--color-ink-soft)]">{course.accentFrom}</span>
-              </div>
+          {/* Cover image preview */}
+          {course.coverImageUrl ? (
+            <img
+              src={course.coverImageUrl}
+              alt="Miniatura del curso"
+              className="aspect-video w-full rounded-xl object-cover"
+            />
+          ) : (
+            <div
+              className="flex flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-[rgba(22,60,88,0.2)] bg-[rgba(22,60,88,0.02)] px-4 text-center"
+              style={{ aspectRatio: "16/9" }}
+            >
+              <ImageIcon className="h-6 w-6 text-[var(--color-muted)]" strokeWidth={1.8} />
+              <p className="text-[0.72rem] text-[var(--color-muted)]">Sin imagen — se mostrarán las iniciales del curso.</p>
             </div>
-            <div>
-              <label className="mb-1 block text-xs font-medium text-[var(--color-ink-soft)]">Color final</label>
-              <div className="flex items-center gap-2 rounded-lg border border-[rgba(22,60,88,0.15)] px-2 py-1.5">
-                <input
-                  type="color"
-                  value={course.accentTo}
-                  onChange={e => onAccentChange(course.accentFrom, e.target.value)}
-                  onBlur={e => onAccentSave(course.accentFrom, e.target.value)}
-                  className="h-6 w-8 cursor-pointer rounded border-0 bg-transparent p-0"
-                />
-                <span className="text-xs font-mono text-[var(--color-ink-soft)]">{course.accentTo}</span>
-              </div>
-            </div>
-          </div>
-          <p className="mt-2 text-[0.7rem] leading-relaxed text-[var(--color-muted)]">El gradiente se usa como portada del curso en el catálogo.</p>
+          )}
+          {/* File input */}
+          <label className="mt-3 block">
+            <input
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              disabled={coverImageSaving}
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) onCoverImageUpload(file);
+                e.target.value = "";
+              }}
+              className="w-full cursor-pointer rounded-xl border border-[rgba(22,60,88,0.15)] px-3 py-2 text-sm text-[var(--color-ink-soft)] file:mr-3 file:rounded-lg file:border-0 file:bg-[var(--color-primary)] file:px-3 file:py-1.5 file:text-sm file:font-semibold file:text-white hover:file:bg-[var(--color-primary-strong)] disabled:opacity-50"
+            />
+          </label>
+          {coverImageSaving && (
+            <p className="mt-2 flex items-center gap-1.5 text-[0.72rem] text-[var(--color-muted)]">
+              <Loader2 className="h-3.5 w-3.5 animate-spin" /> Subiendo…
+            </p>
+          )}
+          <p className="mt-2 text-[0.7rem] leading-relaxed text-[var(--color-muted)]">Sube una imagen en formato JPG, PNG o WEBP (máx. 10MB). Se usará como portada del curso en el catálogo.</p>
         </section>
 
         {/* Categoría */}
@@ -686,8 +684,8 @@ export function CourseBuilder({ course, embedded = false }: { course: BuilderCou
   const [modules, setModules] = useState<BuilderModule[]>(course.modules);
   const [status, setStatus] = useState<"ACTIVE" | "INACTIVE">(course.status);
   const [category, setCategory] = useState(course.category);
-  const [accentFrom, setAccentFrom] = useState(course.accentFrom);
-  const [accentTo, setAccentTo] = useState(course.accentTo);
+  const [coverImageUrl, setCoverImageUrl] = useState(course.coverImageUrl);
+  const [coverImageUploading, setCoverImageUploading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState<{ msg: string; kind: "success" | "error" } | null>(null);
 
@@ -730,20 +728,24 @@ export function CourseBuilder({ course, embedded = false }: { course: BuilderCou
     if (res.error) { setCategory(prev); showToast(res.error, "error"); }
   }
 
-  // ── Accent colors ─────────────────────────────────────────────────────────
+  // ── Cover image ─────────────────────────────────────────────────────────
 
-  function handleAccentChange(from: string, to: string) {
-    setAccentFrom(from);
-    setAccentTo(to);
-  }
-
-  async function handleAccentSave(from: string, to: string) {
+  async function handleCoverImageUpload(file: File) {
+    setCoverImageUploading(true);
+    const previewUrl = URL.createObjectURL(file);
+    const previousUrl = coverImageUrl;
+    setCoverImageUrl(previewUrl);
     const fd = new FormData();
     fd.set("courseId", course.id);
-    fd.set("accentFrom", from);
-    fd.set("accentTo", to);
-    const res = await updateCourseAccentAction({}, fd);
-    if (res.error) showToast(res.error, "error");
+    fd.set("file", file);
+    const res = await updateCourseCoverImageAction({}, fd);
+    setCoverImageUploading(false);
+    if (res.error) {
+      setCoverImageUrl(previousUrl);
+      showToast(res.error, "error");
+    } else {
+      showToast("Imagen actualizada.");
+    }
   }
 
   // ── Modules ───────────────────────────────────────────────────────────────
@@ -869,7 +871,7 @@ export function CourseBuilder({ course, embedded = false }: { course: BuilderCou
 
           {showConfig && (
             <div className="hidden w-[22rem] shrink-0 xl:flex xl:flex-col">
-              <ConfigPanel course={{ ...course, category, accentFrom, accentTo }} status={status} onStatusChange={handleStatusChange} onCategoryChange={handleCategoryChange} onAccentChange={handleAccentChange} onAccentSave={handleAccentSave} disabled={saving} />
+              <ConfigPanel course={{ ...course, category, coverImageUrl }} status={status} onStatusChange={handleStatusChange} onCategoryChange={handleCategoryChange} onCoverImageUpload={handleCoverImageUpload} coverImageSaving={coverImageUploading} disabled={saving} />
             </div>
           )}
         </div>
@@ -883,7 +885,7 @@ export function CourseBuilder({ course, embedded = false }: { course: BuilderCou
                 <ChevronDown className="h-4 w-4 text-[var(--color-muted)] transition group-open:rotate-180" />
               </summary>
               <div className="max-h-[60vh] overflow-y-auto">
-                <ConfigPanel course={{ ...course, category, accentFrom, accentTo }} status={status} onStatusChange={handleStatusChange} onCategoryChange={handleCategoryChange} onAccentChange={handleAccentChange} onAccentSave={handleAccentSave} disabled={saving} />
+                <ConfigPanel course={{ ...course, category, coverImageUrl }} status={status} onStatusChange={handleStatusChange} onCategoryChange={handleCategoryChange} onCoverImageUpload={handleCoverImageUpload} coverImageSaving={coverImageUploading} disabled={saving} />
               </div>
             </details>
           </div>

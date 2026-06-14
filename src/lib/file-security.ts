@@ -38,6 +38,12 @@ export const COURSE_RESOURCE_UPLOAD_POLICY: UploadPolicy = {
   maxFileSizeBytes: MAX_STORED_ASSET_SIZE_BYTES
 };
 
+export const COURSE_COVER_IMAGE_UPLOAD_POLICY: UploadPolicy = {
+  allowedMimeTypes: ["image/jpeg", "image/png", "image/webp"],
+  label: "La imagen",
+  maxFileSizeBytes: MAX_STORED_ASSET_SIZE_BYTES
+};
+
 export const COURSE_SUBMISSION_UPLOAD_POLICY: UploadPolicy = {
   allowedMimeTypes: Object.keys(MIME_EXTENSION_MAP) as AllowedMimeType[],
   label: "El archivo",

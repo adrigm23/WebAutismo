@@ -63,8 +63,9 @@ export default async function CourseBuilderPage({ params }: Props) {
     title: course.title,
     category: course.category,
     status: course.status,
-    accentFrom: course.accentFrom,
-    accentTo: course.accentTo,
+    coverImageUrl: course.coverImageStorageKey
+      ? `/api/courses/${course.slug}/cover`
+      : null,
     modules: course.modules.map((mod, idx) => ({
       id: mod.id,
       title: mod.title,

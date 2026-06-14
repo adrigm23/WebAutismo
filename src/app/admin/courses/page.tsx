@@ -96,6 +96,9 @@ export default async function AdminCoursesPage({
     status: course.status,
     accentFrom: course.accentFrom,
     accentTo: course.accentTo,
+    coverImageUrl: course.coverImageStorageKey
+      ? `/api/courses/${course.slug}/cover`
+      : null,
     enrollmentCount: course._count.enrollments,
     revenueInCents: course._count.purchases * course.priceInCents,
     editHref: `/admin/courses?courseId=${course.id}#course-detail`,

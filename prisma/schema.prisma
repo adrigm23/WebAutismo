@@ -61,6 +61,8 @@ model Course {
   level            String
   accentFrom       String
   accentTo         String
+  coverImageStorageKey String?
+  coverImageMimeType   String?
   category         String
   audienceJson     Json
   outcomesJson     Json

@@ -1,9 +1,16 @@
 "use server";
 
+import { randomUUID } from "crypto";
+import path from "path";
 import { redirect } from "next/navigation";
 import { writeAuditLog } from "@/lib/audit";
 import { getCatalogCourseBySlug } from "@/lib/course-catalog";
 import { buildClonedCourseInput } from "@/lib/course-cloning";
+import {
+  COURSE_COVER_IMAGE_UPLOAD_POLICY,
+  validateFileUpload,
+} from "@/lib/file-security";
+import { writeStoredObject } from "@/lib/object-storage";
 import { getDb } from "@/lib/prisma";
 import {
   enforceAdminMutationRateLimit,
@@ -34,8 +41,6 @@ export async function createCourseAction(formData: FormData) {
     String(formData.get("duration") ?? "").trim() || "Pendiente de configurar";
   const level = String(formData.get("level") ?? "General").trim();
   const category = String(formData.get("category") ?? "General").trim();
-  const accentFrom = String(formData.get("accentFrom") ?? "#163c58").trim();
-  const accentTo = String(formData.get("accentTo") ?? "#2e6b8a").trim();
   const status =
     formData.get("status") === "ACTIVE"
       ? ("ACTIVE" as const)
@@ -68,8 +73,8 @@ export async function createCourseAction(formData: FormData) {
       duration,
       format: "Campus online",
       level,
-      accentFrom,
-      accentTo,
+      accentFrom: "#163c58",
+      accentTo: "#2e6b8a",
       category,
       audienceJson: [],
       outcomesJson: [],
@@ -89,6 +94,31 @@ export async function createCourseAction(formData: FormData) {
       }
     }
   });
+
+  const coverImage = formData.get("coverImage");
+  if (coverImage instanceof File && coverImage.size > 0) {
+    try {
+      const validated = validateFileUpload(
+        coverImage,
+        COURSE_COVER_IMAGE_UPLOAD_POLICY
+      );
+      const key = `course-covers/${course.id}/${randomUUID()}${path.extname(validated.fileName)}`;
+      await writeStoredObject({
+        storageKey: key,
+        content: new Uint8Array(await coverImage.arrayBuffer()),
+        contentType: validated.mimeType
+      });
+      await db.course.update({
+        where: { id: course.id },
+        data: {
+          coverImageStorageKey: key,
+          coverImageMimeType: validated.mimeType
+        }
+      });
+    } catch (error) {
+      console.error("No se pudo guardar la imagen de portada del curso.", error);
+    }
+  }
 
   if (teacherIds.length > 0) {
     await db.courseTeacherAssignment.createMany({

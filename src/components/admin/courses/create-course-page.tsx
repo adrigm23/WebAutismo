@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
 import {
   BookOpen,
+  ImageIcon,
   Info,
   Plus,
   Undo2,
@@ -38,8 +39,7 @@ export function CreateCoursePage({ teachers }: Props) {
   const [status, setStatus] = useState<"ACTIVE" | "INACTIVE">("INACTIVE");
   const [duration, setDuration] = useState("");
   const [priceInCents, setPriceInCents] = useState(0);
-  const [accentFrom, setAccentFrom] = useState("#163c58");
-  const [accentTo, setAccentTo] = useState("#2e6b8a");
+  const [coverImageFile, setCoverImageFile] = useState<File | null>(null);
   const [selectedTeachers, setSelectedTeachers] = useState<Teacher[]>([]);
   const [teacherSelectValue, setTeacherSelectValue] = useState("");
 
@@ -58,13 +58,22 @@ export function CreateCoursePage({ teachers }: Props) {
 
   const slug = slugOverride !== null ? slugOverride : generatedSlug;
 
+  const coverImagePreviewUrl = useMemo(
+    () => (coverImageFile ? URL.createObjectURL(coverImageFile) : null),
+    [coverImageFile],
+  );
+
+  useEffect(() => {
+    return () => {
+      if (coverImagePreviewUrl) URL.revokeObjectURL(coverImagePreviewUrl);
+    };
+  }, [coverImagePreviewUrl]);
+
   return (
     <div className="min-h-screen bg-[#f3f4f6]">
       {/* Form content */}
       <form id="create-course-form" action={createCourseAction}>
         {/* Hidden fields for state */}
-        <input type="hidden" name="accentFrom" value={accentFrom} />
-        <input type="hidden" name="accentTo" value={accentTo} />
         <input type="hidden" name="duration" value={duration} />
         <input type="hidden" name="priceInCents" value={String(priceInCents)} />
         {selectedTeachers.map((t) => (
@@ -272,7 +281,7 @@ export function CreateCoursePage({ teachers }: Props) {
                     </div>
                   </div>
 
-                  {/* Portada — colores del gradiente */}
+                  {/* Portada — imagen */}
                   <div>
                     <label className="mb-2 block text-[0.8rem] font-medium text-[var(--color-ink-soft)]">
                       Imagen de Portada
@@ -280,43 +289,36 @@ export function CreateCoursePage({ teachers }: Props) {
                     <div className="overflow-hidden rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[rgba(22,60,88,0.02)] p-4">
                       <div className="flex items-center gap-4">
                         {/* Preview thumbnail */}
-                        <div
-                          className="h-16 w-28 shrink-0 rounded-lg"
-                          style={{
-                            background: `linear-gradient(135deg, ${accentFrom} 0%, ${accentTo} 100%)`,
-                          }}
-                        />
+                        {coverImagePreviewUrl ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={coverImagePreviewUrl}
+                            alt="Vista previa de la portada"
+                            className="h-16 w-28 shrink-0 rounded-lg object-cover"
+                          />
+                        ) : (
+                          <div className="grid h-16 w-28 shrink-0 place-items-center rounded-lg border border-dashed border-[var(--color-border)] bg-white text-[var(--color-muted)]">
+                            <ImageIcon className="h-5 w-5" strokeWidth={1.8} />
+                          </div>
+                        )}
                         <div className="flex-1">
                           <p className="text-sm font-medium text-[var(--color-ink)]">
-                            Gradiente de portada
+                            {coverImageFile
+                              ? coverImageFile.name
+                              : "Sin imagen seleccionada"}
                           </p>
                           <p className="mt-0.5 text-xs text-[var(--color-muted)]">
-                            Selecciona los colores del gradiente del curso
+                            Sube una imagen JPG, PNG o WEBP para la portada del curso (opcional).
                           </p>
-                          <div className="mt-2 flex items-center gap-3">
-                            <div className="flex items-center gap-1.5">
-                              <label className="text-xs text-[var(--color-muted)]">
-                                Inicio
-                              </label>
-                              <input
-                                type="color"
-                                value={accentFrom}
-                                onChange={(e) => setAccentFrom(e.target.value)}
-                                className="h-7 w-10 cursor-pointer rounded border border-[var(--color-border)] p-0.5"
-                              />
-                            </div>
-                            <div className="flex items-center gap-1.5">
-                              <label className="text-xs text-[var(--color-muted)]">
-                                Final
-                              </label>
-                              <input
-                                type="color"
-                                value={accentTo}
-                                onChange={(e) => setAccentTo(e.target.value)}
-                                className="h-7 w-10 cursor-pointer rounded border border-[var(--color-border)] p-0.5"
-                              />
-                            </div>
-                          </div>
+                          <input
+                            name="coverImage"
+                            type="file"
+                            accept="image/jpeg,image/png,image/webp"
+                            onChange={(e) =>
+                              setCoverImageFile(e.target.files?.[0] ?? null)
+                            }
+                            className="mt-2 w-full cursor-pointer rounded-[var(--radius-md)] border border-[var(--color-border)] bg-white px-2.5 py-1.5 text-xs text-[var(--color-ink-soft)] file:mr-3 file:rounded-md file:border-0 file:bg-[var(--color-primary)] file:px-3 file:py-1 file:text-xs file:font-semibold file:text-white hover:file:bg-[var(--color-primary-strong)]"
+                          />
                         </div>
                       </div>
                     </div>
@@ -396,12 +398,21 @@ export function CreateCoursePage({ teachers }: Props) {
                   {/* Course card preview */}
                   <div className="overflow-hidden rounded-xl border border-[var(--color-border-subtle)] shadow-[var(--shadow-xs)]">
                     {/* Artwork */}
-                    <div
-                      className="h-36 w-full"
-                      style={{
-                        background: `linear-gradient(135deg, ${accentFrom} 0%, ${accentTo} 100%)`,
-                      }}
-                    />
+                    {coverImagePreviewUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={coverImagePreviewUrl}
+                        alt=""
+                        className="h-36 w-full object-cover"
+                      />
+                    ) : (
+                      <div className="grid h-36 w-full place-items-center bg-[rgba(22,60,88,0.06)] text-[var(--color-muted)]">
+                        <div className="flex flex-col items-center gap-1.5">
+                          <ImageIcon className="h-6 w-6" strokeWidth={1.6} />
+                          <span className="text-xs">Sin imagen</span>
+                        </div>
+                      </div>
+                    )}
                     {/* Content */}
                     <div className="bg-white p-4">
                       {category && (
