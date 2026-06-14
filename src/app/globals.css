@@ -458,6 +458,22 @@ select {
   }
 }
 
+/* Aprovecha mejor el ancho en monitores grandes, sin afectar al ancho de
+   lectura de textos (controlado aparte por max-w-* en cada componente). */
+@media (min-width: 1280px) {
+  :root {
+    --container-public: 1440px;
+    --container-app: 1520px;
+  }
+}
+
+@media (min-width: 1536px) {
+  :root {
+    --container-public: 1600px;
+    --container-app: 1680px;
+  }
+}
+
 .prose-course p {
   margin: 0;
 }
