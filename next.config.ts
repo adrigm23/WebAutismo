@@ -68,31 +68,36 @@ const nextConfig: NextConfig = {
   },
 
   async headers() {
+    const cacheHeaders = isDev
+      ? []
+      : [
+          // Aggressive caching for static assets (JS, CSS, fonts, images)
+          {
+            source: "/_next/static/:path*",
+            headers: [
+              {
+                key: "Cache-Control",
+                value: "public, max-age=31536000, immutable",
+              },
+            ],
+          },
+          // Cache public assets (images, icons, manifests)
+          {
+            source: "/(.*)\\.(ico|png|jpg|jpeg|svg|webp|avif|woff|woff2|ttf|otf)",
+            headers: [
+              {
+                key: "Cache-Control",
+                value: "public, max-age=86400, stale-while-revalidate=604800",
+              },
+            ],
+          },
+        ];
     return [
       {
         source: "/:path*",
         headers: securityHeaders,
       },
-      // Aggressive caching for static assets (JS, CSS, fonts, images)
-      {
-        source: "/_next/static/:path*",
-        headers: [
-          {
-            key: "Cache-Control",
-            value: "public, max-age=31536000, immutable",
-          },
-        ],
-      },
-      // Cache public assets (images, icons, manifests)
-      {
-        source: "/(.*)\\.(ico|png|jpg|jpeg|svg|webp|avif|woff|woff2|ttf|otf)",
-        headers: [
-          {
-            key: "Cache-Control",
-            value: "public, max-age=86400, stale-while-revalidate=604800",
-          },
-        ],
-      },
+      ...cacheHeaders,
     ];
   },
 };
