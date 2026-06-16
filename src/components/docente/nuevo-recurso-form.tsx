@@ -4,6 +4,7 @@ import { useActionState, useId, useRef, useState } from "react";
 import Link from "next/link";
 import {
   ArrowLeft,
+  CalendarClock,
   Eye,
   File,
   FileText,
@@ -54,6 +55,7 @@ export function NuevoRecursoForm({
   const [resourceType, setResourceType] = useState<ResourceType>("MATERIAL");
   const [sourceType, setSourceType] = useState<SourceType>("FILE");
   const [linkUrl, setLinkUrl] = useState("");
+  const [dueAt, setDueAt] = useState("");
   const [dragOver, setDragOver] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
@@ -325,6 +327,25 @@ export function NuevoRecursoForm({
                     ))}
                   </div>
                 </div>
+
+                {/* Due date — only for exercises */}
+                {resourceType === "EXERCISE" && (
+                  <div>
+                    <label className="mb-1.5 flex items-center gap-1.5 text-sm font-medium text-[var(--color-ink-soft)]">
+                      <CalendarClock className="h-4 w-4" />
+                      Fecha límite de entrega
+                    </label>
+                    <input
+                      type="datetime-local"
+                      value={dueAt}
+                      onChange={(e) => setDueAt(e.target.value)}
+                      className="w-full rounded-lg border border-[var(--color-border)] bg-white px-4 py-2.5 text-sm text-[var(--color-ink)] focus:border-[var(--color-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20"
+                    />
+                    <p className="mt-1.5 text-xs text-[var(--color-muted)]">
+                      Opcional. Si no se establece, la tarea no tendrá fecha de vencimiento.
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -451,6 +472,7 @@ export function NuevoRecursoForm({
               <input type="hidden" name="title" value={title} />
               <input type="hidden" name="description" value={description} />
               {sourceType === "LINK" && <input type="hidden" name="linkUrl" value={linkUrl} />}
+              {resourceType === "EXERCISE" && dueAt && <input type="hidden" name="dueAt" value={dueAt} />}
               {/* File input for publish */}
               <input
                 ref={fileInputRef}
@@ -488,6 +510,7 @@ export function NuevoRecursoForm({
               <input type="hidden" name="title" value={title} />
               <input type="hidden" name="description" value={description} />
               {sourceType === "LINK" && <input type="hidden" name="linkUrl" value={linkUrl} />}
+              {resourceType === "EXERCISE" && dueAt && <input type="hidden" name="dueAt" value={dueAt} />}
               {/* File input for draft */}
               <input
                 ref={draftFileInputRef}

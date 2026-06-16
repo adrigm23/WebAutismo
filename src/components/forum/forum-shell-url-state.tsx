@@ -22,21 +22,6 @@ function getCurrentCategorySlug(pathname: string, forumRootPath: string) {
   return segment;
 }
 
-export function ForumShellSearchInput() {
-  const searchParams = useSearchParams();
-  const currentQuery = searchParams.get("q") ?? "";
-
-  return (
-    <input
-      className="w-full min-w-0 bg-transparent text-sm text-[var(--color-ink)] outline-none placeholder:text-[var(--color-muted)]"
-      defaultValue={currentQuery}
-      name="q"
-      placeholder="Buscar en la comunidad..."
-      type="search"
-    />
-  );
-}
-
 type ForumShellNewThreadButtonProps = {
   courseSlug: string;
 };
