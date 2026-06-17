@@ -17,11 +17,11 @@ export function AuthShellFrame({ children, className }: AuthShellFrameProps) {
   return (
     <main
       className={cn(
-        "campus-calm-bg min-h-[100dvh] px-5 py-8 sm:px-6 sm:py-10 lg:px-8",
+        "campus-calm-bg h-[100dvh] overflow-hidden px-5 py-8 sm:px-6 sm:py-10 lg:px-8",
         className,
       )}
     >
-      <div className="mx-auto w-full max-w-6xl">{children}</div>
+      <div className="mx-auto flex h-full w-full max-w-6xl flex-col">{children}</div>
     </main>
   );
 }
@@ -105,8 +105,8 @@ export function AuthSplitShell({
 }: AuthSplitShellProps) {
   return (
     <AuthShellFrame>
-      <div className="grid min-h-[calc(100dvh-5rem)] gap-6 lg:grid-cols-[minmax(0,1.03fr)_minmax(21rem,0.97fr)] lg:gap-0">
-        <section className="flex flex-col justify-between rounded-[var(--radius-xl)] border border-[var(--color-border-subtle)] bg-[color:var(--color-surface-elevated)] p-6 shadow-[var(--shadow-sm)] sm:p-8 lg:rounded-r-none lg:border-r-0 lg:p-10 xl:p-12">
+      <div className="grid flex-1 gap-6 overflow-hidden lg:grid-cols-[minmax(0,1.03fr)_minmax(21rem,0.97fr)] lg:gap-0">
+        <section className="flex flex-col justify-between overflow-y-auto rounded-[var(--radius-xl)] border border-[var(--color-border-subtle)] bg-[color:var(--color-surface-elevated)] p-6 shadow-[var(--shadow-sm)] sm:p-8 lg:rounded-r-none lg:border-r-0 lg:p-10 xl:p-12">
           <div>
             <AuthBrand />
 
@@ -165,13 +165,9 @@ export function AuthSplitShell({
             </div>
 
             <div className="mt-10 grid gap-4">
-              <SurfaceCard
-                className="border-white/12 bg-white/10 text-white shadow-none backdrop-blur-[2px]"
-                padding="md"
-                variant="muted"
-              >
+              <div className="rounded-[var(--radius-xl)] border border-white/12 bg-white/10 p-5 backdrop-blur-sm">
                 <div className="flex items-start gap-3">
-                  <div className="grid size-10 place-items-center rounded-[var(--radius-md)] bg-white/14">
+                  <div className="grid size-10 shrink-0 place-items-center rounded-[var(--radius-md)] bg-white/20">
                     <ShieldCheck
                       className="size-5 text-white"
                       strokeWidth={2}
@@ -181,13 +177,13 @@ export function AuthSplitShell({
                     <p className="text-sm font-semibold text-white">
                       Acceso vinculado a tu cuenta
                     </p>
-                    <p className="mt-1 text-sm leading-6 text-white/72">
+                    <p className="mt-1 text-sm leading-6 text-white/70">
                       Cada matricula, progreso y recurso queda asociado a tu
                       perfil institucional.
                     </p>
                   </div>
                 </div>
-              </SurfaceCard>
+              </div>
 
               {showDemoNotice ? (
                 <StateBanner
@@ -203,10 +199,6 @@ export function AuthSplitShell({
             </div>
           </div>
         </section>
-      </div>
-
-      <div className="mt-8">
-        <AuthSupportLinks />
       </div>
     </AuthShellFrame>
   );
