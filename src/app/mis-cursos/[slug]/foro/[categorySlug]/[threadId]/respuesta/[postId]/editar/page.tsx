@@ -7,6 +7,7 @@ import { requireUser } from "@/lib/auth";
 import { getCatalogCourseBySlug } from "@/lib/course-catalog";
 import { canAccessCourseCommunity } from "@/lib/course-community";
 import { canEditForumContent, getForumThreadById } from "@/lib/forum";
+import { getDb } from "@/lib/prisma";
 
 type ForumEditPostPageProps = {
   params: Promise<{ slug: string; categorySlug: string; threadId: string; postId: string }>;
@@ -51,18 +52,29 @@ export default async function ForumEditPostPage({
     redirect(`/checkout/${course.slug}`);
   }
 
-  const forumData = await getForumThreadById({
-    courseSlug: course.slug,
-    categorySlug,
-    threadId,
-    viewerRole: access.role
-  });
+  const [forumData, post] = await Promise.all([
+    getForumThreadById({
+      courseSlug: course.slug,
+      categorySlug,
+      threadId,
+      viewerRole: access.role
+    }),
+    getDb().forumPost.findFirst({
+      where: { id: postId, threadId },
+      select: {
+        id: true,
+        body: true,
+        deletedAt: true,
+        createdAt: true,
+        author: { select: { id: true } },
+        attachments: { select: { id: true, label: true } }
+      }
+    })
+  ]);
 
   if (!forumData) {
     notFound();
   }
-
-  const post = forumData.thread.posts.find((item) => item.id === postId);
 
   if (!post || post.deletedAt) {
     notFound();

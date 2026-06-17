@@ -411,19 +411,15 @@ export const getCatalogCourses = cache(async (includeInactive = false) => {
 
 export const getCatalogCoursesByIds = cache(
   async (courseIds: string[], includeInactive = true) => {
-    const uniqueCourseIds = Array.from(new Set(courseIds)).filter(Boolean);
+    const uniqueIds = new Set(courseIds.filter(Boolean));
 
-    if (uniqueCourseIds.length === 0) {
+    if (uniqueIds.size === 0) {
       return [] as CatalogCourse[];
     }
 
     try {
-      return await fetchCatalogCoursesFromDb({
-        id: {
-          in: uniqueCourseIds,
-        },
-        ...(includeInactive ? {} : { status: "ACTIVE" }),
-      });
+      const allCourses = await getCatalogCourses(includeInactive);
+      return allCourses.filter((c) => uniqueIds.has(c.id));
     } catch (error) {
       if (!shouldUseLegacyCatalogFallback(error)) {
         throw error;

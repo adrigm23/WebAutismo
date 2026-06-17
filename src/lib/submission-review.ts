@@ -143,18 +143,18 @@ export async function upsertRubricCriteria(input: {
 }) {
   const db = getDb();
 
-  for (const c of input.criteria) {
-    if (c.id) {
-      await db.rubricCriterion.update({
-        where: { id: c.id },
-        data: { title: c.title.trim(), description: c.description?.trim() || null, maxPoints: c.maxPoints, order: c.order },
-      });
-    } else {
-      await db.rubricCriterion.create({
-        data: { resourceId: input.resourceId, title: c.title.trim(), description: c.description?.trim() || null, maxPoints: c.maxPoints, order: c.order },
-      });
-    }
-  }
+  await db.$transaction(
+    input.criteria.map((c) =>
+      c.id
+        ? db.rubricCriterion.update({
+            where: { id: c.id },
+            data: { title: c.title.trim(), description: c.description?.trim() || null, maxPoints: c.maxPoints, order: c.order },
+          })
+        : db.rubricCriterion.create({
+            data: { resourceId: input.resourceId, title: c.title.trim(), description: c.description?.trim() || null, maxPoints: c.maxPoints, order: c.order },
+          })
+    )
+  );
 }
 
 export async function upsertRubricScores(input: {
@@ -163,11 +163,13 @@ export async function upsertRubricScores(input: {
 }) {
   const db = getDb();
 
-  for (const s of input.scores) {
-    await db.rubricScore.upsert({
-      where: { submissionId_criterionId: { submissionId: input.submissionId, criterionId: s.criterionId } },
-      create: { submissionId: input.submissionId, criterionId: s.criterionId, points: s.points, comment: s.comment?.trim() || null },
-      update: { points: s.points, comment: s.comment?.trim() || null },
-    });
-  }
+  await db.$transaction(
+    input.scores.map((s) =>
+      db.rubricScore.upsert({
+        where: { submissionId_criterionId: { submissionId: input.submissionId, criterionId: s.criterionId } },
+        create: { submissionId: input.submissionId, criterionId: s.criterionId, points: s.points, comment: s.comment?.trim() || null },
+        update: { points: s.points, comment: s.comment?.trim() || null },
+      })
+    )
+  );
 }

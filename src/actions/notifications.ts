@@ -14,5 +14,4 @@ export async function markAllNotificationsReadAction() {
   ]);
 
   revalidatePath("/notificaciones");
-  revalidatePath("/mis-cursos");
 }

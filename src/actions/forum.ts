@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { getCurrentUser } from "@/lib/auth";
 import { canModerateCourse, getCourseRoleForUser } from "@/lib/course-community";
+import { getDb } from "@/lib/prisma";
 import { isDatabaseConnectionError } from "@/lib/db-errors";
 import {
   persistForumAttachments,
@@ -166,8 +167,6 @@ async function requireAuthenticatedUser(nextPath = "/mi-cuenta") {
 }
 
 function revalidateForumPaths(courseSlug: string, categorySlug: string, threadId?: string) {
-  revalidatePath("/mi-cuenta");
-  revalidatePath(`/mis-cursos/${courseSlug}`);
   revalidatePath(`/mis-cursos/${courseSlug}/foro`);
   revalidatePath(`/mis-cursos/${courseSlug}/foro/${categorySlug}`);
 
@@ -534,7 +533,15 @@ export async function editForumPostAction(
     return { error: "El hilo no existe o no pertenece a esta categoria." };
   }
 
-  const postRecord = threadRecord.thread.posts.find((post) => post.id === parsed.data.postId);
+  const postRecord = await getDb().forumPost.findFirst({
+    where: { id: parsed.data.postId, threadId: parsed.data.threadId },
+    select: {
+      id: true,
+      deletedAt: true,
+      createdAt: true,
+      author: { select: { id: true } }
+    }
+  });
 
   if (!postRecord || postRecord.deletedAt) {
     return { error: "La respuesta no existe o ya no se puede editar." };

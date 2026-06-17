@@ -163,7 +163,7 @@ export async function getForumCategories(
   try {
     const [activeSpace] = await Promise.all([
       ensureCourseCommunity(courseSlug),
-      publishDueAnnouncementsForCourse(courseSlug),
+      publishDueAnnouncementsForCourse(courseSlug),   // único punto de publicación por page-load
     ]);
 
     const categories = await getDb().forumCategory.findMany({
@@ -224,7 +224,6 @@ export async function getForumThreads(
   viewerRole?: ForumViewerRole
 ) {
   try {
-    await publishDueAnnouncementsForCourse(courseSlug);
     const category = await getForumCategory(courseSlug, categorySlug);
 
     if (!category) {
@@ -308,7 +307,6 @@ export async function getForumThreadById(input: {
   pageSize?: number;
 }) {
   try {
-    await publishDueAnnouncementsForCourse(input.courseSlug);
     const category = await getForumCategory(input.courseSlug, input.categorySlug);
 
     if (!category) {
@@ -351,22 +349,12 @@ export async function getForumThreadById(input: {
       return null;
     }
 
-    const shouldPaginatePosts =
-      typeof input.page === "number" || typeof input.pageSize === "number";
-    const postsPagination = shouldPaginatePosts
-      ? buildPagination({
-          page: input.page,
-          pageSize: input.pageSize,
-          totalItems: thread._count.posts,
-          mode: "posts"
-        })
-      : buildPagination({
-          page: 1,
-          pageSize: Math.max(thread._count.posts, 1),
-          totalItems: thread._count.posts,
-          maxPageSize: Number.MAX_SAFE_INTEGER,
-          fallbackPageSize: Math.max(thread._count.posts, 1)
-        });
+    const postsPagination = buildPagination({
+      page: input.page ?? 1,
+      pageSize: input.pageSize ?? 30,
+      totalItems: thread._count.posts,
+      mode: "posts"
+    });
     const posts = (await getDb().forumPost.findMany({
       where: {
         threadId: thread.id
@@ -374,12 +362,8 @@ export async function getForumThreadById(input: {
       orderBy: {
         createdAt: "asc"
       },
-      ...(shouldPaginatePosts
-        ? {
-            skip: (postsPagination.page - 1) * postsPagination.pageSize,
-            take: postsPagination.pageSize
-          }
-        : {}),
+      skip: (postsPagination.page - 1) * postsPagination.pageSize,
+      take: postsPagination.pageSize,
       include: {
         attachments: {
           select: {
