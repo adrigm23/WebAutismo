@@ -139,7 +139,7 @@ export async function addCourseModuleAction(
         moduleKey,
         title: title.trim(),
         description: "",
-        estimatedTime: "0 min",
+        estimatedTime: "",
         resourcesSummary: "",
         position,
       },

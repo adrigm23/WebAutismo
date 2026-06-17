@@ -553,10 +553,12 @@ export function LessonPlayer({
           {isPdfLesson ? (
             <div className="mx-auto max-w-3xl px-5 pb-16 pt-8 lg:px-8">
               {/* Time badge */}
-              <div className="mb-3 flex items-center gap-1.5 text-sm text-[#6b7280]">
-                <Clock className="h-3.5 w-3.5" />
-                <span>Tiempo estimado: {currentModule.estimatedTime} de lectura</span>
-              </div>
+              {currentModule.estimatedTime && currentModule.estimatedTime !== "0 min" && (
+                <div className="mb-3 flex items-center gap-1.5 text-sm text-[#6b7280]">
+                  <Clock className="h-3.5 w-3.5" />
+                  <span>Tiempo estimado: {currentModule.estimatedTime} de lectura</span>
+                </div>
+              )}
 
               {/* Title */}
               <h1 className="mb-4 text-[1.75rem] font-bold leading-tight text-[#111c2c]">
@@ -700,10 +702,12 @@ export function LessonPlayer({
                       {currentModule.title}
                     </h1>
                     <div className="mt-2 flex items-center gap-4 text-sm text-[var(--color-muted)]">
-                      <span className="flex items-center gap-1.5">
-                        <Clock className="h-3.5 w-3.5" />
-                        {currentModule.estimatedTime}
-                      </span>
+                      {currentModule.estimatedTime && currentModule.estimatedTime !== "0 min" && (
+                        <span className="flex items-center gap-1.5">
+                          <Clock className="h-3.5 w-3.5" />
+                          {currentModule.estimatedTime}
+                        </span>
+                      )}
                       <span className="flex items-center gap-1.5">
                         <PlayCircle className="h-3.5 w-3.5" />
                         {lessonType}
