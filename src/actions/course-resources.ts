@@ -1020,3 +1020,107 @@ export async function reviewCourseResourceSubmissionAction(
     };
   }
 }
+
+// ─── Rubric criteria ──────────────────────────────────────────────────────────
+
+export type RubricCriterionFormState = {
+  error?: string;
+  success?: string;
+};
+
+const createRubricCriterionSchema = z.object({
+  courseSlug: z.string().min(1),
+  resourceId: z.string().min(1),
+  title: z.string().min(1, "El criterio necesita un título.").max(200),
+  description: z.string().max(2000).optional(),
+  maxPoints: z.string().refine((v) => {
+    const n = Number(v);
+    return !Number.isNaN(n) && n > 0 && n <= 100;
+  }, "La puntuación máxima debe estar entre 1 y 100."),
+});
+
+const deleteRubricCriterionSchema = z.object({
+  courseSlug: z.string().min(1),
+  resourceId: z.string().min(1),
+  criterionId: z.string().min(1),
+});
+
+export async function createRubricCriterionAction(
+  _: RubricCriterionFormState,
+  formData: FormData
+): Promise<RubricCriterionFormState> {
+  const parsed = createRubricCriterionSchema.safeParse({
+    courseSlug: formData.get("courseSlug"),
+    resourceId: formData.get("resourceId"),
+    title: formData.get("title"),
+    description: formData.get("description")?.toString() || undefined,
+    maxPoints: formData.get("maxPoints"),
+  });
+
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Revisa los datos del criterio." };
+  }
+
+  const user = await getCurrentUser();
+  if (!user) return { error: "Debes iniciar sesión." };
+
+  const access = await canAccessCourseCommunity({
+    userId: user.id,
+    email: user.email,
+    courseSlug: parsed.data.courseSlug,
+    userGlobalRole: user.globalRole,
+    userIsActive: user.isActive,
+  });
+
+  if (!access.allowed || !canModerateCourse(access.role)) {
+    return { error: "No tienes permisos para gestionar esta tarea." };
+  }
+
+  const resource = await getDb().courseResource.findFirst({
+    where: { id: parsed.data.resourceId, type: "EXERCISE", course: { slug: parsed.data.courseSlug } },
+    select: { id: true },
+  });
+
+  if (!resource) return { error: "Tarea no encontrada." };
+
+  const count = await getDb().rubricCriterion.count({ where: { resourceId: resource.id } });
+
+  await getDb().rubricCriterion.create({
+    data: {
+      resourceId: resource.id,
+      title: parsed.data.title.trim(),
+      description: parsed.data.description?.trim() ?? null,
+      maxPoints: Number(parsed.data.maxPoints),
+      order: count,
+    },
+  });
+
+  revalidateCourseCampusView(parsed.data.courseSlug);
+  return { success: "Criterio añadido." };
+}
+
+export async function deleteRubricCriterionAction(formData: FormData): Promise<void> {
+  const parsed = deleteRubricCriterionSchema.safeParse({
+    courseSlug: formData.get("courseSlug"),
+    resourceId: formData.get("resourceId"),
+    criterionId: formData.get("criterionId"),
+  });
+
+  if (!parsed.success) return;
+
+  const user = await getCurrentUser();
+  if (!user) return;
+
+  const access = await canAccessCourseCommunity({
+    userId: user.id,
+    email: user.email,
+    courseSlug: parsed.data.courseSlug,
+    userGlobalRole: user.globalRole,
+    userIsActive: user.isActive,
+  });
+
+  if (!access.allowed || !canModerateCourse(access.role)) return;
+
+  await getDb().rubricCriterion.delete({ where: { id: parsed.data.criterionId } });
+  revalidateCourseCampusView(parsed.data.courseSlug);
+}

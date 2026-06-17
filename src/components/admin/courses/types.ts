@@ -52,4 +52,8 @@ export type EditableCourseDetail = {
   teacherAssignments: CourseTeacherAssignmentItem[];
   teacherCandidates: CourseTeacherCandidate[];
   editions: CourseEditionBadgeItem[];
+  audienceJson: string[];
+  outcomesJson: string[];
+  methodologyJson: string[];
+  faqJson: { question: string; answer: string }[];
 };

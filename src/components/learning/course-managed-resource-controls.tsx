@@ -2,11 +2,14 @@
 
 import { useActionState, useState } from "react";
 import {
+  createRubricCriterionAction,
+  deleteRubricCriterionAction,
   deleteCourseResourceAction,
   moveCourseResourceAction,
   toggleCourseResourcePublicationAction,
   updateCourseResourceAction,
   type CourseResourceFormState,
+  type RubricCriterionFormState,
 } from "@/actions/course-resources";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -18,6 +21,7 @@ import type { CatalogCourse } from "@/lib/course-catalog";
 import type { CampusResourceItem } from "@/lib/course-resources";
 
 const initialState: CourseResourceFormState = {};
+const initialRubricState: RubricCriterionFormState = {};
 const selectClassName =
   "ui-control-base h-[var(--control-height-md)] px-4 text-sm";
 
@@ -57,7 +61,12 @@ export function CourseManagedResourceControls({
     updateCourseResourceAction,
     initialState,
   );
+  const [rubricState, rubricFormAction] = useActionState(
+    createRubricCriterionAction,
+    initialRubricState,
+  );
   const [isEditorOpen, setIsEditorOpen] = useState(false);
+  const [isRubricOpen, setIsRubricOpen] = useState(false);
 
   return (
     <div className="mt-5 space-y-4 rounded-[var(--radius-lg)] border border-[var(--color-border-subtle)] bg-[color:var(--color-bg-subtle)] p-4">
@@ -333,6 +342,81 @@ export function CourseManagedResourceControls({
           </form>
         ) : null}
       </details>
+
+      {/* ── Rubric criteria (only for exercises) ───────────────────────── */}
+      {resource.isExercise && (
+        <details
+          open={isRubricOpen}
+          onToggle={(e) => setIsRubricOpen((e.target as HTMLDetailsElement).open)}
+          className="rounded-[var(--radius-md)] border border-[var(--color-border-subtle)] bg-white"
+        >
+          <summary className="flex cursor-pointer items-center justify-between gap-3 px-4 py-3 text-sm font-medium text-[var(--color-ink-soft)]">
+            <span>Criterios de rúbrica ({resource.rubricCriteria.length})</span>
+            <span className="text-xs text-[var(--color-muted)]">{isRubricOpen ? "▲" : "▼"}</span>
+          </summary>
+
+          <div className="space-y-3 px-4 pb-4">
+            {resource.rubricCriteria.length > 0 && (
+              <ul className="divide-y divide-[var(--color-border-subtle)]">
+                {resource.rubricCriteria.map((criterion) => (
+                  <li key={criterion.id} className="flex items-start justify-between gap-3 py-2.5">
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-[var(--color-ink)]">{criterion.title}</p>
+                      {criterion.description && (
+                        <p className="mt-0.5 text-xs text-[var(--color-muted)]">{criterion.description}</p>
+                      )}
+                    </div>
+                    <div className="flex shrink-0 items-center gap-2">
+                      <span className="rounded-full bg-[var(--color-primary-soft)] px-2 py-0.5 text-xs font-semibold text-[var(--color-primary)]">
+                        {criterion.maxPoints} pts
+                      </span>
+                      <form action={deleteRubricCriterionAction}>
+                        <input type="hidden" name="courseSlug" value={courseSlug} />
+                        <input type="hidden" name="resourceId" value={resource.id} />
+                        <input type="hidden" name="criterionId" value={criterion.id} />
+                        <button
+                          type="submit"
+                          className="text-xs text-[var(--color-danger)] hover:underline"
+                        >
+                          Eliminar
+                        </button>
+                      </form>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            <form action={rubricFormAction} className="space-y-3 rounded-lg border border-[var(--color-border)] p-3">
+              <p className="text-xs font-semibold text-[var(--color-ink-soft)]">Añadir criterio</p>
+              <input type="hidden" name="courseSlug" value={courseSlug} />
+              <input type="hidden" name="resourceId" value={resource.id} />
+              <div className="grid gap-2 sm:grid-cols-[1fr_80px]">
+                <Input name="title" placeholder="Ej. Claridad en la exposición" required />
+                <Input
+                  max="100"
+                  min="1"
+                  name="maxPoints"
+                  placeholder="Pts"
+                  required
+                  step="0.5"
+                  type="number"
+                />
+              </div>
+              <Input name="description" placeholder="Descripción opcional del criterio" />
+              {rubricState.error && (
+                <StateBanner description={rubricState.error} tone="danger" />
+              )}
+              {rubricState.success && (
+                <StateBanner description={rubricState.success} tone="success" />
+              )}
+              <SubmitButton pendingLabel="Añadiendo..." variant="secondary">
+                Añadir criterio
+              </SubmitButton>
+            </form>
+          </div>
+        </details>
+      )}
     </div>
   );
 }

@@ -56,6 +56,7 @@ export function NuevoRecursoForm({
   const [sourceType, setSourceType] = useState<SourceType>("FILE");
   const [linkUrl, setLinkUrl] = useState("");
   const [dueAt, setDueAt] = useState("");
+  const [passingScore, setPassingScore] = useState("");
   const [dragOver, setDragOver] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
@@ -328,22 +329,42 @@ export function NuevoRecursoForm({
                   </div>
                 </div>
 
-                {/* Due date — only for exercises */}
+                {/* Due date + passing score — only for exercises */}
                 {resourceType === "EXERCISE" && (
-                  <div>
-                    <label className="mb-1.5 flex items-center gap-1.5 text-sm font-medium text-[var(--color-ink-soft)]">
-                      <CalendarClock className="h-4 w-4" />
-                      Fecha límite de entrega
-                    </label>
-                    <input
-                      type="datetime-local"
-                      value={dueAt}
-                      onChange={(e) => setDueAt(e.target.value)}
-                      className="w-full rounded-lg border border-[var(--color-border)] bg-white px-4 py-2.5 text-sm text-[var(--color-ink)] focus:border-[var(--color-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20"
-                    />
-                    <p className="mt-1.5 text-xs text-[var(--color-muted)]">
-                      Opcional. Si no se establece, la tarea no tendrá fecha de vencimiento.
-                    </p>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div>
+                      <label className="mb-1.5 flex items-center gap-1.5 text-sm font-medium text-[var(--color-ink-soft)]">
+                        <CalendarClock className="h-4 w-4" />
+                        Fecha límite de entrega
+                      </label>
+                      <input
+                        type="datetime-local"
+                        value={dueAt}
+                        onChange={(e) => setDueAt(e.target.value)}
+                        className="w-full rounded-lg border border-[var(--color-border)] bg-white px-4 py-2.5 text-sm text-[var(--color-ink)] focus:border-[var(--color-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20"
+                      />
+                      <p className="mt-1.5 text-xs text-[var(--color-muted)]">
+                        Opcional. Sin fecha, la tarea permanece abierta.
+                      </p>
+                    </div>
+                    <div>
+                      <label className="mb-1.5 block text-sm font-medium text-[var(--color-ink-soft)]">
+                        Nota mínima para aprobar
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        max="10"
+                        step="0.1"
+                        value={passingScore}
+                        onChange={(e) => setPassingScore(e.target.value)}
+                        placeholder="Ej. 5"
+                        className="w-full rounded-lg border border-[var(--color-border)] bg-white px-4 py-2.5 text-sm text-[var(--color-ink)] placeholder:text-[var(--color-muted)] focus:border-[var(--color-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20"
+                      />
+                      <p className="mt-1.5 text-xs text-[var(--color-muted)]">
+                        Opcional. Entre 0 y 10.
+                      </p>
+                    </div>
                   </div>
                 )}
               </div>
@@ -473,6 +494,7 @@ export function NuevoRecursoForm({
               <input type="hidden" name="description" value={description} />
               {sourceType === "LINK" && <input type="hidden" name="linkUrl" value={linkUrl} />}
               {resourceType === "EXERCISE" && dueAt && <input type="hidden" name="dueAt" value={dueAt} />}
+              {resourceType === "EXERCISE" && passingScore && <input type="hidden" name="passingScore" value={passingScore} />}
               {/* File input for publish */}
               <input
                 ref={fileInputRef}
@@ -511,6 +533,7 @@ export function NuevoRecursoForm({
               <input type="hidden" name="description" value={description} />
               {sourceType === "LINK" && <input type="hidden" name="linkUrl" value={linkUrl} />}
               {resourceType === "EXERCISE" && dueAt && <input type="hidden" name="dueAt" value={dueAt} />}
+              {resourceType === "EXERCISE" && passingScore && <input type="hidden" name="passingScore" value={passingScore} />}
               {/* File input for draft */}
               <input
                 ref={draftFileInputRef}

@@ -3,7 +3,8 @@ import {
   assignTeacherToCourseAction,
   cloneCourseAction,
   unassignTeacherFromCourseAction,
-  updateCourseAction
+  updateCourseAction,
+  updateCourseContentAction,
 } from "@/actions/admin";
 import { AdminStatusBadge } from "@/components/admin/admin-status-badge";
 import { Input } from "@/components/ui/input";
@@ -164,6 +165,80 @@ export function CourseDetailCard({
             </SubmitButton>
           </form>
         </div>
+      </div>
+
+      {/* ── Contenido de la página del curso ─────────────────────────── */}
+      <div className="mt-8" id="course-content">
+        <p className="text-meta-xs font-semibold text-[var(--color-ink-soft)]">
+          Contenido del curso (página pública)
+        </p>
+        <p className="mt-1 text-xs text-[var(--color-muted)]">
+          Un ítem por línea. FAQ: escribe{" "}
+          <code className="rounded bg-[var(--color-surface)] px-1 py-0.5 text-[0.7rem]">
+            Pregunta | Respuesta
+          </code>{" "}
+          por línea.
+        </p>
+        <form action={updateCourseContentAction} className="mt-4 grid gap-4">
+          <input name="courseId" type="hidden" value={course.id} />
+          <div className="grid gap-4 md:grid-cols-2">
+            <label className="block space-y-1.5">
+              <span className="text-xs font-medium text-[var(--color-ink-soft)]">
+                ¿A quién va dirigido?
+              </span>
+              <textarea
+                className="ui-control-base min-h-[100px] w-full resize-y px-3 py-2 text-sm"
+                defaultValue={course.audienceJson.join("\n")}
+                name="audienceJson"
+                placeholder="Profesionales del ámbito educativo&#10;Familias con hijos con TEA"
+                rows={4}
+              />
+            </label>
+            <label className="block space-y-1.5">
+              <span className="text-xs font-medium text-[var(--color-ink-soft)]">
+                Qué aprenderás (objetivos)
+              </span>
+              <textarea
+                className="ui-control-base min-h-[100px] w-full resize-y px-3 py-2 text-sm"
+                defaultValue={course.outcomesJson.join("\n")}
+                name="outcomesJson"
+                placeholder="Identificar señales tempranas de TEA&#10;Aplicar estrategias de comunicación aumentativa"
+                rows={4}
+              />
+            </label>
+            <label className="block space-y-1.5">
+              <span className="text-xs font-medium text-[var(--color-ink-soft)]">
+                Metodología
+              </span>
+              <textarea
+                className="ui-control-base min-h-[100px] w-full resize-y px-3 py-2 text-sm"
+                defaultValue={course.methodologyJson.join("\n")}
+                name="methodologyJson"
+                placeholder="Vídeos explicativos con casos reales&#10;Tareas prácticas evaluadas por docentes"
+                rows={4}
+              />
+            </label>
+            <label className="block space-y-1.5">
+              <span className="text-xs font-medium text-[var(--color-ink-soft)]">
+                Preguntas frecuentes (Pregunta | Respuesta)
+              </span>
+              <textarea
+                className="ui-control-base min-h-[100px] w-full resize-y px-3 py-2 text-sm"
+                defaultValue={course.faqJson
+                  .map((f) => `${f.question} | ${f.answer}`)
+                  .join("\n")}
+                name="faqJson"
+                placeholder="¿Hay certificado? | Sí, al completar el curso&#10;¿Cuánto dura el acceso? | 12 meses"
+                rows={4}
+              />
+            </label>
+          </div>
+          <div className="flex justify-end">
+            <SubmitButton pendingLabel="Guardando..." variant="secondary">
+              Guardar contenido
+            </SubmitButton>
+          </div>
+        </form>
       </div>
 
       <div className="mt-8">

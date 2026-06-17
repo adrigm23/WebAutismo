@@ -49,6 +49,10 @@ export async function createCourseAction(formData: FormData) {
     .getAll("teacherIds")
     .map(String)
     .filter(Boolean);
+  const audienceJson = parseTextareaLines(formData.get("audienceJson"));
+  const outcomesJson = parseTextareaLines(formData.get("outcomesJson"));
+  const methodologyJson = parseTextareaLines(formData.get("methodologyJson"));
+  const faqJson = parseFaqLines(formData.get("faqJson"));
 
   if (!slug || !title || !shortDescription) {
     redirect("/admin/courses?error=course-create");
@@ -76,10 +80,10 @@ export async function createCourseAction(formData: FormData) {
       accentFrom: "#163c58",
       accentTo: "#2e6b8a",
       category,
-      audienceJson: [],
-      outcomesJson: [],
-      methodologyJson: [],
-      faqJson: [],
+      audienceJson,
+      outcomesJson,
+      methodologyJson,
+      faqJson,
       seoTitle: title,
       seoDescription: shortDescription,
       status,
@@ -362,4 +366,59 @@ export async function updateCourseEditionAction(formData: FormData) {
 
   revalidateAdminViews();
   redirect("/admin");
+}
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function parseTextareaLines(raw: FormDataEntryValue | null): string[] {
+  if (typeof raw !== "string") return [];
+  return raw
+    .split("\n")
+    .map((l) => l.trim())
+    .filter(Boolean);
+}
+
+function parseFaqLines(raw: FormDataEntryValue | null): { question: string; answer: string }[] {
+  if (typeof raw !== "string" || !raw.trim()) return [];
+  return raw
+    .split("\n")
+    .map((l) => l.trim())
+    .filter(Boolean)
+    .map((line) => {
+      const sep = line.indexOf("|");
+      if (sep === -1) return { question: line, answer: "" };
+      return { question: line.slice(0, sep).trim(), answer: line.slice(sep + 1).trim() };
+    });
+}
+
+export async function updateCourseContentAction(formData: FormData) {
+  const admin = await requireAdminUser();
+  await enforceAdminMutationRateLimit({
+    action: "update-course",
+    actorId: admin.id,
+    redirectTo: "/admin/courses"
+  });
+  const courseId = String(formData.get("courseId") ?? "");
+  if (!courseId) redirect("/admin/courses");
+
+  const course = await getDb().course.update({
+    where: { id: courseId },
+    data: {
+      audienceJson: parseTextareaLines(formData.get("audienceJson")),
+      outcomesJson: parseTextareaLines(formData.get("outcomesJson")),
+      methodologyJson: parseTextareaLines(formData.get("methodologyJson")),
+      faqJson: parseFaqLines(formData.get("faqJson")),
+    },
+  });
+
+  await writeAuditLog({
+    actorId: admin.id,
+    action: "COURSE_UPDATED",
+    entityType: "COURSE",
+    entityId: course.id,
+    entityLabel: course.title,
+  });
+
+  revalidateAdminViews();
+  redirect(`/admin/courses?courseId=${courseId}#course-content`);
 }

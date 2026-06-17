@@ -132,6 +132,12 @@ export default async function AdminCoursesPage({
           label: e.label,
           status: e.status,
         })),
+        audienceJson: Array.isArray(selectedCourse.audienceJson) ? (selectedCourse.audienceJson as string[]) : [],
+        outcomesJson: Array.isArray(selectedCourse.outcomesJson) ? (selectedCourse.outcomesJson as string[]) : [],
+        methodologyJson: Array.isArray(selectedCourse.methodologyJson) ? (selectedCourse.methodologyJson as string[]) : [],
+        faqJson: Array.isArray(selectedCourse.faqJson)
+          ? (selectedCourse.faqJson as { question: string; answer: string }[])
+          : [],
       }
     : null;
 

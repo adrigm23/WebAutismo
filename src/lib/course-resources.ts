@@ -82,6 +82,7 @@ export type CampusResourceItem = {
     total: number;
     pending: number;
   } | null;
+  rubricCriteria: { id: string; title: string; description: string | null; maxPoints: number; order: number }[];
 };
 
 function sanitizeFileSegment(value: string) {
@@ -122,7 +123,8 @@ function getStaticCampusResources(course: CatalogCourse): CampusResourceItem[] {
       createdAt: null,
       viewerSubmission: null,
       submissions: [],
-      submissionStats: null
+      submissionStats: null,
+      rubricCriteria: [],
     },
     {
       id: "teachers",
@@ -151,7 +153,8 @@ function getStaticCampusResources(course: CatalogCourse): CampusResourceItem[] {
       createdAt: null,
       viewerSubmission: null,
       submissions: [],
-      submissionStats: null
+      submissionStats: null,
+      rubricCriteria: [],
     }
   ];
 }
@@ -285,6 +288,10 @@ export async function getCampusResources(input: {
             name: true
           }
         },
+        rubricCriteria: {
+          select: { id: true, title: true, description: true, maxPoints: true, order: true },
+          orderBy: { order: "asc" as const },
+        },
         submissions: {
           where: input.canModerate
             ? {}
@@ -373,7 +380,8 @@ export async function getCampusResources(input: {
                   total: submissions.length,
                   pending: submissions.filter((submission) => submission.status === "SUBMITTED").length
                 }
-              : null
+              : null,
+          rubricCriteria: resource.rubricCriteria,
         } satisfies CampusResourceItem;
       })
     ] satisfies CampusResourceItem[];

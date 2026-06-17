@@ -317,6 +317,7 @@ export async function addCourseResourceAction(
   const isPublishedRaw = formData.get("isPublished");
   const isPublished = isPublishedRaw !== "false";
   const dueAtRaw = formData.get("dueAt");
+  const passingScoreRaw = formData.get("passingScore");
 
   if (typeof courseId !== "string" || !courseId) return { error: "Curso no válido." };
   if (moduleId !== null && (typeof moduleId !== "string" || !moduleId)) return { error: "Módulo no válido." };
@@ -361,6 +362,11 @@ export async function addCourseResourceAction(
         ? new Date(dueAtRaw)
         : null;
 
+    const passingScore =
+      type === "EXERCISE" && typeof passingScoreRaw === "string" && passingScoreRaw
+        ? Number(passingScoreRaw.replace(",", "."))
+        : null;
+
     const created = await db.courseResource.create({
       data: {
         courseId,
@@ -377,6 +383,7 @@ export async function addCourseResourceAction(
         sortOrder: count,
         isPublished,
         dueAt,
+        passingScore,
       },
       select: { id: true, title: true, type: true, source: true, mimeType: true, linkUrl: true },
     });

@@ -326,6 +326,67 @@ export function CreateCoursePage({ teachers }: Props) {
                 </div>
               </div>
 
+              {/* Sección: Contenido público */}
+              <div className="overflow-hidden rounded-[var(--radius-lg)] border border-[var(--color-border-subtle)] bg-white shadow-[var(--shadow-xs)]">
+                <div className="flex items-center gap-2 border-b border-[var(--color-border-subtle)] px-6 py-4">
+                  <BookOpen className="h-4 w-4 text-[var(--color-muted)]" />
+                  <h2 className="text-sm font-semibold text-[var(--color-ink)]">
+                    Contenido de la página pública
+                  </h2>
+                </div>
+                <div className="space-y-5 px-6 py-6">
+                  <p className="text-xs text-[var(--color-muted)]">
+                    Opcional. Un ítem por línea. Para FAQ: <code className="rounded bg-[var(--color-surface)] px-1">Pregunta | Respuesta</code>
+                  </p>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div>
+                      <label className="mb-1.5 block text-[0.8rem] font-medium text-[var(--color-ink-soft)]">
+                        ¿A quién va dirigido?
+                      </label>
+                      <textarea
+                        name="audienceJson"
+                        rows={3}
+                        placeholder={"Profesionales del ámbito educativo\nFamilias con hijos con TEA"}
+                        className="w-full resize-none rounded-[var(--radius-md)] border border-[var(--color-border)] bg-white px-3.5 py-2.5 text-sm text-[var(--color-ink)] placeholder:text-[var(--color-muted)] focus:border-[var(--color-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/10 transition"
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1.5 block text-[0.8rem] font-medium text-[var(--color-ink-soft)]">
+                        Qué aprenderás (objetivos)
+                      </label>
+                      <textarea
+                        name="outcomesJson"
+                        rows={3}
+                        placeholder={"Identificar señales tempranas de TEA\nAplicar estrategias ABA"}
+                        className="w-full resize-none rounded-[var(--radius-md)] border border-[var(--color-border)] bg-white px-3.5 py-2.5 text-sm text-[var(--color-ink)] placeholder:text-[var(--color-muted)] focus:border-[var(--color-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/10 transition"
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1.5 block text-[0.8rem] font-medium text-[var(--color-ink-soft)]">
+                        Metodología
+                      </label>
+                      <textarea
+                        name="methodologyJson"
+                        rows={3}
+                        placeholder={"Vídeos con casos reales\nTareas evaluadas por docentes"}
+                        className="w-full resize-none rounded-[var(--radius-md)] border border-[var(--color-border)] bg-white px-3.5 py-2.5 text-sm text-[var(--color-ink)] placeholder:text-[var(--color-muted)] focus:border-[var(--color-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/10 transition"
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1.5 block text-[0.8rem] font-medium text-[var(--color-ink-soft)]">
+                        FAQ (Pregunta | Respuesta)
+                      </label>
+                      <textarea
+                        name="faqJson"
+                        rows={3}
+                        placeholder={"¿Hay certificado? | Sí, al completar\n¿Cuánto dura el acceso? | 12 meses"}
+                        className="w-full resize-none rounded-[var(--radius-md)] border border-[var(--color-border)] bg-white px-3.5 py-2.5 text-sm text-[var(--color-ink)] placeholder:text-[var(--color-muted)] focus:border-[var(--color-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/10 transition"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               {/* Sección: Detalles del Curso */}
               <div className="overflow-hidden rounded-[var(--radius-lg)] border border-[var(--color-border-subtle)] bg-white shadow-[var(--shadow-xs)]">
                 <div className="flex items-center gap-2 border-b border-[var(--color-border-subtle)] px-6 py-4">
