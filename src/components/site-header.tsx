@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Menu, X } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { ButtonLink } from "@/components/ui/button";
+import { BrandLogo } from "@/components/ui/brand-logo";
 import { siteConfig } from "@/lib/site";
 
 function getMobilePrimaryAction(pathname: string) {
@@ -25,9 +26,10 @@ export function SiteHeader() {
       <div className="site-container py-3 lg:py-4">
         <div className="hidden items-center gap-8 lg:grid lg:grid-cols-[auto_1fr_auto]">
           <Link
-            className="text-2xl font-bold leading-none tracking-[-0.05em] text-[var(--color-primary)]"
+            className="inline-flex items-center gap-2.5 text-2xl font-bold leading-none tracking-[-0.05em] text-[var(--color-primary)] hover:opacity-90 transition-opacity"
             href="/"
           >
+            <BrandLogo size="md" />
             {siteConfig.shortName}
           </Link>
 
@@ -55,9 +57,10 @@ export function SiteHeader() {
 
         <div className="flex items-center justify-between gap-3 lg:hidden">
           <Link
-            className="min-w-0 text-[1.45rem] font-bold leading-[0.96] tracking-[-0.05em] text-[var(--color-primary)]"
+            className="inline-flex min-w-0 items-center gap-2 text-[1.45rem] font-bold leading-[0.96] tracking-[-0.05em] text-[var(--color-primary)] hover:opacity-90 transition-opacity"
             href="/"
           >
+            <BrandLogo size="sm" />
             {siteConfig.shortName}
           </Link>
 

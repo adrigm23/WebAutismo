@@ -1,7 +1,8 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { Brain, CircleHelp, ShieldCheck } from "lucide-react";
+import { CircleHelp, ShieldCheck } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { BrandLogo } from "@/components/ui/brand-logo";
 import { ButtonLink } from "@/components/ui/button";
 import { StateBanner } from "@/components/ui/state-banner";
 import { SurfaceCard } from "@/components/ui/surface-card";
@@ -40,9 +41,7 @@ export function AuthBrand({
         align === "center" && "justify-center",
       )}
     >
-      <div className="grid size-11 place-items-center rounded-[var(--radius-pill)] bg-[var(--color-primary-soft)] text-[var(--color-primary)] shadow-[var(--shadow-xs)]">
-        <Brain className="size-5" strokeWidth={2} />
-      </div>
+      <BrandLogo size="md" />
       <div className={cn("min-w-0", align === "center" && "text-center")}>
         <p className="font-premium text-heading-md font-semibold text-[var(--color-text)]">
           Autismo Cordoba

@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 215" fill="none" aria-hidden="true">
+  <!-- Heart shape -->
+  <path
+    d="M100 196 C100 196 16 143 16 79 C16 47 36 22 64 22 C80 22 94 31 100 44 C106 31 120 22 136 22 C164 22 184 47 184 79 C184 143 100 196 100 196Z"
+    fill="#52B8D5"
+  />
+  <!-- AU -->
+  <text
+    x="34"
+    y="88"
+    font-family="'Arial Black', 'Franklin Gothic Heavy', Impact, sans-serif"
+    font-weight="900"
+    font-size="44"
+    fill="#0D1920"
+    letter-spacing="2"
+  >AU</text>
+  <!-- T as horizontal bar -->
+  <rect x="28" y="104" width="28" height="6" rx="3" fill="#0D1920"/>
+  <!-- IS -->
+  <text
+    x="60"
+    y="130"
+    font-family="'Arial Black', 'Franklin Gothic Heavy', Impact, sans-serif"
+    font-weight="900"
+    font-size="44"
+    fill="#0D1920"
+    letter-spacing="2"
+  >IS</text>
+  <!-- MO -->
+  <text
+    x="36"
+    y="168"
+    font-family="'Arial Black', 'Franklin Gothic Heavy', Impact, sans-serif"
+    font-weight="900"
+    font-size="44"
+    fill="#0D1920"
+    letter-spacing="2"
+  >MO</text>
+</svg>
