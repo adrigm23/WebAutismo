@@ -33,13 +33,14 @@ export default async function ForumCategoryNewThreadPage({
   params
 }: ForumCategoryNewThreadPageProps) {
   const { slug, categorySlug } = await params;
-  const course = await getCatalogCourseBySlug(slug);
+  const [course, user] = await Promise.all([
+    getCatalogCourseBySlug(slug),
+    requireUser(`/mis-cursos/${slug}/foro/${categorySlug}/nuevo`),
+  ]);
 
   if (!course) {
     notFound();
   }
-
-  const user = await requireUser(`/mis-cursos/${course.slug}/foro/${categorySlug}/nuevo`);
   const access = await canAccessCourseCommunity({
     userId: user.id,
     email: user.email,

@@ -34,9 +34,10 @@ function buildInitials(name: string): string {
 export default async function SubmissionReviewRoute({ params }: Props) {
   const { submissionId } = await params;
 
-  const user = await requireUser(`/docente/tareas/revision/${submissionId}`);
-
-  const submission = await getSubmissionForReview(submissionId);
+  const [user, submission] = await Promise.all([
+    requireUser(`/docente/tareas/revision/${submissionId}`),
+    getSubmissionForReview(submissionId),
+  ]);
   if (!submission) notFound();
 
   // Verify reviewer has moderation rights on the course

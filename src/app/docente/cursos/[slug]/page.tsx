@@ -585,10 +585,12 @@ export default async function TeacherCourseWorkspacePage({ params, searchParams 
   type Tab = (typeof validTabs)[number];
   const activeTab: Tab = validTabs.includes(rawTab as Tab) ? (rawTab as Tab) : "contenido";
 
-  const course = await getCatalogCourseBySlug(slug);
+  const [course, user] = await Promise.all([
+    getCatalogCourseBySlug(slug),
+    requireUser(`/docente/cursos/${slug}`),
+  ]);
   if (!course) notFound();
 
-  const user = await requireUser(`/docente/cursos/${slug}`);
   const access = await canAccessCourseCommunityForCourse({
     userId: user.id,
     email: user.email,

@@ -24,13 +24,14 @@ export async function generateMetadata({ params }: RenewAccessPageProps): Promis
 
 export default async function RenewAccessPage({ params }: RenewAccessPageProps) {
   const { slug } = await params;
-  const course = await getCatalogCourseBySlug(slug);
+  const [course, user] = await Promise.all([
+    getCatalogCourseBySlug(slug),
+    requireUser(`/mis-cursos/${slug}/renovar-acceso`),
+  ]);
 
   if (!course) {
     notFound();
   }
-
-  const user = await requireUser(`/mis-cursos/${course.slug}/renovar-acceso`);
   const access = await canAccessCourseCommunityForCourse({
     userId: user.id,
     email: user.email,

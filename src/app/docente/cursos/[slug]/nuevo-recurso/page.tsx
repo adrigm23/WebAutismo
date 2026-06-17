@@ -27,12 +27,13 @@ export default async function NuevoRecursoPage({ params, searchParams }: Props) 
       ? sp.back
       : `/docente/cursos/${slug}`;
 
-  const user = await requireUser(`/docente/cursos/${slug}/nuevo-recurso`);
+  const [user, course] = await Promise.all([
+    requireUser(`/docente/cursos/${slug}/nuevo-recurso`),
+    getCatalogCourseBySlug(slug),
+  ]);
   if (user.globalRole !== "TEACHER" && user.globalRole !== "ADMIN") {
     redirect("/mis-cursos");
   }
-
-  const course = await getCatalogCourseBySlug(slug);
   if (!course) notFound();
 
   const access = await canAccessCourseCommunityForCourse({

@@ -29,13 +29,14 @@ export async function generateMetadata({ params }: ForumNewThreadPageProps): Pro
 
 export default async function ForumNewThreadPage({ params }: ForumNewThreadPageProps) {
   const { slug } = await params;
-  const course = await getCatalogCourseBySlug(slug);
+  const [course, user] = await Promise.all([
+    getCatalogCourseBySlug(slug),
+    requireUser(`/mis-cursos/${slug}/foro/nuevo`),
+  ]);
 
   if (!course) {
     notFound();
   }
-
-  const user = await requireUser(`/mis-cursos/${course.slug}/foro/nuevo`);
   const access = await canAccessCourseCommunity({
     userId: user.id,
     email: user.email,

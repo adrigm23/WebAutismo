@@ -66,13 +66,14 @@ export default async function ForumThreadPage({ params, searchParams }: ForumThr
     Number.parseInt(firstValue((await searchParams).page) ?? "1", 10) || 1,
     1
   );
-  const course = await getCatalogCourseBySlug(slug);
+  const [course, user] = await Promise.all([
+    getCatalogCourseBySlug(slug),
+    requireUser(`/mis-cursos/${slug}/foro/${categorySlug}/${threadId}`),
+  ]);
 
   if (!course) {
     notFound();
   }
-
-  const user = await requireUser(`/mis-cursos/${course.slug}/foro/${categorySlug}/${threadId}`);
   const access = await canAccessCourseCommunity({
     userId: user.id,
     email: user.email,

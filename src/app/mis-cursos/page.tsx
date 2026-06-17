@@ -521,6 +521,7 @@ export default async function MyCoursesPage({
             module: { select: { title: true } },
           },
           orderBy: { createdAt: "desc" },
+          take: 5,
         });
         return studentSpaces.map((space) => ({
           courseSlug: space.course.slug,

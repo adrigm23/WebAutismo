@@ -44,13 +44,14 @@ export async function generateMetadata({ params }: ForumHistoryPageProps): Promi
 
 export default async function ForumHistoryPage({ params }: ForumHistoryPageProps) {
   const { slug } = await params;
-  const course = await getCatalogCourseBySlug(slug);
+  const [course, user] = await Promise.all([
+    getCatalogCourseBySlug(slug),
+    requireUser(`/mis-cursos/${slug}/foro/historico`),
+  ]);
 
   if (!course) {
     notFound();
   }
-
-  const user = await requireUser(`/mis-cursos/${course.slug}/foro/historico`);
   const access = await canAccessCourseCommunity({
     userId: user.id,
     email: user.email,

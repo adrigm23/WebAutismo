@@ -95,13 +95,14 @@ export default async function ForumModerationPage({
   params
 }: ForumModerationPageProps) {
   const { slug } = await params;
-  const course = await getCatalogCourseBySlug(slug);
+  const [course, user] = await Promise.all([
+    getCatalogCourseBySlug(slug),
+    requireUser(`/mis-cursos/${slug}/foro/moderacion`),
+  ]);
 
   if (!course) {
     notFound();
   }
-
-  const user = await requireUser(`/mis-cursos/${course.slug}/foro/moderacion`);
   const access = await canAccessCourseCommunity({
     userId: user.id,
     email: user.email,

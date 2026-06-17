@@ -27,10 +27,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function LessonPage({ params }: Props) {
   const { slug, moduleIndex: moduleIndexRaw } = await params;
 
-  const course = await getCatalogCourseBySlug(slug);
+  const [course, user] = await Promise.all([
+    getCatalogCourseBySlug(slug),
+    requireUser(`/mis-cursos/${slug}`),
+  ]);
   if (!course) notFound();
-
-  const user = await requireUser(`/mis-cursos/${course.slug}`);
 
   const access = await canAccessCourseCommunityForCourse({
     userId: user.id,

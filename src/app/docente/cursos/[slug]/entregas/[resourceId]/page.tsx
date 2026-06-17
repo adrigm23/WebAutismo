@@ -34,9 +34,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function TeacherEntregasPage({ params }: Props) {
   const { slug, resourceId } = await params;
-  const user = await requireUser(`/docente/cursos/${slug}/entregas/${resourceId}`);
-
-  const course = await getCatalogCourseBySlug(slug);
+  const [user, course] = await Promise.all([
+    requireUser(`/docente/cursos/${slug}/entregas/${resourceId}`),
+    getCatalogCourseBySlug(slug),
+  ]);
   if (!course) notFound();
 
   const access = await canAccessCourseCommunityForCourse({

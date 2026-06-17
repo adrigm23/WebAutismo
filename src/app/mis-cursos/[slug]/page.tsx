@@ -24,11 +24,12 @@ export async function generateMetadata({ params }: MyCoursePageProps): Promise<M
 
 export default async function MyCoursePage({ params }: MyCoursePageProps) {
   const { slug } = await params;
-  const course = await getCatalogCourseBySlug(slug);
+  const [course, user] = await Promise.all([
+    getCatalogCourseBySlug(slug),
+    requireUser(`/mis-cursos/${slug}`),
+  ]);
 
   if (!course) notFound();
-
-  const user = await requireUser(`/mis-cursos/${course.slug}`);
 
   const access = await canAccessCourseCommunityForCourse({
     userId: user.id,

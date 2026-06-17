@@ -317,13 +317,14 @@ export default async function CourseTrackingPage({
   params,
 }: TrackingPageProps) {
   const { slug } = await params;
-  const course = await getCatalogCourseBySlug(slug);
+  const [course, user] = await Promise.all([
+    getCatalogCourseBySlug(slug),
+    requireUser(`/mis-cursos/${slug}/seguimiento`),
+  ]);
 
   if (!course) {
     notFound();
   }
-
-  const user = await requireUser(`/mis-cursos/${slug}/seguimiento`);
   const access = await canAccessCourseCommunityForCourse({
     userId: user.id,
     email: user.email,

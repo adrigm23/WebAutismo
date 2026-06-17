@@ -45,15 +45,14 @@ export default async function ForumEditThreadPage({
   params
 }: ForumEditThreadPageProps) {
   const { slug, categorySlug, threadId } = await params;
-  const course = await getCatalogCourseBySlug(slug);
+  const [course, user] = await Promise.all([
+    getCatalogCourseBySlug(slug),
+    requireUser(`/mis-cursos/${slug}/foro/${categorySlug}/${threadId}/editar`),
+  ]);
 
   if (!course) {
     notFound();
   }
-
-  const user = await requireUser(
-    `/mis-cursos/${course.slug}/foro/${categorySlug}/${threadId}/editar`
-  );
   const access = await canAccessCourseCommunity({
     userId: user.id,
     email: user.email,

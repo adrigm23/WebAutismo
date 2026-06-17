@@ -23,13 +23,14 @@ export default async function ForumLayout({
   params,
 }: ForumLayoutProps) {
   const { slug } = await params;
-  const course = await getCatalogCourseBySlug(slug);
+  const [course, user] = await Promise.all([
+    getCatalogCourseBySlug(slug),
+    requireUser(`/mis-cursos/${slug}/foro`),
+  ]);
 
   if (!course) {
     notFound();
   }
-
-  const user = await requireUser(`/mis-cursos/${course.slug}/foro`);
   const access = await canAccessCourseCommunity({
     userId: user.id,
     email: user.email,
