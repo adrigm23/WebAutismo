@@ -38,7 +38,7 @@ export default async function DocenteCalendarioPage() {
   const viewerName = user.name ?? user.email;
 
   return (
-    <TeacherShell viewerName={viewerName} viewerInitials={getInitials(viewerName)} roleLabel="Docente">
+    <TeacherShell viewerName={viewerName} viewerInitials={getInitials(viewerName)} roleLabel="Docente" isAdmin={user.globalRole === "ADMIN"}>
       <CalendarPageClient
         events={events}
         courses={courses}

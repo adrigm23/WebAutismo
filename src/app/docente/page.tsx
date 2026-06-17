@@ -51,6 +51,7 @@ export default async function DocenteDashboardPage() {
       viewerInitials={getInitials(viewerName)}
       roleLabel="Docente"
       notificationsCount={notificationSnapshot.unreadCount}
+      isAdmin={user.globalRole === "ADMIN"}
     >
       <div className="px-5 sm:px-8 xl:px-10 py-8 sm:py-10 pb-12">
 

@@ -45,6 +45,7 @@ export default async function DocenteCursosPage() {
       viewerInitials={getInitials(viewerName)}
       roleLabel="Docente"
       notificationsCount={notificationSnapshot.unreadCount}
+      isAdmin={user.globalRole === "ADMIN"}
     >
       <div className="px-5 sm:px-8 xl:px-10 py-8 sm:py-10 pb-20">
         <div className="flex items-center justify-between gap-4">

@@ -60,6 +60,7 @@ export default async function NuevoRecursoPage({ params, searchParams }: Props) 
       viewerName={viewerName}
       viewerInitials={getInitials(viewerName)}
       roleLabel="Docente"
+      isAdmin={user.globalRole === "ADMIN"}
     >
       <NuevoRecursoForm
         backHref={back}

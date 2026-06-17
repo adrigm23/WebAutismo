@@ -18,6 +18,7 @@ import {
   Menu,
   MessageSquareText,
   MessagesSquare,
+  ShieldCheck,
   X,
 } from "lucide-react";
 import { logoutAction } from "@/actions/session";
@@ -46,6 +47,7 @@ export type TeacherShellProps = {
   viewerInitials: string;
   roleLabel: string;
   notificationsCount?: number;
+  isAdmin?: boolean;
 };
 
 function isNavItemActive(pathname: string, href: string) {
@@ -130,10 +132,20 @@ function SidebarBrand() {
   );
 }
 
-function SidebarFooter({ onNavigate }: { onNavigate?: () => void }) {
+function SidebarFooter({ onNavigate, isAdmin }: { onNavigate?: () => void; isAdmin?: boolean }) {
   return (
     <div className="border-t border-[var(--color-border-subtle)] px-4 py-5">
       <div className="space-y-1">
+        {isAdmin && (
+          <Link
+            className="flex items-center gap-3 rounded-[var(--radius-md)] px-4 py-3 text-[1.02rem] font-medium text-[var(--color-ink-soft)] transition hover:bg-white hover:text-[var(--color-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2"
+            href="/admin"
+            onClick={onNavigate}
+          >
+            <ShieldCheck className="h-5 w-5 shrink-0" strokeWidth={2} />
+            <span>Panel de admin</span>
+          </Link>
+        )}
         <Link
           className="flex items-center gap-3 rounded-[var(--radius-md)] px-4 py-3 text-[1.02rem] font-medium text-[var(--color-ink-soft)] transition hover:bg-white hover:text-[var(--color-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2"
           href="/mis-cursos"
@@ -170,6 +182,7 @@ export function TeacherShell({
   viewerInitials,
   roleLabel,
   notificationsCount = 0,
+  isAdmin = false,
 }: TeacherShellProps) {
   const pathname = usePathname();
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
@@ -206,7 +219,7 @@ export function TeacherShell({
       <aside className="sticky top-0 hidden h-screen overflow-y-auto border-r border-[rgba(28,47,67,0.08)] bg-white lg:flex lg:w-[260px] lg:flex-col">
         <SidebarBrand />
         <SidebarNav pathname={pathname} />
-        <SidebarFooter />
+        <SidebarFooter isAdmin={isAdmin} />
       </aside>
 
       {isMobileNavOpen && mounted ? createPortal(
@@ -250,7 +263,7 @@ export function TeacherShell({
               className="shrink-0"
               style={{ paddingBottom: "max(env(safe-area-inset-bottom), 1rem)" }}
             >
-              <SidebarFooter onNavigate={closeMobileNav} />
+              <SidebarFooter isAdmin={isAdmin} onNavigate={closeMobileNav} />
             </div>
           </aside>
         </div>,

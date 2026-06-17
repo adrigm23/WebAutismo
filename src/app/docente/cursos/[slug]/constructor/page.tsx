@@ -86,6 +86,7 @@ export default async function CourseBuilderPage({ params }: Props) {
       viewerName={viewerName}
       viewerInitials={viewerInitials}
       roleLabel="Docente"
+      isAdmin={user.globalRole === "ADMIN"}
     >
       <CourseBuilderClient course={builderCourse} embedded={true} />
     </TeacherShell>

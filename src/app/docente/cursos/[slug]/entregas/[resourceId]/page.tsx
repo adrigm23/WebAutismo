@@ -74,6 +74,7 @@ export default async function TeacherEntregasPage({ params }: Props) {
       viewerName={viewerName}
       viewerInitials={getInitials(viewerName)}
       roleLabel="Docente"
+      isAdmin={user.globalRole === "ADMIN"}
     >
       <div className="px-5 sm:px-8 xl:px-10 py-6 sm:py-8 pb-20">
 

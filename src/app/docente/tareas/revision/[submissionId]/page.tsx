@@ -62,6 +62,7 @@ export default async function SubmissionReviewRoute({ params }: Props) {
       viewerInitials={buildInitials(viewerName)}
       viewerName={viewerName}
       roleLabel="Docente"
+      isAdmin={user.globalRole === "ADMIN"}
     >
       <SubmissionReviewPage
         reviewerName={viewerName}

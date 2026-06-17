@@ -41,7 +41,7 @@ export default async function DocenteBibliotecaPage() {
   const viewerName = user.name ?? user.email;
 
   return (
-    <TeacherShell viewerName={viewerName} viewerInitials={getInitials(viewerName)} roleLabel="Docente">
+    <TeacherShell viewerName={viewerName} viewerInitials={getInitials(viewerName)} roleLabel="Docente" isAdmin={user.globalRole === "ADMIN"}>
       <TeacherLibraryPage
         resources={resources}
         courses={courses}
