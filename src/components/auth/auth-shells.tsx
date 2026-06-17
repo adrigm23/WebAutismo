@@ -145,7 +145,7 @@ export function AuthSplitShell({
         </section>
 
         <section className="overflow-hidden rounded-[var(--radius-xl)] border border-[var(--color-border-subtle)] bg-[linear-gradient(180deg,var(--color-primary)_0%,var(--color-primary-strong)_100%)] p-6 text-[var(--color-text-inverse)] shadow-[var(--shadow-sm)] sm:p-8 lg:rounded-l-none lg:p-10 xl:p-12">
-          <div className="flex h-full flex-col justify-between">
+          <div className="flex flex-col">
             <div>
               <Badge
                 className="bg-white/12 text-white"
