@@ -59,7 +59,7 @@ export async function getAggregatedCommunityFeed(
 
   const spaceIds = activeSpaces.map((s) => s.id);
 
-  const [rawThreads, countEntries] = await Promise.all([
+  const [rawThreads, categoryCountRows] = await Promise.all([
     db.forumThread.findMany({
       where: {
         category: { forumSpaceId: { in: spaceIds } },
@@ -81,21 +81,27 @@ export async function getAggregatedCommunityFeed(
         _count: { select: { posts: true } },
       },
     }),
-    Promise.all(
-      activeSpaces.map(async (space) => {
-        const count = await db.forumThread.count({
-          where: {
-            category: { forumSpaceId: space.id },
-            publishedAt: { not: null },
-            deletedAt: null,
+    db.forumCategory.findMany({
+      where: { forumSpaceId: { in: spaceIds } },
+      select: {
+        forumSpaceId: true,
+        _count: {
+          select: {
+            threads: { where: { publishedAt: { not: null }, deletedAt: null } },
           },
-        });
-        return [space.courseSlug, count] as const;
-      })
-    ),
+        },
+      },
+    }),
   ]);
 
-  const courseThreadCounts: Record<string, number> = Object.fromEntries(countEntries);
+  const countBySpaceId: Record<string, number> = {};
+  for (const cat of categoryCountRows) {
+    if (!cat.forumSpaceId) continue;
+    countBySpaceId[cat.forumSpaceId] = (countBySpaceId[cat.forumSpaceId] ?? 0) + cat._count.threads;
+  }
+  const courseThreadCounts: Record<string, number> = Object.fromEntries(
+    activeSpaces.map((space) => [space.courseSlug, countBySpaceId[space.id] ?? 0])
+  );
 
   function initials(name: string): string {
     return name

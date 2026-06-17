@@ -60,7 +60,6 @@ export default async function AdminCoursesPage({
   const db = getDb();
 
   const courseInclude = {
-    modules: { orderBy: { position: "asc" as const } },
     editions: { orderBy: { editionNumber: "desc" as const } },
     teacherAssignments: { include: { user: { select: { id: true, name: true, email: true } } } },
     _count: { select: { enrollments: true as const, purchases: true as const } },

@@ -325,7 +325,7 @@ export async function getCampusResources(input: {
           orderBy: {
             submittedAt: "desc"
           },
-          take: input.canModerate ? 200 : 5
+          take: input.canModerate ? 200 : 1
         }
       },
       orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }]
