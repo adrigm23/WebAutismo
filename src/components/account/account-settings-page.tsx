@@ -13,8 +13,6 @@ import {
   LogOut,
   MessageSquareText,
   Monitor,
-  Shield,
-  UserRound,
 } from "lucide-react";
 import { logoutEverywhereAction } from "@/actions/session";
 import { updateNotificationPreferencesAction } from "@/actions/account";
@@ -165,75 +163,14 @@ function NotificationToggleRow({
   );
 }
 
-// ─── left sidebar ─────────────────────────────────────────────────────────────
-
-type NavSection = "perfil" | "notificaciones" | "seguridad" | "actividad";
-
-const NAV_ITEMS: Array<{ id: NavSection; label: string; icon: LucideIcon; anchor: string }> = [
-  { id: "perfil", label: "Perfil", icon: UserRound, anchor: "#perfil" },
-  { id: "notificaciones", label: "Notificaciones", icon: Bell, anchor: "#notificaciones" },
-  { id: "seguridad", label: "Seguridad", icon: Shield, anchor: "#seguridad" },
-  { id: "actividad", label: "Actividad Académica", icon: Activity, anchor: "#actividad" },
-];
-
-function AccountSidebar({
-  fullName,
-  activeAnchor,
-}: {
-  fullName: string;
-  activeAnchor: NavSection;
-}) {
-  const initials = getInitials(fullName);
-
-  return (
-    <aside className="sticky top-0 hidden h-screen w-[220px] shrink-0 flex-col border-r border-[rgba(22,60,88,0.08)] bg-white lg:flex">
-      {/* Avatar + title */}
-      <div className="flex flex-col items-center px-5 pb-6 pt-8 text-center">
-        <div className="grid h-16 w-16 place-items-center rounded-full bg-[var(--color-primary)] text-xl font-bold text-white">
-          {initials}
-        </div>
-        <p className="mt-3 text-base font-bold text-[var(--color-ink)]">Mi Cuenta</p>
-        <p className="mt-0.5 text-[0.72rem] text-[var(--color-muted)]">Configuración del Centro</p>
-      </div>
-
-      {/* Nav */}
-      <nav className="flex-1 space-y-0.5 px-3" aria-label="Secciones de cuenta">
-        {NAV_ITEMS.map((item) => {
-          const Icon = item.icon;
-          const isActive = activeAnchor === item.id;
-          return (
-            <a
-              key={item.id}
-              href={item.anchor}
-              className={cn(
-                "flex items-center gap-3 rounded-xl px-4 py-2.5 text-sm font-medium transition",
-                isActive
-                  ? "border-l-2 border-[var(--color-primary)] bg-[rgba(22,60,88,0.06)] text-[var(--color-primary)]"
-                  : "text-[var(--color-ink-soft)] hover:bg-[rgba(22,60,88,0.04)] hover:text-[var(--color-ink)]",
-              )}
-            >
-              <Icon className="h-4 w-4 shrink-0" strokeWidth={2} />
-              {item.label}
-            </a>
-          );
-        })}
-      </nav>
-
-      {/* Bottom link */}
-      <div className="border-t border-[rgba(22,60,88,0.08)] px-3 py-5">
-        <Link
-          href="/mis-cursos"
-          className="flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium text-[var(--color-muted)] transition hover:text-[var(--color-primary)]"
-        >
-          <ArrowLeft className="h-4 w-4 shrink-0" />
-          Volver al Campus
-        </Link>
-      </div>
-    </aside>
-  );
-}
-
 // ─── mobile section tabs ──────────────────────────────────────────────────────
+
+const MOBILE_TABS = [
+  { label: "Perfil", anchor: "#perfil" },
+  { label: "Notificaciones", anchor: "#notificaciones" },
+  { label: "Seguridad", anchor: "#seguridad" },
+  { label: "Actividad", anchor: "#actividad" },
+];
 
 function MobileSectionTabs() {
   return (
@@ -241,13 +178,13 @@ function MobileSectionTabs() {
       aria-label="Secciones de cuenta"
       className="flex gap-1 overflow-x-auto border-b border-[rgba(22,60,88,0.08)] bg-white px-4 py-2 lg:hidden"
     >
-      {NAV_ITEMS.map((item) => (
+      {MOBILE_TABS.map((tab) => (
         <a
-          key={item.id}
-          href={item.anchor}
+          key={tab.anchor}
+          href={tab.anchor}
           className="whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-medium text-[var(--color-ink-soft)] transition hover:bg-[rgba(22,60,88,0.05)] hover:text-[var(--color-primary)]"
         >
-          {item.label}
+          {tab.label}
         </a>
       ))}
     </nav>
@@ -563,50 +500,51 @@ export function AccountSettingsPage({
   const webEnabled = notificationSnapshot.preference.webEnabled;
 
   return (
-    <div className="flex min-h-screen bg-[#f8fafc]">
-      {/* Left sidebar */}
-      <AccountSidebar fullName={fullName} activeAnchor="perfil" />
+    <div className="min-h-screen bg-[#f8fafc]">
+      {/* Mobile tabs */}
+      <MobileSectionTabs />
 
-      {/* Main area */}
-      <div className="flex min-w-0 flex-1 flex-col">
-        {/* Mobile tabs */}
-        <MobileSectionTabs />
+      {/* Page header */}
+      <div className="px-6 pb-2 pt-8 sm:px-8">
+        <Link
+          href="/mis-cursos"
+          className="mb-4 inline-flex items-center gap-1.5 text-sm font-medium text-[var(--color-muted)] transition hover:text-[var(--color-primary)]"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Volver al Campus
+        </Link>
+        <h1 className="text-2xl font-bold text-[var(--color-ink)] sm:text-3xl">Mi Cuenta</h1>
+        <p className="mt-1 text-sm text-[var(--color-muted)]">
+          Gestiona tu información y preferencias
+        </p>
+      </div>
 
-        {/* Page header */}
-        <div className="px-6 pb-2 pt-8 sm:px-8">
-          <h1 className="text-2xl font-bold text-[var(--color-ink)] sm:text-3xl">Mi Cuenta</h1>
-          <p className="mt-1 text-sm text-[var(--color-muted)]">
-            Gestiona tu información y preferencias
-          </p>
-        </div>
+      {/* Content grid */}
+      <div className="px-6 pb-12 pt-6 sm:px-8">
+        <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_300px] xl:grid-cols-[minmax(0,1fr)_320px]">
 
-        {/* Content grid */}
-        <div className="px-6 pb-12 pt-6 sm:px-8">
-          <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_300px] xl:grid-cols-[minmax(0,1fr)_320px]">
-
-            {/* Main column */}
-            <div className="space-y-5">
-              <PersonalInfoCard
-                fullName={fullName}
-                email={email}
-                isDemoUser={isDemoUser}
-              />
-              <SecurityCard
-                sessions={sessions}
-                isDemoUser={isDemoUser}
-                globalRole={globalRole}
-              />
-            </div>
-
-            {/* Right sidebar */}
-            <aside className="space-y-4">
-              <NotificationsCard
-                emailEnabled={emailEnabled}
-                webEnabled={webEnabled}
-              />
-              <AcademicActivityCard overviewPanel={overviewPanel} />
-            </aside>
+          {/* Main column */}
+          <div className="space-y-5">
+            <PersonalInfoCard
+              fullName={fullName}
+              email={email}
+              isDemoUser={isDemoUser}
+            />
+            <SecurityCard
+              sessions={sessions}
+              isDemoUser={isDemoUser}
+              globalRole={globalRole}
+            />
           </div>
+
+          {/* Right sidebar */}
+          <aside className="space-y-4">
+            <NotificationsCard
+              emailEnabled={emailEnabled}
+              webEnabled={webEnabled}
+            />
+            <AcademicActivityCard overviewPanel={overviewPanel} />
+          </aside>
         </div>
       </div>
     </div>
