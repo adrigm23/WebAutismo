@@ -28,7 +28,7 @@ export function BrandLogo({
         alt="Autismo Córdoba"
         className={cn("shrink-0", variant === "white" && "brightness-0 invert")}
         height={px}
-        src="/brand/autismo-cordoba-logo.svg"
+        src="/brand/isotipo-autismo-cordoba.png"
         style={{ width: px, height: px }}
         width={px}
       />
