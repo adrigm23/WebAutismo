@@ -53,6 +53,22 @@ export function isDemoAuthEnabled() {
 }
 
 /**
+ * Call at server startup to fail fast if critical auth secrets are missing.
+ * Only enforced in hosted/production deployments.
+ */
+export function assertRequiredProductionSecrets() {
+  if (!isHostedDeploymentEnv()) return;
+  const required = ["SESSION_SECRET", "DATABASE_URL", "NEXT_PUBLIC_SITE_URL"];
+  const missing = required.filter((name) => !process.env[name]?.trim());
+  if (missing.length > 0) {
+    throw new Error(
+      `[startup] Missing required environment variables: ${missing.join(", ")}. ` +
+        `Configure these in your deployment environment before starting the server.`,
+    );
+  }
+}
+
+/**
  * Call at server startup (e.g. instrumentation.ts) to catch misconfigured staging
  * boxes that accidentally expose demo credentials on a public hostname.
  */

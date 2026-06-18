@@ -27,7 +27,7 @@ export function HomeTestimonials() {
                 aria-hidden
                 className="font-display text-[3.5rem] leading-none text-[var(--color-primary)] opacity-20 select-none"
               >
-                "
+                {'"'}
               </span>
 
               <blockquote className="-mt-6 flex-1">

@@ -1,8 +1,6 @@
 "use client";
 
-// Placeholder shown until the client uploads /hero-image.jpg to /public
-// To activate the real image: add hero-image.jpg to /public and set SHOW_PLACEHOLDER to false
-const SHOW_PLACEHOLDER = true;
+const SHOW_PLACEHOLDER = false;
 
 export function HomeHeroImage() {
   if (SHOW_PLACEHOLDER) {
@@ -44,7 +42,7 @@ export function HomeHeroImage() {
       <img
         alt="Formación especializada en autismo"
         className="h-[22rem] w-full object-cover lg:h-[28rem]"
-        src="/hero-image.jpg"
+        src="/brand/thedanw-music-818459_1920 (1).jpg"
       />
     </div>
   );

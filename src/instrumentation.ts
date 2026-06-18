@@ -5,7 +5,8 @@
 export async function register() {
   // Only run security assertions on the Node.js runtime (not edge workers).
   if (process.env.NEXT_RUNTIME === "nodejs") {
-    const { assertNoDemoFlagsInHostedEnv } = await import("@/lib/env");
+    const { assertNoDemoFlagsInHostedEnv, assertRequiredProductionSecrets } = await import("@/lib/env");
+    assertRequiredProductionSecrets();
     assertNoDemoFlagsInHostedEnv();
   }
 }

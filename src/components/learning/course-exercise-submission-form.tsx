@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useId, useRef, useState } from "react";
+import Link from "next/link";
 import { useFormStatus } from "react-dom";
 import {
   ArrowLeft,
@@ -300,9 +301,9 @@ export function CourseExerciseSubmissionForm({
 
           {/* Breadcrumb — simplificado en móvil para no ocupar espacio */}
           <nav aria-label="Migas de pan" className="flex items-center gap-1.5 text-xs text-[var(--color-muted)]">
-            <a href="/mis-cursos" className="shrink-0 hover:text-[var(--color-primary)] hover:underline">
+            <Link href="/mis-cursos" className="shrink-0 hover:text-[var(--color-primary)] hover:underline">
               Mis cursos
-            </a>
+            </Link>
             {courseName ? (
               <>
                 <ChevronRight className="h-3 w-3 shrink-0" />

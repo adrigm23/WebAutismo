@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useDeferredValue } from "react";
+import { createElement, useState, useDeferredValue } from "react";
 import {
   Download,
   ExternalLink,
@@ -58,7 +58,6 @@ const TYPE_COLORS: Record<string, string> = {
 // ─── MaterialCard ─────────────────────────────────────────────────────────────
 
 function MaterialCard({ resource }: { resource: CampusResourceItem }) {
-  const Icon = getMaterialIcon(resource);
   const typeLabel = getMaterialTypeLabel(resource);
   const typeColor = TYPE_COLORS[typeLabel] ?? TYPE_COLORS["Documento"];
 
@@ -72,7 +71,7 @@ function MaterialCard({ resource }: { resource: CampusResourceItem }) {
       {/* Icon + type badge */}
       <div className="flex items-start justify-between gap-3">
         <div className="grid h-12 w-12 shrink-0 place-items-center rounded-[var(--radius-lg)] bg-[var(--color-bg-subtle)] text-[var(--color-primary)]">
-          <Icon className="h-6 w-6" strokeWidth={1.7} />
+          {createElement(getMaterialIcon(resource), { className: "h-6 w-6", strokeWidth: 1.7 })}
         </div>
         <span className={cn("shrink-0 rounded-full border px-2.5 py-0.5 text-[0.68rem] font-semibold", typeColor)}>
           {typeLabel}
@@ -150,14 +149,14 @@ export function CourseMaterialsLibrary({ course, resources }: CourseMaterialsLib
 
   // Grouped by module
   for (const moduleId of moduleOrder) {
-    const module = course.modules.find((m) => m.id === moduleId);
-    if (!module) continue;
+    const courseModule = course.modules.find((m) => m.id === moduleId);
+    if (!courseModule) continue;
     const items = filtered.filter((r) => r.moduleId === moduleId);
     if (!items.length) continue;
     const moduleIndex = course.modules.findIndex((m) => m.id === moduleId);
     groups.push({
       key: moduleId,
-      title: `Módulo ${moduleIndex + 1} — ${module.title}`,
+      title: `Módulo ${moduleIndex + 1} — ${courseModule.title}`,
       items,
     });
   }
@@ -213,7 +212,7 @@ export function CourseMaterialsLibrary({ course, resources }: CourseMaterialsLib
         <div className="flex flex-col items-center justify-center rounded-[var(--radius-xl)] border border-dashed border-[rgba(22,60,88,0.16)] bg-white px-6 py-16 text-center">
           <p className="text-lg font-semibold text-[var(--color-ink)]">Sin resultados</p>
           <p className="mt-2 text-sm text-[var(--color-muted)]">
-            No hay materiales que coincidan con "{search}".
+            No hay materiales que coincidan con &ldquo;{search}&rdquo;.
           </p>
           <button
             className="mt-4 text-sm font-semibold text-[var(--color-primary)] hover:underline"
