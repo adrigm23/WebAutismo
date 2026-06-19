@@ -105,19 +105,19 @@ export function AuthSplitShell({
   return (
     <AuthShellFrame>
       <div className="grid flex-1 gap-6 overflow-hidden lg:grid-cols-[minmax(0,1.03fr)_minmax(21rem,0.97fr)] lg:gap-0">
-        <section className="flex flex-col justify-between overflow-y-auto rounded-[var(--radius-xl)] border border-[var(--color-border-subtle)] bg-[color:var(--color-surface-elevated)] p-6 shadow-[var(--shadow-sm)] sm:p-8 lg:rounded-r-none lg:border-r-0 lg:p-10 xl:p-12">
+        <section className="flex flex-col justify-between overflow-hidden rounded-[var(--radius-xl)] border border-[var(--color-border-subtle)] bg-[color:var(--color-surface-elevated)] p-6 shadow-[var(--shadow-sm)] sm:p-8 lg:rounded-r-none lg:border-r-0 lg:p-8 xl:p-10">
           <div>
             <AuthBrand />
 
             {statusMessage ? (
               <StateBanner
-                className="mt-8"
+                className="mt-6"
                 description={statusMessage}
                 tone={statusTone}
               />
             ) : null}
 
-            <div className="mt-10 max-w-xl">
+            <div className="mt-6 max-w-xl sm:mt-8">
               <h1 className="font-premium text-display-xl font-semibold text-[var(--color-text)]">
                 {leftTitle}
               </h1>
@@ -126,10 +126,10 @@ export function AuthSplitShell({
               </p>
             </div>
 
-            <div className="mt-10 max-w-xl">{leftContent}</div>
+            <div className="mt-6 max-w-xl sm:mt-8">{leftContent}</div>
           </div>
 
-          <div className="mt-10 border-t border-[var(--color-border-subtle)] pt-6">
+          <div className="mt-6 border-t border-[var(--color-border-subtle)] pt-5 sm:mt-8">
             <p className="text-label-sm font-medium text-[var(--color-text-muted)]">
               {secondaryCtaHint}
             </p>
