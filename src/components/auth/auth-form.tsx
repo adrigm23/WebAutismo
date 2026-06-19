@@ -82,7 +82,7 @@ export function AuthForm({
         <div className="-mt-2 flex justify-end">
           <Link
             className="text-sm font-medium text-[var(--color-primary)] underline-offset-4 hover:underline"
-            href="/recuperar-contraseña"
+            href="/recuperar-contrasena"
           >
             Has olvidado tu contraseña
           </Link>
