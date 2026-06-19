@@ -7,11 +7,7 @@ export const siteConfig = {
     "Plataforma de formacion digital especializada en autismo para familias, profesionales y entidades.",
   supportEmail: "formacion@autismocordoba.org",
   donateUrl: "https://autismocordoba.org/",
-  nav: [
-    { href: "/cursos", label: "Cursos" },
-    { href: "/recursos", label: "Recursos" },
-    { href: "/blog", label: "Blog" }
-  ]
+  nav: [] as { href: string; label: string }[]
 };
 
 export function absoluteUrl(path = "/") {

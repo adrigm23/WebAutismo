@@ -24,7 +24,7 @@ export function SiteHeader() {
   return (
     <header className="sticky top-0 z-40 border-b border-[rgba(12,113,195,0.12)] bg-[rgba(248,246,243,0.94)] backdrop-blur-md">
       <div className="site-container py-3 lg:py-4">
-        <div className="hidden items-center gap-8 lg:grid lg:grid-cols-[auto_1fr_auto]">
+        <div className="hidden items-center justify-between gap-8 lg:flex">
           <Link
             className="inline-flex items-center gap-2.5 text-2xl font-bold leading-none tracking-[-0.05em] text-[var(--color-primary)] hover:opacity-90 transition-opacity"
             href="/"
@@ -33,19 +33,13 @@ export function SiteHeader() {
             {siteConfig.shortName}
           </Link>
 
-          <nav aria-label="Navegacion principal" className="flex items-center justify-center gap-10">
-            {siteConfig.nav.map((item) => (
-              <Link
-                className="border-b-2 border-transparent pb-1 text-base font-medium text-[var(--color-ink)] transition hover:text-[var(--color-primary)]"
-                href={item.href}
-                key={item.href}
-              >
-                {item.label}
-              </Link>
-            ))}
-          </nav>
-
           <div className="flex items-center justify-end gap-3">
+            <Link
+              className="border-b-2 border-transparent pb-1 text-base font-medium text-[var(--color-ink)] transition hover:text-[var(--color-primary)]"
+              href="/cursos"
+            >
+              Cursos
+            </Link>
             <ButtonLink href="/acceder" variant="ghost">
               Iniciar Sesión
             </ButtonLink>
@@ -95,16 +89,13 @@ export function SiteHeader() {
                 id="public-mobile-menu"
               >
                 <nav aria-label="Navegacion principal movil" className="flex flex-col">
-                  {siteConfig.nav.map((item) => (
-                    <Link
-                      className="inline-flex min-h-11 items-center rounded-lg px-3.5 py-2.5 text-sm font-medium text-[var(--color-ink)] transition hover:bg-white hover:text-[var(--color-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2"
-                      href={item.href}
-                      key={`mobile-${item.href}`}
-                      onClick={() => setIsMobileMenuOpen(false)}
-                    >
-                      {item.label}
-                    </Link>
-                  ))}
+                  <Link
+                    className="inline-flex min-h-11 items-center rounded-lg px-3.5 py-2.5 text-sm font-medium text-[var(--color-ink)] transition hover:bg-white hover:text-[var(--color-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2"
+                    href="/cursos"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    Cursos
+                  </Link>
                 </nav>
 
                 <div className="mt-1 border-t border-[rgba(12,113,195,0.1)] pt-1.5">
