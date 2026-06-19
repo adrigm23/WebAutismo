@@ -254,32 +254,34 @@ export function AdminShell({ user, children }: AdminShellProps) {
               </div>
 
               <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-                <form className="w-full lg:max-w-[34rem]" method="get">
-                  {preservedSearchParams.map(([key, value]) => (
-                    <input
-                      key={`${key}-${value}`}
-                      name={key}
-                      type="hidden"
-                      value={value}
-                    />
-                  ))}
-                  <label className="relative flex min-h-11 items-center rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-white px-4 text-[var(--color-muted)] shadow-[var(--shadow-inset-soft)] transition focus-within:border-[var(--color-primary)] focus-within:ring-2 focus-within:ring-[var(--color-primary)] focus-within:ring-offset-2 focus-within:ring-offset-[var(--color-surface-canvas)] sm:px-4 lg:min-h-[var(--control-height-lg)] lg:px-5 lg:shadow-[var(--shadow-soft)]">
-                    <span className="pointer-events-none mr-2 text-[var(--color-muted)] lg:mr-3">
-                      <Search
-                        className="h-4 w-4 sm:h-[1.05rem] sm:w-[1.05rem]"
-                        strokeWidth={1.8}
+                {searchPlaceholder ? (
+                  <form className="w-full lg:max-w-[34rem]" method="get">
+                    {preservedSearchParams.map(([key, value]) => (
+                      <input
+                        key={`${key}-${value}`}
+                        name={key}
+                        type="hidden"
+                        value={value}
                       />
-                    </span>
-                    <input
-                      aria-label={searchPlaceholder}
-                      className="w-full min-w-0 bg-transparent text-sm text-[var(--color-ink)] outline-none placeholder:text-[var(--color-muted)] focus-visible:outline-2 focus-visible:outline-[var(--color-primary)] focus-visible:outline-offset-2 sm:text-[0.98rem]"
-                      defaultValue={searchValue}
-                      name="q"
-                      placeholder={searchPlaceholder}
-                      type="search"
-                    />
-                  </label>
-                </form>
+                    ))}
+                    <label className="relative flex min-h-11 items-center rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-white px-4 text-[var(--color-muted)] shadow-[var(--shadow-inset-soft)] transition focus-within:border-[var(--color-primary)] focus-within:ring-2 focus-within:ring-[var(--color-primary)] focus-within:ring-offset-2 focus-within:ring-offset-[var(--color-surface-canvas)] sm:px-4 lg:min-h-[var(--control-height-lg)] lg:px-5 lg:shadow-[var(--shadow-soft)]">
+                      <span className="pointer-events-none mr-2 text-[var(--color-muted)] lg:mr-3">
+                        <Search
+                          className="h-4 w-4 sm:h-[1.05rem] sm:w-[1.05rem]"
+                          strokeWidth={1.8}
+                        />
+                      </span>
+                      <input
+                        aria-label={searchPlaceholder}
+                        className="w-full min-w-0 bg-transparent text-sm text-[var(--color-ink)] outline-none placeholder:text-[var(--color-muted)] focus-visible:outline-2 focus-visible:outline-[var(--color-primary)] focus-visible:outline-offset-2 sm:text-[0.98rem]"
+                        defaultValue={searchValue}
+                        name="q"
+                        placeholder={searchPlaceholder}
+                        type="search"
+                      />
+                    </label>
+                  </form>
+                ) : <div />}
 
                 <div className="hidden items-center gap-3 text-[var(--color-ink-soft)] lg:flex">
                   <Link

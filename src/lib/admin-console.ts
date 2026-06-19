@@ -112,7 +112,7 @@ export function getAdminSearchPlaceholder(pathname: string) {
     return "Buscar alumnos, cursos, accesos...";
   }
 
-  return "Buscar...";
+  return null;
 }
 
 export function getUserInitials(name: string) {

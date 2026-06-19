@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import type { UserGlobalRole } from "@prisma/client";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight, UserPlus } from "lucide-react";
+import { CreateTeacherCard } from "@/components/admin/users/create-teacher-card";
 import { UserFiltersBar } from "@/components/admin/users/user-filters-bar";
 import { UserTable } from "@/components/admin/users/user-table";
 import type { UserRoleFilter, UserStatusFilter } from "@/components/admin/users/types";
@@ -150,6 +151,9 @@ export default async function AdminUsersPage({ searchParams }: UsersPageProps) {
           </Link>
         </div>
       </div>
+
+      {/* ── Create user ────────────────────────────────────────────── */}
+      <CreateTeacherCard />
     </div>
   );
 }
