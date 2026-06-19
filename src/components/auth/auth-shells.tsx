@@ -105,36 +105,36 @@ export function AuthSplitShell({
   return (
     <AuthShellFrame>
       <div className="grid flex-1 gap-6 overflow-hidden lg:grid-cols-[minmax(0,1.03fr)_minmax(21rem,0.97fr)] lg:gap-0">
-        <section className="flex flex-col justify-between overflow-y-auto rounded-[var(--radius-xl)] border border-[var(--color-border-subtle)] bg-[color:var(--color-surface-elevated)] p-6 shadow-[var(--shadow-sm)] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:p-8 lg:rounded-r-none lg:border-r-0 lg:p-8 xl:p-10">
+        <section className="flex flex-col justify-between overflow-y-auto rounded-[var(--radius-xl)] border border-[var(--color-border-subtle)] bg-[color:var(--color-surface-elevated)] p-6 shadow-[var(--shadow-sm)] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:p-7 lg:rounded-r-none lg:border-r-0 lg:p-8 xl:p-9">
           <div>
             <AuthBrand />
 
             {statusMessage ? (
               <StateBanner
-                className="mt-6"
+                className="mt-5"
                 description={statusMessage}
                 tone={statusTone}
               />
             ) : null}
 
-            <div className="mt-6 max-w-xl sm:mt-8">
-              <h1 className="font-premium text-display-xl font-semibold text-[var(--color-text)]">
+            <div className="mt-5 max-w-xl">
+              <h1 className="font-premium text-display-lg font-semibold text-[var(--color-text)]">
                 {leftTitle}
               </h1>
-              <p className="mt-4 max-w-[34rem] text-body-lg text-[var(--color-text-muted)]">
+              <p className="mt-3 max-w-[34rem] text-body-md text-[var(--color-text-muted)]">
                 {leftDescription}
               </p>
             </div>
 
-            <div className="mt-6 max-w-xl sm:mt-8">{leftContent}</div>
+            <div className="mt-5 max-w-xl">{leftContent}</div>
           </div>
 
-          <div className="mt-6 border-t border-[var(--color-border-subtle)] pt-5 sm:mt-8">
+          <div className="mt-5 border-t border-[var(--color-border-subtle)] pt-4">
             <p className="text-label-sm font-medium text-[var(--color-text-muted)]">
               {secondaryCtaHint}
             </p>
             <ButtonLink
-              className="mt-4"
+              className="mt-3"
               href={secondaryCtaHref}
               variant="neutral"
             >
