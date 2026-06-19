@@ -18,7 +18,7 @@ export function AuthShellFrame({ children, className }: AuthShellFrameProps) {
   return (
     <main
       className={cn(
-        "campus-calm-bg fixed inset-0 overflow-hidden px-5 py-8 sm:px-6 sm:py-10 lg:px-8",
+        "campus-calm-bg fixed inset-0 overflow-hidden px-5 py-4 sm:px-6 sm:py-6 lg:px-8",
         className,
       )}
     >
@@ -105,36 +105,36 @@ export function AuthSplitShell({
   return (
     <AuthShellFrame>
       <div className="grid flex-1 gap-6 overflow-hidden lg:grid-cols-[minmax(0,1.03fr)_minmax(21rem,0.97fr)] lg:gap-0">
-        <section className="flex flex-col overflow-hidden rounded-[var(--radius-xl)] border border-[var(--color-border-subtle)] bg-[color:var(--color-surface-elevated)] p-6 shadow-[var(--shadow-sm)] sm:p-7 lg:rounded-r-none lg:border-r-0 lg:p-8 xl:p-9">
-          <div className="no-scrollbar min-h-0 flex-1">
+        <section className="flex flex-col overflow-hidden rounded-[var(--radius-xl)] border border-[var(--color-border-subtle)] bg-[color:var(--color-surface-elevated)] p-5 shadow-[var(--shadow-sm)] sm:p-6 lg:rounded-r-none lg:border-r-0 lg:p-6">
+          <div className="flex-1">
             <AuthBrand />
 
             {statusMessage ? (
               <StateBanner
-                className="mt-5"
+                className="mt-4"
                 description={statusMessage}
                 tone={statusTone}
               />
             ) : null}
 
-            <div className="mt-5 max-w-xl">
-              <h1 className="font-premium text-display-lg font-semibold text-[var(--color-text)]">
+            <div className="mt-4 max-w-xl">
+              <h1 className="font-premium text-display-md font-semibold text-[var(--color-text)]">
                 {leftTitle}
               </h1>
-              <p className="mt-3 max-w-[34rem] text-body-md text-[var(--color-text-muted)]">
+              <p className="mt-2 max-w-[34rem] text-body-sm text-[var(--color-text-muted)]">
                 {leftDescription}
               </p>
             </div>
 
-            <div className="mt-5 max-w-xl">{leftContent}</div>
+            <div className="mt-4 max-w-xl">{leftContent}</div>
           </div>
 
-          <div className="mt-5 shrink-0 border-t border-[var(--color-border-subtle)] pt-4">
+          <div className="mt-4 shrink-0 border-t border-[var(--color-border-subtle)] pt-3">
             <p className="text-label-sm font-medium text-[var(--color-text-muted)]">
               {secondaryCtaHint}
             </p>
             <ButtonLink
-              className="mt-3"
+              className="mt-2"
               href={secondaryCtaHref}
               variant="neutral"
             >
