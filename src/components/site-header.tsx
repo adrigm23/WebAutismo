@@ -33,7 +33,7 @@ export function SiteHeader() {
             {siteConfig.shortName}
           </Link>
 
-          <div className="flex items-center justify-end gap-3">
+          <div className="flex items-center justify-end gap-2">
             <ButtonLink href="/cursos" variant="ghost">
               Cursos
             </ButtonLink>
