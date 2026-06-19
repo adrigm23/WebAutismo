@@ -105,7 +105,7 @@ export function AuthSplitShell({
   return (
     <AuthShellFrame>
       <div className="grid flex-1 gap-6 overflow-hidden lg:grid-cols-[minmax(0,1.03fr)_minmax(21rem,0.97fr)] lg:gap-0">
-        <section className="flex flex-col overflow-hidden rounded-[var(--radius-xl)] border border-[var(--color-border-subtle)] bg-[color:var(--color-surface-elevated)] p-5 shadow-[var(--shadow-sm)] sm:p-6 lg:rounded-r-none lg:border-r-0 lg:p-6">
+        <section className="flex flex-col self-start overflow-hidden rounded-[var(--radius-xl)] border border-[var(--color-border-subtle)] bg-[color:var(--color-surface-elevated)] p-5 shadow-[var(--shadow-sm)] sm:p-6 lg:rounded-r-none lg:border-r-0 lg:p-6">
           <div>
             <AuthBrand />
 
@@ -129,7 +129,7 @@ export function AuthSplitShell({
             <div className="mt-4 max-w-xl">{leftContent}</div>
           </div>
 
-          <div className="mt-auto shrink-0 border-t border-[var(--color-border-subtle)] pt-3">
+          <div className="mt-4 shrink-0 border-t border-[var(--color-border-subtle)] pt-3">
             <p className="text-label-sm font-medium text-[var(--color-text-muted)]">
               {secondaryCtaHint}
             </p>
