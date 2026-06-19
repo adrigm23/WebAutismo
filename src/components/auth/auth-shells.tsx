@@ -105,7 +105,7 @@ export function AuthSplitShell({
   return (
     <AuthShellFrame>
       <div className="grid flex-1 gap-6 overflow-hidden lg:grid-cols-[minmax(0,1.03fr)_minmax(21rem,0.97fr)] lg:gap-0">
-        <section className="flex flex-col justify-between overflow-hidden rounded-[var(--radius-xl)] border border-[var(--color-border-subtle)] bg-[color:var(--color-surface-elevated)] p-6 shadow-[var(--shadow-sm)] sm:p-8 lg:rounded-r-none lg:border-r-0 lg:p-8 xl:p-10">
+        <section className="flex flex-col justify-between overflow-y-auto rounded-[var(--radius-xl)] border border-[var(--color-border-subtle)] bg-[color:var(--color-surface-elevated)] p-6 shadow-[var(--shadow-sm)] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:p-8 lg:rounded-r-none lg:border-r-0 lg:p-8 xl:p-10">
           <div>
             <AuthBrand />
 
@@ -144,7 +144,7 @@ export function AuthSplitShell({
         </section>
 
         <section className="overflow-hidden rounded-[var(--radius-xl)] border border-[var(--color-border-subtle)] bg-[linear-gradient(180deg,var(--color-primary)_0%,var(--color-primary-strong)_100%)] p-6 text-[var(--color-text-inverse)] shadow-[var(--shadow-sm)] sm:p-8 lg:rounded-l-none lg:p-10 xl:p-12">
-          <div className="flex flex-col">
+          <div className="flex h-full flex-col">
             <div>
               <Badge
                 className="bg-white/12 text-white"
@@ -163,7 +163,7 @@ export function AuthSplitShell({
               </p>
             </div>
 
-            <div className="mt-10 grid gap-4">
+            <div className="mt-auto grid gap-4 pt-10">
               <div className="rounded-[var(--radius-xl)] border border-white/12 bg-white/10 p-5 backdrop-blur-sm">
                 <div className="flex items-start gap-3">
                   <div className="grid size-10 shrink-0 place-items-center rounded-[var(--radius-md)] bg-white/20">
