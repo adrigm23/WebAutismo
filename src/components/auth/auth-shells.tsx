@@ -105,7 +105,7 @@ export function AuthSplitShell({
   return (
     <AuthShellFrame>
       <div className="grid flex-1 gap-6 overflow-hidden lg:grid-cols-[minmax(0,1.03fr)_minmax(21rem,0.97fr)] lg:gap-0">
-        <section className="flex flex-col overflow-hidden rounded-[var(--radius-xl)] border border-[var(--color-border-subtle)] bg-[color:var(--color-surface-elevated)] p-6 shadow-[var(--shadow-sm)] sm:p-7 lg:rounded-r-none lg:border-r-0 lg:p-8 xl:p-9">
+        <section className="no-scrollbar flex flex-col rounded-[var(--radius-xl)] border border-[var(--color-border-subtle)] bg-[color:var(--color-surface-elevated)] p-6 shadow-[var(--shadow-sm)] sm:p-7 lg:rounded-r-none lg:border-r-0 lg:p-8 xl:p-9">
           <div>
             <AuthBrand />
 
