@@ -253,8 +253,8 @@ export function CourseResourceManager({
           }
 
           return (
-            right.submission.submittedAt.getTime() -
-            left.submission.submittedAt.getTime()
+            new Date(right.submission.submittedAt).getTime() -
+            new Date(left.submission.submittedAt).getTime()
           );
         })
     : [];
