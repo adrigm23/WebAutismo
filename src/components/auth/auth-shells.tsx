@@ -18,7 +18,7 @@ export function AuthShellFrame({ children, className }: AuthShellFrameProps) {
   return (
     <main
       className={cn(
-        "campus-calm-bg h-[100dvh] overflow-hidden px-5 py-8 sm:px-6 sm:py-10 lg:px-8",
+        "campus-calm-bg fixed inset-0 overflow-hidden px-5 py-8 sm:px-6 sm:py-10 lg:px-8",
         className,
       )}
     >
