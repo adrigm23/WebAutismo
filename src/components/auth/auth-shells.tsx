@@ -129,7 +129,7 @@ export function AuthSplitShell({
             <div className="mt-4 max-w-xl">{leftContent}</div>
           </div>
 
-          <div className="mt-4 shrink-0 border-t border-[var(--color-border-subtle)] pt-3">
+          <div className="mt-auto shrink-0 border-t border-[var(--color-border-subtle)] pt-3">
             <p className="text-label-sm font-medium text-[var(--color-text-muted)]">
               {secondaryCtaHint}
             </p>
