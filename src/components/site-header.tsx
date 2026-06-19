@@ -34,12 +34,9 @@ export function SiteHeader() {
           </Link>
 
           <div className="flex items-center justify-end gap-3">
-            <Link
-              className="border-b-2 border-transparent pb-1 text-base font-medium text-[var(--color-ink)] transition hover:text-[var(--color-primary)]"
-              href="/cursos"
-            >
+            <ButtonLink href="/cursos" variant="ghost">
               Cursos
-            </Link>
+            </ButtonLink>
             <ButtonLink href="/acceder" variant="ghost">
               Iniciar Sesión
             </ButtonLink>
