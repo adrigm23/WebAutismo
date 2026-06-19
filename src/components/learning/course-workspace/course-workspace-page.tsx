@@ -53,9 +53,10 @@ function getLessonIcon(resource: CampusResourceItem) {
   return Circle;
 }
 
-function formatMonthDay(date: Date): { month: string; day: string } {
-  const month = date.toLocaleString("es-ES", { month: "short" }).toUpperCase();
-  const day = String(date.getDate());
+function formatMonthDay(date: Date | string): { month: string; day: string } {
+  const d = date instanceof Date ? date : new Date(date);
+  const month = d.toLocaleString("es-ES", { month: "short" }).toUpperCase();
+  const day = String(d.getDate());
   return { month, day };
 }
 
