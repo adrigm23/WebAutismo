@@ -109,7 +109,7 @@ export default async function AdminEditionsPage({ searchParams }: EditionsPagePr
           title="Ediciones"
         />
 
-        <section className="grid gap-5 xl:grid-cols-[1.1fr_1fr_1fr]">
+        <section className="grid gap-5 xl:grid-cols-[2fr_1fr_1fr]">
           <EditionLifecycleGuide />
           <AdminMetricCard
             accent="primary"
@@ -266,7 +266,7 @@ export default async function AdminEditionsPage({ searchParams }: EditionsPagePr
         title="Ediciones"
       />
 
-      <section className="grid gap-5 xl:grid-cols-[1.1fr_1fr_1fr]">
+      <section className="grid gap-5 xl:grid-cols-[2fr_1fr_1fr]">
         <EditionLifecycleGuide />
         <AdminMetricCard
           accent="primary"
