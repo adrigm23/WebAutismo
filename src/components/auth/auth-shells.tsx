@@ -129,17 +129,20 @@ export function AuthSplitShell({
             <div className="mt-4 max-w-xl">{leftContent}</div>
           </div>
 
-          <div className="mt-auto shrink-0 border-t border-[var(--color-border-subtle)] pt-3">
-            <p className="text-label-sm font-medium text-[var(--color-text-muted)]">
-              {secondaryCtaHint}
-            </p>
-            <ButtonLink
-              className="mt-2"
-              href={secondaryCtaHref}
-              variant="neutral"
-            >
-              {secondaryCtaLabel}
-            </ButtonLink>
+          <div className="mt-auto shrink-0 space-y-4 border-t border-[var(--color-border-subtle)] pt-3">
+            <div>
+              <p className="text-label-sm font-medium text-[var(--color-text-muted)]">
+                {secondaryCtaHint}
+              </p>
+              <ButtonLink
+                className="mt-2"
+                href={secondaryCtaHref}
+                variant="neutral"
+              >
+                {secondaryCtaLabel}
+              </ButtonLink>
+            </div>
+            <AuthSupportLinks />
           </div>
         </section>
 
