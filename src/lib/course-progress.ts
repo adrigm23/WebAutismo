@@ -7,9 +7,12 @@ import { getDb } from "./prisma.ts";
 
 // Legacy CourseModuleProgress rows (moduleId === "") only exist for accounts
 // that haven't loaded their progress since an old data migration. Once a
-// user has zero of them, they will never have any again (new progress is
-// always written with a real moduleId) — so it's safe to remember "clean"
-// per user for a while instead of re-querying on every single page load.
+// (user, course) pair has zero of them, it will never have any again (new
+// progress is always written with a real moduleId) — so it's safe to
+// remember "clean" per (user, course) for a while instead of re-querying on
+// every single page load. Scoped per course, not just per user: a user can
+// be clean for course A (checked first) while course B (checked later)
+// still has unmigrated rows — a user-wide flag would wrongly skip B too.
 const NO_LEGACY_PROGRESS_CACHE_TTL_MS = 60 * 60 * 1_000;
 
 declare global {
@@ -24,13 +27,35 @@ function getNoLegacyProgressCache() {
   return globalThis.__academyNoLegacyProgressCache;
 }
 
-function isUserKnownClean(userId: string) {
-  const cachedAt = getNoLegacyProgressCache().get(userId);
-  return cachedAt !== undefined && Date.now() - cachedAt < NO_LEGACY_PROGRESS_CACHE_TTL_MS;
+function getCleanCacheKey(userId: string, courseSlug: string) {
+  return `${userId}:${courseSlug}`;
 }
 
-function markUserClean(userId: string) {
-  getNoLegacyProgressCache().set(userId, Date.now());
+function areAllCoursesKnownClean(userId: string, courses: CourseProgressCourseShape[]) {
+  const cache = getNoLegacyProgressCache();
+  const now = Date.now();
+
+  return courses.every((course) => {
+    const cachedAt = cache.get(getCleanCacheKey(userId, course.slug));
+    return cachedAt !== undefined && now - cachedAt < NO_LEGACY_PROGRESS_CACHE_TTL_MS;
+  });
+}
+
+function markCoursesClean(userId: string, courses: CourseProgressCourseShape[]) {
+  const cache = getNoLegacyProgressCache();
+  const now = Date.now();
+
+  if (cache.size >= 5_000) {
+    for (const [key, cachedAt] of cache.entries()) {
+      if (now - cachedAt >= NO_LEGACY_PROGRESS_CACHE_TTL_MS) {
+        cache.delete(key);
+      }
+    }
+  }
+
+  for (const course of courses) {
+    cache.set(getCleanCacheKey(userId, course.slug), now);
+  }
 }
 
 function markUserDirty(userId: string) {
@@ -238,7 +263,7 @@ async function upgradeLegacyCourseProgressRecords(input: {
     return;
   }
 
-  if (isUserKnownClean(input.userId)) {
+  if (areAllCoursesKnownClean(input.userId, input.courses)) {
     return;
   }
 
@@ -273,7 +298,7 @@ async function upgradeLegacyCourseProgressRecords(input: {
     });
 
     if (legacyRecords.length === 0) {
-      markUserClean(input.userId);
+      markCoursesClean(input.userId, Array.from(uniqueCourses.values()));
       return;
     }
 
