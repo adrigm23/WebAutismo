@@ -5,6 +5,38 @@ import { getDemoUserById, isDemoUserId } from "./demo-auth.ts";
 import { getCatalogCourseBySlug } from "./course-catalog.ts";
 import { getDb } from "./prisma.ts";
 
+// Legacy CourseModuleProgress rows (moduleId === "") only exist for accounts
+// that haven't loaded their progress since an old data migration. Once a
+// user has zero of them, they will never have any again (new progress is
+// always written with a real moduleId) — so it's safe to remember "clean"
+// per user for a while instead of re-querying on every single page load.
+const NO_LEGACY_PROGRESS_CACHE_TTL_MS = 60 * 60 * 1_000;
+
+declare global {
+  var __academyNoLegacyProgressCache: Map<string, number> | undefined;
+}
+
+function getNoLegacyProgressCache() {
+  if (!globalThis.__academyNoLegacyProgressCache) {
+    globalThis.__academyNoLegacyProgressCache = new Map();
+  }
+
+  return globalThis.__academyNoLegacyProgressCache;
+}
+
+function isUserKnownClean(userId: string) {
+  const cachedAt = getNoLegacyProgressCache().get(userId);
+  return cachedAt !== undefined && Date.now() - cachedAt < NO_LEGACY_PROGRESS_CACHE_TTL_MS;
+}
+
+function markUserClean(userId: string) {
+  getNoLegacyProgressCache().set(userId, Date.now());
+}
+
+function markUserDirty(userId: string) {
+  getNoLegacyProgressCache().delete(userId);
+}
+
 type CourseProgressCourseShape = {
   id?: string;
   slug: string;
@@ -206,6 +238,10 @@ async function upgradeLegacyCourseProgressRecords(input: {
     return;
   }
 
+  if (isUserKnownClean(input.userId)) {
+    return;
+  }
+
   try {
     const db = getDb();
     const uniqueCourses = new Map(input.courses.map((course) => [course.slug, course]));
@@ -235,6 +271,11 @@ async function upgradeLegacyCourseProgressRecords(input: {
         completedAt: true
       }
     });
+
+    if (legacyRecords.length === 0) {
+      markUserClean(input.userId);
+      return;
+    }
 
     // Build the resolved (record, course, module) triples in memory — no DB calls here.
     type ResolvedLegacyRecord = {

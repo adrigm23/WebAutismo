@@ -19,7 +19,7 @@ import { ProgressBar } from "@/components/ui/progress-bar";
 import { requireUser } from "@/lib/auth";
 import {
   getDashboardNotificationSnapshot,
-  getStudentDashboardPendingSources,
+  getStudentDashboardResourcesForCourseSpaces,
   getTeacherDashboardCourseSummaries,
   type DashboardNotificationSnapshot,
 } from "@/lib/account-dashboard";
@@ -33,7 +33,6 @@ import {
   resolvePlatformNotificationHref,
 } from "@/lib/course-navigation";
 import { getCourseProgressDetailsMapForUser, type CourseProgressDetails } from "@/lib/course-progress";
-import { getDb } from "@/lib/prisma";
 import { isStaffCourseRole } from "@/lib/course-roles";
 import { siteConfig } from "@/lib/site";
 import { cn, formatDateTime, getInitials } from "@/lib/utils";
@@ -231,7 +230,7 @@ function buildRecentManagedResources(input: {
 function buildStudentSteps(input: {
   primaryStudentCourse: StudentCourseEntry | null;
   teacherCourses: TeacherCourseEntry[];
-  pendingSources: Awaited<ReturnType<typeof getStudentDashboardPendingSources>>;
+  pendingSources: Awaited<ReturnType<typeof getStudentDashboardResourcesForCourseSpaces>>["pendingSources"];
   recentResources: RecentManagedResource[];
   notificationSnapshot: DashboardNotificationSnapshot;
 }) {
@@ -489,7 +488,7 @@ export default async function MyCoursesPage({
 
   const studentSpaces = spaces.filter((space) => !isStaffCourseRole(space.role));
   const staffSpaces = spaces.filter((space) => isStaffCourseRole(space.role));
-  const [progressByCourse, notificationSnapshot, pendingSources, studentResourcesByCourse, teacherSummaries] =
+  const [progressByCourse, notificationSnapshot, { pendingSources, recentMaterialsByCourse: studentResourcesByCourse }, teacherSummaries] =
     await Promise.all([
       getCourseProgressDetailsMapForUser({
         userId: user.id,
@@ -498,46 +497,14 @@ export default async function MyCoursesPage({
       getDashboardNotificationSnapshot({
         userId: user.id,
         courseSlugs: spaces.map((space) => space.course.slug),
+        courseIdentities: spaces.map((space) => ({ id: space.course.id, slug: space.course.slug })),
       }),
-      getStudentDashboardPendingSources({
+      // One combined query for pending exercises + recent materials instead
+      // of two separate courseResource fetches.
+      getStudentDashboardResourcesForCourseSpaces({
         spaces: studentSpaces,
         userId: user.id,
       }),
-      // Single query for non-exercise materials across all student courses
-      // (dashboard only needs id/title/moduleTitle/createdAt for recent resources widget)
-      (async () => {
-        if (studentSpaces.length === 0) return [];
-        const materials = await getDb().courseResource.findMany({
-          where: {
-            courseId: { in: studentSpaces.map((s) => s.course.id) },
-            type: "MATERIAL",
-            isPublished: true,
-          },
-          select: {
-            id: true,
-            courseId: true,
-            title: true,
-            createdAt: true,
-            module: { select: { title: true } },
-          },
-          orderBy: { createdAt: "desc" },
-          take: 5,
-        });
-        return studentSpaces.map((space) => ({
-          courseSlug: space.course.slug,
-          courseTitle: space.course.title,
-          resources: materials
-            .filter((r) => r.courseId === space.course.id)
-            .map((r) => ({
-              id: r.id,
-              title: r.title,
-              moduleTitle: r.module?.title ?? null,
-              createdAt: r.createdAt,
-              isManaged: true,
-              isExercise: false,
-            })),
-        }));
-      })(),
       getTeacherDashboardCourseSummaries({
         spaces: staffSpaces,
         learnerSummariesByCourse: new Map(),

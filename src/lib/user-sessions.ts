@@ -9,6 +9,61 @@ import { getClientIpFromHeaders, getUserAgentFromHeaders } from "@/lib/request-c
 
 const SESSION_COOKIE = "academy_session";
 
+// Short in-process cache for session-validity lookups. The database round
+// trip to validate a session (revocation + expiry check) runs on every page
+// load; caching it for a few seconds turns N page loads in a row into a
+// single DB hit while keeping revocation propagation fast enough in
+// practice. This is per-instance memory: on a serverless deployment with
+// multiple warm instances, a revoked session may still be treated as valid
+// on *other* instances for up to SESSION_VALIDITY_CACHE_TTL_MS — an accepted
+// trade-off for this app's threat model, not appropriate for high-security
+// session revocation requirements.
+const SESSION_VALIDITY_CACHE_TTL_MS = 5_000;
+
+type CachedSessionRecord = {
+  id: string;
+  userId: string;
+  expiresAt: Date;
+  revokedAt: Date | null;
+  lastSeenAt: Date | null;
+};
+
+declare global {
+  var __academySessionValidityCache:
+    | Map<string, { record: CachedSessionRecord | null; cachedAt: number }>
+    | undefined;
+}
+
+function getSessionValidityCache() {
+  if (!globalThis.__academySessionValidityCache) {
+    globalThis.__academySessionValidityCache = new Map();
+  }
+
+  return globalThis.__academySessionValidityCache;
+}
+
+function invalidateSessionValidityCache(sessionId: string) {
+  getSessionValidityCache().delete(sessionId);
+}
+
+function invalidateAllSessionValidityCache() {
+  getSessionValidityCache().clear();
+}
+
+function pruneExpiredSessionValidityCacheEntries(now: number) {
+  const cache = getSessionValidityCache();
+
+  if (cache.size < 1_000) {
+    return;
+  }
+
+  for (const [sessionId, entry] of cache.entries()) {
+    if (now - entry.cachedAt >= SESSION_VALIDITY_CACHE_TTL_MS) {
+      cache.delete(sessionId);
+    }
+  }
+}
+
 function getSessionDurationSeconds() {
   return getSessionTtlDays() * 24 * 60 * 60;
 }
@@ -130,16 +185,20 @@ export async function getCurrentSessionId() {
   return (await getSessionTokenPayload())?.sessionId ?? null;
 }
 
-export async function getCurrentSessionUserId() {
-  const tokenPayload = await getSessionTokenPayload();
+async function findSessionRecord(sessionId: string): Promise<CachedSessionRecord | null> {
+  const cache = getSessionValidityCache();
+  const cached = cache.get(sessionId);
+  const now = Date.now();
 
-  if (!tokenPayload) {
-    return null;
+  if (cached && now - cached.cachedAt < SESSION_VALIDITY_CACHE_TTL_MS) {
+    return cached.record;
   }
 
-  const session = await getDb().userSession.findUnique({
+  pruneExpiredSessionValidityCacheEntries(now);
+
+  const record = await getDb().userSession.findUnique({
     where: {
-      id: tokenPayload.sessionId
+      id: sessionId
     },
     select: {
       id: true,
@@ -149,6 +208,20 @@ export async function getCurrentSessionUserId() {
       lastSeenAt: true
     }
   });
+
+  cache.set(sessionId, { record, cachedAt: now });
+
+  return record;
+}
+
+export async function getCurrentSessionUserId() {
+  const tokenPayload = await getSessionTokenPayload();
+
+  if (!tokenPayload) {
+    return null;
+  }
+
+  const session = await findSessionRecord(tokenPayload.sessionId);
 
   if (
     !session ||
@@ -180,6 +253,8 @@ export async function revokeUserSession(sessionId: string) {
       revokedAt: new Date()
     }
   });
+
+  invalidateSessionValidityCache(sessionId);
 }
 
 export async function revokeUserSessions(input: {
@@ -202,6 +277,11 @@ export async function revokeUserSessions(input: {
       revokedAt: new Date()
     }
   });
+
+  // We don't have the individual session ids revoked in bulk here, so drop
+  // the whole cache rather than leave other users' sessions serving stale
+  // "valid" reads — this is a rare admin/security action, not a hot path.
+  invalidateAllSessionValidityCache();
 }
 
 export async function clearCurrentUserSession() {

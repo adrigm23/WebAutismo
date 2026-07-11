@@ -1,5 +1,5 @@
 import type { ForumNotificationListItem } from "@/lib/forum-types";
-import { buildLegacyCourseInWhere, getCourseIdentitiesBySlugs } from "@/lib/course-identity";
+import { buildLegacyCourseInWhere, getCourseIdentitiesBySlugs, type CourseIdentity } from "@/lib/course-identity";
 import { isDatabaseSchemaDriftError } from "@/lib/db-errors";
 import { isDemoUserId } from "@/lib/demo-auth";
 import { publishDueAnnouncementsForCourse } from "@/lib/forum-notifications";
@@ -11,6 +11,9 @@ export async function getUserForumNotifications(input: {
   courseSlugs: string[];
   limit?: number;
   skipPublishDueAnnouncements?: boolean;
+  // Optional: pass {id, slug} pairs when the caller already resolved them
+  // (e.g. from getUserCourseSpaces) to skip a redundant Course lookup.
+  courseIdentities?: CourseIdentity[];
 }) {
   if (isDemoUserId(input.userId)) {
     return {
@@ -20,7 +23,9 @@ export async function getUserForumNotifications(input: {
   }
 
   const courseSlugs = Array.from(new Set(input.courseSlugs.filter(Boolean)));
-  const courseIdentities = await getCourseIdentitiesBySlugs(courseSlugs);
+  const courseIdentities = input.courseIdentities?.length
+    ? input.courseIdentities.filter((identity) => courseSlugs.includes(identity.slug))
+    : await getCourseIdentitiesBySlugs(courseSlugs);
 
   if (!input.skipPublishDueAnnouncements) {
     await Promise.all(courseSlugs.map((courseSlug) => publishDueAnnouncementsForCourse(courseSlug)));

@@ -154,6 +154,7 @@ export default async function NotificationsPage() {
   const forumResult = await getUserForumNotifications({
     userId: user.id,
     courseSlugs: spaces.map((s) => s.course.slug),
+    courseIdentities: spaces.map((s) => ({ id: s.course.id, slug: s.course.slug })),
     limit: 50,
     skipPublishDueAnnouncements: true,
   });
