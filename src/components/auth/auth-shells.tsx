@@ -18,11 +18,13 @@ export function AuthShellFrame({ children, className }: AuthShellFrameProps) {
   return (
     <main
       className={cn(
-        "campus-calm-bg fixed inset-0 overflow-hidden px-5 py-4 sm:px-6 sm:py-6 lg:px-8",
+        "campus-calm-bg min-h-dvh px-5 py-4 sm:px-6 sm:py-6 lg:fixed lg:inset-0 lg:overflow-hidden lg:px-8",
         className,
       )}
     >
-      <div className="mx-auto flex h-full w-full max-w-6xl flex-col">{children}</div>
+      <div className="mx-auto flex w-full max-w-6xl flex-col lg:h-full">
+        {children}
+      </div>
     </main>
   );
 }
@@ -104,8 +106,8 @@ export function AuthSplitShell({
 }: AuthSplitShellProps) {
   return (
     <AuthShellFrame>
-      <div className="grid flex-1 gap-6 overflow-hidden lg:grid-cols-[minmax(0,1.03fr)_minmax(21rem,0.97fr)] lg:gap-0">
-        <section className="flex flex-col overflow-hidden rounded-[var(--radius-xl)] border border-[var(--color-border-subtle)] bg-[color:var(--color-surface-elevated)] p-5 shadow-[var(--shadow-sm)] sm:p-6 lg:rounded-r-none lg:border-r-0 lg:p-6">
+      <div className="grid flex-1 gap-6 lg:overflow-hidden lg:grid-cols-[minmax(0,1.03fr)_minmax(21rem,0.97fr)] lg:gap-0">
+        <section className="flex flex-col rounded-[var(--radius-xl)] border border-[var(--color-border-subtle)] bg-[color:var(--color-surface-elevated)] p-5 shadow-[var(--shadow-sm)] sm:p-6 lg:overflow-hidden lg:rounded-r-none lg:border-r-0 lg:p-6">
           <div>
             <AuthBrand />
 
@@ -146,8 +148,8 @@ export function AuthSplitShell({
           </div>
         </section>
 
-        <section className="overflow-hidden rounded-[var(--radius-xl)] border border-[var(--color-border-subtle)] bg-[linear-gradient(180deg,var(--color-primary)_0%,var(--color-primary-strong)_100%)] p-6 text-[var(--color-text-inverse)] shadow-[var(--shadow-sm)] sm:p-8 lg:rounded-l-none lg:p-10 xl:p-12">
-          <div className="flex h-full flex-col">
+        <section className="rounded-[var(--radius-xl)] border border-[var(--color-border-subtle)] bg-[linear-gradient(180deg,var(--color-primary)_0%,var(--color-primary-strong)_100%)] p-6 text-[var(--color-text-inverse)] shadow-[var(--shadow-sm)] sm:p-8 lg:overflow-hidden lg:rounded-l-none lg:p-10 xl:p-12">
+          <div className="flex flex-col lg:h-full">
             <div>
               <Badge
                 className="bg-white/12 text-white"
@@ -188,15 +190,26 @@ export function AuthSplitShell({
               </div>
 
               {showDemoNotice ? (
-                <StateBanner
-                  className="border-white/14 bg-white/10 text-white"
-                  description="Modo demo habilitado solo para entornos locales configurados. Las credenciales no se exponen en esta interfaz."
-                  icon={
-                    <CircleHelp className="size-4 text-white" strokeWidth={2} />
-                  }
-                  title="Entorno de validacion"
-                  tone="info"
-                />
+                <div className="rounded-[var(--radius-xl)] border border-white/12 bg-white/10 p-5 backdrop-blur-sm">
+                  <div className="flex items-start gap-3">
+                    <div className="grid size-10 shrink-0 place-items-center rounded-[var(--radius-md)] bg-white/20">
+                      <CircleHelp
+                        className="size-5 text-white"
+                        strokeWidth={2}
+                      />
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-white">
+                        Entorno de validacion
+                      </p>
+                      <p className="mt-1 text-sm leading-6 text-white/70">
+                        Modo demo habilitado solo para entornos locales
+                        configurados. Las credenciales no se exponen en esta
+                        interfaz.
+                      </p>
+                    </div>
+                  </div>
+                </div>
               ) : null}
             </div>
           </div>
