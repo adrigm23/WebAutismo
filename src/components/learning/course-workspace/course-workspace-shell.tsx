@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -20,6 +21,7 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { logoutAction } from "@/actions/session";
+import { useScrollLock } from "@/hooks/use-scroll-lock";
 import { siteConfig } from "@/lib/site";
 import { cn } from "@/lib/utils";
 
@@ -173,7 +175,30 @@ export function CourseWorkspaceShell({
 }: CourseWorkspaceShellProps) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const closeMobile = () => setMobileOpen(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Close drawer on route change
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [pathname]);
+
+  // Close drawer on Escape key (WCAG 2.1 SC 2.4.3)
+  useEffect(() => {
+    if (!mobileOpen) return;
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") closeMobile();
+    }
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [mobileOpen]);
+
+  // Lock body scroll (iOS-safe)
+  useScrollLock(mobileOpen);
 
   return (
     <div className="min-h-screen lg:grid lg:grid-cols-[260px_minmax(0,1fr)]">
@@ -182,40 +207,49 @@ export function CourseWorkspaceShell({
         <SidebarContent pathname={pathname} roleLabel={roleLabel} />
       </aside>
 
-      {/* Mobile sidebar overlay */}
-      {mobileOpen && (
-        <div className="fixed inset-0 z-40 lg:hidden">
-          <button
-            aria-label="Cerrar menú"
-            className="absolute inset-0 bg-[rgba(15,23,32,0.45)] backdrop-blur-sm"
-            onClick={closeMobile}
-            type="button"
-          />
-          <aside className="absolute inset-y-0 left-0 flex w-[280px] max-w-[85vw] flex-col overflow-y-auto border-r border-[rgba(28,47,67,0.08)] bg-white shadow-2xl">
-            <div className="flex items-start justify-between pr-3">
-              <div className="px-6 pb-5 pt-8">
-                <Link className="block" href="/mis-cursos" onClick={closeMobile}>
-                  <div className="text-[1.85rem] font-bold tracking-[-0.06em] text-[var(--color-primary)]">
-                    {siteConfig.shortName}
-                  </div>
-                  <p className="mt-2 text-[0.7rem] font-semibold uppercase tracking-[0.26em] text-[var(--color-ink-soft)]">
-                    {roleLabel ?? "Campus"}
-                  </p>
-                </Link>
-              </div>
+      {/* Mobile sidebar overlay — portaled to document.body so it always sits
+          above page content, regardless of stacking contexts created inside children */}
+      {mobileOpen && mounted
+        ? createPortal(
+            <div className="fixed inset-0 z-[9999] lg:hidden">
               <button
                 aria-label="Cerrar menú"
-                className="mr-1 mt-7 grid h-10 w-10 place-items-center rounded-full text-[var(--color-ink-soft)] transition hover:bg-white hover:text-[var(--color-primary)]"
+                className="absolute inset-0 bg-[rgba(15,23,32,0.45)] backdrop-blur-sm"
                 onClick={closeMobile}
                 type="button"
+              />
+              <aside
+                aria-label="Menú de navegación"
+                aria-modal="true"
+                className="absolute inset-y-0 left-0 flex w-[280px] max-w-[85vw] flex-col overflow-y-auto border-r border-[rgba(28,47,67,0.08)] bg-white shadow-2xl"
+                role="dialog"
               >
-                <X className="h-5 w-5" strokeWidth={2} />
-              </button>
-            </div>
-            <SidebarContent pathname={pathname} onNavigate={closeMobile} roleLabel={roleLabel} />
-          </aside>
-        </div>
-      )}
+                <div className="flex items-start justify-between pr-3">
+                  <div className="px-6 pb-5 pt-8">
+                    <Link className="block" href="/mis-cursos" onClick={closeMobile}>
+                      <div className="text-[1.85rem] font-bold tracking-[-0.06em] text-[var(--color-primary)]">
+                        {siteConfig.shortName}
+                      </div>
+                      <p className="mt-2 text-[0.7rem] font-semibold uppercase tracking-[0.26em] text-[var(--color-ink-soft)]">
+                        {roleLabel ?? "Campus"}
+                      </p>
+                    </Link>
+                  </div>
+                  <button
+                    aria-label="Cerrar menú"
+                    className="mr-1 mt-7 grid h-10 w-10 place-items-center rounded-full text-[var(--color-ink-soft)] transition hover:bg-white hover:text-[var(--color-primary)]"
+                    onClick={closeMobile}
+                    type="button"
+                  >
+                    <X className="h-5 w-5" strokeWidth={2} />
+                  </button>
+                </div>
+                <SidebarContent pathname={pathname} onNavigate={closeMobile} roleLabel={roleLabel} />
+              </aside>
+            </div>,
+            document.body,
+          )
+        : null}
 
       {/* Main content area */}
       <div className="flex min-h-screen flex-col">
