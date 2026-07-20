@@ -331,32 +331,39 @@ function ModuleCard({
 // ─── right sidebar cards ──────────────────────────────────────────────────────
 
 function InstructorCard({ course }: { course: CatalogCourse }) {
-  const teacher = course.teachers[0];
-  if (!teacher) return null;
-
-  const initials = teacher.name
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((p) => (p[0] ?? "").toUpperCase())
-    .join("");
+  if (course.teachers.length === 0) return null;
 
   return (
     <div className="rounded-xl border border-[var(--color-border)] bg-white p-5">
       <p className="text-[0.65rem] font-bold uppercase tracking-[0.14em] text-[var(--color-ink-muted)]">
-        Instructora del Curso
+        {course.teachers.length > 1 ? "Equipo Docente del Curso" : "Instructora del Curso"}
       </p>
-      <div className="mt-3 flex items-center gap-3">
-        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.76),rgba(217,232,251,0.92))] text-base font-bold text-[var(--color-primary)]">
-          {initials}
-        </div>
-        <div className="min-w-0">
-          <p className="font-semibold text-[var(--color-primary)]">{teacher.name}</p>
-          <p className="text-xs text-[var(--color-ink-soft)]">{teacher.role}</p>
-        </div>
+      <div className={cn("space-y-4", course.teachers.length > 1 && "mt-3")}>
+        {course.teachers.map((teacher, index) => {
+          const initials = teacher.name
+            .split(/\s+/)
+            .slice(0, 2)
+            .map((p) => (p[0] ?? "").toUpperCase())
+            .join("");
+
+          return (
+            <div key={`${teacher.name}-${index}`}>
+              <div className={cn("flex items-center gap-3", course.teachers.length === 1 && "mt-3")}>
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.76),rgba(217,232,251,0.92))] text-base font-bold text-[var(--color-primary)]">
+                  {initials}
+                </div>
+                <div className="min-w-0">
+                  <p className="font-semibold text-[var(--color-primary)]">{teacher.name}</p>
+                  <p className="text-xs text-[var(--color-ink-soft)]">{teacher.role}</p>
+                </div>
+              </div>
+              {teacher.bio && (
+                <p className="mt-3 text-xs leading-relaxed text-[var(--color-ink-soft)]">{teacher.bio}</p>
+              )}
+            </div>
+          );
+        })}
       </div>
-      {teacher.bio && (
-        <p className="mt-3 text-xs leading-relaxed text-[var(--color-ink-soft)]">{teacher.bio}</p>
-      )}
     </div>
   );
 }

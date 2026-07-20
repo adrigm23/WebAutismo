@@ -10,7 +10,10 @@ type Props = {
 
 export function CourseCardCatalog({ course }: Props) {
   const isFree = course.priceInCents === 0;
-  const teacherName = course.teachers[0]?.name ?? "Equipo Campus Autismo";
+  const teacherName =
+    course.teachers.length > 0
+      ? course.teachers.map((teacher) => teacher.name).join(", ")
+      : "Equipo Campus Autismo";
 
   return (
     <article className="overflow-hidden rounded-xl border border-[var(--color-border)] bg-white shadow-sm transition hover:shadow-md hover:-translate-y-0.5">
@@ -42,7 +45,7 @@ export function CourseCardCatalog({ course }: Props) {
 
         <div className="mt-3 flex items-center gap-2 text-sm text-[var(--color-muted)]">
           <User className="h-3.5 w-3.5 shrink-0" />
-          <span>{teacherName}</span>
+          <span className="truncate">{teacherName}</span>
         </div>
 
         <div className="mt-4 flex items-center justify-between">
