@@ -53,6 +53,7 @@ import {
   updateCourseModuleAction,
   updateCourseStatusAction,
 } from "@/actions/course-builder";
+import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -249,6 +250,17 @@ function AddLessonDialog({ courseId, moduleId, onClose }: {
           <div>
             <label className="mb-1.5 block text-sm font-medium text-[var(--color-ink)]">Título *</label>
             <input name="title" required placeholder="Ej. Introducción al neurodesarrollo" className="w-full rounded-xl border border-[rgba(22,60,88,0.15)] px-4 py-2.5 text-sm outline-none focus:border-[var(--color-primary)] focus:ring-2 focus:ring-[var(--color-primary)]/10" />
+          </div>
+
+          <div>
+            <label className="mb-1.5 block text-sm font-medium text-[var(--color-ink)]">
+              Descripción <span className="font-normal text-[var(--color-ink-soft)]">(opcional)</span>
+            </label>
+            <Textarea
+              className="min-h-[6rem]"
+              name="description"
+              placeholder="Breve explicación o comentario sobre la lección para el alumnado."
+            />
           </div>
 
           {/* Type */}
