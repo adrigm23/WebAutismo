@@ -239,7 +239,7 @@ export function AuthCenteredShell({
   status,
 }: AuthCenteredShellProps) {
   return (
-    <AuthShellFrame className="flex items-center">
+    <AuthShellFrame className="flex items-center lg:static lg:inset-auto lg:overflow-visible">
       <div className="mx-auto flex w-full max-w-2xl flex-col items-center">
         <AuthBrand align="center" subtitle="Plataforma profesional" />
 
