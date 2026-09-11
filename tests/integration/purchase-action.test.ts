@@ -11,6 +11,11 @@ const captureOperationalWarningMock = vi.fn();
 const captureOperationalInfoMock = vi.fn();
 const captureServerExceptionMock = vi.fn();
 const getDbMock = vi.fn();
+const consumeRateLimitMock = vi.fn();
+
+vi.mock("@/lib/rate-limit", () => ({
+  consumeRateLimit: consumeRateLimitMock
+}));
 
 vi.mock("next/headers", () => ({
   headers: headersMock
@@ -76,6 +81,11 @@ describe("purchase action", () => {
       email: "ana@example.com"
     });
     userOwnsCourseMock.mockResolvedValue(false);
+    consumeRateLimitMock.mockResolvedValue({
+      allowed: true,
+      remaining: 7,
+      retryAfterSeconds: 0
+    });
     createPendingPurchaseMock.mockResolvedValue({
       id: "purchase-1",
       courseEditionId: null,

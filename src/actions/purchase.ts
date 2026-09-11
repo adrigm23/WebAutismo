@@ -13,8 +13,11 @@ import {
 } from "@/lib/monitoring";
 import { createRequestLogger, getRequestIdFromHeaders } from "@/lib/logger";
 import { getPurchaseRuntimeMode } from "@/lib/purchase-runtime";
+import { PROMOTION_VALIDATION_REASONS } from "@/lib/promotions";
 import { createPendingPurchase, grantCourseAccess, userOwnsCourse } from "@/lib/purchases";
 import { getDb } from "@/lib/prisma";
+import { buildRequestFingerprint } from "@/lib/request-client";
+import { consumeRateLimit } from "@/lib/rate-limit";
 import { absoluteUrl } from "@/lib/site";
 import { getStripe, getStripeRuntimeState } from "@/lib/stripe";
 
@@ -28,13 +31,12 @@ const purchaseSchema = z.object({
   promotionCode: z.string().optional()
 });
 
+// Built from promotions.ts's own reasons instead of hand-copied strings, so
+// this can't silently drift out of sync with what that module actually
+// throws again (it already had — see the fix that added this comment).
 const SAFE_PURCHASE_ERRORS = new Set([
   "El curso solicitado no existe.",
-  "El codigo promocional ya ha alcanzado su limite de usos.",
-  "El codigo promocional no es valido para este curso.",
-  "El codigo promocional todavia no esta activo.",
-  "El codigo promocional ya ha caducado.",
-  "El codigo promocional no esta activo."
+  ...Object.values(PROMOTION_VALIDATION_REASONS)
 ]);
 
 export async function startPurchaseAction(
@@ -74,6 +76,26 @@ export async function startPurchaseAction(
 
   if (alreadyOwned) {
     redirect(`/mis-cursos/${course.slug}`);
+  }
+
+  const rateLimit = await consumeRateLimit({
+    bucket: "purchase-start",
+    key: buildRequestFingerprint(requestHeaders, [user.id]),
+    limit: 8,
+    windowMs: 10 * 60 * 1_000
+  });
+
+  if (!rateLimit.allowed) {
+    purchaseLogger.warn("Purchase blocked by rate limit.", {
+      userId: user.id,
+      courseSlug: course.slug,
+      result: "rate-limited",
+      durationMs: Date.now() - startedAt
+    });
+
+    return {
+      error: `Demasiados intentos de compra. Espera ${rateLimit.retryAfterSeconds} segundos antes de volver a intentarlo.`
+    };
   }
 
   try {
