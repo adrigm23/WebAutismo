@@ -28,8 +28,20 @@ export function isProductionRuntime() {
   return process.env.NODE_ENV === "production";
 }
 
+/**
+ * True for any real deployment — not just Vercel. Historically this only looked at
+ * Vercel's own env vars, so the production safety nets below (missing secrets,
+ * demo flags left on) never fired on a self-hosted server: `next start` there sets
+ * NODE_ENV=production but no VERCEL_ENV, so the checks silently skipped themselves.
+ * Treating any production runtime as "hosted" closes that gap while leaving actual
+ * local development (`next dev`, NODE_ENV=development) unaffected.
+ */
 export function isHostedDeploymentEnv() {
-  return process.env.VERCEL === "1" || Boolean(process.env.VERCEL_ENV?.trim());
+  return (
+    isProductionRuntime() ||
+    process.env.VERCEL === "1" ||
+    Boolean(process.env.VERCEL_ENV?.trim())
+  );
 }
 
 export function isDevelopmentRuntime() {
