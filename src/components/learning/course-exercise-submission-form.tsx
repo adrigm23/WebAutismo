@@ -204,7 +204,7 @@ function SubmissionActionRow(input: {
       </Button>
       <Button
         aria-busy={pending}
-        className="border border-[var(--color-primary)] bg-[var(--color-primary)] px-5 text-white shadow-none hover:bg-[var(--color-primary-strong)] hover:shadow-none"
+        className="[--button-fg:var(--color-surface-elevated)] [--button-fg-hover:var(--color-surface-elevated)] border border-[var(--color-primary)] bg-[var(--color-primary)] px-5 shadow-none hover:bg-[var(--color-primary-strong)] hover:shadow-none"
         disabled={pending || input.disabled}
         type="submit"
         variant="neutral"
