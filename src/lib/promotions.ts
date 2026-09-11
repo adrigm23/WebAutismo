@@ -42,6 +42,22 @@ export function normalizePromotionCode(code: string) {
   return code.trim().toUpperCase();
 }
 
+/**
+ * Single source of truth for every promotion-validation failure message.
+ * `purchase.ts` builds its user-facing safe-error allowlist directly from
+ * this object instead of hand-copying the strings — they drifted apart once
+ * already (different wording/accents), which meant most rejection reasons
+ * silently fell back to a generic error instead of the real one.
+ */
+export const PROMOTION_VALIDATION_REASONS = {
+  NOT_FOUND: "El código promocional no existe.",
+  NOT_ACTIVE: "El código promocional no está activo.",
+  NOT_YET_VALID: "El código promocional todavía no está disponible.",
+  EXPIRED: "El código promocional ha caducado.",
+  WRONG_COURSE: "El código promocional no aplica a este curso.",
+  USAGE_LIMIT_REACHED: "El código promocional ya ha alcanzado su límite de usos."
+} as const;
+
 export function calculatePromotionDiscount(input: {
   subtotalInCents: number;
   discountType: PromotionDiscountType;
@@ -95,7 +111,7 @@ export function validatePromotionForCourse(input: {
   const now = input.now ?? new Date();
 
   if (!input.promotion.isActive) {
-    return { ok: false, reason: "El codigo promocional no esta activo." };
+    return { ok: false, reason: PROMOTION_VALIDATION_REASONS.NOT_ACTIVE };
   }
 
   if (
@@ -104,7 +120,7 @@ export function validatePromotionForCourse(input: {
   ) {
     return {
       ok: false,
-      reason: "El código promocional todavía no está disponible.",
+      reason: PROMOTION_VALIDATION_REASONS.NOT_YET_VALID,
     };
   }
 
@@ -112,7 +128,7 @@ export function validatePromotionForCourse(input: {
     input.promotion.validUntil &&
     input.promotion.validUntil.getTime() < now.getTime()
   ) {
-    return { ok: false, reason: "El codigo promocional ha caducado." };
+    return { ok: false, reason: PROMOTION_VALIDATION_REASONS.EXPIRED };
   }
 
   if (
@@ -122,7 +138,7 @@ export function validatePromotionForCourse(input: {
   ) {
     return {
       ok: false,
-      reason: "El codigo promocional no aplica a este curso.",
+      reason: PROMOTION_VALIDATION_REASONS.WRONG_COURSE,
     };
   }
 
@@ -133,7 +149,7 @@ export function validatePromotionForCourse(input: {
   ) {
     return {
       ok: false,
-      reason: "El codigo promocional ya ha alcanzado su limite de usos.",
+      reason: PROMOTION_VALIDATION_REASONS.USAGE_LIMIT_REACHED,
     };
   }
 
@@ -185,7 +201,7 @@ export async function resolvePromotionForPurchase(input: {
       promotion: null,
       validation: {
         ok: false as const,
-        reason: "El codigo promocional no existe.",
+        reason: PROMOTION_VALIDATION_REASONS.NOT_FOUND,
       },
     };
   }

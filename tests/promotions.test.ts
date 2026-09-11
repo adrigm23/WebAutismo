@@ -79,6 +79,6 @@ export function runPromotionTests() {
 
   assert.deepEqual(exhaustedPromotion, {
     ok: false,
-    reason: "El codigo promocional ya ha alcanzado su limite de usos."
+    reason: "El código promocional ya ha alcanzado su límite de usos."
   });
 }
