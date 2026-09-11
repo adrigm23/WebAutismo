@@ -11,6 +11,7 @@ import {
 import { buildCourseContentHref } from "@/lib/course-navigation";
 import { isDevelopmentDemoPurchaseEnabled } from "@/lib/env";
 import { createRequestLogger } from "@/lib/logger";
+import { captureOperationalWarning } from "@/lib/monitoring";
 import { sendPlatformNotification } from "@/lib/notifications";
 import { getDb } from "@/lib/prisma";
 import {
@@ -399,31 +400,97 @@ export async function grantCourseAccess(input: GrantCourseAccessInput) {
       purchaseId: purchase.id
     });
 
+    let promotionLimitExceeded = false;
+
     if (purchase.promotionId && purchase.discountInCents > 0) {
-      await db.promotionRedemption.upsert({
+      // The usage limit is only checked against PAID redemptions, and a
+      // PromotionRedemption row is only ever created here, after payment
+      // succeeds — so two checkouts started concurrently with the same
+      // limited code can both pass the check in resolvePromotionForPurchase
+      // (0 redemptions exist yet for either) and both go on to pay. Lock the
+      // promotion row so concurrent grants for the same code serialize here
+      // instead of racing past a stale count, then re-check the limit for
+      // real before committing another redemption.
+      await db.$queryRaw`SELECT id FROM Promotion WHERE id = ${purchase.promotionId} FOR UPDATE`;
+
+      const promotion = await db.promotion.findUnique({
+        where: {
+          id: purchase.promotionId
+        },
+        select: {
+          usageLimit: true
+        }
+      });
+
+      const ownRedemption = await db.promotionRedemption.findUnique({
         where: {
           purchaseId: purchase.id
         },
-        update: {
-          discountInCents: purchase.discountInCents
-        },
-        create: {
-          promotionId: purchase.promotionId,
-          purchaseId: purchase.id,
-          userId: input.userId,
-          courseId: course.id,
-          discountInCents: purchase.discountInCents
+        select: {
+          id: true
         }
       });
+
+      const otherRedemptionCount = await db.promotionRedemption.count({
+        where: {
+          promotionId: purchase.promotionId,
+          purchaseId: {
+            not: purchase.id
+          }
+        }
+      });
+
+      promotionLimitExceeded =
+        !ownRedemption &&
+        promotion?.usageLimit != null &&
+        otherRedemptionCount >= promotion.usageLimit;
+
+      if (!promotionLimitExceeded) {
+        await db.promotionRedemption.upsert({
+          where: {
+            purchaseId: purchase.id
+          },
+          update: {
+            discountInCents: purchase.discountInCents
+          },
+          create: {
+            promotionId: purchase.promotionId,
+            purchaseId: purchase.id,
+            userId: input.userId,
+            courseId: course.id,
+            discountInCents: purchase.discountInCents
+          }
+        });
+      }
     }
 
     return {
       purchase,
-      enrollmentState
+      enrollmentState,
+      promotionLimitExceeded
     };
   });
 
   const purchase = persistedGrant.purchase;
+
+  if (persistedGrant.promotionLimitExceeded) {
+    // Payment already succeeded at the discounted price via Stripe — access
+    // is still granted below, but this redemption wasn't counted against the
+    // promotion's usage limit. Surface it loudly so an admin can review it
+    // (adjust the limit, or handle the discount difference manually).
+    captureOperationalWarning(
+      "Promotion usage limit exceeded by a concurrent redemption race; course access was still granted because payment already succeeded.",
+      {
+        action: "grantCourseAccess",
+        purchaseId: purchase.id,
+        promotionId: purchase.promotionId,
+        promotionCode: purchase.promotionCode,
+        userId: input.userId,
+        courseSlug: course.slug
+      }
+    );
+  }
+
   const { enrollment } = persistedGrant.enrollmentState;
   const hadEnrollment = Boolean(persistedGrant.enrollmentState.existing);
 
