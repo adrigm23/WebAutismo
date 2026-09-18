@@ -6,7 +6,11 @@ const prisma = new PrismaClient();
 function serialize(value) {
   if (value instanceof Date) return { __type: "Date", value: value.toISOString() };
   if (typeof value === "bigint") return { __type: "BigInt", value: value.toString() };
-  if (Buffer.isBuffer(value)) return { __type: "Buffer", value: value.toString("base64") };
+  // Buffer.isBuffer() alone misses this: the raw-query driver returns BLOB
+  // columns as a plain Uint8Array, not a Buffer instance, so it fell
+  // through to JSON.stringify's default { "0": 37, "1": 80, ... } — every
+  // byte as its own object key, silently corrupting binary file content.
+  if (value instanceof Uint8Array) return { __type: "Buffer", value: Buffer.from(value).toString("base64") };
   return value;
 }
 
