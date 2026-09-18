@@ -9,6 +9,7 @@ import { HomeAudienceRoutes } from "@/components/platform/home/home-audience-rou
 import { HomeHowItWorks } from "@/components/platform/home/home-how-it-works";
 import { HomeSectionHeader } from "@/components/platform/home/home-section-header";
 import { HomeTestimonials } from "@/components/platform/home/home-testimonials";
+import { ScrollReveal } from "@/components/platform/home/scroll-reveal";
 import { ButtonLink } from "@/components/ui/button";
 import { getFeaturedCatalogCourses } from "@/lib/course-catalog";
 import "@/components/platform/home/home-landing.css";
@@ -22,18 +23,27 @@ export async function HomeLanding() {
       <HomeHero />
 
       {/* 2. Stats numéricas */}
-      <HomeStats />
+      <ScrollReveal>
+        <HomeStats />
+      </ScrollReveal>
 
       {/* 4. Rutas de especialización — segmentación por audiencia */}
-      <HomeAudienceRoutes />
+      <ScrollReveal>
+        <HomeAudienceRoutes />
+      </ScrollReveal>
 
       {/* 5. ¿Cómo funciona? — convencer antes de mostrar el precio */}
-      <HomeHowItWorks />
+      <ScrollReveal>
+        <HomeHowItWorks />
+      </ScrollReveal>
 
       {/* 6. Campus por dentro — demostración del producto */}
-      <HomeCampusInside />
+      <ScrollReveal>
+        <HomeCampusInside />
+      </ScrollReveal>
 
       {/* 7. Cursos destacados — ahora el usuario ya confía */}
+      <ScrollReveal>
       <section
         aria-labelledby="home-courses-heading"
         className="border-t border-[rgba(12,113,195,0.08)] py-16 sm:py-20"
@@ -64,14 +74,20 @@ export async function HomeLanding() {
           </div>
         </div>
       </section>
+      </ScrollReveal>
 
       {/* 8. Comunidad */}
-      <HomeCommunity />
+      <ScrollReveal>
+        <HomeCommunity />
+      </ScrollReveal>
 
       {/* 10. Testimonios — prueba social antes del CTA final */}
-      <HomeTestimonials />
+      <ScrollReveal>
+        <HomeTestimonials />
+      </ScrollReveal>
 
       {/* 11. CTA final */}
+      <ScrollReveal>
       <section
         aria-labelledby="home-cta-heading"
         className="site-container py-14 sm:pb-24"
@@ -122,6 +138,7 @@ export async function HomeLanding() {
           </p>
         </div>
       </section>
+      </ScrollReveal>
     </div>
   );
 }

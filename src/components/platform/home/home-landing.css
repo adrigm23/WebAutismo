@@ -32,3 +32,14 @@
     transform: translateY(0);
   }
 }
+
+/* Added by ScrollReveal via JS after mount — never present in the initial
+   server-rendered HTML, so content is always visible with no JS. */
+.scroll-reveal-pending {
+  opacity: 0;
+  transform: translateY(16px);
+}
+
+.scroll-reveal-in {
+  animation: home-rise 640ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
