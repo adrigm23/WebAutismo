@@ -436,7 +436,7 @@ function CheckoutFooter() {
   return (
     <footer className="border-t border-[var(--color-border)] bg-white">
       <div className="mx-auto flex max-w-5xl flex-col items-center justify-between gap-3 px-5 py-5 text-[0.75rem] text-[var(--color-muted)] sm:flex-row sm:px-8">
-        <p>© 2024 Campus Autismo Córdoba. Innovación y Empatía.</p>
+        <p>© {new Date().getFullYear()} Campus Autismo Córdoba. Innovación y Empatía.</p>
         <nav className="flex items-center gap-4">
           <Link className="hover:text-[var(--color-primary)]" href="/legal/terminos">Términos</Link>
           <Link className="hover:text-[var(--color-primary)]" href="/legal/privacidad">Privacidad</Link>
