@@ -14,8 +14,10 @@
 const { createServer } = require("node:http");
 const next = require("next");
 
+// Not process.env.HOSTNAME: Docker/Passenger set that to the container or
+// process name, not an address to bind to, which stops the server listening.
 const port = Number(process.env.PORT) || 3000;
-const hostname = process.env.HOSTNAME || "0.0.0.0";
+const hostname = "0.0.0.0";
 
 const app = next({ dev: false });
 const handle = app.getRequestHandler();
