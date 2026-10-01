@@ -1,5 +1,8 @@
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  // "rhel-openssl-1.0.x": the cPanel host runs CentOS/RHEL 7 (OpenSSL 1.0.x),
+  // which the "native" engine built on a modern dev/CI machine can't run.
+  binaryTargets = ["native", "rhel-openssl-1.0.x"]
 }
 
 datasource db {
