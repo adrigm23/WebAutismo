@@ -20,6 +20,8 @@
     "storage:migrate": "tsx scripts/migrate-stored-assets.ts",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
+    "db:generate:safe": "NODE_OPTIONS=\"--disable-wasm-trap-handler --max-old-space-size=3072\" prisma generate",
+    "db:push:safe": "NODE_OPTIONS=\"--disable-wasm-trap-handler --max-old-space-size=3072\" prisma db push",
     "db:bootstrap-real": "node --experimental-strip-types scripts/bootstrap-real-data.mjs",
     "postinstall": "prisma generate && patch-package"
   },

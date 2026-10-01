@@ -35,7 +35,8 @@ async function checkDatabaseReadiness() {
   try {
     await getDb().$queryRaw`SELECT 1`;
     return buildOkCheck();
-  } catch {
+  } catch (error) {
+    console.error("[readiness] database check failed:", error);
     return buildFailedCheck("database-unreachable");
   }
 }
