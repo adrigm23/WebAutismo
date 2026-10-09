@@ -241,6 +241,8 @@ model Purchase {
   promotionCode           String?
   stripeCheckoutSessionId String?        @unique
   stripePaymentIntentId   String?        @unique
+  redsysOrder             String?        @unique @db.VarChar(12)
+  redsysAuthorisationCode String?        @db.VarChar(16)
   courseSlugSnapshot      String
   courseTitleSnapshot     String
   createdAt               DateTime       @default(now())

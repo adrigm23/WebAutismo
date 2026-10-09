@@ -113,7 +113,7 @@ export function CheckoutAccessPoller({
         {isDemo ? (
           <StateBanner
             className="text-left"
-            description="Flujo demo local: el acceso se activa de inmediato sin esperar al webhook de Stripe."
+            description="Flujo demo local: el acceso se activa de inmediato sin esperar la confirmación de la pasarela de pago."
             tone="info"
           />
         ) : null}

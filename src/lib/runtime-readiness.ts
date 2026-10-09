@@ -3,6 +3,7 @@ import {
 } from "@/lib/env";
 import { getObjectStorageWriteReadiness } from "@/lib/object-storage";
 import { getDb } from "@/lib/prisma";
+import { getRedsysRuntimeState } from "@/lib/redsys";
 import { getStripeRuntimeState } from "@/lib/stripe";
 
 type ReadinessCheck =
@@ -109,15 +110,40 @@ function checkStripeReadiness() {
   });
 }
 
+function checkRedsysReadiness() {
+  const redsysState = getRedsysRuntimeState();
+
+  if (redsysState.mode === "misconfigured") {
+    return buildFailedCheck(`redsys-${redsysState.reason}`, {
+      mode: redsysState.mode,
+      environment: redsysState.environment
+    });
+  }
+
+  if (redsysState.mode === "disabled") {
+    return buildOkCheck({
+      mode: redsysState.mode,
+      enabled: false
+    });
+  }
+
+  return buildOkCheck({
+    mode: redsysState.mode,
+    enabled: true,
+    environment: redsysState.environment
+  });
+}
+
 export async function getReadinessReport() {
-  const [database, storage, session, stripe] = await Promise.all([
+  const [database, storage, session, stripe, redsys] = await Promise.all([
     checkDatabaseReadiness(),
     Promise.resolve(checkStorageReadiness()),
     Promise.resolve(checkSessionRuntimeReadiness()),
-    Promise.resolve(checkStripeReadiness())
+    Promise.resolve(checkStripeReadiness()),
+    Promise.resolve(checkRedsysReadiness())
   ]);
 
-  const ok = database.ok && storage.ok && session.ok && stripe.ok;
+  const ok = database.ok && storage.ok && session.ok && stripe.ok && redsys.ok;
 
   return {
     ok,
@@ -127,7 +153,8 @@ export async function getReadinessReport() {
       database,
       storage,
       session,
-      stripe
+      stripe,
+      redsys
     }
   };
 }

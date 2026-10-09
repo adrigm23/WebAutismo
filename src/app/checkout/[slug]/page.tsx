@@ -3,11 +3,13 @@ import { notFound, redirect } from "next/navigation";
 import { CheckoutPage } from "@/components/checkout/checkout-page";
 import { getCurrentUser } from "@/lib/auth";
 import { getCatalogCourseBySlug } from "@/lib/course-catalog";
-import { getPurchaseRuntimeMode } from "@/lib/purchase-runtime";
+import { getActivePaymentProvider, getPurchaseRuntimeMode } from "@/lib/purchase-runtime";
 import { userOwnsCourse } from "@/lib/purchases";
+import { firstValue } from "@/lib/utils";
 
 type CheckoutPageProps = {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ pago?: string | string[] }>;
 };
 
 export async function generateMetadata({
@@ -22,8 +24,9 @@ export async function generateMetadata({
   };
 }
 
-export default async function CheckoutRoute({ params }: CheckoutPageProps) {
+export default async function CheckoutRoute({ params, searchParams }: CheckoutPageProps) {
   const { slug } = await params;
+  const { pago } = await searchParams;
   const course = await getCatalogCourseBySlug(slug);
 
   if (!course) {
@@ -32,7 +35,7 @@ export default async function CheckoutRoute({ params }: CheckoutPageProps) {
 
   const user = await getCurrentUser();
   const purchaseMode = getPurchaseRuntimeMode();
-  const isStripeReady = purchaseMode === "live";
+  const paymentProvider = purchaseMode === "live" ? getActivePaymentProvider() : null;
   const isDemoMode = purchaseMode === "demo";
 
   if (user && (await userOwnsCourse(user.id, course.slug))) {
@@ -43,7 +46,8 @@ export default async function CheckoutRoute({ params }: CheckoutPageProps) {
     <CheckoutPage
       course={course}
       isDemoMode={isDemoMode}
-      isStripeReady={isStripeReady}
+      paymentCancelled={firstValue(pago) === "cancelado"}
+      paymentProvider={paymentProvider}
       user={user ? { name: user.name, email: user.email } : null}
     />
   );

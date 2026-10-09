@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, useActionState } from "react";
+import { useEffect, useRef, useState, useTransition, useActionState } from "react";
 import Link from "next/link";
 import {
   BadgeCheck,
@@ -17,6 +17,8 @@ import { CourseArtwork } from "@/components/course-artwork";
 import { startPurchaseAction, type PurchaseFormState } from "@/actions/purchase";
 import { previewPromotionAction, type PromoPreviewResult } from "@/actions/checkout-preview";
 import type { CatalogCourse } from "@/lib/course-catalog";
+import type { PaymentProvider } from "@/lib/purchase-runtime";
+import type { RedsysPaymentForm } from "@/lib/redsys";
 import { cn, formatPrice } from "@/lib/utils";
 import { siteConfig } from "@/lib/site";
 
@@ -27,8 +29,14 @@ type PaymentTab = "tarjeta" | "paypal" | "transferencia";
 export type CheckoutPageProps = {
   course: CatalogCourse;
   user: { name: string; email: string } | null;
-  isStripeReady: boolean;
+  paymentProvider: PaymentProvider | null;
   isDemoMode: boolean;
+  paymentCancelled: boolean;
+};
+
+const PAYMENT_PROVIDER_LABELS: Record<PaymentProvider, string> = {
+  redsys: "CaixaBank (Redsys)",
+  stripe: "Stripe",
 };
 
 // ─── Shared input class ────────────────────────────────────────────────────────
@@ -150,10 +158,10 @@ function CheckoutCustomerData({ user }: { user: CheckoutPageProps["user"] }) {
 // ─── Payment method card ──────────────────────────────────────────────────────
 
 function CheckoutPaymentMethod({
-  isStripeReady,
+  paymentProvider,
   isDemoMode,
 }: {
-  isStripeReady: boolean;
+  paymentProvider: PaymentProvider | null;
   isDemoMode: boolean;
 }) {
   const [activeTab, setActiveTab] = useState<PaymentTab>("tarjeta");
@@ -202,7 +210,7 @@ function CheckoutPaymentMethod({
             </div>
           </div>
 
-          {isStripeReady || isDemoMode ? (
+          {paymentProvider || isDemoMode ? (
             <div className="space-y-3">
               <div className="relative">
                 <CreditCard className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--color-muted)]" strokeWidth={2} />
@@ -224,8 +232,15 @@ function CheckoutPaymentMethod({
               <div className="flex items-start gap-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-primary-soft)] p-3">
                 <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-[var(--color-primary)]" strokeWidth={2} />
                 <p className="text-[0.74rem] leading-relaxed text-[var(--color-primary)]">
-                  Los datos de tu tarjeta son gestionados por <strong>Stripe</strong>. Al pulsar
-                  &ldquo;Finalizar y Pagar&rdquo; serás redirigido a la pasarela segura.
+                  {paymentProvider ? (
+                    <>
+                      Los datos de tu tarjeta son gestionados por{" "}
+                      <strong>{PAYMENT_PROVIDER_LABELS[paymentProvider]}</strong>. Al pulsar
+                      &ldquo;Finalizar y Pagar&rdquo; serás redirigido a la pasarela segura.
+                    </>
+                  ) : (
+                    <>Modo demo: el acceso se activa sin realizar ningún cobro.</>
+                  )}
                 </p>
               </div>
             </div>
@@ -270,16 +285,55 @@ function CheckoutPaymentMethod({
 
 const purchaseInitialState: PurchaseFormState = {};
 
+/** Sends the buyer to the Redsys payment page with the signed form the server built. */
+function RedsysRedirect({ form }: { form: RedsysPaymentForm }) {
+  const formRef = useRef<HTMLFormElement>(null);
+  // Redsys rejects a second POST for the same order (SIS0051), so the manual
+  // fallback button stops sending once the form has gone out.
+  const submittedRef = useRef(false);
+
+  useEffect(() => {
+    formRef.current?.submit();
+    submittedRef.current = true;
+  }, [form]);
+
+  return (
+    <form
+      action={form.url}
+      method="POST"
+      onSubmit={(event) => {
+        if (submittedRef.current) {
+          event.preventDefault();
+        }
+        submittedRef.current = true;
+      }}
+      ref={formRef}
+    >
+      {Object.entries(form.fields).map(([name, value]) => (
+        <input key={name} name={name} type="hidden" value={value} />
+      ))}
+      <p className="mb-3 rounded-lg border border-[var(--color-border)] bg-[var(--color-primary-soft)] px-3 py-2 text-[0.78rem] text-[var(--color-primary)]">
+        Redirigiendo a la pasarela de pago segura…{" "}
+        <button className="font-semibold underline" type="submit">
+          Continuar
+        </button>
+      </p>
+    </form>
+  );
+}
+
 function CheckoutOrderSummary({
   course,
   user,
-  isStripeReady,
+  paymentProvider,
   isDemoMode,
+  paymentCancelled,
 }: {
   course: CatalogCourse;
   user: CheckoutPageProps["user"];
-  isStripeReady: boolean;
+  paymentProvider: PaymentProvider | null;
   isDemoMode: boolean;
+  paymentCancelled: boolean;
 }) {
   const [promoCode, setPromoCode] = useState("");
   const [promoResult, setPromoResult] = useState<PromoPreviewResult | null>(null);
@@ -298,7 +352,7 @@ function CheckoutOrderSummary({
     });
   }
 
-  const buttonLabel = isStripeReady
+  const buttonLabel = paymentProvider
     ? "Finalizar y Pagar"
     : isDemoMode
       ? "Activar Acceso Demo"
@@ -372,11 +426,19 @@ function CheckoutOrderSummary({
 
       {/* Purchase button */}
       <div className="mt-5">
+        {formState.redsysForm && <RedsysRedirect form={formState.redsysForm} />}
+
         {user ? (
           <form action={formAction}>
             <input name="courseSlug" type="hidden" value={course.slug} />
             <input name="courseEditionId" type="hidden" value={course.activeEdition?.id ?? ""} />
             <input name="promotionCode" type="hidden" value={appliedCode} />
+
+            {paymentCancelled && !formState.error && !formState.redsysForm && (
+              <p className="mb-3 rounded-lg border border-[var(--color-danger)] bg-[var(--color-danger-soft)] px-3 py-2 text-[0.78rem] text-[var(--color-danger)]">
+                El pago no se ha completado y no se ha realizado ningún cargo. Puedes intentarlo de nuevo.
+              </p>
+            )}
 
             {formState.error && (
               <p className="mb-3 rounded-lg border border-[var(--color-danger)] bg-[var(--color-danger-soft)] px-3 py-2 text-[0.78rem] text-[var(--color-danger)]">
@@ -449,7 +511,13 @@ function CheckoutFooter() {
 
 // ─── Main export ──────────────────────────────────────────────────────────────
 
-export function CheckoutPage({ course, user, isStripeReady, isDemoMode }: CheckoutPageProps) {
+export function CheckoutPage({
+  course,
+  user,
+  paymentProvider,
+  isDemoMode,
+  paymentCancelled,
+}: CheckoutPageProps) {
   return (
     <div className="flex min-h-[100dvh] flex-col bg-[#f7f8fc]">
       <CheckoutHeader />
@@ -458,12 +526,13 @@ export function CheckoutPage({ course, user, isStripeReady, isDemoMode }: Checko
           <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-start xl:grid-cols-[minmax(0,1fr)_24rem]">
             <div className="space-y-5">
               <CheckoutCustomerData user={user} />
-              <CheckoutPaymentMethod isDemoMode={isDemoMode} isStripeReady={isStripeReady} />
+              <CheckoutPaymentMethod isDemoMode={isDemoMode} paymentProvider={paymentProvider} />
             </div>
             <CheckoutOrderSummary
               course={course}
               isDemoMode={isDemoMode}
-              isStripeReady={isStripeReady}
+              paymentCancelled={paymentCancelled}
+              paymentProvider={paymentProvider}
               user={user}
             />
           </div>

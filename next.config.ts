@@ -10,7 +10,8 @@ const securityHeaders = [
       "default-src 'self'",
       "base-uri 'self'",
       "frame-ancestors 'self'",
-      "form-action 'self' https://checkout.stripe.com",
+      // Redsys (CaixaBank TPV) is reached by POSTing the signed payment form.
+      "form-action 'self' https://checkout.stripe.com https://sis.redsys.es https://sis-t.redsys.es:25443",
       "object-src 'none'",
       // React / Next dev tooling (Fast Refresh, overlays) needs eval; never in production builds.
       `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""} https://js.stripe.com`,

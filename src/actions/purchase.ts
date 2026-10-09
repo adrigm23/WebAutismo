@@ -14,15 +14,28 @@ import {
 import { createRequestLogger, getRequestIdFromHeaders } from "@/lib/logger";
 import { getPurchaseRuntimeMode } from "@/lib/purchase-runtime";
 import { PROMOTION_VALIDATION_REASONS } from "@/lib/promotions";
-import { createPendingPurchase, grantCourseAccess, userOwnsCourse } from "@/lib/purchases";
+import {
+  assignRedsysOrderToPurchase,
+  createPendingPurchase,
+  grantCourseAccess,
+  userOwnsCourse
+} from "@/lib/purchases";
 import { getDb } from "@/lib/prisma";
 import { buildRequestFingerprint } from "@/lib/request-client";
 import { consumeRateLimit } from "@/lib/rate-limit";
+import {
+  buildRedsysPaymentForm,
+  getRedsysRuntimeState,
+  type RedsysPaymentForm
+} from "@/lib/redsys";
 import { absoluteUrl } from "@/lib/site";
 import { getStripe, getStripeRuntimeState } from "@/lib/stripe";
 
 export type PurchaseFormState = {
   error?: string;
+  // Redsys is reached with a browser POST, which a server action cannot
+  // redirect to, so the signed form is returned and auto-submitted client-side.
+  redsysForm?: RedsysPaymentForm;
 };
 
 const purchaseSchema = z.object({
@@ -99,9 +112,32 @@ export async function startPurchaseAction(
   }
 
   try {
+    const redsysState = getRedsysRuntimeState();
+
+    if (redsysState.mode === "misconfigured") {
+      captureOperationalWarning("Blocked purchase because Redsys runtime configuration is invalid.", {
+        action: "startPurchaseAction",
+        courseSlug: course.slug,
+        userId: user.id,
+        redsysReason: redsysState.reason
+      });
+      purchaseLogger.error("Purchase blocked because Redsys configuration is invalid.", {
+        userId: user.id,
+        courseSlug: course.slug,
+        redsysReason: redsysState.reason,
+        result: "blocked-misconfigured",
+        durationMs: Date.now() - startedAt
+      });
+
+      return {
+        error:
+          "La compra esta bloqueada porque la pasarela de pago no tiene la configuracion completa en este entorno."
+      };
+    }
+
     const stripeState = getStripeRuntimeState();
 
-    if (stripeState.mode === "misconfigured") {
+    if (redsysState.mode === "disabled" && stripeState.mode === "misconfigured") {
       captureOperationalWarning("Blocked purchase because Stripe runtime configuration is incomplete.", {
         action: "startPurchaseAction",
         courseSlug: course.slug,
@@ -129,6 +165,48 @@ export async function startPurchaseAction(
       promotionCode: parsed.data.promotionCode
     });
     const purchaseMode = getPurchaseRuntimeMode();
+
+    if (purchaseMode === "live" && redsysState.mode === "live") {
+      if (pendingPurchase.totalInCents <= 0) {
+        purchaseLogger.warn("Redsys purchase blocked because the total is zero.", {
+          userId: user.id,
+          courseSlug: course.slug,
+          purchaseId: pendingPurchase.id,
+          result: "blocked-zero-total",
+          durationMs: Date.now() - startedAt
+        });
+
+        return {
+          error:
+            "El importe total de esta compra es 0 €. Escribe a soporte para que activemos tu acceso."
+        };
+      }
+
+      const redsysOrder = await assignRedsysOrderToPurchase(pendingPurchase.id);
+      const redsysForm = buildRedsysPaymentForm({
+        config: redsysState,
+        order: redsysOrder,
+        amountInCents: pendingPurchase.totalInCents,
+        productDescription: course.title,
+        merchantData: pendingPurchase.id,
+        notificationUrl: absoluteUrl("/api/redsys/notification"),
+        okUrl: absoluteUrl(`/checkout/exito?course=${course.slug}`),
+        koUrl: absoluteUrl(`/checkout/${course.slug}?pago=cancelado`)
+      });
+
+      purchaseLogger.info("Redsys payment form created.", {
+        userId: user.id,
+        courseSlug: course.slug,
+        purchaseId: pendingPurchase.id,
+        redsysOrder,
+        redsysEnvironment: redsysState.environment,
+        result: "redirect-redsys",
+        durationMs: Date.now() - startedAt
+      });
+
+      return { redsysForm };
+    }
+
     const stripe = purchaseMode === "live" ? getStripe() : null;
 
     if (stripe) {

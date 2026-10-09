@@ -68,6 +68,10 @@ Comandos operativos previos fuera del repo:
 | --- | --- |
 | `STRIPE_SECRET_KEY` | si se va a probar checkout real en modo test |
 | `STRIPE_WEBHOOK_SECRET` | siempre que exista `STRIPE_SECRET_KEY` |
+| `REDSYS_MERCHANT_CODE` | si se cobra con el TPV de CaixaBank (Redsys); en cuanto se define, Redsys sustituye a Stripe |
+| `REDSYS_SECRET_KEY` | siempre que exista `REDSYS_MERCHANT_CODE` (clave SHA-256 del comercio, distinta en pruebas y en real) |
+| `REDSYS_TERMINAL` | opcional, por defecto `1` |
+| `REDSYS_ENVIRONMENT` | `test` (sis-t.redsys.es) o `production` (sis.redsys.es); por defecto `test` |
 | `BLOB_READ_WRITE_TOKEN` | si `OBJECT_STORAGE_PROVIDER=vercel-blob` |
 | `OBJECT_STORAGE_FILESYSTEM_ROOT` | si `OBJECT_STORAGE_PROVIDER=filesystem` |
 | `RESEND_API_KEY` | si se va a probar email real |

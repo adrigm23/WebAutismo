@@ -19,6 +19,15 @@ import {
   resolvePromotionForPurchase,
   type PromotionValidationResult
 } from "@/lib/promotions";
+import {
+  generateRedsysOrderNumber,
+  isRedsysResponseAuthorized,
+  isSameRedsysTerminal,
+  REDSYS_CURRENCY_EUR,
+  REDSYS_TRANSACTION_TYPE_AUTHORIZATION,
+  type LiveRedsysConfig,
+  type RedsysNotification
+} from "@/lib/redsys";
 
 type PurchasePricingInput = {
   subtotalInCents: number;
@@ -54,6 +63,10 @@ type StripeCheckoutValidationResult =
   | { ok: true }
   | { ok: false; reason: string };
 
+type RedsysNotificationValidationResult =
+  | { ok: true }
+  | { ok: false; reason: string };
+
 type CreatePendingPurchaseInput = {
   userId: string;
   courseSlug: string;
@@ -67,9 +80,11 @@ type GrantCourseAccessInput = {
   courseSlug: string;
   courseEditionId?: string | null;
   purchaseId: string;
-  grantSource: "stripe-webhook" | "development-demo";
+  grantSource: "stripe-webhook" | "redsys-notification" | "development-demo";
   stripeCheckoutSessionId?: string | null;
   stripePaymentIntentId?: string | null;
+  redsysOrder?: string | null;
+  redsysAuthorisationCode?: string | null;
 };
 
 async function resolveCoursePurchaseTarget(input: {
@@ -229,6 +244,90 @@ export function validateStripeCheckoutSessionAgainstPurchase(input: {
   return { ok: true };
 }
 
+const REDSYS_ORDER_ASSIGNMENT_ATTEMPTS = 3;
+
+/** Gives a pending purchase its own Redsys order number, retrying on the (unlikely) collision. */
+export async function assignRedsysOrderToPurchase(purchaseId: string) {
+  for (let attempt = 1; ; attempt += 1) {
+    const redsysOrder = generateRedsysOrderNumber();
+
+    try {
+      await getDb().purchase.update({
+        where: {
+          id: purchaseId
+        },
+        data: {
+          redsysOrder
+        }
+      });
+
+      return redsysOrder;
+    } catch (error) {
+      const isOrderCollision =
+        error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002";
+
+      if (!isOrderCollision || attempt >= REDSYS_ORDER_ASSIGNMENT_ATTEMPTS) {
+        throw error;
+      }
+    }
+  }
+}
+
+export function validateRedsysNotificationAgainstPurchase(input: {
+  purchase: Pick<StoredPurchaseSnapshot, "totalInCents"> & { redsysOrder: string | null };
+  notification: RedsysNotification;
+  config: Pick<LiveRedsysConfig, "merchantCode" | "terminal">;
+}): RedsysNotificationValidationResult {
+  const { notification, purchase, config } = input;
+
+  if (notification.transactionType !== REDSYS_TRANSACTION_TYPE_AUTHORIZATION) {
+    return { ok: false, reason: "Redsys notification is not a payment authorization." };
+  }
+
+  if (!isRedsysResponseAuthorized(notification.responseCode)) {
+    return {
+      ok: false,
+      reason: `Redsys payment was not authorised (Ds_Response ${notification.responseCode}).`
+    };
+  }
+
+  if (purchase.redsysOrder !== notification.order) {
+    return { ok: false, reason: "Redsys order does not match the stored purchase." };
+  }
+
+  if (notification.amountInCents !== purchase.totalInCents) {
+    return { ok: false, reason: "Redsys amount does not match the stored purchase total." };
+  }
+
+  if (notification.currency !== REDSYS_CURRENCY_EUR) {
+    return { ok: false, reason: "Redsys currency is invalid for this purchase." };
+  }
+
+  if (notification.merchantCode !== config.merchantCode) {
+    return { ok: false, reason: "Redsys merchant code does not match this merchant." };
+  }
+
+  if (!isSameRedsysTerminal(notification.terminal, config.terminal)) {
+    return { ok: false, reason: "Redsys terminal does not match this merchant." };
+  }
+
+  return { ok: true };
+}
+
+export async function markPurchaseFailedByRedsysOrder(redsysOrder: string) {
+  // Only a still-pending purchase can fail: a late denial must never undo a
+  // purchase that was already paid.
+  return getDb().purchase.updateMany({
+    where: {
+      redsysOrder,
+      status: PurchaseStatus.PENDING
+    },
+    data: {
+      status: PurchaseStatus.FAILED
+    }
+  });
+}
+
 export async function markPurchaseFailedByStripeSessionId(stripeCheckoutSessionId: string) {
   return getDb().purchase.updateMany({
     where: {
@@ -348,6 +447,10 @@ export async function grantCourseAccess(input: GrantCourseAccessInput) {
     throw new Error("Stripe checkout session id is required for webhook grants.");
   }
 
+  if (input.grantSource === "redsys-notification" && !input.redsysOrder) {
+    throw new Error("Redsys order is required for notification grants.");
+  }
+
   const { course, edition } = await resolveCoursePurchaseTarget({
     courseSlug: input.courseSlug,
     courseEditionId: input.courseEditionId
@@ -385,6 +488,9 @@ export async function grantCourseAccess(input: GrantCourseAccessInput) {
           input.stripeCheckoutSessionId ?? existingPurchase.stripeCheckoutSessionId,
         stripePaymentIntentId:
           input.stripePaymentIntentId ?? existingPurchase.stripePaymentIntentId,
+        redsysOrder: input.redsysOrder ?? existingPurchase.redsysOrder,
+        redsysAuthorisationCode:
+          input.redsysAuthorisationCode ?? existingPurchase.redsysAuthorisationCode,
         courseSlugSnapshot: course.slug,
         courseTitleSnapshot: course.title
       }

@@ -170,7 +170,7 @@ export async function PlatformLanding() {
                 <div className="mt-5 space-y-3">
                   <div className="flex items-center gap-3 rounded-xl bg-[var(--color-surface)] px-4 py-3 text-sm">
                     <CheckCircle2 className="h-4 w-4 text-[var(--color-teal)]" />
-                    Pago seguro cuando Stripe esta activo
+                    Pago seguro con tarjeta
                   </div>
                   <div className="flex items-center gap-3 rounded-xl bg-[var(--color-surface)] px-4 py-3 text-sm">
                     <CheckCircle2 className="h-4 w-4 text-[var(--color-teal)]" />
