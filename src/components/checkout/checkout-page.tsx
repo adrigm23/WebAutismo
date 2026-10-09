@@ -73,8 +73,8 @@ function CheckoutHeader() {
 // ─── Country list ─────────────────────────────────────────────────────────────
 
 const COUNTRIES = [
-  "Argentina", "Bolivia", "Chile", "Colombia", "Costa Rica", "Cuba",
-  "Ecuador", "El Salvador", "España", "Guatemala", "Honduras", "México",
+  "España", "Argentina", "Bolivia", "Chile", "Colombia", "Costa Rica", "Cuba",
+  "Ecuador", "El Salvador", "Guatemala", "Honduras", "México",
   "Nicaragua", "Panamá", "Paraguay", "Perú", "Puerto Rico",
   "República Dominicana", "Uruguay", "Venezuela", "Otro",
 ];
@@ -124,7 +124,7 @@ function CheckoutCustomerData({ user }: { user: CheckoutPageProps["user"] }) {
           <div className="relative">
             <select
               className="h-11 w-full cursor-pointer appearance-none rounded-lg border border-[var(--color-border)] bg-white px-3.5 pr-9 text-sm text-[var(--color-primary)] focus-visible:border-[var(--color-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)]"
-              defaultValue="Argentina"
+              defaultValue="España"
               name="country"
             >
               {COUNTRIES.map((c) => (
@@ -203,7 +203,7 @@ function CheckoutPaymentMethod({
       {activeTab === "tarjeta" && (
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <p className="text-[0.8rem] font-semibold text-[var(--color-ink-soft)]">Detalles de la Tarjeta</p>
+            <p className="text-[0.8rem] font-semibold text-[var(--color-ink-soft)]">Pago con tarjeta</p>
             <div className="flex items-center gap-1.5 text-[var(--color-muted)]">
               <CreditCard className="h-4 w-4" strokeWidth={1.5} />
               <CreditCard className="h-4 w-4" strokeWidth={1.5} />
@@ -212,23 +212,19 @@ function CheckoutPaymentMethod({
 
           {paymentProvider || isDemoMode ? (
             <div className="space-y-3">
-              <div className="relative">
-                <CreditCard className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--color-muted)]" strokeWidth={2} />
-                <input className={cn(inputCls, "pl-9")} placeholder="Número de Tarjeta" readOnly type="text" />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <input className={inputCls} placeholder="MM/AA" readOnly type="text" />
-                <div className="relative">
-                  <input className={inputCls} placeholder="CVC" readOnly type="text" />
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-muted)]">
-                    <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
-                      <circle cx="12" cy="12" r="10" />
-                      <path d="M12 16v-4M12 8h.01" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
+              <p className="text-[0.82rem] leading-relaxed text-[var(--color-ink-soft)]">
+                Introducirás los datos de tu tarjeta en la página segura del banco, no en esta web.
+              </p>
+              <div className="flex flex-wrap items-center gap-2" aria-label="Tarjetas aceptadas">
+                {["Visa", "Mastercard", "Maestro"].map((brand) => (
+                  <span
+                    className="rounded-md border border-[var(--color-border)] bg-white px-2.5 py-1 text-[0.72rem] font-bold tracking-wide text-[var(--color-primary)]"
+                    key={brand}
+                  >
+                    {brand}
                   </span>
-                </div>
+                ))}
               </div>
-              <input className={inputCls} placeholder="Nombre en la tarjeta" readOnly type="text" />
               <div className="flex items-start gap-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-primary-soft)] p-3">
                 <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-[var(--color-primary)]" strokeWidth={2} />
                 <p className="text-[0.74rem] leading-relaxed text-[var(--color-primary)]">
