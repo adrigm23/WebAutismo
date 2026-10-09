@@ -23,7 +23,7 @@ La app no depende de `ADMIN_EMAILS` ni `TEACHER_EMAILS` para operar. Solo se man
 
 ## Stripe y promociones
 
-- El checkout genera importe dinamico en servidor con subtotal, descuento, IVA y total final.
+- El checkout genera importe dinamico en servidor con subtotal, descuento y total final. Las formaciones estan exentas de IVA (`TAX_RATE = 0` en `src/lib/promotions.ts`).
 - Ya no se depende de `STRIPE_PRICE_*` fijos por curso.
 - El webhook de Stripe confirma la compra y activa la matricula.
 - Si Stripe no esta configurado, la app conserva un flujo demo local.

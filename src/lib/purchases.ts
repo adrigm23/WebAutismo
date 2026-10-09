@@ -17,6 +17,7 @@ import { getDb } from "@/lib/prisma";
 import {
   calculatePurchaseAmounts,
   resolvePromotionForPurchase,
+  TAX_RATE,
   type PromotionValidationResult
 } from "@/lib/promotions";
 import {
@@ -125,8 +126,8 @@ export async function resolvePurchasePricing(
     return {
       subtotalInCents: input.subtotalInCents,
       discountInCents: 0,
-      taxInCents: Math.round(input.subtotalInCents * 0.21),
-      totalInCents: input.subtotalInCents + Math.round(input.subtotalInCents * 0.21),
+      taxInCents: Math.round(input.subtotalInCents * TAX_RATE),
+      totalInCents: input.subtotalInCents + Math.round(input.subtotalInCents * TAX_RATE),
       promotionId: null,
       promotionCode: input.promotionCode?.trim().toUpperCase() ?? null,
       validation

@@ -36,8 +36,8 @@ export function runPromotionTests() {
     subtotalInCents: 10000,
     discountInCents: 1000,
     taxableBaseInCents: 9000,
-    taxInCents: 1890,
-    totalInCents: 10890
+    taxInCents: 0,
+    totalInCents: 9000
   });
 
   const validPromotion = validatePromotionForCourse({

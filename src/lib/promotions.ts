@@ -5,7 +5,10 @@ import {
 } from "@prisma/client";
 import { getDb } from "./prisma.ts";
 
-export const TAX_RATE = 0.21;
+// The association's training courses are VAT-exempt, so buyers pay exactly the
+// course price. Kept as a rate (stored per purchase in taxInCents) in case a
+// taxable product is ever sold.
+export const TAX_RATE = 0;
 
 export type PromotionLike = {
   id: string;

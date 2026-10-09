@@ -34,7 +34,7 @@ const TEST_USERS = {
 
 function calculateAmounts(subtotalInCents, discountInCents) {
   const taxableBase = Math.max(subtotalInCents - discountInCents, 0);
-  const taxInCents = Math.round(taxableBase * 0.21);
+  const taxInCents = 0; // training courses are VAT-exempt
 
   return {
     subtotalInCents,
