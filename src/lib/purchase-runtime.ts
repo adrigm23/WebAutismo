@@ -1,5 +1,5 @@
 import { isDevelopmentDemoPurchaseEnabled, isProductionRuntime } from "@/lib/env";
-import { getRedsysRuntimeState } from "@/lib/redsys";
+import { getRedsysRuntimeState, isRedsysCheckoutAllowedFor } from "@/lib/redsys";
 import { getStripeRuntimeState } from "@/lib/stripe";
 
 export type PurchaseRuntimeMode = "live" | "demo" | "disabled";
@@ -19,6 +19,21 @@ export function getActivePaymentProvider(): PaymentProvider | null {
   }
 
   return getStripeRuntimeState().mode === "live" ? "stripe" : null;
+}
+
+/**
+ * The gateway a given visitor may pay with. Same as getActivePaymentProvider,
+ * except that Redsys in test mode is limited to REDSYS_TEST_ALLOWED_EMAILS.
+ */
+export function getPaymentProviderForUser(email: string | null | undefined): PaymentProvider | null {
+  const provider = getActivePaymentProvider();
+  const redsysState = getRedsysRuntimeState();
+
+  if (provider === "redsys" && redsysState.mode === "live") {
+    return isRedsysCheckoutAllowedFor(redsysState, email) ? "redsys" : null;
+  }
+
+  return provider;
 }
 
 export function getPurchaseRuntimeMode(): PurchaseRuntimeMode {

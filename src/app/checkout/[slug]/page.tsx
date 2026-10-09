@@ -3,7 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { CheckoutPage } from "@/components/checkout/checkout-page";
 import { getCurrentUser } from "@/lib/auth";
 import { getCatalogCourseBySlug } from "@/lib/course-catalog";
-import { getActivePaymentProvider, getPurchaseRuntimeMode } from "@/lib/purchase-runtime";
+import { getPaymentProviderForUser, getPurchaseRuntimeMode } from "@/lib/purchase-runtime";
 import { userOwnsCourse } from "@/lib/purchases";
 import { firstValue } from "@/lib/utils";
 
@@ -35,7 +35,7 @@ export default async function CheckoutRoute({ params, searchParams }: CheckoutPa
 
   const user = await getCurrentUser();
   const purchaseMode = getPurchaseRuntimeMode();
-  const paymentProvider = purchaseMode === "live" ? getActivePaymentProvider() : null;
+  const paymentProvider = purchaseMode === "live" ? getPaymentProviderForUser(user?.email) : null;
   const isDemoMode = purchaseMode === "demo";
 
   if (user && (await userOwnsCourse(user.id, course.slug))) {

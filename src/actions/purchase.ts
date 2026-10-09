@@ -26,6 +26,7 @@ import { consumeRateLimit } from "@/lib/rate-limit";
 import {
   buildRedsysPaymentForm,
   getRedsysRuntimeState,
+  isRedsysCheckoutAllowedFor,
   type RedsysPaymentForm
 } from "@/lib/redsys";
 import { absoluteUrl } from "@/lib/site";
@@ -132,6 +133,19 @@ export async function startPurchaseAction(
       return {
         error:
           "La compra esta bloqueada porque la pasarela de pago no tiene la configuracion completa en este entorno."
+      };
+    }
+
+    if (redsysState.mode === "live" && !isRedsysCheckoutAllowedFor(redsysState, user.email)) {
+      purchaseLogger.warn("Purchase blocked because Redsys test mode is limited to allowed accounts.", {
+        userId: user.id,
+        courseSlug: course.slug,
+        result: "blocked-redsys-test-allowlist",
+        durationMs: Date.now() - startedAt
+      });
+
+      return {
+        error: "La compra online todavia no esta disponible. Escribe a soporte para inscribirte."
       };
     }
 

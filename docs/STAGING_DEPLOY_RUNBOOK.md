@@ -72,6 +72,7 @@ Comandos operativos previos fuera del repo:
 | `REDSYS_SECRET_KEY` | siempre que exista `REDSYS_MERCHANT_CODE` (clave SHA-256 del comercio, distinta en pruebas y en real) |
 | `REDSYS_TERMINAL` | opcional, por defecto `1` |
 | `REDSYS_ENVIRONMENT` | `test` (sis-t.redsys.es) o `production` (sis.redsys.es); por defecto `test` |
+| `REDSYS_TEST_ALLOWED_EMAILS` | obligatoria en un sitio público con `REDSYS_ENVIRONMENT=test`: emails (separados por comas) que pueden pagar; el resto ve el pago como no disponible |
 | `BLOB_READ_WRITE_TOKEN` | si `OBJECT_STORAGE_PROVIDER=vercel-blob` |
 | `OBJECT_STORAGE_FILESYSTEM_ROOT` | si `OBJECT_STORAGE_PROVIDER=filesystem` |
 | `RESEND_API_KEY` | si se va a probar email real |

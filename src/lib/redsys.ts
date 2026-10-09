@@ -43,6 +43,8 @@ export type RedsysRuntimeState =
       terminal: string;
       secretKey: string;
       endpoint: string;
+      // Only meaningful in the test environment, see isRedsysCheckoutAllowedFor.
+      testAllowedEmails: string[] | null;
     };
 
 export type LiveRedsysConfig = Extract<RedsysRuntimeState, { mode: "live" }>;
@@ -87,6 +89,11 @@ export function getRedsysRuntimeState(): RedsysRuntimeState {
     return { mode: "misconfigured", reason: "invalid-environment", environment };
   }
 
+  const testAllowedEmails = (process.env.REDSYS_TEST_ALLOWED_EMAILS ?? "")
+    .split(",")
+    .map((email) => email.trim().toLowerCase())
+    .filter(Boolean);
+
   return {
     mode: "live",
     reason: null,
@@ -94,8 +101,23 @@ export function getRedsysRuntimeState(): RedsysRuntimeState {
     merchantCode,
     terminal,
     secretKey,
-    endpoint: REDSYS_ENDPOINTS[environment]
+    endpoint: REDSYS_ENDPOINTS[environment],
+    testAllowedEmails: testAllowedEmails.length > 0 ? testAllowedEmails : null
   };
+}
+
+/**
+ * The Redsys test environment accepts publicly documented test cards, so on a
+ * public site anyone could "pay" with one and get a course for free. While
+ * REDSYS_ENVIRONMENT=test, REDSYS_TEST_ALLOWED_EMAILS limits the checkout to
+ * the listed accounts (the team's and the bank's validation account).
+ */
+export function isRedsysCheckoutAllowedFor(config: LiveRedsysConfig, email: string | null | undefined) {
+  if (config.environment === "production" || !config.testAllowedEmails) {
+    return true;
+  }
+
+  return Boolean(email) && config.testAllowedEmails.includes(email!.trim().toLowerCase());
 }
 
 /**

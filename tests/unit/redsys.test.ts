@@ -3,6 +3,7 @@ import {
   computeRedsysSignature,
   generateRedsysOrderNumber,
   getRedsysRuntimeState,
+  isRedsysCheckoutAllowedFor,
   parseRedsysNotification,
   type LiveRedsysConfig
 } from "@/lib/redsys";
@@ -19,7 +20,8 @@ const liveConfig: LiveRedsysConfig = {
   merchantCode: TEST_MERCHANT_CODE,
   terminal: "1",
   secretKey: TEST_SECRET_KEY,
-  endpoint: "https://sis-t.redsys.es:25443/sis/realizarPago"
+  endpoint: "https://sis-t.redsys.es:25443/sis/realizarPago",
+  testAllowedEmails: null
 };
 
 function encodeParameters(parameters: Record<string, string>) {
@@ -250,6 +252,42 @@ describe("redsys", () => {
       mode: "misconfigured",
       reason: "invalid-environment"
     });
+  });
+
+  test("limits the test environment checkout to the allowed accounts", () => {
+    const restricted: LiveRedsysConfig = {
+      ...liveConfig,
+      testAllowedEmails: ["equipo@autismocordoba.org", "banco@example.com"]
+    };
+
+    expect(isRedsysCheckoutAllowedFor(restricted, "Equipo@AutismoCordoba.org ")).toBe(true);
+    expect(isRedsysCheckoutAllowedFor(restricted, "banco@example.com")).toBe(true);
+    expect(isRedsysCheckoutAllowedFor(restricted, "visitante@example.com")).toBe(false);
+    expect(isRedsysCheckoutAllowedFor(restricted, null)).toBe(false);
+
+    // Without a list, and always in production, everyone can pay.
+    expect(isRedsysCheckoutAllowedFor(liveConfig, "visitante@example.com")).toBe(true);
+    expect(
+      isRedsysCheckoutAllowedFor({ ...restricted, environment: "production" }, "visitante@example.com")
+    ).toBe(true);
+  });
+
+  test("reads the allowed accounts from the environment", () => {
+    process.env = {
+      ...originalEnv,
+      REDSYS_MERCHANT_CODE: TEST_MERCHANT_CODE,
+      REDSYS_SECRET_KEY: TEST_SECRET_KEY,
+      REDSYS_ENVIRONMENT: "test",
+      REDSYS_TEST_ALLOWED_EMAILS: " Equipo@AutismoCordoba.org , banco@example.com ,"
+    };
+
+    expect(getRedsysRuntimeState()).toMatchObject({
+      mode: "live",
+      testAllowedEmails: ["equipo@autismocordoba.org", "banco@example.com"]
+    });
+
+    process.env.REDSYS_TEST_ALLOWED_EMAILS = "";
+    expect(getRedsysRuntimeState()).toMatchObject({ mode: "live", testAllowedEmails: null });
   });
 
   describe("validateRedsysNotificationAgainstPurchase", () => {
