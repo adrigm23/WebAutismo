@@ -19,13 +19,53 @@ const next = require("next");
 const port = Number(process.env.PORT) || 3000;
 const hostname = "0.0.0.0";
 
+// How long in-flight requests get to finish after a stop signal before the
+// process exits anyway.
+const SHUTDOWN_GRACE_MS = 10_000;
+
 const app = next({ dev: false });
 const handle = app.getRequestHandler();
+let server = null;
+let shuttingDown = false;
+
+// The hosting panel stops or restarts the app with SIGTERM. Without a handler
+// the old process never exited: each restart left another copy running, and
+// two copies (~50 processes each) filled the account's 100-process limit and
+// took the whole hosting account down.
+function shutdown(signal) {
+  if (shuttingDown) {
+    return;
+  }
+
+  shuttingDown = true;
+  console.log(`> ${signal} received, shutting down`);
+
+  const forceExit = setTimeout(() => {
+    console.error("> Graceful shutdown timed out, forcing exit");
+    process.exit(0);
+  }, SHUTDOWN_GRACE_MS);
+  forceExit.unref();
+
+  if (!server) {
+    process.exit(0);
+  }
+
+  server.close(() => process.exit(0));
+  // Idle keep-alive sockets would otherwise hold close() open until they time out.
+  server.closeIdleConnections();
+}
+
+process.on("SIGTERM", () => shutdown("SIGTERM"));
+process.on("SIGINT", () => shutdown("SIGINT"));
 
 app
   .prepare()
   .then(() => {
-    createServer((req, res) => {
+    if (shuttingDown) {
+      process.exit(0);
+    }
+
+    server = createServer((req, res) => {
       handle(req, res);
     }).listen(port, hostname, () => {
       console.log(`> Ready on http://${hostname}:${port}`);

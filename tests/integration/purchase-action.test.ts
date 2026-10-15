@@ -74,7 +74,8 @@ describe("purchase action", () => {
       id: "course-1",
       slug: "curso-demo",
       title: "Curso demo",
-      shortDescription: "Descripcion breve"
+      shortDescription: "Descripcion breve",
+      isPublished: true
     });
     getCurrentUserMock.mockResolvedValue({
       id: "user-1",
@@ -156,5 +157,26 @@ describe("purchase action", () => {
       "REDIRECT:https://checkout.stripe.test/session"
     );
     expect(createPendingPurchaseMock).toHaveBeenCalledTimes(1);
+  });
+
+  test("refuses to sell a course that is not published yet", async () => {
+    getCatalogCourseBySlugMock.mockResolvedValue({
+      id: "course-1",
+      slug: "curso-demo",
+      title: "Curso demo",
+      shortDescription: "Descripcion breve",
+      isPublished: false
+    });
+
+    const { startPurchaseAction } = await import("@/actions/purchase");
+    const formData = new FormData();
+    formData.set("courseSlug", "curso-demo");
+    formData.set("courseEditionId", "");
+    formData.set("promotionCode", "");
+
+    await expect(startPurchaseAction({}, formData)).resolves.toEqual({
+      error: "El curso solicitado no existe."
+    });
+    expect(getCurrentUserMock).not.toHaveBeenCalled();
   });
 });

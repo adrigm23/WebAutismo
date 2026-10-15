@@ -12,7 +12,8 @@ import {
   User,
 } from "lucide-react";
 import { PurchaseCard } from "@/components/purchase-card";
-import { getCatalogCourseBySlug, getCatalogCourses } from "@/lib/course-catalog";
+import { getCurrentUser } from "@/lib/auth";
+import { getCatalogCourseBySlug } from "@/lib/course-catalog";
 import { getPurchaseRuntimeMode } from "@/lib/purchase-runtime";
 import { absoluteUrl } from "@/lib/site";
 import type { CatalogCourse } from "@/lib/course-catalog";
@@ -21,19 +22,31 @@ type CoursePageProps = {
   params: Promise<{ slug: string }>;
 };
 
-export const revalidate = 3600;
-export const dynamicParams = false;
+// Rendered per request (course data itself is cached in course-catalog).
+// Pages used to be pre-generated at build time with dynamicParams = false, so a
+// course published after the last build, or the course builder's preview of an
+// unpublished one, answered 404.
+export const dynamic = "force-dynamic";
 
-export async function generateStaticParams() {
-  const courses = await getCatalogCourses();
-  return courses.map((course) => ({ slug: course.slug }));
+/** Unpublished courses are only visible to staff, as a preview from the course builder. */
+async function canViewCourse(course: CatalogCourse) {
+  if (course.isPublished) {
+    return true;
+  }
+
+  const user = await getCurrentUser();
+  return user?.globalRole === "ADMIN" || user?.globalRole === "TEACHER";
 }
 
 export async function generateMetadata({ params }: CoursePageProps): Promise<Metadata> {
   const { slug } = await params;
   const course = await getCatalogCourseBySlug(slug);
 
-  if (!course) return { title: "Curso no encontrado" };
+  if (!course || !(await canViewCourse(course))) return { title: "Curso no encontrado" };
+
+  if (!course.isPublished) {
+    return { title: `Vista previa: ${course.title}`, robots: { index: false, follow: false } };
+  }
 
   return {
     title: { absolute: course.seoTitle },
@@ -139,7 +152,7 @@ export default async function CoursePage({ params }: CoursePageProps) {
   const { slug } = await params;
   const course = await getCatalogCourseBySlug(slug);
 
-  if (!course) notFound();
+  if (!course || !(await canViewCourse(course))) notFound();
 
   const purchaseMode = getPurchaseRuntimeMode();
   const leadTeacher = course.teachers[0] ?? null;
@@ -193,6 +206,12 @@ export default async function CoursePage({ params }: CoursePageProps) {
       />
 
       <div className="site-container py-6 lg:py-8">
+        {!course.isPublished && (
+          <p className="mb-4 rounded-lg border border-[var(--color-warning,#d97706)] bg-[#fff7ed] px-4 py-2.5 text-sm font-semibold text-[#9a3412]">
+            Vista previa: este curso todavía no está publicado. Solo lo ven administradores y docentes.
+          </p>
+        )}
+
         {/* Breadcrumb */}
         <nav
           aria-label="Ruta de navegación"

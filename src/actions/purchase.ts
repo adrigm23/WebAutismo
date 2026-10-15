@@ -76,7 +76,7 @@ export async function startPurchaseAction(
 
   const course = await getCatalogCourseBySlug(parsed.data.courseSlug);
 
-  if (!course) {
+  if (!course || !course.isPublished) {
     return { error: "El curso solicitado no existe." };
   }
 

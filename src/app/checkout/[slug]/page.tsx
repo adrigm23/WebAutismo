@@ -29,7 +29,7 @@ export default async function CheckoutRoute({ params, searchParams }: CheckoutPa
   const { pago } = await searchParams;
   const course = await getCatalogCourseBySlug(slug);
 
-  if (!course) {
+  if (!course || !course.isPublished) {
     notFound();
   }
 

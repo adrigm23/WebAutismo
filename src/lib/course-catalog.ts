@@ -39,6 +39,9 @@ export type CatalogCourse = Omit<LegacyCourse, "teacher" | "modules"> & {
   editions: CatalogCourseEdition[];
   activeEdition: CatalogCourseEdition | null;
   coverImageUrl: string | null;
+  // False while a course is still being built (Course.status INACTIVE): only
+  // staff may see it and nobody may buy it.
+  isPublished: boolean;
   source: "database" | "legacy";
 };
 
@@ -128,6 +131,7 @@ function toCatalogCourse(record: {
   accentFrom: string;
   accentTo: string;
   coverImageStorageKey: string | null;
+  status: "ACTIVE" | "INACTIVE";
   category: string;
   audienceJson: unknown;
   outcomesJson: unknown;
@@ -226,6 +230,7 @@ function toCatalogCourse(record: {
     coverImageUrl: record.coverImageStorageKey
       ? `/api/courses/${record.slug}/cover`
       : null,
+    isPublished: record.status === "ACTIVE",
     source: "database",
   };
 }
@@ -234,6 +239,7 @@ function toLegacyCatalogCourse(course: LegacyCourse): CatalogCourse {
   return {
     ...course,
     id: `legacy-${course.slug}`,
+    isPublished: true,
     teachers: [course.teacher],
     editions: [],
     activeEdition: null,
